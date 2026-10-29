@@ -5,6 +5,7 @@ using FrameGenManagerNext.App.Localization;
 using FrameGenManagerNext.App.Services;
 using FrameGenManagerNext.App.ViewModels;
 using FrameGenManagerNext.App.Views;
+using FrameGenManagerNext.App.Web;
 using FrameGenManagerNext.Core.Features.Settings;
 using FrameGenManagerNext.Infrastructure.Composition;
 using FrameGenManagerNext.Infrastructure.Paths;
@@ -67,6 +68,7 @@ public partial class App : Application
                 services.AddSingleton<LogsViewModel>();
                 services.AddSingleton<AboutViewModel>();
                 services.AddSingleton<SettingsViewModel>();
+                services.AddSingleton<WebFrameGenBridge>();
 
                 services.AddSingleton<LibraryPage>();
                 services.AddSingleton<SmoothMotionPage>();
@@ -74,6 +76,7 @@ public partial class App : Application
                 services.AddSingleton<LogsPage>();
                 services.AddSingleton<AboutPage>();
                 services.AddSingleton<SettingsPage>();
+                services.AddSingleton<WebFrameGenPage>();
                 services.AddSingleton<MainWindow>();
             })
             .Build();

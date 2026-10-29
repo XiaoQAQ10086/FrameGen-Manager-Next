@@ -12,6 +12,7 @@
   <ItemGroup>
     <PackageReference Include="CommunityToolkit.Mvvm" />
     <PackageReference Include="Microsoft.Extensions.Hosting" />
+    <PackageReference Include="Microsoft.Web.WebView2" />
     <PackageReference Include="Serilog.Extensions.Hosting" />
     <PackageReference Include="Serilog.Sinks.File" />
     <PackageReference Include="Velopack" />
@@ -21,6 +22,7 @@
   <ItemGroup>
     <Resource Include="Assets\app.ico" />
     <Resource Include="Assets\app.png" />
+    <Content Include="WebAssets\**\*" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
   <ItemGroup>

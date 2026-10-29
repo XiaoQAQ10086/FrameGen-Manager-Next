@@ -11,8 +11,10 @@ FrameGen Manager-Next（便携版 / Portable）
   不写注册表；删除整个文件夹即可卸载。
 
 界面：
-  帧生成 / Smooth Motion / DLSS5 / 日志与诊断 / 设置 / 关于
-  “帧生成”页左侧显示 GPU 状态、HAGS 和显卡名称伪装；右侧是游戏列表。
+  帧生成（WebView2 试验版） / Smooth Motion / DLSS5 / 日志与诊断 / 设置 / 关于
+  “帧生成”页由本地 HTML/CSS 渲染（WebView2），左侧显示 GPU 状态、HAGS 和显卡名称伪装；
+  右侧是游戏卡片列表。需要系统安装 Microsoft Edge WebView2 Runtime（Win11 通常自带）；
+  WebView2 缓存写在系统 LocalAppData，不放在便携目录。
   游戏列表支持扫描 Steam、Epic、WeGame、散装目录，也可手动添加 EXE；
   Steam 游戏会显示本地或缓存封面。
   点某个游戏的“部署”后才会弹出代理、优化、帧数、Preset、引擎等参数。

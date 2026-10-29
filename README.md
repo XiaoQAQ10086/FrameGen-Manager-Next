@@ -4,7 +4,7 @@
 
 FrameGen Manager-Next 是 FrameGen Manager 的从零重写版：Windows 桌面端帧生成部署管理器，使用 **C# / .NET 10 LTS + WPF + Wpf.Ui**，单进程架构。
 
-> 当前状态：**Phase 5 功能完成，等待真实游戏验收**。游戏库（Steam 封面）、GPU 状态与显卡名称伪装、日志诊断、统一部署引擎、FrameGen、Smooth Motion、DLSS5（含彻底卸载/旧版 RenoDX 清理）、设置页、中英文切换、浅色界面、CLI 已完成；剩余真实游戏对照和安装包（等便携版验收后做）。
+> 当前状态：**帧生成页已切到 WebView2 试验版**。C# 核心不变，帧生成页由本地 HTML/CSS/JS 渲染；其余页面仍为 WPF，验收后可继续迁移。游戏库（Steam 封面）、GPU 状态与显卡名称伪装、日志诊断、统一部署引擎、FrameGen、Smooth Motion、DLSS5（含彻底卸载/旧版 RenoDX 清理）、设置页、中英文切换、浅色界面、CLI 已完成；剩余真实游戏对照和安装包（等便携版验收后做）。
 
 ## 仓库
 
