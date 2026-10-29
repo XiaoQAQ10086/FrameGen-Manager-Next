@@ -2,6 +2,8 @@ using System.Globalization;
 using System.IO;
 using System.Windows;
 using FrameGenManagerNext.App.ViewModels;
+using FrameGenManagerNext.App.Views;
+using FrameGenManagerNext.Infrastructure.Composition;
 using FrameGenManagerNext.Infrastructure.Paths;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -25,15 +27,26 @@ public partial class App : Application
                 Path.Combine(paths.LogsDirectory, "app-.log"),
                 formatProvider: CultureInfo.InvariantCulture,
                 rollingInterval: RollingInterval.Day,
-                retainedFileCountLimit: 14)
+                retainedFileCountLimit: 14,
+                shared: true)
             .CreateLogger();
 
         _host = Host.CreateDefaultBuilder()
             .UseSerilog()
             .ConfigureServices(services =>
             {
-                services.AddSingleton(paths);
+                services.AddFrameGenServices(paths);
+
                 services.AddSingleton<MainWindowViewModel>();
+                services.AddSingleton<LibraryViewModel>();
+                services.AddSingleton<GpuViewModel>();
+                services.AddSingleton<LogsViewModel>();
+                services.AddSingleton<AboutViewModel>();
+
+                services.AddSingleton<LibraryPage>();
+                services.AddSingleton<GpuPage>();
+                services.AddSingleton<LogsPage>();
+                services.AddSingleton<AboutPage>();
                 services.AddSingleton<MainWindow>();
             })
             .Build();

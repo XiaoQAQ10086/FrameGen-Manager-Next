@@ -3,14 +3,15 @@
                  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                  xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
                  Title="FrameGen Manager-Next"
-                 Width="1100"
-                 Height="720"
-                 MinWidth="900"
-                 MinHeight="600"
+                 Width="1180"
+                 Height="760"
+                 MinWidth="980"
+                 MinHeight="640"
                  WindowStartupLocation="CenterScreen"
                  ExtendsContentIntoTitleBar="True"
                  WindowBackdropType="Mica"
-                 WindowCornerPreference="Round">
+                 WindowCornerPreference="Round"
+                 Background="#101010">
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
@@ -19,25 +20,88 @@
 
         <ui:TitleBar Grid.Row="0" Title="FrameGen Manager-Next" />
 
-        <StackPanel Grid.Row="1"
-                    HorizontalAlignment="Center"
-                    VerticalAlignment="Center">
-            <TextBlock HorizontalAlignment="Center"
-                       FontSize="40"
-                       FontWeight="SemiBold"
-                       Text="{Binding ProductName}" />
-            <TextBlock Margin="0,8,0,0"
-                       HorizontalAlignment="Center"
-                       Opacity="0.65"
-                       Text="{Binding Version}" />
-            <TextBlock Margin="0,24,0,0"
-                       HorizontalAlignment="Center"
-                       Opacity="0.8"
-                       Text="{Binding Status}" />
-            <TextBlock Margin="0,6,0,0"
-                       HorizontalAlignment="Center"
-                       Opacity="0.55"
-                       Text="{Binding Tagline}" />
-        </StackPanel>
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="222" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <Border Grid.Column="0"
+                    Background="#161616"
+                    BorderBrush="#2A2A2A"
+                    BorderThickness="0,0,1,0">
+                <Grid Margin="12,18,12,12">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <StackPanel Grid.Row="0" Margin="8,0,8,20">
+                        <TextBlock Text="{Binding ProductName}"
+                                   FontSize="17"
+                                   FontWeight="SemiBold"
+                                   TextWrapping="Wrap" />
+                        <TextBlock Margin="0,4,0,0"
+                                   Opacity="0.55"
+                                   FontSize="12"
+                                   Text="{Binding Version}" />
+                    </StackPanel>
+
+                    <ListBox x:Name="NavList"
+                             Grid.Row="1"
+                             Background="Transparent"
+                             BorderThickness="0"
+                             SelectionChanged="NavList_SelectionChanged">
+                        <ListBox.ItemContainerStyle>
+                            <Style TargetType="ListBoxItem">
+                                <Setter Property="Foreground" Value="#D8D8D8" />
+                                <Setter Property="Padding" Value="12,9" />
+                                <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                                <Setter Property="Template">
+                                    <Setter.Value>
+                                        <ControlTemplate TargetType="ListBoxItem">
+                                            <Border x:Name="Root"
+                                                    Background="Transparent"
+                                                    CornerRadius="6"
+                                                    Margin="0,2,0,2"
+                                                    Padding="{TemplateBinding Padding}">
+                                                <ContentPresenter />
+                                            </Border>
+                                            <ControlTemplate.Triggers>
+                                                <Trigger Property="IsMouseOver" Value="True">
+                                                    <Setter TargetName="Root" Property="Background" Value="#242424" />
+                                                </Trigger>
+                                                <Trigger Property="IsSelected" Value="True">
+                                                    <Setter TargetName="Root" Property="Background" Value="#2B4C63" />
+                                                    <Setter Property="Foreground" Value="White" />
+                                                </Trigger>
+                                            </ControlTemplate.Triggers>
+                                        </ControlTemplate>
+                                    </Setter.Value>
+                                </Setter>
+                            </Style>
+                        </ListBox.ItemContainerStyle>
+
+                        <ListBoxItem Content="游戏库" Tag="library" />
+                        <ListBoxItem Content="GPU 状态" Tag="gpu" />
+                        <ListBoxItem Content="日志与诊断" Tag="logs" />
+                        <ListBoxItem Content="关于" Tag="about" />
+                    </ListBox>
+
+                    <StackPanel Grid.Row="2" Margin="8,16,8,4">
+                        <TextBlock Text="Phase 2 · 只读扫描"
+                                   FontSize="11"
+                                   Opacity="0.5" />
+                        <TextBlock Margin="0,4,0,0"
+                                   Text="不会修改游戏目录"
+                                   FontSize="11"
+                                   Opacity="0.35" />
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <ContentControl x:Name="PageHost" Grid.Column="1" />
+        </Grid>
     </Grid>
 </ui:FluentWindow>

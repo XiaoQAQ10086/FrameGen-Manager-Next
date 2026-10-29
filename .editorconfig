@@ -32,6 +32,9 @@ dotnet_naming_style.i_prefixed.capitalization = pascal_case
 dotnet_diagnostic.CA1000.severity = none
 dotnet_diagnostic.CA1031.severity = none
 dotnet_diagnostic.CA1303.severity = none
+# Logging calls are low-frequency; source-generated logging can be adopted incrementally.
+dotnet_diagnostic.CA1848.severity = none
+dotnet_diagnostic.CA1873.severity = none
 dotnet_diagnostic.CA1812.severity = none
 dotnet_diagnostic.CA1852.severity = none
 dotnet_diagnostic.CA2007.severity = none

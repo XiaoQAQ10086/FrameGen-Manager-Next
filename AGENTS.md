@@ -88,6 +88,7 @@ Core/Features/<Feature>/
 - Domain 定义 `ErrorCode` 枚举 + 参数对象。
 - 日志用英文结构化输出，带 operation id。
 - UI 文案只在 `FrameGenManagerNext.App` 的 resx 中；中英文运行时切换。
+- 进度事件只能带稳定 key / 结构化参数（如 `GameScanProgress.Phase`），不能带用户文案。
 - 错误弹窗显示本地化文案 + 错误码 + 诊断复制按钮。
 
 ## 8. Definition of Done

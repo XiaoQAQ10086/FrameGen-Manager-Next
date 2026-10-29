@@ -25,6 +25,18 @@
 - 行为规格：路径安全、INI、资产包。
 - 112 个单元/集成测试。
 
+### Phase 2
+
+- GPU 读取：nvidia-smi 名称/驱动、HAGS 注册表、旧版路由表与 R580 / 616.64 闸门。
+- 游戏库：Steam（多库 VDF/appmanifest）、Epic 清单、WeGame 尽力扫描、固定盘散装目录、手动 EXE。
+- 渲染 EXE：旧版权重评分与排除表；无信号时返回未识别。
+- 图形 API：PE 导入 + 文件名 token + DXVK wrapper + Vulkan/DX12 sibling + Unity/Unreal/CryEngine 回退。
+- `library.json` 缓存、忽略列表、手动条目、损坏隔离。
+- WPF 外壳与四页：游戏库、GPU 状态、日志与诊断、关于。
+- CLI：`gpu`、`library list/scan [--json]`、`logs tail [--lines N]`。
+- 行为规格：`library.md`、`gpu.md`。
+- 真机验收：7 个游戏，API 与旧版一致；GPU RTX 3070 / SM86。
+
 ### Notes
 
 - 不读取或迁移旧版数据。

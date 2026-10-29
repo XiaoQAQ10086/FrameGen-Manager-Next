@@ -36,13 +36,19 @@
 
 > 安装包（Velopack）不在此阶段生成；先交付便携版给用户验收，通过后再做安装器。
 
-## Phase 2 · 只读闭环
+## Phase 2 · 只读闭环（已完成本地验收）
 
-- GPU / 驱动信息
-- 游戏库扫描（Steam / Epic / WeGame / 手动）
-- 日志与诊断页
+- [x] GPU / 驱动 / HAGS 读取（nvidia-smi + 注册表）
+- [x] GPU 路由与 R580 / 616.64 闸门（Domain 纯函数）
+- [x] Steam / Epic / WeGame / 散装 / 手动游戏扫描
+- [x] 渲染 EXE 评分（旧版加权规则）
+- [x] PE 导入 + 文件名 + wrapper + UnityPlayer 回退的 API 检测
+- [x] `library.json` 缓存、忽略列表、手动条目
+- [x] WPF 四页：游戏库、GPU 状态、日志与诊断、关于
+- [x] CLI：`gpu`、`library list/scan`、`logs tail`
+- [x] 行为规格：`library.md`、`gpu.md`
 
-验收：同一台机器扫描结果与旧版一致；全程无写入。
+验收（2026-10-29）：真机扫描 7 个游戏（旧缓存 6 个 + 新增散装 1 个）；霍格沃茨/PUBG/VTube/Nomad DX12、Wallpaper DX11、CS2 Unknown，与旧版一致；GPU RTX 3070 / SM86 / 621.01。全程未写入游戏目录。详见 [Phase 2 验收记录](phase2-acceptance.md)。
 
 ## Phase 3 · 部署引擎 + 帧生成
 

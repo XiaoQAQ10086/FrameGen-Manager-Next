@@ -1,0 +1,125 @@
+<UserControl x:Class="FrameGenManagerNext.App.Views.LibraryPage"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+             mc:Ignorable="d"
+             d:DesignHeight="700"
+             d:DesignWidth="1000">
+    <UserControl.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVis" />
+        <Style x:Key="TrimmedCell" TargetType="TextBlock">
+            <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="ToolTip" Value="{Binding Text, RelativeSource={RelativeSource Self}}" />
+        </Style>
+    </UserControl.Resources>
+
+    <Grid Margin="18">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <DockPanel Grid.Row="0" LastChildFill="False">
+            <StackPanel DockPanel.Dock="Left">
+                <TextBlock Text="游戏库" FontSize="26" FontWeight="SemiBold" />
+                <TextBlock Margin="0,4,0,0"
+                           Opacity="0.6"
+                           Text="只读扫描 Steam / Epic / WeGame / 散装目录；添加游戏可选单个 EXE。" />
+            </StackPanel>
+            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
+                <ui:Button Content="扫描游戏" Command="{Binding ScanCommand}" Margin="0,0,8,0" />
+                <ui:Button Content="添加游戏" Command="{Binding AddGameCommand}" Margin="0,0,8,0" />
+                <ui:Button Content="取消" Command="{Binding CancelCommand}" IsEnabled="{Binding IsBusy}" />
+            </StackPanel>
+        </DockPanel>
+
+        <StackPanel Grid.Row="1" Margin="0,16,0,0">
+            <TextBlock Text="{Binding StatusText}" Opacity="0.8" />
+            <ProgressBar Height="4"
+                         Margin="0,8,0,0"
+                         Maximum="100"
+                         Value="{Binding ProgressValue}" />
+        </StackPanel>
+
+        <TextBlock Grid.Row="2"
+                   Margin="0,10,0,0"
+                   Foreground="#F0B429"
+                   Text="{Binding Warnings}"
+                   TextWrapping="Wrap"
+                   Visibility="{Binding HasWarnings, Converter={StaticResource BoolToVis}}" />
+
+        <Grid Grid.Row="3" Margin="0,16,0,0">
+            <DataGrid ItemsSource="{Binding Games}"
+                      AutoGenerateColumns="False"
+                      IsReadOnly="True"
+                      CanUserAddRows="False"
+                      CanUserDeleteRows="False"
+                      SelectionMode="Single"
+                      HeadersVisibility="Column"
+                      GridLinesVisibility="None"
+                      BorderThickness="0"
+                      Background="Transparent"
+                      Foreground="#E8E8E8"
+                      RowBackground="Transparent"
+                      AlternatingRowBackground="#1A1A1A"
+                      RowHeight="42"
+                      EnableRowVirtualization="True"
+                      ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                      ScrollViewer.VerticalScrollBarVisibility="Auto"
+                      Visibility="{Binding HasGames, Converter={StaticResource BoolToVis}}">
+                <DataGrid.ColumnHeaderStyle>
+                    <Style TargetType="DataGridColumnHeader">
+                        <Setter Property="Background" Value="#252525" />
+                        <Setter Property="Foreground" Value="#D0D0D0" />
+                        <Setter Property="BorderThickness" Value="0" />
+                        <Setter Property="Padding" Value="8,7" />
+                    </Style>
+                </DataGrid.ColumnHeaderStyle>
+                <DataGrid.CellStyle>
+                    <Style TargetType="DataGridCell">
+                        <Setter Property="BorderThickness" Value="0" />
+                        <Setter Property="Padding" Value="8,4" />
+                        <Setter Property="Foreground" Value="#E8E8E8" />
+                    </Style>
+                </DataGrid.CellStyle>
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="名称" Binding="{Binding Name}" Width="1.2*" ElementStyle="{StaticResource TrimmedCell}" />
+                    <DataGridTextColumn Header="平台" Binding="{Binding LauncherDisplay}" Width="72" ElementStyle="{StaticResource TrimmedCell}" />
+                    <DataGridTextColumn Header="API" Binding="{Binding ApiDisplay}" Width="60" ElementStyle="{StaticResource TrimmedCell}" />
+                    <DataGridTextColumn Header="目标目录" Binding="{Binding TargetDirectory}" Width="1.7*" ElementStyle="{StaticResource TrimmedCell}" />
+                    <DataGridTextColumn Header="渲染 EXE" Binding="{Binding RenderExeDisplay}" Width="1.7*" ElementStyle="{StaticResource TrimmedCell}" />
+                    <DataGridTemplateColumn Header="操作" Width="124">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <StackPanel Orientation="Horizontal">
+                                    <ui:Button Content="打开"
+                                               Margin="0,0,4,0"
+                                               Padding="6,1"
+                                               FontSize="11"
+                                               Command="{Binding DataContext.OpenFolderCommand, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}}"
+                                               CommandParameter="{Binding}" />
+                                    <ui:Button Content="移除"
+                                               Padding="6,1"
+                                               FontSize="11"
+                                               Command="{Binding DataContext.RemoveGameCommand, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}}"
+                                               CommandParameter="{Binding}" />
+                                </StackPanel>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                </DataGrid.Columns>
+            </DataGrid>
+
+            <TextBlock HorizontalAlignment="Center"
+                       VerticalAlignment="Center"
+                       Opacity="0.55"
+                       Text="还没有游戏。点击右上角“扫描游戏”，或手动添加一个 EXE。"
+                       Visibility="{Binding IsEmpty, Converter={StaticResource BoolToVis}}" />
+        </Grid>
+    </Grid>
+</UserControl>

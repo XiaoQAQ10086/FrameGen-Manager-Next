@@ -1,16 +1,10 @@
-using CommunityToolkit.Mvvm.ComponentModel;
 using FrameGenManagerNext.Domain;
 
 namespace FrameGenManagerNext.App.ViewModels;
 
-public sealed partial class MainWindowViewModel : ObservableObject
+public sealed class MainWindowViewModel
 {
-    [ObservableProperty]
-    private string _status = "Phase 0 · 基础框架已就绪";
-
     public string ProductName { get; } = AppInfo.ProductName;
 
     public string Version { get; } = $"v{AppInfo.Version}";
-
-    public string Tagline { get; } = ".NET 10 · WPF · Wpf.Ui";
 }
