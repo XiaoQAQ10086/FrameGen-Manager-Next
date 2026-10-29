@@ -38,7 +38,7 @@
                                Text="{loc:Loc Settings.Subtitle}" />
                 </StackPanel>
                 <ui:Button DockPanel.Dock="Right"
-                           Content="{loc:Loc Settings.Save}"
+                           Appearance="Primary" Content="{loc:Loc Settings.Save}"
                            Command="{Binding SaveCommand}"
                            VerticalAlignment="Center" />
             </DockPanel>
@@ -100,7 +100,7 @@
                         </StackPanel>
                         <ui:Button Grid.Column="1"
                                    Margin="8,0,0,0"
-                                   Content="{loc:Loc Common.Open}"
+                                   Appearance="Secondary" Content="{loc:Loc Common.Open}"
                                    Command="{Binding OpenPacksCommand}" />
                     </Grid>
 
@@ -115,7 +115,7 @@
                         </StackPanel>
                         <ui:Button Grid.Column="1"
                                    Margin="8,0,0,0"
-                                   Content="{loc:Loc Common.Open}"
+                                   Appearance="Secondary" Content="{loc:Loc Common.Open}"
                                    Command="{Binding OpenBackupsCommand}" />
                     </Grid>
 
@@ -131,10 +131,10 @@
                         </StackPanel>
                         <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
                             <ui:Button Margin="8,0,0,0"
-                                       Content="{loc:Loc Settings.Config}"
+                                       Appearance="Transparent" Content="{loc:Loc Settings.Config}"
                                        Command="{Binding OpenConfigCommand}" />
                             <ui:Button Margin="8,0,0,0"
-                                       Content="{loc:Loc Settings.Logs}"
+                                       Appearance="Transparent" Content="{loc:Loc Settings.Logs}"
                                        Command="{Binding OpenLogsCommand}" />
                         </StackPanel>
                     </Grid>
@@ -151,7 +151,7 @@
                                Text="{loc:Loc Settings.HagsHint}" />
                     <ui:Button Margin="0,12,0,0"
                                HorizontalAlignment="Left"
-                               Content="{loc:Loc Settings.OpenHags}"
+                               Appearance="Secondary" Content="{loc:Loc Settings.OpenHags}"
                                Command="{Binding OpenHagsSettingsCommand}" />
                 </StackPanel>
             </Border>

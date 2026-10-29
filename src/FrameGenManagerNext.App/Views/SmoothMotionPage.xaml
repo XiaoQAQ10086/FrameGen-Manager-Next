@@ -33,19 +33,19 @@
                            Text="{loc:Loc SmoothMotion.Subtitle}" />
             </StackPanel>
             <ui:Button DockPanel.Dock="Right"
-                       Content="{loc:Loc Common.RefreshState}"
+                       Appearance="Secondary" Content="{loc:Loc Common.RefreshState}"
                        Command="{Binding RefreshStatesCommand}"
                        VerticalAlignment="Center" />
         </DockPanel>
 
         <TextBlock Grid.Row="1" Margin="0,16,0,0" Text="{Binding StatusText}" Opacity="0.8" />
 
-        <TextBlock Grid.Row="2"
-                   Margin="0,10,0,0"
-                   Foreground="{DynamicResource WarningBrush}"
-                   Text="{Binding Warnings}"
-                   TextWrapping="Wrap"
-                   Visibility="{Binding HasWarnings, Converter={StaticResource BoolToVis}}" />
+        <ui:InfoBar Margin="0,10,0,0"
+                   IsOpen="{Binding HasWarnings}"
+                   IsClosable="False"
+                   Severity="Warning"
+                   Title="{loc:Loc Common.Warning}"
+                   Message="{Binding Warnings}" />
 
         <Grid Grid.Row="3" Margin="0,16,0,0">
             <DataGrid ItemsSource="{Binding Games}"
@@ -88,19 +88,19 @@
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
                                 <WrapPanel>
-                                    <ui:Button Content="{loc:Loc SmoothMotion.Enable}"
+                                    <ui:Button Appearance="Secondary" Content="{loc:Loc SmoothMotion.Enable}"
                                                Margin="0,0,4,0"
                                                Padding="5,1"
                                                FontSize="11"
                                                Command="{Binding DataContext.EnableCommand, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}}"
                                                CommandParameter="{Binding}" />
-                                    <ui:Button Content="{loc:Loc SmoothMotion.Disable}"
+                                    <ui:Button Appearance="Transparent" Content="{loc:Loc SmoothMotion.Disable}"
                                                Margin="0,0,4,0"
                                                Padding="5,1"
                                                FontSize="11"
                                                Command="{Binding DataContext.DisableCommand, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}}"
                                                CommandParameter="{Binding}" />
-                                    <ui:Button Content="{loc:Loc Common.Restore}"
+                                    <ui:Button Appearance="Transparent" Content="{loc:Loc Common.Restore}"
                                                Padding="5,1"
                                                FontSize="11"
                                                Command="{Binding DataContext.RestoreCommand, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}}"

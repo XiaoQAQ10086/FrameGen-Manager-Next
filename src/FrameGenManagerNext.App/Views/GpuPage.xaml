@@ -38,7 +38,7 @@
                                Text="{loc:Loc Gpu.Subtitle}" />
                 </StackPanel>
                 <ui:Button DockPanel.Dock="Right"
-                           Content="{loc:Loc Common.Refresh}"
+                           Appearance="Secondary" Content="{loc:Loc Common.Refresh}"
                            Command="{Binding RefreshCommand}"
                            VerticalAlignment="Center" />
             </DockPanel>
@@ -132,7 +132,7 @@
                                   SelectedItem="{Binding SelectedSpoofPreset}" />
                         <ui:Button Grid.Column="1"
                                    Margin="8,0,0,0"
-                                   Content="{loc:Loc Gpu.ApplySpoof}"
+                                   Appearance="Primary" Content="{loc:Loc Gpu.ApplySpoof}"
                                    Command="{Binding ApplySpoofCommand}" />
                     </Grid>
 
@@ -148,9 +148,9 @@
 
                     <WrapPanel Margin="0,12,0,0">
                         <ui:Button Margin="0,0,8,0"
-                                   Content="{loc:Loc Gpu.RestoreDriver}"
+                                   Appearance="Secondary" Content="{loc:Loc Gpu.RestoreDriver}"
                                    Command="{Binding RestoreDriverCommand}" />
-                        <ui:Button Content="{loc:Loc Gpu.RestoreOriginal}"
+                        <ui:Button Appearance="Transparent" Content="{loc:Loc Gpu.RestoreOriginal}"
                                    IsEnabled="{Binding HasOriginalBackup}"
                                    Command="{Binding RestoreOriginalCommand}" />
                     </WrapPanel>

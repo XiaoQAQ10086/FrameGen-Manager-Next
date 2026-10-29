@@ -1,4 +1,5 @@
 using System.Windows.Controls;
+using System.Windows.Media.Animation;
 using FrameGenManagerNext.App.ViewModels;
 using FrameGenManagerNext.App.Views;
 using Microsoft.Extensions.DependencyInjection;
@@ -36,5 +37,12 @@ public partial class MainWindow : FluentWindow
             "about" => _services.GetRequiredService<AboutPage>(),
             _ => null,
         };
+
+        PageHost.BeginAnimation(
+            OpacityProperty,
+            new DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(160))
+            {
+                EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut },
+            });
     }
 }

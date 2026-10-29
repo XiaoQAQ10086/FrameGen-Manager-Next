@@ -30,6 +30,7 @@ internal static class StringCatalog
         ["Common.Files"] = ("文件", "Files"),
         ["Common.Checking"] = ("检查中", "Checking"),
         ["Common.Unknown"] = ("未知", "Unknown"),
+        ["Common.Warning"] = ("警告", "Warning"),
         ["Common.Installed"] = ("已安装", "Installed"),
         ["Common.NotInstalled"] = ("未安装", "Not installed"),
         ["Common.Enabled"] = ("已开启", "Enabled"),

@@ -23,9 +23,9 @@
                            Text="{loc:Loc Logs.Subtitle}" />
             </StackPanel>
             <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
-                <ui:Button Content="{loc:Loc Common.Refresh}" Command="{Binding RefreshCommand}" Margin="0,0,8,0" />
-                <ui:Button Content="{loc:Loc Logs.OpenFolder}" Command="{Binding OpenLogsFolderCommand}" Margin="0,0,8,0" />
-                <ui:Button Content="{loc:Loc Logs.Export}" Command="{Binding ExportCommand}" />
+                <ui:Button Appearance="Secondary" Content="{loc:Loc Common.Refresh}" Command="{Binding RefreshCommand}" Margin="0,0,8,0" />
+                <ui:Button Appearance="Secondary" Content="{loc:Loc Logs.OpenFolder}" Command="{Binding OpenLogsFolderCommand}" Margin="0,0,8,0" />
+                <ui:Button Appearance="Primary" Content="{loc:Loc Logs.Export}" Command="{Binding ExportCommand}" />
             </StackPanel>
         </DockPanel>
 
