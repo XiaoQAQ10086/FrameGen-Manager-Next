@@ -1,6 +1,7 @@
 using FrameGenManagerNext.Core.Features.App;
 using FrameGenManagerNext.Core.Features.Deployment;
 using FrameGenManagerNext.Core.Features.Diagnostics;
+using FrameGenManagerNext.Core.Features.Dlss5;
 using FrameGenManagerNext.Core.Features.Framegen;
 using FrameGenManagerNext.Core.Features.Gpu;
 using FrameGenManagerNext.Core.Features.Library;
@@ -8,10 +9,12 @@ using FrameGenManagerNext.Core.Features.Packs;
 using FrameGenManagerNext.Core.Features.SmoothMotion;
 using FrameGenManagerNext.Infrastructure.Deployment;
 using FrameGenManagerNext.Infrastructure.Diagnostics;
+using FrameGenManagerNext.Infrastructure.Dlss5;
 using FrameGenManagerNext.Infrastructure.Gpu;
 using FrameGenManagerNext.Infrastructure.Library;
 using FrameGenManagerNext.Infrastructure.Packs;
 using FrameGenManagerNext.Infrastructure.Paths;
+using FrameGenManagerNext.Infrastructure.Processes;
 using FrameGenManagerNext.Infrastructure.SmoothMotion;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -49,6 +52,11 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<SmProfileStore>();
         services.AddSingleton<INvApiSmoothMotion, NvApiSmoothMotion>();
         services.AddSingleton<ISmoothMotionDeploymentService, SmoothMotionDeploymentService>();
+
+        services.AddSingleton<IGraphicsApiProbe, GraphicsApiProbeService>();
+        services.AddSingleton<IProcessRunner, ProcessRunner>();
+        services.AddSingleton<IReShadeConfigService, ReShadeConfigService>();
+        services.AddSingleton<IDlss5DeploymentService, Dlss5DeploymentService>();
 
         return services;
     }

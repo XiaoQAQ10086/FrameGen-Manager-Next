@@ -229,7 +229,7 @@ public sealed class GameProbe : IGameProbe
         }
     }
 
-    private static GraphicsApi DetectApi(string exePath)
+    public static GraphicsApi DetectApi(string exePath)
     {
         var imports = PeImportReader.GetImportedDlls(exePath);
         var directory = Path.GetDirectoryName(exePath) ?? string.Empty;

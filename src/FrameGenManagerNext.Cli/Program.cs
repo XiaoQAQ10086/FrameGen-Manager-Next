@@ -98,6 +98,25 @@ if (args.Length >= 4 &&
         CancellationToken.None);
 }
 
+if (args.Length >= 4 &&
+    args[0].Equals("dlss5", StringComparison.OrdinalIgnoreCase))
+{
+    var action = args[1].ToLowerInvariant();
+    if (action is not ("inspect" or "install" or "restore"))
+    {
+        Console.Error.WriteLine("Usage: fgm-next dlss5 <inspect|install|restore> <target-dir> <game-exe>");
+        return 2;
+    }
+
+    using var services = CliServices.Create();
+    return await Dlss5Command.RunAsync(
+        services,
+        action,
+        args[2],
+        args[3],
+        CancellationToken.None);
+}
+
 if (args.Length >= 3 &&
     args[0].Equals("deploy", StringComparison.OrdinalIgnoreCase))
 {
@@ -222,6 +241,7 @@ Console.WriteLine("  fgm-next library list [--json]");
 Console.WriteLine("  fgm-next library scan [--json]");
 Console.WriteLine("  fgm-next logs tail [--lines N]");
 Console.WriteLine("  fgm-next sm <inspect|enable|disable|restore> <target-dir> <game-exe>");
+Console.WriteLine("  fgm-next dlss5 <inspect|install|restore> <target-dir> <game-exe>");
 Console.WriteLine("  fgm-next deploy <inspect|framegen|restore> <target-dir>");
 Console.WriteLine("      [--proxy version.dll] [--optimized 0-3] [--frames 3|5] [--preset A|B|C]");
 Console.WriteLine("      [--engine DLSS|XeSS] [--sr Off|M-INT8|L-INT8|M-FP16|L-FP16]");

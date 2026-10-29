@@ -58,6 +58,15 @@
 - 真机验证：RTX 3070 + 621.01，开启读回 1、关闭读回 0、还原后组件移除。
 - 测试增至 197 个；`smooth-motion.md` 行为规格。
 
+### Phase 4（DLSS5 核心）
+
+- 图形 API 探测接入 DLSS5：DX9/10/11/12、Vulkan、OpenGL 映射到 ReShade 参数。
+- ReShade 安装器：哈希校验、`--headless --api <api>`、240 秒超时、stdout/stderr 捕获、失败回滚。
+- 114 个 pack 文件部署：addon/helper/model/shaders/effects；`ReShade.ini` 搜索路径写入。
+- 状态检查与还原；ReShade 模块/INI 保留并提示。
+- CLI：`dlss5 inspect|install|restore`。
+- 真机验证：VTube Studio 临时副本，ReShade 安装成功、114 个文件部署、还原无冲突。
+
 ### Notes
 
 - 不读取或迁移旧版数据。

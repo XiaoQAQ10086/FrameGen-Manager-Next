@@ -69,9 +69,10 @@
 - [x] Smooth Motion 组件部署（RTX30 / RTX20 pack）与还原
 - [x] Smooth Motion 页面与 CLI（inspect / enable / disable / restore）
 - [x] 真机验证：RTX 3070，写 1 读回 1，写 0 读回 0，还原后组件移除
-- [ ] DLSS5：ReShade 安装器、哈希校验、shader/effects/model、还原
+- [x] DLSS5 核心：API 探测、ReShade 安装器、哈希校验、114 个文件部署、还原
+- [ ] DLSS5 页面与 GPU 闸门、ReShade 卸载/旧版清理
 
-验收（SM）：NVAPI 写后读回一致；组件部署/还原通过；197 个测试通过。
+验收（SM + DLSS5 核心）：NVAPI 写后读回一致；DLSS5 真机安装/还原通过；197 个测试通过。
 
 ## Phase 5 · 发布
 
