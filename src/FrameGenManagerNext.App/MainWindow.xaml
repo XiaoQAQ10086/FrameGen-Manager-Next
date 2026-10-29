@@ -12,7 +12,7 @@
                  ExtendsContentIntoTitleBar="True"
                  WindowBackdropType="None"
                  WindowCornerPreference="Round"
-                 Background="#101010">
+                 Background="{DynamicResource AppBackgroundBrush}">
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
@@ -28,8 +28,8 @@
             </Grid.ColumnDefinitions>
 
             <Border Grid.Column="0"
-                    Background="#161616"
-                    BorderBrush="#2A2A2A"
+                    Background="{DynamicResource SidebarBackgroundBrush}"
+                    BorderBrush="{DynamicResource CardBorderBrush}"
                     BorderThickness="0,0,1,0">
                 <Grid Margin="12,18,12,12">
                     <Grid.RowDefinitions>
@@ -56,7 +56,7 @@
                              SelectionChanged="NavList_SelectionChanged">
                         <ListBox.ItemContainerStyle>
                             <Style TargetType="ListBoxItem">
-                                <Setter Property="Foreground" Value="#D8D8D8" />
+                                <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
                                 <Setter Property="Padding" Value="12,9" />
                                 <Setter Property="HorizontalContentAlignment" Value="Stretch" />
                                 <Setter Property="Template">
@@ -71,10 +71,10 @@
                                             </Border>
                                             <ControlTemplate.Triggers>
                                                 <Trigger Property="IsMouseOver" Value="True">
-                                                    <Setter TargetName="Root" Property="Background" Value="#242424" />
+                                                    <Setter TargetName="Root" Property="Background" Value="{DynamicResource NavHoverBrush}" />
                                                 </Trigger>
                                                 <Trigger Property="IsSelected" Value="True">
-                                                    <Setter TargetName="Root" Property="Background" Value="#2B4C63" />
+                                                    <Setter TargetName="Root" Property="Background" Value="{DynamicResource AccentMutedBrush}" />
                                                     <Setter Property="Foreground" Value="White" />
                                                 </Trigger>
                                             </ControlTemplate.Triggers>
@@ -84,22 +84,59 @@
                             </Style>
                         </ListBox.ItemContainerStyle>
 
-                        <ListBoxItem Content="{loc:Loc Nav.Library}" Tag="library" />
-                        <ListBoxItem Content="{loc:Loc Nav.Gpu}" Tag="gpu" />
-                        <ListBoxItem Content="{loc:Loc Nav.SmoothMotion}" Tag="smooth-motion" />
-                        <ListBoxItem Content="{loc:Loc Nav.Dlss5}" Tag="dlss5" />
-                        <ListBoxItem Content="{loc:Loc Nav.Logs}" Tag="logs" />
-                        <ListBoxItem Content="{loc:Loc Nav.Settings}" Tag="settings" />
-                        <ListBoxItem Content="{loc:Loc Nav.About}" Tag="about" />
+                        <ListBoxItem Tag="library" AutomationProperties.Name="{loc:Loc Nav.Library}">
+                            <StackPanel Orientation="Horizontal">
+                                <ui:SymbolIcon Symbol="Library24" FontSize="16" Margin="0,0,10,0" />
+                                <TextBlock Text="{loc:Loc Nav.Library}" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </ListBoxItem>
+                        <ListBoxItem Tag="gpu" AutomationProperties.Name="{loc:Loc Nav.Gpu}">
+                            <StackPanel Orientation="Horizontal">
+                                <ui:SymbolIcon Symbol="Desktop24" FontSize="16" Margin="0,0,10,0" />
+                                <TextBlock Text="{loc:Loc Nav.Gpu}" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </ListBoxItem>
+                        <ListBoxItem Tag="smooth-motion" AutomationProperties.Name="{loc:Loc Nav.SmoothMotion}">
+                            <StackPanel Orientation="Horizontal">
+                                <ui:SymbolIcon Symbol="Play24" FontSize="16" Margin="0,0,10,0" />
+                                <TextBlock Text="{loc:Loc Nav.SmoothMotion}" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </ListBoxItem>
+                        <ListBoxItem Tag="dlss5" AutomationProperties.Name="{loc:Loc Nav.Dlss5}">
+                            <StackPanel Orientation="Horizontal">
+                                <ui:SymbolIcon Symbol="Grid24" FontSize="16" Margin="0,0,10,0" />
+                                <TextBlock Text="{loc:Loc Nav.Dlss5}" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </ListBoxItem>
+                        <ListBoxItem Tag="logs" AutomationProperties.Name="{loc:Loc Nav.Logs}">
+                            <StackPanel Orientation="Horizontal">
+                                <ui:SymbolIcon Symbol="Bug24" FontSize="16" Margin="0,0,10,0" />
+                                <TextBlock Text="{loc:Loc Nav.Logs}" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </ListBoxItem>
+                        <ListBoxItem Tag="settings" AutomationProperties.Name="{loc:Loc Nav.Settings}">
+                            <StackPanel Orientation="Horizontal">
+                                <ui:SymbolIcon Symbol="Settings24" FontSize="16" Margin="0,0,10,0" />
+                                <TextBlock Text="{loc:Loc Nav.Settings}" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </ListBoxItem>
+                        <ListBoxItem Tag="about" AutomationProperties.Name="{loc:Loc Nav.About}">
+                            <StackPanel Orientation="Horizontal">
+                                <ui:SymbolIcon Symbol="Info24" FontSize="16" Margin="0,0,10,0" />
+                                <TextBlock Text="{loc:Loc Nav.About}" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </ListBoxItem>
                     </ListBox>
 
                     <StackPanel Grid.Row="2" Margin="8,16,8,4">
                         <TextBlock Text="{loc:Loc Nav.Footer1}"
-                                   FontSize="11"
+                                   FontSize="10.5"
+                                   TextWrapping="Wrap"
                                    Opacity="0.5" />
                         <TextBlock Margin="0,4,0,0"
                                    Text="{loc:Loc Nav.Footer2}"
-                                   FontSize="11"
+                                   FontSize="10.5"
+                                   TextWrapping="Wrap"
                                    Opacity="0.35" />
                     </StackPanel>
                 </Grid>

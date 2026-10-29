@@ -272,7 +272,7 @@ internal static class StringCatalog
         ["Settings.Theme.Light"] = ("浅色", "Light"),
 
         ["About.Title"] = ("关于", "About"),
-        ["About.Subtitle"] = ("FrameGen Manager 的从零重写版，Phase 2 只读扫描切片。", "A from-scratch rewrite of FrameGen Manager. Phase 2 read-only scanning slice."),
+        ["About.Subtitle"] = ("帧生成、Smooth Motion 与 DLSS5 部署管理器。", "Deployment manager for frame generation, Smooth Motion and DLSS5."),
         ["About.Product"] = ("产品", "Product"),
         ["About.Version"] = ("版本", "Version"),
         ["About.Runtime"] = ("运行时", "Runtime"),

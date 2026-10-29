@@ -48,9 +48,14 @@ public sealed partial class GameEntryViewModel : ObservableObject
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HasCover))]
+    [NotifyPropertyChangedFor(nameof(HasNoCover))]
     private string? _coverPath;
 
     public bool HasCover => !string.IsNullOrWhiteSpace(CoverPath);
+
+    public bool HasNoCover => !HasCover;
+
+    public string CoverInitial => string.IsNullOrWhiteSpace(Name) ? "?" : Name[..1].ToUpperInvariant();
 
     public void ApplyInspection(DeploymentInspection inspection)
     {

@@ -42,7 +42,7 @@
 
         <TextBlock Grid.Row="2"
                    Margin="0,10,0,0"
-                   Foreground="#F0B429"
+                   Foreground="{DynamicResource WarningBrush}"
                    Text="{Binding Warnings}"
                    TextWrapping="Wrap"
                    Visibility="{Binding HasWarnings, Converter={StaticResource BoolToVis}}" />
@@ -57,16 +57,16 @@
                       GridLinesVisibility="None"
                       BorderThickness="0"
                       Background="Transparent"
-                      Foreground="#E8E8E8"
+                      Foreground="{DynamicResource TextPrimaryBrush}"
                       RowBackground="Transparent"
-                      AlternatingRowBackground="#1A1A1A"
+                      AlternatingRowBackground="{DynamicResource RowAlternateBrush}"
                       RowHeight="46"
                       EnableRowVirtualization="True"
                       Visibility="{Binding HasGames, Converter={StaticResource BoolToVis}}">
                 <DataGrid.ColumnHeaderStyle>
                     <Style TargetType="DataGridColumnHeader">
-                        <Setter Property="Background" Value="#252525" />
-                        <Setter Property="Foreground" Value="#D0D0D0" />
+                        <Setter Property="Background" Value="{DynamicResource GridHeaderBrush}" />
+                        <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
                         <Setter Property="BorderThickness" Value="0" />
                         <Setter Property="Padding" Value="8,7" />
                     </Style>
@@ -75,7 +75,7 @@
                     <Style TargetType="DataGridCell">
                         <Setter Property="BorderThickness" Value="0" />
                         <Setter Property="Padding" Value="8,4" />
-                        <Setter Property="Foreground" Value="#E8E8E8" />
+                        <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
                     </Style>
                 </DataGrid.CellStyle>
                 <DataGrid.Columns>

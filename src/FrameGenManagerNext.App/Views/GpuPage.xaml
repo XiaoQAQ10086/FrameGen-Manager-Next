@@ -11,11 +11,11 @@
     <UserControl.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVis" />
         <Style TargetType="Border" x:Key="Card">
-            <Setter Property="Background" Value="#1D1D1D" />
+            <Setter Property="Background" Value="{DynamicResource CardBackgroundBrush}" />
             <Setter Property="CornerRadius" Value="8" />
             <Setter Property="Padding" Value="16" />
             <Setter Property="Margin" Value="0,0,0,12" />
-            <Setter Property="BorderBrush" Value="#2A2A2A" />
+            <Setter Property="BorderBrush" Value="{DynamicResource CardBorderBrush}" />
             <Setter Property="BorderThickness" Value="1" />
         </Style>
         <Style TargetType="TextBlock" x:Key="Label">
@@ -156,7 +156,7 @@
                     </WrapPanel>
 
                     <TextBlock Margin="0,10,0,0"
-                               Foreground="#F0B429"
+                               Foreground="{DynamicResource WarningBrush}"
                                TextWrapping="Wrap"
                                Text="{Binding SpoofMessage}" />
                 </StackPanel>

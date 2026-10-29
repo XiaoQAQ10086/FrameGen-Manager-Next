@@ -45,9 +45,9 @@
                  FontFamily="Consolas"
                  FontSize="12"
                  Padding="12"
-                 Background="#151515"
-                 Foreground="#D6D6D6"
-                 BorderBrush="#2A2A2A"
+                 Background="{DynamicResource CardBackgroundBrush}"
+                 Foreground="{DynamicResource TextPrimaryBrush}"
+                 BorderBrush="{DynamicResource CardBorderBrush}"
                  BorderThickness="1"
                  Text="{Binding LogText, Mode=OneWay}" />
     </Grid>
