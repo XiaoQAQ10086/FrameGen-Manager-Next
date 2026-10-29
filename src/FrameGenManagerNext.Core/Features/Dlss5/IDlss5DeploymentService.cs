@@ -16,7 +16,8 @@ public interface IDlss5DeploymentService
         string targetDirectory,
         string exePath,
         IProgress<DeploymentProgress>? progress,
-        CancellationToken cancellationToken);
+        CancellationToken cancellationToken,
+        GraphicsApi? knownApi = null);
 
     Task<Result<Dlss5RestoreReport>> RestoreAsync(
         string targetDirectory,

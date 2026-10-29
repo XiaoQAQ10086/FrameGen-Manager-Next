@@ -38,9 +38,8 @@ export default {
           <footer class="modal-foot">
             <span class="muted small">${t('Deploy.CloseGameHint')}</span>
             <div class="foot-actions">
-              <button class="btn" data-action="modal-restore" type="button">${t('Common.Restore')}</button>
               <button class="btn danger" data-action="modal-uninstall" type="button">${t('Common.Uninstall')}</button>
-              <button class="btn primary" data-action="modal-install" type="button">${t('Common.Install')}</button>
+              <button class="btn success" data-action="modal-install" type="button">${t('Common.Install')}</button>
             </div>
           </footer>
         </section>
@@ -62,7 +61,7 @@ export default {
 
     function tile(game, index) {
       const media = game.cover
-        ? `<img src="${game.cover}" alt="">`
+        ? `<img src="${game.cover}" alt="" loading="lazy" decoding="async">`
         : `<div class="ph">${esc(game.initial)}</div>`;
       return `
         <button class="tile" data-action="open" data-id="${esc(game.id)}" type="button" style="--i:${index}">
@@ -87,6 +86,21 @@ export default {
       current = game;
       detailTitle.textContent = game.name;
       detailPath.textContent = prettyPath(game.targetDirectory);
+      const targets = game.targets?.length
+        ? game.targets
+        : (game.renderExe ? [{ path: game.renderExe, name: game.renderExe.split('\\').pop() }] : []);
+      const apiOptions = [
+        ['auto', t('Dlss5.ApiAuto')],
+        ['DX12', 'DX12'],
+        ['DX11', 'DX11'],
+        ['DX10', 'DX10'],
+        ['DX9', 'DX9'],
+        ['VULKAN', 'Vulkan'],
+        ['OPENGL', 'OpenGL'],
+      ];
+      const currentApi = game.api && game.api !== 'Unknown'
+        ? game.api.replace('Direct3D', 'DX').toUpperCase()
+        : 'auto';
       detailBody.innerHTML = `
         <div class="badges">
           <span class="badge">${esc(apiLabel(game.api))}</span>
@@ -94,8 +108,24 @@ export default {
           <span class="badge ${game.reShade ? 'ok' : 'dim'}">${esc(t('Dlss5.ReShade'))} ${game.reShade ? '✓' : '—'}</span>
           ${game.legacy ? `<span class="badge warn">${esc(t('Dlss5.RequiresUninstall'))}</span>` : ''}
         </div>
+        <div class="deploy-picker">
+          <label>${t('Dlss5.Target')}<select data-role="detail-target">
+            ${targets.map((target) => `<option value="${esc(target.path)}">${esc(target.name)}</option>`).join('')}
+          </select></label>
+          <label>${t('Dlss5.GraphicsApiLabel')}<select data-role="detail-api">
+            ${apiOptions.map(([value, label]) => `<option value="${value}">${label}</option>`).join('')}
+          </select></label>
+        </div>
         <p class="hint">${esc(t('Dlss5.Subtitle'))}</p>`;
-      q('[data-action="modal-install"]').disabled = game.available === false || game.legacy;
+      const targetSelect = detailBody.querySelector('[data-role="detail-target"]');
+      const apiSelect = detailBody.querySelector('[data-role="detail-api"]');
+      if (targetSelect && game.renderExe) {
+        targetSelect.value = game.renderExe;
+      }
+      if (apiSelect) {
+        apiSelect.value = apiOptions.some(([value]) => value === currentApi) ? currentApi : 'auto';
+      }
+      q('[data-action="modal-install"]').disabled = game.available === false || game.legacy || targets.length === 0;
       detail.classList.remove('hidden');
     }
 
@@ -116,11 +146,11 @@ export default {
       }
     }
 
-    async function action(command, id) {
+    async function action(command, id, extra = {}) {
       if (busy) return;
       busy = true;
       try {
-        const state = await api.request(command, { id });
+        const state = await api.request(command, { id, ...extra });
         games = state.games;
         render();
       } catch (error) {
@@ -164,18 +194,15 @@ export default {
           if (game) openDetail(game);
           return;
         }
-        if (name === 'modal-install' || name === 'modal-restore' || name === 'modal-uninstall') {
+        if (name === 'modal-install' || name === 'modal-uninstall') {
           if (!current) return;
           const game = current;
           if (name === 'modal-install') {
-            if (!(await confirmDialog(t('Dlss5.Title'), t('Dlss5.Confirm.Install').replace('{0}', game.name).replace('{1}', game.targetDirectory), t('Common.Install')))) return;
+            const target = detailBody.querySelector('[data-role="detail-target"]')?.value;
+            const api = detailBody.querySelector('[data-role="detail-api"]')?.value || 'auto';
+            if (!(await confirmDialog(t('Dlss5.Title'), t('Dlss5.Confirm.Install').replace('{0}', game.name).replace('{1}', prettyPath(target || game.targetDirectory)), t('Common.Install')))) return;
             closeDetail();
-            return action('dlss5.install', game.id);
-          }
-          if (name === 'modal-restore') {
-            if (!(await confirmDialog(t('Dlss5.Title'), t('Dlss5.Confirm.Restore').replace('{0}', game.name), t('Common.Restore')))) return;
-            closeDetail();
-            return action('dlss5.restore', game.id);
+            return action('dlss5.install', game.id, { target, api });
           }
           if (!(await confirmDialog(t('Dlss5.Title'), t('Dlss5.Confirm.Uninstall').replace('{0}', game.name), t('Common.Uninstall')))) return;
           closeDetail();

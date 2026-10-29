@@ -77,7 +77,7 @@ public sealed partial class GameLibraryService : IGameLibraryService, IDisposabl
 
         var entries = new List<GameEntry>();
         var completed = 0;
-        using var gate = new SemaphoreSlim(4);
+        using var gate = new SemaphoreSlim(6);
 
         var tasks = unique.Select(async candidate =>
         {

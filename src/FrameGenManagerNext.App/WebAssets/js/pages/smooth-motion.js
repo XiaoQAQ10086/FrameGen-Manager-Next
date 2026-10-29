@@ -78,7 +78,7 @@ export default {
       list.innerHTML = games.map((game, index) => `
         <article class="gcard" style="animation-delay:${Math.min(index * 35, 350)}ms">
           <div class="gtop">
-            ${game.cover ? `<img class="thumb" src="${game.cover}" alt="">` : `<div class="thumb ph2">${esc(game.initial)}</div>`}
+            ${game.cover ? `<img class="thumb" src="${game.cover}" alt="" loading="lazy" decoding="async">` : `<div class="thumb ph2">${esc(game.initial)}</div>`}
             <div class="ginfo">
               <div class="gname">${esc(game.name)}</div>
               <div class="badges">

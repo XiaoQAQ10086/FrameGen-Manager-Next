@@ -114,6 +114,7 @@ export default {
             <div><h2 data-role="modal-title"></h2><p class="muted" data-role="modal-path"></p></div>
             <button class="icon-btn" data-close type="button">✕</button>
           </header>
+          <div class="deploy-meta" data-role="deploy-meta"></div>
           <p class="hint">${esc(t('Deploy.DialogHint'))}</p>
           <div class="options" data-role="options"></div>
           <footer class="modal-foot">
@@ -146,6 +147,7 @@ export default {
     const removedCount = q('[data-role="removed-count"]');
     const modalTitle = q('[data-role="modal-title"]');
     const modalPath = q('[data-role="modal-path"]');
+    const deployMeta = q('[data-role="deploy-meta"]');
     const optionsRoot = q('[data-role="options"]');
     const dataPath = q('[data-role="data-path"]');
     if (dataPath) dataPath.textContent = prettyPath(ctx.info?.bundledPacksDirectory || ctx.info?.packsDirectory || ctx.info?.dataRoot || '');
@@ -197,7 +199,7 @@ export default {
         return `
         <article class="gcard" style="animation-delay:${Math.min(index * 35, 350)}ms">
           <div class="gtop">
-            ${game.cover ? `<img class="thumb" src="${game.cover}" alt="">` : `<div class="thumb ph2">${esc(game.initial)}</div>`}
+            ${game.cover ? `<img class="thumb" src="${game.cover}" alt="" loading="lazy" decoding="async">` : `<div class="thumb ph2">${esc(game.initial)}</div>`}
             <div class="ginfo">
               <div class="gname">${esc(game.name)}</div>
               <div class="badges">
@@ -258,6 +260,9 @@ export default {
       current = game;
       modalTitle.textContent = game.name;
       modalPath.textContent = prettyPath(game.targetDirectory);
+      deployMeta.innerHTML = `
+        <div class="kv2"><span>${esc(t('Dlss5.Target'))}</span><b class="badge" title="${esc(prettyPath(game.renderExe || game.targetDirectory))}">${esc(game.renderExe ? game.renderExe.split('\\').pop() : t('Library.RenderExeMissing'))}</b></div>
+        <div class="kv2"><span>${esc(t('Dlss5.GraphicsApiLabel'))}</span><b class="badge">${esc(apiKeys[game.api] || game.api || t('Common.Unknown'))}</b></div>`;
       optionsRoot.innerHTML = optionFields();
       overlay.classList.remove('hidden');
       syncEngine();

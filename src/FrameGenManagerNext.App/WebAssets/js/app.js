@@ -5,7 +5,6 @@ import framegen from './pages/framegen.js';
 import smoothMotion from './pages/smooth-motion.js';
 import dlss5 from './pages/dlss5.js';
 import logs from './pages/logs.js';
-import settings from './pages/settings.js';
 import about from './pages/about.js';
 import donate from './pages/donate.js';
 
@@ -14,7 +13,6 @@ const pages = {
   'smooth-motion': smoothMotion,
   dlss5,
   logs,
-  settings,
   about,
   donate,
 };
@@ -33,10 +31,6 @@ const context = {
   get info() { return state.info; },
   refreshInfo: loadInfo,
   navigate,
-  reloadAll: async () => {
-    resetPages();
-    await navigate(state.current, false);
-  },
 };
 
 function updateSidebar() {

@@ -1,5 +1,7 @@
+using System.IO;
 using System.Text.Json;
 using FrameGenManagerNext.Domain.Deployment;
+using FrameGenManagerNext.Domain.Library;
 
 namespace FrameGenManagerNext.App.Web;
 
@@ -15,6 +17,7 @@ public sealed partial class AppWebBridge
         {
             var cover = settings.ShowCovers ? await GetCoverUrlAsync(game) : null;
             var initial = string.IsNullOrWhiteSpace(game.Name) ? "?" : game.Name[..1].ToUpperInvariant();
+            var targets = EnumerateExeTargets(game.TargetDirectory);
 
             if (string.IsNullOrWhiteSpace(game.RenderExePath))
             {
@@ -25,6 +28,8 @@ public sealed partial class AppWebBridge
                     targetDirectory = game.TargetDirectory,
                     initial,
                     cover,
+                    renderExe = game.RenderExePath,
+                    targets,
                     available = false,
                     state = "Unavailable",
                     api = game.GraphicsApi.ToString(),
@@ -49,6 +54,8 @@ public sealed partial class AppWebBridge
                     targetDirectory = game.TargetDirectory,
                     initial,
                     cover,
+                    renderExe = game.RenderExePath,
+                    targets,
                     available = false,
                     state = inspection.Error!.Code.ToString(),
                     api = game.GraphicsApi.ToString(),
@@ -66,6 +73,8 @@ public sealed partial class AppWebBridge
                 targetDirectory = game.TargetDirectory,
                 initial,
                 cover,
+                renderExe = game.RenderExePath,
+                targets,
                 available = true,
                 state = inspection.Value.FileState.ToString(),
                 api = inspection.Value.Api.ToString(),
@@ -86,6 +95,9 @@ public sealed partial class AppWebBridge
             throw new BridgeException(Domain.Errors.ErrorCode.FileNotFound, "render executable not found");
         }
 
+        var targetExe = ReadTargetExe(payload, game);
+        var knownApi = ReadGraphicsApi(payload);
+
         return await RunExclusiveAsync(async () =>
         {
             var progress = new Progress<DeploymentProgress>(update =>
@@ -94,9 +106,10 @@ public sealed partial class AppWebBridge
             });
             var result = await _dlss5.InstallAsync(
                 game.TargetDirectory,
-                game.RenderExePath,
+                targetExe,
                 progress,
-                CancellationToken.None);
+                CancellationToken.None,
+                knownApi);
             if (result.IsFailure)
             {
                 throw new BridgeException(result.Error!.Code, result.Error.Diagnostic ?? "install failed");
@@ -159,5 +172,66 @@ public sealed partial class AppWebBridge
 
             return await BuildDlss5StateAsync();
         });
+    }
+
+    private static List<object> EnumerateExeTargets(string directory)
+    {
+        try
+        {
+            if (!Directory.Exists(directory))
+            {
+                return [];
+            }
+
+            return Directory.EnumerateFiles(directory, "*.exe", SearchOption.TopDirectoryOnly)
+                .Select(path => new { path, name = Path.GetFileName(path) })
+                .OrderBy(item => item.name, StringComparer.CurrentCultureIgnoreCase)
+                .Take(64)
+                .Cast<object>()
+                .ToList();
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
+        {
+            return [];
+        }
+    }
+
+    private static string ReadTargetExe(JsonElement payload, GameEntry game)
+    {
+        var requested = payload.TryGetProperty("target", out var value) ? value.GetString() : null;
+        if (string.IsNullOrWhiteSpace(requested))
+        {
+            return game.RenderExePath!;
+        }
+
+        var path = Path.GetFullPath(requested);
+        var directory = Path.GetDirectoryName(path);
+        if (!File.Exists(path) ||
+            !string.Equals(directory, Path.GetFullPath(game.TargetDirectory), StringComparison.OrdinalIgnoreCase))
+        {
+            throw new BridgeException(Domain.Errors.ErrorCode.InvalidPath, "target executable is outside the game folder");
+        }
+
+        return path;
+    }
+
+    private static GraphicsApi? ReadGraphicsApi(JsonElement payload)
+    {
+        var value = payload.TryGetProperty("api", out var element) ? element.GetString() : null;
+        if (string.IsNullOrWhiteSpace(value) || value.Equals("auto", StringComparison.OrdinalIgnoreCase))
+        {
+            return null;
+        }
+
+        return value.ToUpperInvariant() switch
+        {
+            "DX9" or "D3D9" => GraphicsApi.Direct3D9,
+            "DX10" or "D3D10" => GraphicsApi.Direct3D10,
+            "DX11" or "D3D11" => GraphicsApi.Direct3D11,
+            "DX12" or "D3D12" => GraphicsApi.Direct3D12,
+            "VULKAN" => GraphicsApi.Vulkan,
+            "OPENGL" or "GL" => GraphicsApi.OpenGl,
+            _ => null,
+        };
     }
 }

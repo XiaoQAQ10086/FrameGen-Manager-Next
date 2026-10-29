@@ -82,14 +82,17 @@ public sealed partial class Dlss5DeploymentService : IDlss5DeploymentService
         string targetDirectory,
         string exePath,
         IProgress<DeploymentProgress>? progress,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        GraphicsApi? knownApi = null)
     {
         if (!File.Exists(exePath))
         {
             return Result<Dlss5Report>.Fail(new AppError(ErrorCode.InvalidPath, $"executable not found: {exePath}"));
         }
 
-        var api = await DetectApiAsync(exePath, true, cancellationToken);
+        var api = knownApi is { } apiValue && apiValue != GraphicsApi.Unknown
+            ? Result<GraphicsApi>.Ok(apiValue)
+            : await DetectApiAsync(exePath, true, cancellationToken);
         if (api.IsFailure)
         {
             return Result<Dlss5Report>.Fail(api.Error!);
