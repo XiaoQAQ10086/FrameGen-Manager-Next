@@ -55,32 +55,50 @@ export default {
 
     root.innerHTML = `
       <section class="page">
-        <header class="page-head">
-          <h1>${esc(t('Library.Title'))}</h1>
-          <div class="head-actions">
+        <header class="listhead">
+          <div class="lh-text">
+            <h1>${esc(t('Library.Title'))}</h1>
+            <div class="sub" data-role="status">${esc(t('Library.Status.Loading'))}</div>
+          </div>
+          <div class="lh-actions">
             <button class="btn" data-action="add" type="button">${esc(t('Library.Add'))}</button>
             <button class="btn" data-action="removed" type="button">${esc(t('Library.Removed'))}<span class="count" data-role="removed-count"></span></button>
-            <button class="btn" data-action="cancel" type="button" disabled>${esc(t('Common.Cancel'))}</button>
+            <button class="btn hidden" data-action="cancel" type="button" disabled>${esc(t('Common.Cancel'))}</button>
             <button class="btn scan" data-action="scan" type="button">${esc(t('Library.Scan'))}</button>
           </div>
         </header>
         <div class="notice hidden" data-role="notice"></div>
         <main class="layout">
           <aside class="side">
-            <section class="panel" data-role="gpu"></section>
-            <section class="panel spoof">
-              <details>
-                <summary>${esc(t('Gpu.SpoofTitle'))}</summary>
-                <div data-role="spoof"></div>
-              </details>
+            <section class="panel" data-role="gpu">
+              <div class="ctitle">${esc(t('Gpu.SettingsTitle'))}</div>
+              <div class="hint">${esc(t('Gpu.Status.Reading'))}</div>
+            </section>
+            <section class="panel">
+              <div class="ctitle">${esc(t('Gpu.SpoofTitle'))}</div>
+              <div data-role="spoof"><div class="hint">${esc(t('Gpu.Status.Reading'))}</div></div>
+            </section>
+            <section class="panel">
+              <div class="ctitle">${esc(t('Library.AssetsFolder'))}</div>
+              <div class="path" data-role="data-path"></div>
+              <button class="btn wide" data-action="open-data" type="button">${esc(t('Library.OpenFolder'))}</button>
             </section>
           </aside>
           <section class="content">
-            <div class="statusline">
-              <span data-role="status">${esc(t('Library.Status.Loading'))}</span>
-              <div class="progress"><i data-role="page-progress"></i></div>
+            <div class="game-list" data-role="games">
+              <div class="gcard skeleton-card">
+                <div class="sk-cover"></div>
+                <div class="sk-body"><i></i><i></i><i></i></div>
+              </div>
+              <div class="gcard skeleton-card">
+                <div class="sk-cover"></div>
+                <div class="sk-body"><i></i><i></i><i></i></div>
+              </div>
+              <div class="gcard skeleton-card">
+                <div class="sk-cover"></div>
+                <div class="sk-body"><i></i><i></i><i></i></div>
+              </div>
             </div>
-            <div class="game-list" data-role="games"></div>
             <div class="empty hidden" data-role="empty">
               <p>${esc(t('Library.Empty'))}</p>
               <button class="btn scan" data-action="scan" type="button">${esc(t('Library.Scan'))}</button>
@@ -127,21 +145,18 @@ export default {
     const modalTitle = q('[data-role="modal-title"]');
     const modalPath = q('[data-role="modal-path"]');
     const optionsRoot = q('[data-role="options"]');
+    const dataPath = q('[data-role="data-path"]');
+    if (dataPath) dataPath.textContent = ctx.info?.dataRoot || '';
 
     function setBusy(value) {
       busy = value;
       root.querySelectorAll('[data-action="scan"], [data-action="add"]').forEach((button) => {
         button.disabled = value;
       });
-      q('[data-action="cancel"]').disabled = !value;
     }
 
     function status(message) {
       q('[data-role="status"]').textContent = message;
-    }
-
-    function progress(value) {
-      q('[data-role="page-progress"]').style.width = `${Math.max(0, Math.min(100, value))}%`;
     }
 
     function notice(message) {
@@ -153,49 +168,47 @@ export default {
     function renderGpu() {
       const g = gpu.gpu;
       const s = gpu.spoof;
+      const hagsClass = g.hags === 'on' ? 'ok' : (g.hags === 'off' ? 'warn' : 'dim');
       q('[data-role="gpu"]').innerHTML = `
-        <div class="panel-head"><h2>${esc(t('Gpu.Title'))}</h2></div>
-        <div class="gpu-name">${esc(g.name)}</div>
-        <div class="kv"><span>${esc(t('Gpu.DriverVersion'))}</span><b>${esc(g.driver || t('Gpu.Status.UnknownDriver'))}</b></div>
-        <div class="kv stacked"><span>${esc(t('Gpu.Route'))}</span><b>${esc(t(routeKeys[g.route] || 'Gpu.Route.Unknown'))}</b></div>
-        <div class="hags">
-          <div class="kv"><span>${esc(t('Gpu.HagsShort'))}</span><b>${esc(t(hagsKeys[g.hags] || 'Gpu.Hags.Unknown'))}</b></div>
-          <button class="btn small ghost" data-action="open-hags" type="button">${esc(t('Gpu.GoSettings'))}</button>
-        </div>`;
+        <div class="ctitle">${esc(t('Gpu.SettingsTitle'))}</div>
+        <div class="chips">
+          <span class="chip gpu-chip" title="${esc(g.name)}">${esc(g.name)}</span>
+        </div>
+        <div class="kv2"><span>${esc(t('Gpu.DriverVersion'))}</span><b class="badge">${esc(g.driver || t('Gpu.Status.UnknownDriver'))}</b></div>
+        <div class="kv2"><span>${esc(t('Gpu.Hags'))}</span><b class="badge ${hagsClass}">${esc(t(hagsKeys[g.hags] || 'Gpu.Hags.Unknown'))}</b></div>
+        <button class="btn wide" data-action="open-hags" type="button">${esc(t('Gpu.GoSettings'))}</button>`;
       q('[data-role="spoof"]').innerHTML = `
-        <div class="kv"><span>${esc(t('Gpu.Card'))}</span><b>${esc(s.current || '—')}</b></div>
-        <div class="kv"><span>${esc(t('Gpu.DriverNameLabel'))}</span><b>${esc(s.driver || '—')}</b></div>
-        <p class="muted small">${esc(t('Gpu.Spoof.Warning'))}</p>
-        <select data-role="spoof-preset">${s.presets.map((preset) => `<option>${esc(preset)}</option>`).join('')}</select>
-        <div class="actions" style="margin-top:10px;flex-wrap:wrap;gap:6px">
+        <div class="kv2"><span>${esc(t('Gpu.Card'))}</span><b class="badge" title="${esc(s.current || '—')}">${esc(s.current || '—')}</b></div>
+        <div class="kv2"><span>${esc(t('Gpu.DriverNameLabel'))}</span><b class="badge" title="${esc(s.driver || '—')}">${esc(s.driver || '—')}</b></div>
+        <p class="hint">${esc(t('Gpu.Spoof.Warning'))}</p>
+        <div class="row">
+          <select data-role="spoof-preset">${s.presets.map((preset) => `<option>${esc(preset)}</option>`).join('')}</select>
           <button class="btn primary small" data-action="spoof-apply" type="button">${esc(t('Gpu.ApplySpoof'))}</button>
-          <button class="btn small" data-action="spoof-driver" type="button">${esc(t('Gpu.RestoreDriver'))}</button>
-          <button class="btn ghost small" data-action="spoof-original" type="button" ${s.hasOriginal ? '' : 'disabled'}>${esc(t('Gpu.RestoreOriginal'))}</button>
-        </div>`;
+        </div>
+        <button class="btn wide" data-action="spoof-driver" type="button" ${s.spoofed ? '' : 'disabled'}>${esc(t('Gpu.RestoreDriver'))}</button>`;
     }
 
     function renderGames() {
       const list = q('[data-role="games"]');
       list.innerHTML = games.map((game, index) => `
-        <article class="game-card" style="animation-delay:${Math.min(index * 26, 160)}ms">
-          ${game.cover ? `<img class="cover" src="${game.cover}" alt="">` : `<div class="cover-fallback">${esc(game.initial)}</div>`}
-          <span></span>
-          <div class="game-main">
-            <div class="game-info">
-              <div class="game-name">${esc(game.name)}</div>
-              <div class="game-path" title="${esc(game.targetDirectory)}">${esc(game.targetDirectory)}</div>
-              <div class="chips">
-                <span class="chip">${esc(t(launcherKeys[game.launcher] || 'Common.Unknown'))}</span>
-                <span class="chip">${esc(apiKeys[game.api] || game.api || '未知')}</span>
-                <span class="chip ${game.state === 'Installed' ? 'ok' : (game.state === 'Partial' || game.state === 'Conflict' ? 'warn' : '')}">${esc(t(stateKeys[game.state] || 'State.NotDeployed'))}</span>
+        <article class="gcard" style="animation-delay:${Math.min(index * 35, 350)}ms">
+          <div class="gtop">
+            ${game.cover ? `<img class="thumb" src="${game.cover}" alt="">` : `<div class="thumb ph2">${esc(game.initial)}</div>`}
+            <div class="ginfo">
+              <div class="gname">${esc(game.name)}</div>
+              <div class="badges">
+                <span class="badge">${esc(t(launcherKeys[game.launcher] || 'Common.Unknown'))}</span>
+                <span class="badge">${esc(apiKeys[game.api] || game.api || '未知')}</span>
+                <span class="badge ${game.state === 'Installed' ? 'ok' : (game.state === 'Partial' || game.state === 'Conflict' ? 'warn' : 'dim')}">${esc(t(stateKeys[game.state] || 'State.NotDeployed'))}</span>
               </div>
             </div>
-            <div class="actions">
-              <button class="btn small primary" data-action="deploy" data-id="${esc(game.id)}" type="button">${esc(t('Common.Deploy'))}</button>
-              <button class="btn small" data-action="restore" data-id="${esc(game.id)}" type="button">${esc(t('Common.Restore'))}</button>
-              <button class="btn small" data-action="open" data-id="${esc(game.id)}" type="button">${esc(t('Library.OpenFolder'))}</button>
-              <button class="btn small danger" data-action="remove" data-id="${esc(game.id)}" type="button">${esc(t('Common.Remove'))}</button>
-            </div>
+          </div>
+          <div class="gpath" title="${esc(game.targetDirectory)}">${esc(game.targetDirectory)}</div>
+          <div class="gactions">
+            <button class="btn small primary" data-action="deploy" data-id="${esc(game.id)}" type="button">${esc(t('Common.Deploy'))}</button>
+            <button class="btn small" data-action="restore" data-id="${esc(game.id)}" type="button">${esc(t('Common.Restore'))}</button>
+            <button class="btn small" data-action="open" data-id="${esc(game.id)}" type="button">${esc(t('Library.OpenFolder'))}</button>
+            <button class="btn small danger" data-action="remove" data-id="${esc(game.id)}" type="button">${esc(t('Common.Remove'))}</button>
           </div>
         </article>`).join('');
       q('[data-role="empty"]').classList.toggle('hidden', games.length > 0);
@@ -285,21 +298,32 @@ export default {
     }
 
     async function load() {
+      // Let the game list paint as soon as its data arrives; GPU probing may take
+      // longer because it queries the driver.
+      const gpuPromise = api.request('gpu.state').catch((error) => {
+        ui.toast(error.message || error.code || 'GPU 状态读取失败', 'error');
+        return null;
+      });
+
       try {
-        const [gpuState, gamesState] = await Promise.all([
-          api.request('gpu.state'),
-          api.request('games.state'),
-        ]);
-        gpu = gpuState;
+        const gamesState = await api.request('games.state');
         options = gamesState.options;
         games = gamesState.games;
         removed = gamesState.removed || [];
-        renderGpu();
         renderGames();
         renderRemoved();
         status(t('Library.Status.Loaded').replace('{0}', games.length));
         notice(gamesState.warning);
+
+        const gpuState = await gpuPromise;
+        if (gpuState) {
+          gpu = gpuState;
+          renderGpu();
+        }
       } catch (error) {
+        games = [];
+        removed = [];
+        renderGames();
         status(error.code || '加载失败');
         notice(error.message);
       }
@@ -329,11 +353,16 @@ export default {
 
     async function scan() {
       const buttons = root.querySelectorAll('[data-action="scan"]');
+      const cancel = q('[data-action="cancel"]');
       buttons.forEach((button) => button.classList.add('loading'));
+      cancel.classList.remove('hidden');
+      cancel.disabled = false;
       try {
         await run(() => api.request('games.scan'), null);
       } finally {
         buttons.forEach((button) => button.classList.remove('loading'));
+        cancel.classList.add('hidden');
+        cancel.disabled = true;
       }
     }
 
@@ -368,6 +397,10 @@ export default {
         await api.request('settings.openHags').catch(() => {});
         return;
       }
+      if (action === 'open-data') {
+        await api.request('app.openData').catch((error) => ui.toast(error.message, 'error'));
+        return;
+      }
       if (action === 'spoof-apply') {
         const preset = q('[data-role="spoof-preset"]').value;
         if (!confirm(t('Gpu.Spoof.ConfirmApply').replace('{0}', preset).replace('{1}', t('Gpu.Spoof.Warning')))) return;
@@ -380,11 +413,10 @@ export default {
         }
         return;
       }
-      if (action === 'spoof-driver' || action === 'spoof-original') {
-        const targetName = action === 'spoof-driver' ? 'driver' : 'original';
+      if (action === 'spoof-driver') {
         if (!confirm(t('Gpu.Spoof.ConfirmDriver'))) return;
         try {
-          gpu = await api.request('gpu.spoof.restore', { target: targetName });
+          gpu = await api.request('gpu.spoof.restore', { target: 'driver' });
           renderGpu();
           ui.toast(t('Gpu.Spoof.Done'));
         } catch (error) {

@@ -30,13 +30,18 @@ public partial class MainWindow : FluentWindow
         _bridge = bridge;
         _logger = logger;
         InitializeComponent();
+        LoadingTitle.Text = L.T("Startup.Title");
+        LoadingText.Text = L.T("Startup.Loading");
         _bridge.Failed += OnBridgeFailed;
         Loaded += OnLoaded;
+        SizeChanged += OnWindowSizeChanged;
         Closed += OnClosed;
     }
 
     private async void OnLoaded(object sender, RoutedEventArgs e)
     {
+        UpdateLoadingSize();
+        LoadingPopup.IsOpen = true;
         if (!await TryInitializeAsync(Browser, additionalBrowserArguments: null))
         {
             await RecoverAsync();
@@ -50,6 +55,7 @@ public partial class MainWindow : FluentWindow
         try
         {
             await _bridge.InitializeAsync(webView, additionalBrowserArguments);
+            LoadingPopup.IsOpen = false;
             BrowserHost.Visibility = Visibility.Visible;
             Fallback.Visibility = Visibility.Collapsed;
             RetryButton.IsEnabled = true;
@@ -176,6 +182,7 @@ public partial class MainWindow : FluentWindow
     private void ShowFallback(string message, string? detail, bool canRetry)
     {
         DetachBrowser();
+        LoadingPopup.IsOpen = false;
         BrowserHost.Visibility = Visibility.Collapsed;
         Fallback.Visibility = Visibility.Visible;
         FallbackTitle.Text = L.T("Fallback.Title");
@@ -240,9 +247,25 @@ public partial class MainWindow : FluentWindow
         }
     }
 
+    private void OnWindowSizeChanged(object sender, SizeChangedEventArgs e)
+    {
+        UpdateLoadingSize();
+    }
+
+    private void UpdateLoadingSize()
+    {
+        if (BrowserHost.ActualWidth > 0 && BrowserHost.ActualHeight > 0)
+        {
+            Loading.Width = BrowserHost.ActualWidth;
+            Loading.Height = BrowserHost.ActualHeight;
+        }
+    }
+
     private void OnClosed(object? sender, EventArgs e)
     {
         _closing = true;
+        LoadingPopup.IsOpen = false;
+        SizeChanged -= OnWindowSizeChanged;
         _bridge.Failed -= OnBridgeFailed;
     }
 }

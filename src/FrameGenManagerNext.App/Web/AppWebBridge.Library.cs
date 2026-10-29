@@ -20,36 +20,50 @@ public sealed partial class AppWebBridge
     {
         var settings = _settings.Load();
         var library = await _library.LoadAsync(CancellationToken.None);
-        var games = new List<object>();
-        var installed = 0;
+        var visible = library.EnumerateVisibleGames().ToList();
+        var entries = new object?[visible.Count];
+        var states = new DeploymentState[visible.Count];
 
-        foreach (var game in library.EnumerateVisibleGames())
+        // Inspecting every game and loading covers used to be sequential, which made
+        // the library appear several seconds after the window opened.
+        using var gate = new SemaphoreSlim(4);
+        await Task.WhenAll(visible.Select(async (game, index) =>
         {
-            var inspection = await _frameGen.InspectAsync(
-                game.TargetDirectory,
-                FrameGenOptions.Default,
-                CancellationToken.None);
-            var state = inspection.IsSuccess ? inspection.Value.State : DeploymentState.NotDeployed;
-            if (state == DeploymentState.Installed)
+            await gate.WaitAsync();
+            try
             {
-                installed++;
-            }
+                var inspection = await _frameGen.InspectAsync(
+                    game.TargetDirectory,
+                    FrameGenOptions.Default,
+                    CancellationToken.None);
+                var state = inspection.IsSuccess
+                    ? inspection.Value.State
+                    : DeploymentState.NotDeployed;
+                states[index] = state;
 
-            games.Add(new
+                entries[index] = new
+                {
+                    id = game.Id,
+                    name = game.Name,
+                    launcher = game.Launcher.ToString(),
+                    api = game.GraphicsApi.ToString(),
+                    state = state.ToString(),
+                    targetDirectory = game.TargetDirectory,
+                    renderExe = game.RenderExePath,
+                    initial = string.IsNullOrWhiteSpace(game.Name) ? "?" : game.Name[..1].ToUpperInvariant(),
+                    cover = settings.ShowCovers
+                        ? await GetCoverDataUrlAsync(game)
+                        : null,
+                };
+            }
+            finally
             {
-                id = game.Id,
-                name = game.Name,
-                launcher = game.Launcher.ToString(),
-                api = game.GraphicsApi.ToString(),
-                state = state.ToString(),
-                targetDirectory = game.TargetDirectory,
-                renderExe = game.RenderExePath,
-                initial = string.IsNullOrWhiteSpace(game.Name) ? "?" : game.Name[..1].ToUpperInvariant(),
-                cover = settings.ShowCovers
-                    ? await GetCoverDataUrlAsync(game)
-                    : null,
-            });
-        }
+                gate.Release();
+            }
+        }));
+
+        var games = entries.Select(entry => entry!).ToList();
+        var installed = states.Count(state => state == DeploymentState.Installed);
 
         var removed = library.EnumerateRemovedGames()
             .OrderBy(game => game.Name, StringComparer.CurrentCultureIgnoreCase)

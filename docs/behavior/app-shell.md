@@ -4,7 +4,9 @@
 
 1. `Program.Main` 先执行 Velopack 启动钩子，再尝试获取 `Local\FrameGenManagerNext.App` 互斥体。
 2. 已有实例在运行时，新进程直接退出，不创建窗口、不打开第二份 WebView2 配置。
-3. 主机启动后读取设置语言，创建 `MainWindow`，在 `Loaded` 事件中初始化 WebView2。
+3. 主机启动后读取设置语言，创建 `MainWindow`，在 `Loaded` 事件中显示加载层并初始化 WebView2。
+4. 加载层是独立 `Popup`，不会把 WebView2 的父容器设为 `Collapsed`（WebView2 在不可见时会延迟初始化）；WebView2 就绪后关闭加载层。
+5. 页面自身也带启动骨架；游戏库状态读取完成前显示骨架卡片，不显示空白页。
 
 ## WebView2 配置
 

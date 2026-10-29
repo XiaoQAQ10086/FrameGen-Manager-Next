@@ -118,6 +118,10 @@ async function bootstrap() {
     const initial = location.hash.replace('#', '') || 'framegen';
     await navigate(pages[initial] ? initial : 'framegen', false);
   } catch (error) {
+    const view = document.getElementById('view');
+    if (view) {
+      view.innerHTML = `<div class="boot"><div class="boot-title">界面加载失败</div><div class="boot-sub">${ui.escapeHtml(error.message || String(error))}</div></div>`;
+    }
     ui.toast(`初始化失败：${error.message || error}`, 'error');
   }
 }

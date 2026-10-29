@@ -30,6 +30,43 @@
             </Grid>
         </Grid>
 
+        <Popup x:Name="LoadingPopup"
+               PlacementTarget="{Binding ElementName=BrowserHost}"
+               Placement="Relative"
+               HorizontalOffset="0"
+               VerticalOffset="0"
+               StaysOpen="True"
+               AllowsTransparency="True"
+               PopupAnimation="Fade"
+               IsOpen="False">
+            <Border x:Name="Loading"
+                    Background="#F6F8FB">
+                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                    <Image Source="pack://application:,,,/Assets/app.png"
+                           Width="64"
+                           Height="64"
+                           RenderOptions.BitmapScalingMode="HighQuality" />
+                    <TextBlock x:Name="LoadingTitle"
+                               Margin="0,18,0,0"
+                               Text="正在启动 FrameGen Manager-Next"
+                               FontSize="17"
+                               FontWeight="SemiBold"
+                               Foreground="#181C24"
+                               HorizontalAlignment="Center" />
+                    <ui:ProgressRing Margin="0,16,0,0"
+                                     Width="26"
+                                     Height="26"
+                                     IsIndeterminate="True" />
+                    <TextBlock x:Name="LoadingText"
+                               Margin="0,14,0,0"
+                               Text="正在加载本地游戏库…"
+                               FontSize="12.5"
+                               Foreground="#667085"
+                               HorizontalAlignment="Center" />
+                </StackPanel>
+            </Border>
+        </Popup>
+
         <Border x:Name="Fallback"
                 Grid.Row="1"
                 Background="#F6F8FB"
