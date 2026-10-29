@@ -51,9 +51,23 @@ public sealed partial class AppWebBridge
             });
         }
 
+        var removed = library.EnumerateRemovedGames()
+            .OrderBy(game => game.Name, StringComparer.CurrentCultureIgnoreCase)
+            .Select(game => new
+            {
+                id = game.Id,
+                name = game.Name,
+                launcher = game.Launcher.ToString(),
+                api = game.GraphicsApi.ToString(),
+                targetDirectory = game.TargetDirectory,
+                initial = string.IsNullOrWhiteSpace(game.Name) ? "?" : game.Name[..1].ToUpperInvariant(),
+            })
+            .ToList();
+
         return new
         {
             games,
+            removed,
             counts = new
             {
                 total = games.Count,
@@ -143,6 +157,21 @@ public sealed partial class AppWebBridge
         return await RunExclusiveAsync(async () =>
         {
             await _library.RemoveAsync(id, CancellationToken.None);
+            return await BuildGamesStateAsync();
+        });
+    }
+
+    private async Task<object?> RestoreGameAsync(System.Text.Json.JsonElement payload)
+    {
+        var id = IdOf(payload);
+        if (string.IsNullOrWhiteSpace(id))
+        {
+            throw new BridgeException(Domain.Errors.ErrorCode.InvalidArgument, "missing game id");
+        }
+
+        return await RunExclusiveAsync(async () =>
+        {
+            await _library.SetIgnoredAsync(id, ignored: false, CancellationToken.None);
             return await BuildGamesStateAsync();
         });
     }

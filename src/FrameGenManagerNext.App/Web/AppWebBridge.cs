@@ -224,6 +224,7 @@ public sealed partial class AppWebBridge : IDisposable
             "games.cancelScan" => CancelScan(),
             "games.add" => await AddGameAsync(),
             "games.remove" => await RemoveGameAsync(payload),
+            "games.restore" => await RestoreGameAsync(payload),
             "games.openFolder" => await OpenGameFolderAsync(payload),
             "framegen.deploy" => await DeployFrameGenAsync(payload),
             "framegen.restore" => await RestoreFrameGenAsync(payload),

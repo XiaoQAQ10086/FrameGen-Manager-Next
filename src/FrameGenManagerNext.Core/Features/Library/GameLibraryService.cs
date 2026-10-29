@@ -182,27 +182,28 @@ public sealed partial class GameLibraryService : IGameLibraryService, IDisposabl
         try
         {
             var library = await _store.LoadAsync(cancellationToken);
-            var manual = library.Manual
-                .Where(game => !string.Equals(game.Id, gameId, StringComparison.OrdinalIgnoreCase))
-                .ToList();
-
-            var ignored = library.IgnoredIds
-                .Where(id => !string.Equals(id, gameId, StringComparison.OrdinalIgnoreCase))
-                .ToList();
-
-            var isScanned = library.Scanned.Any(game => string.Equals(game.Id, gameId, StringComparison.OrdinalIgnoreCase));
-            if (isScanned)
+            var exists = library.Manual
+                .Concat(library.Scanned)
+                .Any(game => string.Equals(game.Id, gameId, StringComparison.OrdinalIgnoreCase));
+            if (!exists)
             {
-                ignored.Add(gameId);
+                return library;
             }
+
+            // Manual entries stay in the library so the removed-games view can
+            // restore them; the ignored id hides them from the normal list.
+            var ignored = library.IgnoredIds
+                .Append(gameId)
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToList();
 
             var updated = new GameLibrary
             {
                 SchemaVersion = library.SchemaVersion,
                 LastScanUtc = library.LastScanUtc,
                 Scanned = library.Scanned,
-                Manual = manual,
-                IgnoredIds = ignored.Distinct(StringComparer.OrdinalIgnoreCase).ToList(),
+                Manual = library.Manual,
+                IgnoredIds = ignored,
             };
 
             await _store.SaveAsync(updated, cancellationToken);

@@ -30,4 +30,18 @@ public sealed class GameLibrary
             }
         }
     }
+
+    public IEnumerable<GameEntry> EnumerateRemovedGames()
+    {
+        var ignored = new HashSet<string>(IgnoredIds, StringComparer.OrdinalIgnoreCase);
+        var seenIds = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        foreach (var game in Manual.Concat(Scanned))
+        {
+            if (ignored.Contains(game.Id) && seenIds.Add(game.Id))
+            {
+                yield return game;
+            }
+        }
+    }
 }

@@ -23,7 +23,7 @@ Steam junk 跳过（精确名称）：`steamworks common redistributables`、`st
 
 - 启动器结果按 `InstallDirectory`（完整路径、大小写不敏感）去重；优先级 Steam > Epic > WeGame > 散装。
 - 手动条目优先于扫描条目；`GameLibrary.EnumerateVisibleGames()` 按安装目录去重。
-- 删除扫描条目写入 `ignoredIds`；删除手动条目直接移除。
+- 移除游戏只把 id 写入 `ignoredIds`，手动条目仍保留在 `Manual` 中；`EnumerateRemovedGames()` 按 id 去重列出这些条目，恢复时从 `ignoredIds` 删除即可重新显示。
 - 缓存文件损坏时重命名为 `library.json.bad`，本次从空库开始，不覆盖原文件。
 
 ## 渲染 EXE 选择

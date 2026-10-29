@@ -37,14 +37,6 @@ const routeKeys = {
   Unknown: 'Gpu.Route.Unknown',
 };
 
-const gateKeys = {
-  Supported: 'Gpu.Gate.Supported',
-  DriverTooOld: 'Gpu.Gate.DriverTooOld',
-  GpuNotSupported: 'Gpu.Gate.GpuNotSupported',
-  GpuNotNeeded: 'Gpu.Gate.GpuNotNeeded',
-  Unknown: 'Gpu.Gate.Unknown',
-};
-
 const hagsKeys = {
   on: 'Gpu.Hags.On',
   off: 'Gpu.Hags.Off',
@@ -55,8 +47,8 @@ export default {
   async mount(root, ctx) {
     const { api, t, ui } = ctx;
     let games = [];
+    let removed = [];
     let gpu = null;
-    let spoof = null;
     let options = null;
     let busy = false;
     let current = null;
@@ -64,12 +56,10 @@ export default {
     root.innerHTML = `
       <section class="page">
         <header class="page-head">
-          <div>
-            <h1>${esc(t('Library.Title'))}</h1>
-            <p>${esc(t('Library.Subtitle'))}</p>
-          </div>
+          <h1>${esc(t('Library.Title'))}</h1>
           <div class="head-actions">
             <button class="btn" data-action="add" type="button">${esc(t('Library.Add'))}</button>
+            <button class="btn" data-action="removed" type="button">${esc(t('Library.Removed'))}<span class="count" data-role="removed-count"></span></button>
             <button class="btn" data-action="cancel" type="button" disabled>${esc(t('Common.Cancel'))}</button>
             <button class="btn scan" data-action="scan" type="button">${esc(t('Library.Scan'))}</button>
           </div>
@@ -115,10 +105,25 @@ export default {
             </div>
           </footer>
         </section>
+      </div>
+      <div class="overlay hidden" data-role="removed-overlay">
+        <section class="modal removed-modal" role="dialog" aria-modal="true">
+          <header class="modal-head">
+            <div>
+              <h2>${esc(t('Library.RemovedTitle'))}</h2>
+              <p class="muted">${esc(t('Library.RemovedHint'))}</p>
+            </div>
+            <button class="icon-btn" data-close-removed type="button">✕</button>
+          </header>
+          <div class="removed-list" data-role="removed-list"></div>
+        </section>
       </div>`;
 
     const q = (selector) => root.querySelector(selector);
     const overlay = q('[data-role="overlay"]');
+    const removedOverlay = q('[data-role="removed-overlay"]');
+    const removedList = q('[data-role="removed-list"]');
+    const removedCount = q('[data-role="removed-count"]');
     const modalTitle = q('[data-role="modal-title"]');
     const modalPath = q('[data-role="modal-path"]');
     const optionsRoot = q('[data-role="options"]');
@@ -149,18 +154,13 @@ export default {
       const g = gpu.gpu;
       const s = gpu.spoof;
       q('[data-role="gpu"]').innerHTML = `
-        <div class="panel-head"><div><h2>${esc(t('Gpu.Title'))}</h2><p class="muted">${esc(t('Gpu.Status.Refreshed'))}</p></div>
-          <button class="btn small" data-action="refresh-gpu" type="button">${esc(t('Common.Refresh'))}</button></div>
+        <div class="panel-head"><h2>${esc(t('Gpu.Title'))}</h2></div>
         <div class="gpu-name">${esc(g.name)}</div>
         <div class="kv"><span>${esc(t('Gpu.DriverVersion'))}</span><b>${esc(g.driver || t('Gpu.Status.UnknownDriver'))}</b></div>
-        <div class="gate-row">
-          <div><span class="muted small">${esc(t('Gpu.FrameGeneration'))}</span><b>${esc(t(gateKeys[g.frameGeneration] || 'Gpu.Gate.Unknown'))}</b></div>
-          <div><span class="muted small">${esc(t('Gpu.SmoothMotion'))}</span><b>${esc(t(gateKeys[g.smoothMotion] || 'Gpu.Gate.Unknown'))}</b></div>
-        </div>
-        <div class="kv"><span>${esc(t('Gpu.Route'))}</span><b>${esc(t(routeKeys[g.route] || 'Gpu.Route.Unknown'))}</b></div>
+        <div class="kv stacked"><span>${esc(t('Gpu.Route'))}</span><b>${esc(t(routeKeys[g.route] || 'Gpu.Route.Unknown'))}</b></div>
         <div class="hags">
-          <div class="kv"><span>${esc(t('Gpu.Hags'))}</span><b>${esc(t(hagsKeys[g.hags] || 'Gpu.Hags.Unknown'))}</b></div>
-          <button class="btn small ghost" data-action="open-hags" type="button">${esc(t('Settings.OpenHags'))}</button>
+          <div class="kv"><span>${esc(t('Gpu.HagsShort'))}</span><b>${esc(t(hagsKeys[g.hags] || 'Gpu.Hags.Unknown'))}</b></div>
+          <button class="btn small ghost" data-action="open-hags" type="button">${esc(t('Gpu.GoSettings'))}</button>
         </div>`;
       q('[data-role="spoof"]').innerHTML = `
         <div class="kv"><span>${esc(t('Gpu.Card'))}</span><b>${esc(s.current || '—')}</b></div>
@@ -191,15 +191,48 @@ export default {
               </div>
             </div>
             <div class="actions">
-              <button class="btn small" data-action="deploy" data-id="${esc(game.id)}" type="button">${esc(t('Common.Deploy'))}</button>
-              <button class="btn small ghost" data-action="restore" data-id="${esc(game.id)}" type="button">${esc(t('Common.Restore'))}</button>
-              <button class="btn small ghost" data-action="open" data-id="${esc(game.id)}" type="button">${esc(t('Common.Open'))}</button>
-              <button class="btn small ghost" data-action="remove" data-id="${esc(game.id)}" type="button">${esc(t('Common.Remove'))}</button>
+              <button class="btn small primary" data-action="deploy" data-id="${esc(game.id)}" type="button">${esc(t('Common.Deploy'))}</button>
+              <button class="btn small" data-action="restore" data-id="${esc(game.id)}" type="button">${esc(t('Common.Restore'))}</button>
+              <button class="btn small" data-action="open" data-id="${esc(game.id)}" type="button">${esc(t('Library.OpenFolder'))}</button>
+              <button class="btn small danger" data-action="remove" data-id="${esc(game.id)}" type="button">${esc(t('Common.Remove'))}</button>
             </div>
           </div>
         </article>`).join('');
       q('[data-role="empty"]').classList.toggle('hidden', games.length > 0);
       list.classList.toggle('hidden', games.length === 0);
+      updateRemovedCount();
+    }
+
+    function updateRemovedCount() {
+      removedCount.textContent = removed.length > 0 ? ` (${removed.length})` : '';
+    }
+
+    function renderRemoved() {
+      removedList.innerHTML = removed.length > 0
+        ? removed.map((game) => `
+          <div class="removed-row">
+            <div class="removed-initial">${esc(game.initial)}</div>
+            <div class="removed-info">
+              <div class="removed-name">${esc(game.name)}</div>
+              <div class="game-path" title="${esc(game.targetDirectory)}">${esc(game.targetDirectory)}</div>
+              <div class="chips">
+                <span class="chip">${esc(t(launcherKeys[game.launcher] || 'Common.Unknown'))}</span>
+                <span class="chip">${esc(apiKeys[game.api] || game.api || '未知')}</span>
+              </div>
+            </div>
+            <button class="btn small primary" data-action="restore-removed" data-id="${esc(game.id)}" type="button">${esc(t('Library.RestoreRemoved'))}</button>
+          </div>`).join('')
+        : `<p class="muted removed-empty">${esc(t('Library.RemovedEmpty'))}</p>`;
+      updateRemovedCount();
+    }
+
+    function openRemoved() {
+      renderRemoved();
+      removedOverlay.classList.remove('hidden');
+    }
+
+    function closeRemoved() {
+      removedOverlay.classList.add('hidden');
     }
 
     function openModal(game) {
@@ -260,8 +293,10 @@ export default {
         gpu = gpuState;
         options = gamesState.options;
         games = gamesState.games;
+        removed = gamesState.removed || [];
         renderGpu();
         renderGames();
+        renderRemoved();
         status(t('Library.Status.Loaded').replace('{0}', games.length));
         notice(gamesState.warning);
       } catch (error) {
@@ -277,8 +312,10 @@ export default {
         const next = await action();
         if (next?.games) {
           games = next.games;
+          removed = next.removed || removed;
           options = next.options || options;
           renderGames();
+          renderRemoved();
           status(t('Library.Status.Loaded').replace('{0}', games.length));
         }
         if (next?.options) options = next.options;
@@ -314,13 +351,17 @@ export default {
         await api.request('games.cancelScan').catch(() => {});
         return;
       }
-      if (action === 'refresh-gpu') {
-        try {
-          gpu = await api.request('gpu.state');
-          renderGpu();
-        } catch (error) {
-          ui.toast(error.message, 'error');
-        }
+      if (action === 'removed') {
+        openRemoved();
+        return;
+      }
+      if (action === 'restore-removed') {
+        const game = removed.find((item) => item.id === id);
+        if (!game) return;
+        await run(
+          () => api.request('games.restore', { id }),
+          t('Library.Status.Restored').replace('{0}', game.name),
+        );
         return;
       }
       if (action === 'open-hags') {
@@ -393,10 +434,17 @@ export default {
     overlay.addEventListener('click', (event) => {
       if (event.target === overlay) closeModal();
     });
+    removedOverlay.querySelectorAll('[data-close-removed]').forEach((button) => {
+      button.addEventListener('click', closeRemoved);
+    });
+    removedOverlay.addEventListener('click', (event) => {
+      if (event.target === removedOverlay) closeRemoved();
+    });
 
     await load();
     return () => {
       closeModal();
+      closeRemoved();
       root.removeEventListener('click', onRootClick);
       optionsRoot.removeEventListener('change', onOptionsChange);
     };
