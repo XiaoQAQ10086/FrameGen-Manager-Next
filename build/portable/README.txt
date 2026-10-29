@@ -2,7 +2,8 @@ FrameGen Manager-Next（便携版 / Portable）
 =========================================
 
 启动：
-  双击 FrameGenManager-Next.exe
+  双击 “FrameGen Manager-Next.lnk”，或直接双击 FrameGenManager-Next.exe。
+  fgm-next.exe 是命令行；fgm-next-elevated.exe 是提权助手，不要直接运行。
 
 便携模式：
   本目录下的 portable.flag 会让程序把数据写到 .\data\

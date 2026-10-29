@@ -5,6 +5,7 @@
     <TargetFramework>net10.0-windows</TargetFramework>
     <UseWPF>true</UseWPF>
     <AssemblyName>FrameGenManager-Next</AssemblyName>
+    <ApplicationIcon>Assets\app.ico</ApplicationIcon>
     <StartupObject>FrameGenManagerNext.App.Program</StartupObject>
   </PropertyGroup>
 
@@ -15,6 +16,11 @@
     <PackageReference Include="Serilog.Sinks.File" />
     <PackageReference Include="Velopack" />
     <PackageReference Include="WPF-UI" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="Assets\app.ico" />
+    <Resource Include="Assets\app.png" />
   </ItemGroup>
 
   <ItemGroup>

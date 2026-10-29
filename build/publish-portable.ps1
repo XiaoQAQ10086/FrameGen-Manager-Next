@@ -77,6 +77,14 @@ Invoke-Publish -Project $elevatedProject
 Set-Content -LiteralPath (Join-Path $destination 'portable.flag') -Value 'FrameGen Manager-Next portable build' -Encoding ascii
 Copy-Item -LiteralPath (Join-Path $PSScriptRoot 'portable\README.txt') -Destination (Join-Path $destination 'README.txt')
 
+$shell = New-Object -ComObject WScript.Shell
+$shortcut = $shell.CreateShortcut((Join-Path $destination 'FrameGen Manager-Next.lnk'))
+$shortcut.TargetPath = Join-Path $destination 'FrameGenManager-Next.exe'
+$shortcut.WorkingDirectory = $destination
+$shortcut.IconLocation = (Join-Path $destination 'FrameGenManager-Next.exe') + ',0'
+$shortcut.Description = 'FrameGen Manager-Next'
+$shortcut.Save()
+
 $packsSource = Join-Path $root 'packs'
 if (Test-Path -LiteralPath $packsSource) {
     Copy-Item -LiteralPath $packsSource -Destination (Join-Path $destination 'packs') -Recurse -Force
