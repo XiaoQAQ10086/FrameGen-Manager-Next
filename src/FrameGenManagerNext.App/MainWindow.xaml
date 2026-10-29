@@ -10,6 +10,9 @@
                  MinWidth="980"
                  MinHeight="640"
                  WindowStartupLocation="CenterScreen"
+                 FontFamily="Segoe UI Variable Display, Segoe UI"
+                 UseLayoutRounding="True"
+                 SnapsToDevicePixels="True"
                  ExtendsContentIntoTitleBar="True"
                  WindowBackdropType="None"
                  WindowCornerPreference="Round"
@@ -91,12 +94,6 @@
                             <StackPanel Orientation="Horizontal">
                                 <ui:SymbolIcon Symbol="Library24" FontSize="16" Margin="0,0,10,0" />
                                 <TextBlock Text="{loc:Loc Nav.Library}" VerticalAlignment="Center" />
-                            </StackPanel>
-                        </ListBoxItem>
-                        <ListBoxItem Tag="gpu" AutomationProperties.Name="{loc:Loc Nav.Gpu}">
-                            <StackPanel Orientation="Horizontal">
-                                <ui:SymbolIcon Symbol="Desktop24" FontSize="16" Margin="0,0,10,0" />
-                                <TextBlock Text="{loc:Loc Nav.Gpu}" VerticalAlignment="Center" />
                             </StackPanel>
                         </ListBoxItem>
                         <ListBoxItem Tag="smooth-motion" AutomationProperties.Name="{loc:Loc Nav.SmoothMotion}">

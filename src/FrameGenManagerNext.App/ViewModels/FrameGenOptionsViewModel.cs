@@ -34,7 +34,10 @@ public sealed partial class FrameGenOptionsViewModel : ObservableObject
     private string _preset = "A";
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsXeSsEngine))]
     private string _engine = "DLSS";
+
+    public bool IsXeSsEngine => string.Equals(Engine, "XeSS", StringComparison.OrdinalIgnoreCase);
 
     [ObservableProperty]
     private string _superResolutionMode = "Off";

@@ -27,7 +27,7 @@
 
         <DockPanel Grid.Row="0" LastChildFill="False">
             <StackPanel DockPanel.Dock="Left">
-                <TextBlock Text="{loc:Loc Dlss5.Title}" FontSize="26" FontWeight="SemiBold" />
+                <TextBlock Text="{loc:Loc Dlss5.Title}" FontSize="30" FontWeight="SemiBold" />
                 <TextBlock Margin="0,4,0,0"
                            Opacity="0.6"
                            Text="{loc:Loc Dlss5.Subtitle}" />

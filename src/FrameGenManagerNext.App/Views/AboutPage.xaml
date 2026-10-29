@@ -11,9 +11,9 @@
     <UserControl.Resources>
         <Style TargetType="Border" x:Key="Card">
             <Setter Property="Background" Value="{DynamicResource CardBackgroundBrush}" />
-            <Setter Property="CornerRadius" Value="8" />
-            <Setter Property="Padding" Value="16" />
-            <Setter Property="Margin" Value="0,0,0,12" />
+            <Setter Property="CornerRadius" Value="14" />
+            <Setter Property="Padding" Value="18" />
+            <Setter Property="Margin" Value="0,0,0,14" />
             <Setter Property="BorderBrush" Value="{DynamicResource CardBorderBrush}" />
             <Setter Property="BorderThickness" Value="1" />
         </Style>
@@ -30,7 +30,7 @@
 
     <ScrollViewer VerticalScrollBarVisibility="Auto">
         <StackPanel Margin="18" MaxWidth="760" HorizontalAlignment="Left">
-            <TextBlock Text="{loc:Loc About.Title}" FontSize="26" FontWeight="SemiBold" />
+            <TextBlock Text="{loc:Loc About.Title}" FontSize="30" FontWeight="SemiBold" />
             <TextBlock Margin="0,4,0,0"
                        Opacity="0.6"
                        Text="{loc:Loc About.Subtitle}" />

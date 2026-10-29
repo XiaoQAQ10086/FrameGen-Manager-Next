@@ -47,9 +47,22 @@ public sealed partial class LibraryViewModel : ObservableObject, IDisposable
     [NotifyCanExecuteChangedFor(nameof(ScanCommand))]
     [NotifyCanExecuteChangedFor(nameof(AddGameCommand))]
     [NotifyCanExecuteChangedFor(nameof(RemoveGameCommand))]
-    [NotifyCanExecuteChangedFor(nameof(DeployGameCommand))]
+    [NotifyCanExecuteChangedFor(nameof(OpenDeployDialogCommand))]
+    [NotifyCanExecuteChangedFor(nameof(ConfirmDeployCommand))]
     [NotifyCanExecuteChangedFor(nameof(RestoreGameCommand))]
     private bool _isBusy;
+
+    [ObservableProperty]
+    private bool _isDeployDialogOpen;
+
+    [ObservableProperty]
+    private string _deployTargetName = string.Empty;
+
+    [ObservableProperty]
+    private string _deployTargetDirectory = string.Empty;
+
+    [ObservableProperty]
+    private GameEntryViewModel? _deployTarget;
 
     [ObservableProperty]
     private string _statusText = L.T("Library.Status.NotLoaded");
@@ -208,24 +221,35 @@ public sealed partial class LibraryViewModel : ObservableObject, IDisposable
     }
 
     [RelayCommand(CanExecute = nameof(CanModify))]
-    private async Task DeployGameAsync(GameEntryViewModel? game)
+    private void OpenDeployDialog(GameEntryViewModel? game)
     {
         if (game is null)
         {
             return;
         }
 
-        var choice = MessageBox.Show(
-            L.F("Library.Confirm.Deploy", game.TargetDirectory),
-            L.T("Library.Dialog.DeployTitle"),
-            MessageBoxButton.YesNo,
-            MessageBoxImage.Warning);
+        DeployTarget = game;
+        DeployTargetName = game.Name;
+        DeployTargetDirectory = game.TargetDirectory;
+        IsDeployDialogOpen = true;
+    }
 
-        if (choice != MessageBoxResult.Yes)
+    [RelayCommand]
+    private void CloseDeployDialog()
+    {
+        IsDeployDialogOpen = false;
+    }
+
+    [RelayCommand(CanExecute = nameof(CanModify))]
+    private async Task ConfirmDeployAsync()
+    {
+        var game = DeployTarget;
+        if (game is null)
         {
             return;
         }
 
+        IsDeployDialogOpen = false;
         IsBusy = true;
         ProgressValue = 0;
         Warnings = string.Empty;
@@ -295,11 +319,7 @@ public sealed partial class LibraryViewModel : ObservableObject, IDisposable
             MessageBoxButton.YesNo,
             MessageBoxImage.Question);
 
-        if (choice != MessageBoxResult.Yes)
-        {
-            return;
-        }
-
+        IsDeployDialogOpen = false;
         IsBusy = true;
         ProgressValue = 0;
         Warnings = string.Empty;

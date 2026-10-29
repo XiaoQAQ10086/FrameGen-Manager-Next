@@ -11,10 +11,11 @@ FrameGen Manager-Next（便携版 / Portable）
   不写注册表；删除整个文件夹即可卸载。
 
 界面：
-  游戏库 / GPU 状态 / Smooth Motion / DLSS5 / 日志与诊断 / 设置 / 关于
-  游戏库支持扫描 Steam、Epic、WeGame、散装目录，也可手动添加 EXE；
+  帧生成 / Smooth Motion / DLSS5 / 日志与诊断 / 设置 / 关于
+  “帧生成”页左侧显示 GPU 状态、HAGS 和显卡名称伪装；右侧是游戏列表。
+  游戏列表支持扫描 Steam、Epic、WeGame、散装目录，也可手动添加 EXE；
   Steam 游戏会显示本地或缓存封面。
-  GPU 页面可选择性修改显卡名称（需要管理员权限，可随时还原）。
+  点某个游戏的“部署”后才会弹出代理、优化、帧数、Preset、引擎等参数。
   设置页可切换主题、启动自动扫描、封面开关，并打开数据目录/HAGS 设置。
 
 命令行：
@@ -30,7 +31,8 @@ FrameGen Manager-Next（便携版 / Portable）
   fgm-next.exe pack validate <pack目录> [--no-hash] [--schema-only]
 
 部署：
-  游戏库中的“部署”会写入 FrameGen 组件（代理槽/优化/帧数/Preset/引擎/SR 可选）。
+  “帧生成”页点“部署”后，在弹出的面板里调整代理槽/优化/帧数/Preset/引擎/SR，
+  确认后写入 FrameGen 组件。
   “还原”会恢复部署前备份的原文件；用户改过的文件会保留并提示冲突。
   Smooth Motion 页面可逐游戏开启/关闭/还原。
   DLSS5 页面可逐游戏安装/还原/卸载；卸载会清理 ReShade、GITC 组件和旧版 RenoDX 残留。

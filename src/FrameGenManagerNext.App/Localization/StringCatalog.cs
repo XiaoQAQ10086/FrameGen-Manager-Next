@@ -4,14 +4,14 @@ internal static class StringCatalog
 {
     internal static readonly Dictionary<string, (string Chinese, string English)> Entries = new(StringComparer.Ordinal)
     {
-        ["Nav.Library"] = ("游戏库", "Library"),
+        ["Nav.Library"] = ("帧生成", "Frame generation"),
         ["Nav.Gpu"] = ("GPU 状态", "GPU"),
         ["Nav.SmoothMotion"] = ("Smooth Motion", "Smooth Motion"),
         ["Nav.Dlss5"] = ("DLSS5 / ReShade", "DLSS5 / ReShade"),
         ["Nav.Logs"] = ("日志与诊断", "Logs & diagnostics"),
         ["Nav.Settings"] = ("设置", "Settings"),
         ["Nav.About"] = ("关于", "About"),
-        ["Nav.Footer1"] = ("Phase 5 · 设置 / 伪装 / 更新", "Phase 5 · Settings / Spoofing / Updates"),
+        ["Nav.Footer1"] = ("安全部署 · 可回滚", "Safe deployment · rollback ready"),
         ["Nav.Footer2"] = ("部署前会备份原文件", "Original files are backed up before deployment"),
 
         ["Common.Refresh"] = ("刷新", "Refresh"),
@@ -54,10 +54,12 @@ internal static class StringCatalog
         ["State.CheckFailed"] = ("检查失败", "Check failed"),
         ["State.DeployFailed"] = ("部署失败", "Deployment failed"),
 
-        ["Library.Title"] = ("游戏库", "Library"),
-        ["Library.Subtitle"] = ("扫描只读；部署会写入游戏目录并备份原文件，还原可恢复。", "Scanning is read-only. Deployment writes to the game folder and backs up originals; restore can revert them."),
+        ["Library.Title"] = ("帧生成", "Frame generation"),
+        ["Library.Subtitle"] = ("选择游戏后点“部署”，再调整帧生成参数。", "Pick a game, click Deploy, then adjust frame generation options."),
         ["Library.Scan"] = ("扫描游戏", "Scan games"),
         ["Library.Add"] = ("添加游戏", "Add game"),
+        ["Deploy.DialogHint"] = ("以下选项只影响本次部署；请确认游戏已关闭。", "These options apply to this deployment only. Close the game before continuing."),
+        ["Deploy.CloseGameHint"] = ("部署前请关闭游戏", "Close the game before deploying"),
         ["Library.Proxy"] = ("代理", "Proxy"),
         ["Library.Optimized"] = ("优化", "Optimize"),
         ["Library.Frames"] = ("帧数", "Frames"),
@@ -120,7 +122,7 @@ internal static class StringCatalog
         ["Gpu.SmoothMotion"] = ("Smooth Motion", "Smooth Motion"),
         ["Gpu.SmoothMotionHint"] = ("需要 616.64 或更新驱动；仅 RTX 20/30。", "Requires 616.64 or newer; RTX 20/30 only."),
         ["Gpu.Hags"] = ("硬件加速 GPU 计划（HAGS）", "Hardware-accelerated GPU scheduling (HAGS)"),
-        ["Gpu.SpoofTitle"] = ("显卡名称伪装（高级 · 可选）", "GPU name spoofing (advanced, optional)"),
+        ["Gpu.SpoofTitle"] = ("显卡名称伪装（高级）", "GPU name spoofing"),
         ["Gpu.ApplySpoof"] = ("应用伪装", "Apply spoof"),
         ["Gpu.DriverNameLabel"] = ("驱动记录名称：", "Driver name: "),
         ["Gpu.AdminLabel"] = ("管理员权限：", "Administrator: "),

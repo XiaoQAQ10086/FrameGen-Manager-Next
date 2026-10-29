@@ -29,7 +29,6 @@ public partial class MainWindow : FluentWindow
         PageHost.Content = tag switch
         {
             "library" => _services.GetRequiredService<LibraryPage>(),
-            "gpu" => _services.GetRequiredService<GpuPage>(),
             "smooth-motion" => _services.GetRequiredService<SmoothMotionPage>(),
             "dlss5" => _services.GetRequiredService<Dlss5Page>(),
             "logs" => _services.GetRequiredService<LogsPage>(),

@@ -69,7 +69,6 @@ public partial class App : Application
                 services.AddSingleton<SettingsViewModel>();
 
                 services.AddSingleton<LibraryPage>();
-                services.AddSingleton<GpuPage>();
                 services.AddSingleton<SmoothMotionPage>();
                 services.AddSingleton<Dlss5Page>();
                 services.AddSingleton<LogsPage>();

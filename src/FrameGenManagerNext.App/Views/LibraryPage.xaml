@@ -5,9 +5,10 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
              xmlns:loc="clr-namespace:FrameGenManagerNext.App.Localization"
+             xmlns:views="clr-namespace:FrameGenManagerNext.App.Views"
              mc:Ignorable="d"
-             d:DesignHeight="700"
-             d:DesignWidth="1000">
+             d:DesignHeight="760"
+             d:DesignWidth="1180">
     <UserControl.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVis" />
         <Style x:Key="TrimmedCell" TargetType="TextBlock">
@@ -15,12 +16,15 @@
             <Setter Property="VerticalAlignment" Value="Center" />
             <Setter Property="ToolTip" Value="{Binding Text, RelativeSource={RelativeSource Self}}" />
         </Style>
+        <Style x:Key="FieldLabel" TargetType="TextBlock">
+            <Setter Property="Opacity" Value="0.55" />
+            <Setter Property="FontSize" Value="11" />
+            <Setter Property="Margin" Value="0,0,0,5" />
+        </Style>
     </UserControl.Resources>
 
-    <Grid Margin="18">
+    <Grid Margin="22,18,22,18">
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
@@ -28,191 +32,346 @@
 
         <DockPanel Grid.Row="0" LastChildFill="False">
             <StackPanel DockPanel.Dock="Left">
-                <TextBlock Text="{loc:Loc Library.Title}" FontSize="26" FontWeight="SemiBold" />
-                <TextBlock Margin="0,4,0,0"
-                           Opacity="0.6"
+                <TextBlock Text="{loc:Loc Library.Title}"
+                           FontSize="30"
+                           FontWeight="SemiBold" />
+                <TextBlock Margin="0,5,0,0"
+                           Opacity="0.55"
+                           FontSize="13"
                            Text="{loc:Loc Library.Subtitle}" />
             </StackPanel>
-            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
-                <ui:Button Appearance="Primary" Content="{loc:Loc Library.Scan}" Command="{Binding ScanCommand}" Margin="0,0,8,0" />
-                <ui:Button Appearance="Secondary" Content="{loc:Loc Library.Add}" Command="{Binding AddGameCommand}" Margin="0,0,8,0" />
-                <ui:Button Appearance="Transparent" Content="{loc:Loc Common.Cancel}" Command="{Binding CancelCommand}" IsEnabled="{Binding IsBusy}" />
+            <StackPanel DockPanel.Dock="Right"
+                        Orientation="Horizontal"
+                        VerticalAlignment="Center">
+                <ui:Button Margin="0,0,8,0"
+                           Appearance="Secondary"
+                           Content="{loc:Loc Library.Add}"
+                           Command="{Binding AddGameCommand}" />
+                <ui:Button Margin="0,0,8,0"
+                           Appearance="Transparent"
+                           Content="{loc:Loc Common.Cancel}"
+                           Command="{Binding CancelCommand}"
+                           IsEnabled="{Binding IsBusy}" />
+                <ui:Button Appearance="Primary"
+                           Content="{loc:Loc Library.Scan}"
+                           Command="{Binding ScanCommand}" />
             </StackPanel>
         </DockPanel>
 
-        <StackPanel Grid.Row="1" Margin="0,16,0,0">
-            <TextBlock Text="{Binding StatusText}" Opacity="0.8" />
-            <ProgressBar Height="4"
-                         Margin="0,8,0,0"
-                         Maximum="100"
-                         Value="{Binding ProgressValue}" />
-        </StackPanel>
+        <ui:InfoBar Grid.Row="1"
+                    Margin="0,12,0,0"
+                    IsOpen="{Binding HasWarnings}"
+                    IsClosable="False"
+                    Severity="Warning"
+                    Title="{loc:Loc Common.Warning}"
+                    Message="{Binding Warnings}" />
 
-        <WrapPanel Grid.Row="2" Margin="0,12,0,0">
-            <StackPanel Margin="0,0,12,0">
-                <TextBlock Text="{loc:Loc Library.Proxy}" FontSize="11" Opacity="0.55" />
-                <ComboBox Width="116" Height="28" Margin="0,4,0,0"
-                          ItemsSource="{Binding Options.ProxySlots}"
-                          SelectedItem="{Binding Options.ProxySlot, Mode=TwoWay}" />
-            </StackPanel>
-            <StackPanel Margin="0,0,12,0">
-                <TextBlock Text="{loc:Loc Library.Optimized}" FontSize="11" Opacity="0.55" />
-                <ComboBox Width="64" Height="28" Margin="0,4,0,0"
-                          ItemsSource="{Binding Options.OptimizedLevels}"
-                          SelectedItem="{Binding Options.Optimized, Mode=TwoWay}" />
-            </StackPanel>
-            <StackPanel Margin="0,0,12,0">
-                <TextBlock Text="{loc:Loc Library.Frames}" FontSize="11" Opacity="0.55" />
-                <ComboBox Width="64" Height="28" Margin="0,4,0,0"
-                          ItemsSource="{Binding Options.FrameMultipliers}"
-                          SelectedItem="{Binding Options.Frames, Mode=TwoWay}" />
-            </StackPanel>
-            <StackPanel Margin="0,0,12,0">
-                <TextBlock Text="{loc:Loc Library.Preset}" FontSize="11" Opacity="0.55" />
-                <ComboBox Width="64" Height="28" Margin="0,4,0,0"
-                          ItemsSource="{Binding Options.Presets}"
-                          SelectedItem="{Binding Options.Preset, Mode=TwoWay}" />
-            </StackPanel>
-            <StackPanel Margin="0,0,12,0">
-                <TextBlock Text="{loc:Loc Library.Engine}" FontSize="11" Opacity="0.55" />
-                <ComboBox Width="76" Height="28" Margin="0,4,0,0"
-                          ItemsSource="{Binding Options.Engines}"
-                          SelectedItem="{Binding Options.Engine, Mode=TwoWay}" />
-            </StackPanel>
-            <StackPanel Margin="0,0,12,0">
-                <TextBlock Text="{loc:Loc Library.SuperResolution}" FontSize="11" Opacity="0.55" />
-                <ComboBox Width="96" Height="28" Margin="0,4,0,0"
-                          ItemsSource="{Binding Options.SuperResolutionModes}"
-                          SelectedItem="{Binding Options.SuperResolutionMode, Mode=TwoWay}" />
-            </StackPanel>
-            <StackPanel Margin="0,0,12,0">
-                <TextBlock Text="{loc:Loc Library.XeSsFlow}" FontSize="11" Opacity="0.55" />
-                <ComboBox Width="86" Height="28" Margin="0,4,0,0"
-                          ItemsSource="{Binding Options.XeSsFlowResolutions}"
-                          SelectedItem="{Binding Options.XeSsFlow, Mode=TwoWay}" />
-            </StackPanel>
-            <StackPanel>
-                <TextBlock Text="{loc:Loc Library.XeSsHudless}" FontSize="11" Opacity="0.55" />
-                <ComboBox Width="72" Height="28" Margin="0,4,0,0"
-                          ItemsSource="{Binding Options.XeSsHudlessValues}"
-                          SelectedItem="{Binding Options.XeSsHudless, Mode=TwoWay}" />
-            </StackPanel>
-        </WrapPanel>
+        <Grid Grid.Row="2" Margin="0,16,0,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="296" />
+                <ColumnDefinition Width="18" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
 
-        <ui:InfoBar Margin="0,10,0,0"
-                   IsOpen="{Binding HasWarnings}"
-                   IsClosable="False"
-                   Severity="Warning"
-                   Title="{loc:Loc Common.Warning}"
-                   Message="{Binding Warnings}" />
+            <ScrollViewer Grid.Column="0"
+                          VerticalScrollBarVisibility="Auto"
+                          HorizontalScrollBarVisibility="Disabled">
+                <views:GpuSidebar x:Name="GpuPanel" />
+            </ScrollViewer>
 
-        <Grid Grid.Row="4" Margin="0,16,0,0">
-            <DataGrid ItemsSource="{Binding Games}"
-                      AutoGenerateColumns="False"
-                      IsReadOnly="True"
-                      CanUserAddRows="False"
-                      CanUserDeleteRows="False"
-                      SelectionMode="Single"
-                      HeadersVisibility="Column"
-                      GridLinesVisibility="None"
-                      BorderThickness="0"
-                      Background="Transparent"
-                      Foreground="{DynamicResource TextPrimaryBrush}"
-                      RowBackground="Transparent"
-                      AlternatingRowBackground="{DynamicResource RowAlternateBrush}"
-                      RowHeight="56"
-                      EnableRowVirtualization="True"
-                      ScrollViewer.HorizontalScrollBarVisibility="Disabled"
-                      ScrollViewer.VerticalScrollBarVisibility="Auto"
-                      Visibility="{Binding HasGames, Converter={StaticResource BoolToVis}}">
-                <DataGrid.ColumnHeaderStyle>
-                    <Style TargetType="DataGridColumnHeader">
-                        <Setter Property="Background" Value="{DynamicResource GridHeaderBrush}" />
-                        <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
-                        <Setter Property="BorderThickness" Value="0" />
-                        <Setter Property="Padding" Value="8,7" />
-                    </Style>
-                </DataGrid.ColumnHeaderStyle>
-                <DataGrid.CellStyle>
-                    <Style TargetType="DataGridCell">
-                        <Setter Property="BorderThickness" Value="0" />
-                        <Setter Property="Padding" Value="8,4" />
-                        <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
-                    </Style>
-                </DataGrid.CellStyle>
-                <DataGrid.Columns>
-                    <DataGridTemplateColumn Header="" Width="46">
-                        <DataGridTemplateColumn.CellTemplate>
-                            <DataTemplate>
-                                <Grid Width="34" Height="46">
-                                    <Border CornerRadius="4"
-                                            Background="{DynamicResource NavHoverBrush}"
-                                            ClipToBounds="True" />
-                                    <Image Source="{Binding CoverPath}"
-                                           Stretch="UniformToFill"
-                                           Visibility="{Binding HasCover, Converter={StaticResource BoolToVis}}" />
-                                    <TextBlock Text="{Binding CoverInitial}"
-                                               FontSize="16"
-                                               FontWeight="SemiBold"
-                                               Foreground="{DynamicResource TextSecondaryBrush}"
-                                               HorizontalAlignment="Center"
-                                               VerticalAlignment="Center"
-                                               Visibility="{Binding HasNoCover, Converter={StaticResource BoolToVis}}" />
-                                </Grid>
-                            </DataTemplate>
-                        </DataGridTemplateColumn.CellTemplate>
-                    </DataGridTemplateColumn>
-                    <DataGridTextColumn Header="{loc:Loc Library.Name}" Binding="{Binding Name}" Width="1.1*" ElementStyle="{StaticResource TrimmedCell}" />
-                    <DataGridTextColumn Header="{loc:Loc Library.Platform}" Binding="{Binding LauncherDisplay}" Width="66" ElementStyle="{StaticResource TrimmedCell}" />
-                    <DataGridTextColumn Header="{loc:Loc Common.Api}" Binding="{Binding ApiDisplay}" Width="52" ElementStyle="{StaticResource TrimmedCell}" />
-                    <DataGridTextColumn Header="{loc:Loc Library.DeploymentState}" Binding="{Binding DeploymentStateDisplay}" Width="112" ElementStyle="{StaticResource TrimmedCell}" />
-                    <DataGridTextColumn Header="{loc:Loc Library.TargetDirectory}" Binding="{Binding TargetDirectory}" Width="1.35*" ElementStyle="{StaticResource TrimmedCell}" />
-                    <DataGridTextColumn Header="{loc:Loc Library.RenderExe}" Binding="{Binding RenderExeDisplay}" Width="1.35*" ElementStyle="{StaticResource TrimmedCell}" />
-                    <DataGridTemplateColumn Header="{loc:Loc Common.Operations}" Width="232">
-                        <DataGridTemplateColumn.CellTemplate>
-                            <DataTemplate>
-                                <WrapPanel Orientation="Horizontal">
-                                    <ui:Button Appearance="Transparent" Content="{loc:Loc Common.Deploy}"
-                                               Margin="0,0,4,0"
-                                               Padding="4,1"
-                                               FontSize="11"
-                                               Command="{Binding DataContext.DeployGameCommand, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}}"
-                                               CommandParameter="{Binding}" />
-                                    <ui:Button Appearance="Transparent" Content="{loc:Loc Common.Restore}"
-                                               Margin="0,0,4,0"
-                                               Padding="4,1"
-                                               FontSize="11"
-                                               Command="{Binding DataContext.RestoreGameCommand, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}}"
-                                               CommandParameter="{Binding}" />
-                                    <ui:Button Appearance="Transparent" Content="{loc:Loc Common.Open}"
-                                               Margin="0,0,4,0"
-                                               Padding="4,1"
-                                               FontSize="11"
-                                               Command="{Binding DataContext.OpenFolderCommand, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}}"
-                                               CommandParameter="{Binding}" />
-                                    <ui:Button Appearance="Transparent" Content="{loc:Loc Common.Remove}"
-                                               Padding="4,1"
-                                               FontSize="11"
-                                               Command="{Binding DataContext.RemoveGameCommand, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}}"
-                                               CommandParameter="{Binding}" />
-                                </WrapPanel>
-                            </DataTemplate>
-                        </DataGridTemplateColumn.CellTemplate>
-                    </DataGridTemplateColumn>
-                </DataGrid.Columns>
-            </DataGrid>
+            <Grid Grid.Column="2">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
 
-            <StackPanel HorizontalAlignment="Center"
-                        VerticalAlignment="Center"
-                        Visibility="{Binding IsEmpty, Converter={StaticResource BoolToVis}}">
-                <TextBlock HorizontalAlignment="Center"
-                           Opacity="0.55"
-                           Text="{loc:Loc Library.Empty}" />
-                <ui:Button Margin="0,14,0,0"
-                           HorizontalAlignment="Center"
-                           Appearance="Primary" Content="{loc:Loc Library.Scan}"
-                           Command="{Binding ScanCommand}" />
-            </StackPanel>
+                <StackPanel Grid.Row="0">
+                    <TextBlock Text="{Binding StatusText}"
+                               FontSize="13"
+                               Opacity="0.7" />
+                    <ProgressBar Height="3"
+                                 Margin="0,8,0,0"
+                                 Maximum="100"
+                                 Value="{Binding ProgressValue}" />
+                </StackPanel>
+
+                <Grid Grid.Row="1" Margin="0,14,0,0">
+                    <DataGrid ItemsSource="{Binding Games}"
+                              AutoGenerateColumns="False"
+                              IsReadOnly="True"
+                              CanUserAddRows="False"
+                              CanUserDeleteRows="False"
+                              SelectionMode="Single"
+                              HeadersVisibility="Column"
+                              GridLinesVisibility="None"
+                              BorderThickness="0"
+                              Background="Transparent"
+                              Foreground="{DynamicResource TextPrimaryBrush}"
+                              RowBackground="Transparent"
+                              AlternatingRowBackground="{DynamicResource RowAlternateBrush}"
+                              RowHeight="64"
+                              EnableRowVirtualization="True"
+                              ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                              ScrollViewer.VerticalScrollBarVisibility="Auto"
+                              Visibility="{Binding HasGames, Converter={StaticResource BoolToVis}}">
+                        <DataGrid.ColumnHeaderStyle>
+                            <Style TargetType="DataGridColumnHeader">
+                                <Setter Property="Background" Value="{DynamicResource GridHeaderBrush}" />
+                                <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}" />
+                                <Setter Property="FontSize" Value="11" />
+                                <Setter Property="BorderThickness" Value="0" />
+                                <Setter Property="Padding" Value="8,8" />
+                            </Style>
+                        </DataGrid.ColumnHeaderStyle>
+                        <DataGrid.CellStyle>
+                            <Style TargetType="DataGridCell">
+                                <Setter Property="BorderThickness" Value="0" />
+                                <Setter Property="Padding" Value="8,4" />
+                                <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
+                            </Style>
+                        </DataGrid.CellStyle>
+                        <DataGrid.Columns>
+                            <DataGridTemplateColumn Header="{loc:Loc Common.Game}" Width="*">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Grid Margin="2,0,0,0">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="42" />
+                                                <ColumnDefinition Width="10" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+                                            <Grid Grid.Column="0" Width="40" Height="54">
+                                                <Border CornerRadius="7"
+                                                        Background="{DynamicResource NavHoverBrush}"
+                                                        ClipToBounds="True" />
+                                                <Image Source="{Binding CoverPath}"
+                                                       Stretch="UniformToFill"
+                                                       Visibility="{Binding HasCover, Converter={StaticResource BoolToVis}}" />
+                                                <TextBlock Text="{Binding CoverInitial}"
+                                                           FontSize="17"
+                                                           FontWeight="SemiBold"
+                                                           Foreground="{DynamicResource TextSecondaryBrush}"
+                                                           HorizontalAlignment="Center"
+                                                           VerticalAlignment="Center"
+                                                           Visibility="{Binding HasNoCover, Converter={StaticResource BoolToVis}}" />
+                                            </Grid>
+                                            <StackPanel Grid.Column="2" VerticalAlignment="Center">
+                                                <TextBlock Text="{Binding Name}"
+                                                           FontSize="14"
+                                                           FontWeight="SemiBold"
+                                                           TextTrimming="CharacterEllipsis" />
+                                                <TextBlock Margin="0,2,0,0"
+                                                           Text="{Binding TargetDirectory}"
+                                                           FontSize="10"
+                                                           Opacity="0.5"
+                                                           TextTrimming="CharacterEllipsis"
+                                                           ToolTip="{Binding TargetDirectory}" />
+                                            </StackPanel>
+                                        </Grid>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            <DataGridTextColumn Header="{loc:Loc Library.Platform}" Binding="{Binding LauncherDisplay}" Width="68" ElementStyle="{StaticResource TrimmedCell}" />
+                            <DataGridTextColumn Header="{loc:Loc Common.Api}" Binding="{Binding ApiDisplay}" Width="58" ElementStyle="{StaticResource TrimmedCell}" />
+                            <DataGridTextColumn Header="{loc:Loc Library.DeploymentState}" Binding="{Binding DeploymentStateDisplay}" Width="104" ElementStyle="{StaticResource TrimmedCell}" />
+                            <DataGridTemplateColumn Header="{loc:Loc Common.Operations}" Width="226">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <WrapPanel Orientation="Horizontal">
+                                            <ui:Button Appearance="Secondary"
+                                                       Margin="0,0,4,0"
+                                                       Padding="7,2"
+                                                       FontSize="11"
+                                                       Content="{loc:Loc Common.Deploy}"
+                                                       Command="{Binding DataContext.OpenDeployDialogCommand, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}}"
+                                                       CommandParameter="{Binding}" />
+                                            <ui:Button Appearance="Transparent"
+                                                       Margin="0,0,4,0"
+                                                       Padding="7,2"
+                                                       FontSize="11"
+                                                       Content="{loc:Loc Common.Restore}"
+                                                       Command="{Binding DataContext.RestoreGameCommand, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}}"
+                                                       CommandParameter="{Binding}" />
+                                            <ui:Button Appearance="Transparent"
+                                                       Margin="0,0,4,0"
+                                                       Padding="7,2"
+                                                       FontSize="11"
+                                                       Content="{loc:Loc Common.Open}"
+                                                       Command="{Binding DataContext.OpenFolderCommand, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}}"
+                                                       CommandParameter="{Binding}" />
+                                            <ui:Button Appearance="Transparent"
+                                                       Padding="7,2"
+                                                       FontSize="11"
+                                                       Content="{loc:Loc Common.Remove}"
+                                                       Command="{Binding DataContext.RemoveGameCommand, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}}"
+                                                       CommandParameter="{Binding}" />
+                                        </WrapPanel>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                        </DataGrid.Columns>
+                    </DataGrid>
+
+                    <StackPanel HorizontalAlignment="Center"
+                                VerticalAlignment="Center"
+                                Visibility="{Binding IsEmpty, Converter={StaticResource BoolToVis}}">
+                        <TextBlock HorizontalAlignment="Center"
+                                   Opacity="0.55"
+                                   Text="{loc:Loc Library.Empty}" />
+                        <ui:Button Margin="0,14,0,0"
+                                   HorizontalAlignment="Center"
+                                   Appearance="Primary"
+                                   Content="{loc:Loc Library.Scan}"
+                                   Command="{Binding ScanCommand}" />
+                    </StackPanel>
+                </Grid>
+            </Grid>
+        </Grid>
+
+        <Grid x:Name="DeployOverlay"
+              Grid.RowSpan="3"
+              Panel.ZIndex="20"
+              Background="#A6000000"
+              Visibility="{Binding IsDeployDialogOpen, Converter={StaticResource BoolToVis}}">
+            <Border x:Name="DeployCard"
+                    Width="660"
+                    MaxHeight="700"
+                    Padding="24"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    Background="{DynamicResource CardBackgroundBrush}"
+                    BorderBrush="{DynamicResource CardBorderBrush}"
+                    BorderThickness="1"
+                    CornerRadius="20"
+                    RenderTransformOrigin="0.5,0.5">
+                <Border.RenderTransform>
+                    <ScaleTransform x:Name="DeployCardScale" ScaleX="1" ScaleY="1" />
+                </Border.RenderTransform>
+                <Border.Effect>
+                    <DropShadowEffect BlurRadius="34"
+                                      ShadowDepth="10"
+                                      Opacity="0.35"
+                                      Color="Black" />
+                </Border.Effect>
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <Grid Grid.Row="0">
+                        <StackPanel>
+                            <TextBlock FontSize="23"
+                                       FontWeight="SemiBold"
+                                       Text="{Binding DeployTargetName}" />
+                            <TextBlock Margin="0,4,0,0"
+                                       Opacity="0.55"
+                                       FontSize="12"
+                                       TextTrimming="CharacterEllipsis"
+                                       Text="{Binding DeployTargetDirectory}" />
+                        </StackPanel>
+                        <ui:Button HorizontalAlignment="Right"
+                                   VerticalAlignment="Top"
+                                   Appearance="Transparent"
+                                   FontSize="16"
+                                   Content="✕"
+                                   Command="{Binding CloseDeployDialogCommand}" />
+                    </Grid>
+
+                    <ScrollViewer Grid.Row="1"
+                                  Margin="0,18,0,0"
+                                  VerticalScrollBarVisibility="Auto">
+                        <StackPanel>
+                            <TextBlock Opacity="0.6"
+                                       FontSize="12"
+                                       TextWrapping="Wrap"
+                                       Text="{loc:Loc Deploy.DialogHint}" />
+
+                            <Grid Margin="0,18,0,0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="16" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                </Grid.RowDefinitions>
+
+                                <StackPanel Grid.Row="0" Grid.Column="0">
+                                    <TextBlock Style="{StaticResource FieldLabel}" Text="{loc:Loc Library.Proxy}" />
+                                    <ComboBox ItemsSource="{Binding Options.ProxySlots}"
+                                              SelectedItem="{Binding Options.ProxySlot}" />
+                                </StackPanel>
+                                <StackPanel Grid.Row="0" Grid.Column="2">
+                                    <TextBlock Style="{StaticResource FieldLabel}" Text="{loc:Loc Library.Optimized}" />
+                                    <ComboBox ItemsSource="{Binding Options.OptimizedLevels}"
+                                              SelectedItem="{Binding Options.Optimized}" />
+                                </StackPanel>
+
+                                <StackPanel Grid.Row="1" Grid.Column="0" Margin="0,14,0,0">
+                                    <TextBlock Style="{StaticResource FieldLabel}" Text="{loc:Loc Library.Frames}" />
+                                    <ComboBox ItemsSource="{Binding Options.FrameMultipliers}"
+                                              SelectedItem="{Binding Options.Frames}" />
+                                </StackPanel>
+                                <StackPanel Grid.Row="1" Grid.Column="2" Margin="0,14,0,0">
+                                    <TextBlock Style="{StaticResource FieldLabel}" Text="{loc:Loc Library.Preset}" />
+                                    <ComboBox ItemsSource="{Binding Options.Presets}"
+                                              SelectedItem="{Binding Options.Preset}" />
+                                </StackPanel>
+
+                                <StackPanel Grid.Row="2" Grid.Column="0" Margin="0,14,0,0">
+                                    <TextBlock Style="{StaticResource FieldLabel}" Text="{loc:Loc Library.Engine}" />
+                                    <ComboBox ItemsSource="{Binding Options.Engines}"
+                                              SelectedItem="{Binding Options.Engine}" />
+                                </StackPanel>
+                                <StackPanel Grid.Row="2" Grid.Column="2" Margin="0,14,0,0">
+                                    <TextBlock Style="{StaticResource FieldLabel}" Text="{loc:Loc Library.SuperResolution}" />
+                                    <ComboBox ItemsSource="{Binding Options.SuperResolutionModes}"
+                                              SelectedItem="{Binding Options.SuperResolutionMode}" />
+                                </StackPanel>
+
+                                <StackPanel Grid.Row="3" Grid.Column="0" Margin="0,14,0,0"
+                                            Visibility="{Binding Options.IsXeSsEngine, Converter={StaticResource BoolToVis}}">
+                                    <TextBlock Style="{StaticResource FieldLabel}" Text="{loc:Loc Library.XeSsFlow}" />
+                                    <ComboBox ItemsSource="{Binding Options.XeSsFlowResolutions}"
+                                              SelectedItem="{Binding Options.XeSsFlow}" />
+                                </StackPanel>
+                                <StackPanel Grid.Row="3" Grid.Column="2" Margin="0,14,0,0"
+                                            Visibility="{Binding Options.IsXeSsEngine, Converter={StaticResource BoolToVis}}">
+                                    <TextBlock Style="{StaticResource FieldLabel}" Text="{loc:Loc Library.XeSsHudless}" />
+                                    <ComboBox ItemsSource="{Binding Options.XeSsHudlessValues}"
+                                              SelectedItem="{Binding Options.XeSsHudless}" />
+                                </StackPanel>
+                            </Grid>
+                        </StackPanel>
+                    </ScrollViewer>
+
+                    <Grid Grid.Row="2" Margin="0,22,0,0">
+                        <TextBlock VerticalAlignment="Center"
+                                   Opacity="0.45"
+                                   FontSize="11"
+                                   Text="{loc:Loc Deploy.CloseGameHint}" />
+                        <StackPanel HorizontalAlignment="Right" Orientation="Horizontal">
+                            <ui:Button Margin="0,0,8,0"
+                                       Appearance="Transparent"
+                                       Content="{loc:Loc Common.Cancel}"
+                                       Command="{Binding CloseDeployDialogCommand}" />
+                            <ui:Button Margin="0,0,8,0"
+                                       Appearance="Secondary"
+                                       Content="{loc:Loc Common.Restore}"
+                                       Command="{Binding RestoreGameCommand}"
+                                       CommandParameter="{Binding DeployTarget}" />
+                            <ui:Button Appearance="Primary"
+                                       Content="{loc:Loc Common.Deploy}"
+                                       Command="{Binding ConfirmDeployCommand}" />
+                        </StackPanel>
+                    </Grid>
+                </Grid>
+            </Border>
         </Grid>
     </Grid>
 </UserControl>
