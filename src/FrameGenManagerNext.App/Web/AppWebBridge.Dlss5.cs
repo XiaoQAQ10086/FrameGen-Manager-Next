@@ -84,7 +84,7 @@ public sealed partial class AppWebBridge
             });
         }
 
-        return new { games };
+        return new { games, removed = BuildRemovedGames(library) };
     }
 
     private async Task<object?> InstallDlss5Async(JsonElement payload)

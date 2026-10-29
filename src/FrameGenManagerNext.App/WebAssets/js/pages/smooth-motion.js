@@ -1,5 +1,6 @@
 import { confirmDialog, escapeHtml as esc } from '../ui.js';
 import { componentKeys, prettyPath, routeKeys } from '../labels.js';
+import { createRemovedController, removedMarkup } from '../removed-modal.js';
 
 const gateKeys = {
   Supported: 'Gpu.Gate.Supported',
@@ -13,6 +14,7 @@ export default {
   async mount(root, ctx) {
     const { api, t, ui } = ctx;
     let games = [];
+    let removed = [];
     let gpu = null;
     let busy = false;
     let addingGame = false;
@@ -26,6 +28,7 @@ export default {
           </div>
           <div class="lh-actions">
             <button class="btn" data-action="add" type="button">${t('Library.Add')}</button>
+            <button class="btn" data-action="removed" type="button">${t('Library.Removed')}<span class="count" data-role="removed-count"></span></button>
             <button class="btn scan" data-action="scan" type="button">${t('Library.Scan')}</button>
           </div>
         </header>
@@ -52,9 +55,11 @@ export default {
             <div class="empty hidden" data-role="empty"><p>${t('SmoothMotion.Empty')}</p></div>
           </section>
         </main>
-      </section>`;
+      </section>
+      ${removedMarkup(t)}`;
 
     const q = (selector) => root.querySelector(selector);
+    const removedController = createRemovedController(root, ctx, () => removed, load);
 
     function status(value) {
       q('[data-role="status"]').textContent = value;
@@ -106,8 +111,10 @@ export default {
         const state = await api.request('sm.state');
         gpu = state.gpu;
         games = state.games;
+        removed = state.removed || [];
         renderGpu();
         render();
+        removedController.render();
         status(t('SmoothMotion.Status.Checked').replace('{0}', games.length));
       } catch (error) {
         status(error.code || '加载失败');
@@ -121,9 +128,11 @@ export default {
       try {
         const state = await api.request(command, { id });
         games = state.games;
+        removed = state.removed || removed;
         gpu = state.gpu || gpu;
         renderGpu();
         render();
+        removedController.render();
         ui.toast(t('Common.OperationDone'));
       } catch (error) {
         ui.toast(error.message, 'error');
@@ -136,6 +145,10 @@ export default {
       const button = event.target.closest('[data-action]');
       if (!button) return;
       const actionName = button.dataset.action;
+      if (actionName === 'removed') {
+        removedController.open();
+        return;
+      }
       if (actionName === 'add') {
         if (addingGame) return;
         addingGame = true;

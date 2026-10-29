@@ -1,10 +1,12 @@
 import { confirmDialog, escapeHtml as esc } from '../ui.js';
 import { apiLabel, prettyPath, stateKeys } from '../labels.js';
+import { createRemovedController, removedMarkup } from '../removed-modal.js';
 
 export default {
   async mount(root, ctx) {
     const { api, t, ui } = ctx;
     let games = [];
+    let removed = [];
     let busy = false;
     let addingGame = false;
     let current = null;
@@ -18,6 +20,7 @@ export default {
           </div>
           <div class="lh-actions">
             <button class="btn" data-action="add" type="button">${t('Library.Add')}</button>
+            <button class="btn" data-action="removed" type="button">${t('Library.Removed')}<span class="count" data-role="removed-count"></span></button>
             <button class="btn scan" data-action="scan" type="button">${t('Library.Scan')}</button>
           </div>
         </header>
@@ -28,6 +31,7 @@ export default {
         </div>
         <div class="empty hidden" data-role="empty"><p>${t('Dlss5.Empty')}</p></div>
       </section>
+      ${removedMarkup(t)}
       <div class="overlay hidden" data-role="detail">
         <section class="modal dlss-modal" role="dialog" aria-modal="true">
           <header class="modal-head">
@@ -50,6 +54,7 @@ export default {
     const detailTitle = q('[data-role="detail-title"]');
     const detailPath = q('[data-role="detail-path"]');
     const detailBody = q('[data-role="detail-body"]');
+    const removedController = createRemovedController(root, ctx, () => removed, load);
 
     function status(value) {
       q('[data-role="status"]').textContent = value;
@@ -138,7 +143,9 @@ export default {
       try {
         const state = await api.request('dlss5.state');
         games = state.games;
+        removed = state.removed || [];
         render();
+        removedController.render();
         status(t('Dlss5.Status.Checked').replace('{0}', games.length));
       } catch (error) {
         status(error.code || '加载失败');
@@ -152,7 +159,9 @@ export default {
       try {
         const state = await api.request(command, { id, ...extra });
         games = state.games;
+        removed = state.removed || removed;
         render();
+        removedController.render();
       } catch (error) {
         ui.toast(error.message, 'error');
       } finally {
@@ -164,6 +173,10 @@ export default {
       const button = event.target.closest('[data-action]');
       if (button) {
         const name = button.dataset.action;
+        if (name === 'removed') {
+          removedController.open();
+          return;
+        }
         if (name === 'add') {
           if (addingGame) return;
           addingGame = true;

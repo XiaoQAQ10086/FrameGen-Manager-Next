@@ -70,18 +70,7 @@ public sealed partial class AppWebBridge
         var games = entries.Select(entry => entry!).ToList();
         var installed = states.Count(state => state == DeploymentState.Installed);
 
-        var removed = library.EnumerateRemovedGames()
-            .OrderBy(game => game.Name, StringComparer.CurrentCultureIgnoreCase)
-            .Select(game => new
-            {
-                id = game.Id,
-                name = game.Name,
-                launcher = game.Launcher.ToString(),
-                api = game.GraphicsApi.ToString(),
-                targetDirectory = game.TargetDirectory,
-                initial = string.IsNullOrWhiteSpace(game.Name) ? "?" : game.Name[..1].ToUpperInvariant(),
-            })
-            .ToList();
+        var removed = BuildRemovedGames(library);
 
         return new
         {
@@ -233,6 +222,22 @@ public sealed partial class AppWebBridge
 
         var library = await _library.LoadAsync(CancellationToken.None);
         return library.EnumerateVisibleGames().FirstOrDefault(game => game.Id == id);
+    }
+
+    private static List<object> BuildRemovedGames(GameLibrary library)
+    {
+        return library.EnumerateRemovedGames()
+            .OrderBy(game => game.Name, StringComparer.CurrentCultureIgnoreCase)
+            .Select(game => (object)new
+            {
+                id = game.Id,
+                name = game.Name,
+                launcher = game.Launcher.ToString(),
+                api = game.GraphicsApi.ToString(),
+                targetDirectory = game.TargetDirectory,
+                initial = string.IsNullOrWhiteSpace(game.Name) ? "?" : game.Name[..1].ToUpperInvariant(),
+            })
+            .ToList();
     }
 
     private async Task<string?> GetCoverUrlAsync(GameEntry game)

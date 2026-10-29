@@ -76,7 +76,8 @@ button, select { font: inherit; }
 .lh-text { min-width: 0; }
 .listhead h1 { margin: 0; font-size: 20px; letter-spacing: .2px; }
 .listhead .sub { margin-top: 2px; color: var(--muted); font-size: 12.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.lh-actions { display: flex; gap: 8px; flex: 0 0 auto; flex-wrap: wrap; justify-content: flex-end; }
+.lh-actions { display: flex; gap: 8px; flex: 0 0 auto; flex-wrap: wrap; justify-content: flex-end; align-items: center; }
+.lh-actions .btn { min-width: 112px; min-height: 34px; display: inline-flex; align-items: center; justify-content: center; gap: 3px; }
 
 .panel {
   background: var(--card);
