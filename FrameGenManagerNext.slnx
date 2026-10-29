@@ -1,0 +1,15 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/FrameGenManagerNext.App/FrameGenManagerNext.App.csproj" />
+    <Project Path="src/FrameGenManagerNext.Cli/FrameGenManagerNext.Cli.csproj" />
+    <Project Path="src/FrameGenManagerNext.Core/FrameGenManagerNext.Core.csproj" />
+    <Project Path="src/FrameGenManagerNext.Domain/FrameGenManagerNext.Domain.csproj" />
+    <Project Path="src/FrameGenManagerNext.Infrastructure/FrameGenManagerNext.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/FrameGenManagerNext.Core.Tests/FrameGenManagerNext.Core.Tests.csproj" />
+    <Project Path="tests/FrameGenManagerNext.Domain.Tests/FrameGenManagerNext.Domain.Tests.csproj" />
+    <Project Path="tests/FrameGenManagerNext.Infrastructure.Tests/FrameGenManagerNext.Infrastructure.Tests.csproj" />
+    <Project Path="tests/FrameGenManagerNext.Integration.Tests/FrameGenManagerNext.Integration.Tests.csproj" />
+  </Folder>
+</Solution>

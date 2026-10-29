@@ -8,7 +8,7 @@ Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
 $root = Split-Path -Parent $PSScriptRoot
-$solution = Join-Path $root 'FrameGenNext.slnx'
+$solution = Join-Path $root 'FrameGenManagerNext.slnx'
 
 $dotnetCommand = Get-Command dotnet -ErrorAction SilentlyContinue
 if ($null -ne $dotnetCommand) {

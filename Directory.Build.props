@@ -16,10 +16,10 @@
     <AssemblyVersion>2.0.0.0</AssemblyVersion>
     <FileVersion>2.0.0.0</FileVersion>
     <InformationalVersion>2.0.0</InformationalVersion>
-    <Product>FrameGen Next</Product>
-    <Company>FrameGen Next</Company>
-    <Authors>FrameGen Next</Authors>
-    <Copyright>Copyright (c) FrameGen Next contributors</Copyright>
+    <Product>FrameGen Manager-Next</Product>
+    <Company>FrameGen Manager-Next</Company>
+    <Authors>FrameGen Manager-Next</Authors>
+    <Copyright>Copyright (c) FrameGen Manager-Next contributors</Copyright>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(CI)' == 'true'">

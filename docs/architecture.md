@@ -7,9 +7,9 @@
 ```
 WPF View / ViewModel
         ↓ DI
-FrameGenNext.Core（用例 + 端口）
+FrameGenManagerNext.Core（用例 + 端口）
         ↓
-FrameGenNext.Infrastructure（Windows / 文件 / 网络 / NVAPI / ReShade）
+FrameGenManagerNext.Infrastructure（Windows / 文件 / 网络 / NVAPI / ReShade）
 ```
 
 没有 sidecar，没有 stdin/stdout JSON 协议，没有第二语言运行时。长操作通过 `async` + `IProgress<OperationProgress>` + `CancellationToken` 执行，写操作由 `OperationRunner` 串行化。
@@ -17,11 +17,11 @@ FrameGenNext.Infrastructure（Windows / 文件 / 网络 / NVAPI / ReShade）
 ## 2. 项目与依赖
 
 ```
-FrameGenNext.Domain          纯领域，零外部依赖
-FrameGenNext.Core            用例服务 + 端口接口，只依赖 Domain
-FrameGenNext.Infrastructure  端口实现，依赖 Core/Domain
-FrameGenNext.App             WPF，依赖 Core，组合根引用 Infrastructure
-FrameGenNext.Cli             无 UI 验收入口
+FrameGenManagerNext.Domain          纯领域，零外部依赖
+FrameGenManagerNext.Core            用例服务 + 端口接口，只依赖 Domain
+FrameGenManagerNext.Infrastructure  端口实现，依赖 Core/Domain
+FrameGenManagerNext.App             WPF，依赖 Core，组合根引用 Infrastructure
+FrameGenManagerNext.Cli             无 UI 验收入口
 ```
 
 依赖规则由项目引用和架构测试共同保证：
@@ -98,7 +98,7 @@ planned → backingUp → writing → verifying → installed
 ## 7. 数据与持久化
 
 ```
-%LOCALAPPDATA%\FrameGenNext\
+%LOCALAPPDATA%\FrameGenManagerNext\
   config\app.json
   library\library.json
   packs\<pack-id>\<version>\

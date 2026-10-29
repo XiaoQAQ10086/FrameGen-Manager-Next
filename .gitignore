@@ -481,7 +481,7 @@ $RECYCLE.BIN/
 # Vim temporary swap files
 *.swp
 
-# FrameGen Next
+# FrameGen Manager-Next
 .zcode/
 .vs/
 .idea/

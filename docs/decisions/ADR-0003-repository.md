@@ -15,9 +15,9 @@ raw.githubusercontent.com/XiaoQAQ10086/FrameGen-Manager/main/Cargo.toml
 
 ## 决策
 
-- 新建独立仓库 `FrameGen-Next`，独立历史、Issues、Releases 和 Velopack 更新源。
+- 新建独立仓库 `FrameGen-Manager-Next`，独立历史、Issues、Releases 和 Velopack 更新源。
 - 旧仓库保持原样，不覆盖 `main`，不改旧 Releases。
-- 新版本从 `2.0.0` 开始，`packId = FrameGenNext`，与旧版并存安装。
+- 新版本从 `2.0.0` 开始，`packId = FrameGenManagerNext`，与旧版并存安装。
 - 旧仓库在 Next 正式发布后加迁移公告，再 Archive；旧 Releases 永久保留。
 
 ## 后果

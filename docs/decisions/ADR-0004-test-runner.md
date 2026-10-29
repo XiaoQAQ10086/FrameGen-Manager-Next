@@ -21,7 +21,7 @@
 ```
 
 - 测试项目设置 `<OutputType>Exe</OutputType>` 和 `<IsTestProject>true</IsTestProject>`。
-- CI 使用 `dotnet test FrameGenNext.slnx -c Release --no-build`。
+- CI 使用 `dotnet test FrameGenManagerNext.slnx -c Release --no-build`。
 
 ## 后果
 

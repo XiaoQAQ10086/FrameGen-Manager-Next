@@ -3,7 +3,7 @@
 ## Phase 0 · 基础脚手架（当前）
 
 - [x] 安装 .NET 10 SDK，锁定 10.0.4xx
-- [x] `FrameGenNext.slnx` + 5 个源项目 + 4 个测试项目
+- [x] `FrameGenManagerNext.slnx` + 5 个源项目 + 4 个测试项目
 - [x] 中央包版本、分析器、Nullable、warnings-as-errors
 - [x] WPF + Wpf.Ui 空壳、DI、Serilog、数据目录
 - [x] CLI `--version` / `--paths`
@@ -15,7 +15,7 @@
 
 验收：`pwsh ./build/verify.ps1` 全绿；空壳启动；CI 通过。
 
-待完成：GitHub 仓库 `FrameGen-Next` 创建与首次 push（需要本机 `gh auth login` 或手动建仓）。
+待完成：GitHub 仓库 `FrameGen-Manager-Next` 创建与首次 push（需要本机 `gh auth login` 或手动建仓）。
 
 ## Phase 1 · 领域与资产包
 

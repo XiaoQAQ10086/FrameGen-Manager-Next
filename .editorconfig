@@ -35,7 +35,7 @@ dotnet_diagnostic.CA1812.severity = none
 dotnet_diagnostic.CA1852.severity = none
 dotnet_diagnostic.CA2007.severity = none
 
-[src/FrameGenNext.App/**/*.cs]
+[src/FrameGenManagerNext.App/**/*.cs]
 # WPF and MVVM-generated code frequently triggers these; UI layer is still covered by tests.
 dotnet_diagnostic.CA1416.severity = none
 

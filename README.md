@@ -1,6 +1,6 @@
-# FrameGen Next
+# FrameGen Manager-Next
 
-FrameGen Next 是 FrameGen Manager 的从零重写版：Windows 桌面端帧生成部署管理器，使用 **C# / .NET 10 LTS + WPF + Wpf.Ui**，单进程架构。
+FrameGen Manager-Next 是 FrameGen Manager 的从零重写版：Windows 桌面端帧生成部署管理器，使用 **C# / .NET 10 LTS + WPF + Wpf.Ui**，单进程架构。
 
 > 当前状态：**Phase 0（基础脚手架）本地部分已完成**。UI 空壳、DI、日志、测试与 CLI 已跑通；GitHub 仓库待创建，业务模块尚未迁移。
 
@@ -46,12 +46,12 @@ dotnet --list-sdks
 ## 构建与运行
 
 ```powershell
-dotnet restore FrameGenNext.slnx
-dotnet build FrameGenNext.slnx -c Debug
-dotnet test  FrameGenNext.slnx -c Debug
+dotnet restore FrameGenManagerNext.slnx
+dotnet build FrameGenManagerNext.slnx -c Debug
+dotnet test  FrameGenManagerNext.slnx -c Debug
 
-dotnet run --project src/FrameGenNext.Cli -- --version
-dotnet run --project src/FrameGenNext.App
+dotnet run --project src/FrameGenManagerNext.Cli -- --version
+dotnet run --project src/FrameGenManagerNext.App
 ```
 
 完整门禁（格式 + 构建 + 测试 + 结构检查）：
@@ -66,11 +66,11 @@ powershell -NoProfile -ExecutionPolicy Bypass -File ./build/verify.ps1 -Configur
 
 ```
 src/
-  FrameGenNext.Domain/          纯领域模型、规则、错误码、资产包协议
-  FrameGenNext.Core/            用例服务 + 端口接口
-  FrameGenNext.Infrastructure/  Windows / 文件 / 网络 / NVAPI / ReShade 实现
-  FrameGenNext.App/             WPF（View + ViewModel）
-  FrameGenNext.Cli/             无 UI 验收入口
+  FrameGenManagerNext.Domain/          纯领域模型、规则、错误码、资产包协议
+  FrameGenManagerNext.Core/            用例服务 + 端口接口
+  FrameGenManagerNext.Infrastructure/  Windows / 文件 / 网络 / NVAPI / ReShade 实现
+  FrameGenManagerNext.App/             WPF（View + ViewModel）
+  FrameGenManagerNext.Cli/             无 UI 验收入口
 tests/                          单元、基础设施、集成测试
 docs/                           architecture / behavior / decisions / roadmap
 build/                          质量门禁与构建脚本
@@ -84,14 +84,14 @@ assets/                         本地资产（不进 git）
 默认：
 
 ```
-%LOCALAPPDATA%\FrameGenNext\
+%LOCALAPPDATA%\FrameGenManagerNext\
   config\  library\  packs\  backups\  logs\  cache\  state\
 ```
 
 测试或便携场景可用环境变量覆盖：
 
 ```powershell
-$env:FGM_DATA_DIR = "D:\FrameGenNextData"
+$env:FGM_DATA_DIR = "D:\FrameGenManagerNextData"
 ```
 
 ## 与旧项目的关系

@@ -36,8 +36,8 @@ foreach ($file in $sourceFiles) {
 }
 
 $strictFiles = @(
-    Get-SourceFiles -Path (Join-Path $Root 'src\FrameGenNext.Domain')
-    Get-SourceFiles -Path (Join-Path $Root 'src\FrameGenNext.Core')
+    Get-SourceFiles -Path (Join-Path $Root 'src\FrameGenManagerNext.Domain')
+    Get-SourceFiles -Path (Join-Path $Root 'src\FrameGenManagerNext.Core')
 )
 
 foreach ($file in $strictFiles) {
@@ -51,7 +51,7 @@ foreach ($file in $strictFiles) {
         $violations.Add("UI-DEPENDENCY: $($file.FullName) must not reference UI frameworks")
     }
 
-    if ($content -match '\bFrameGenNext\.Infrastructure\b') {
+    if ($content -match '\bFrameGenManagerNext\.Infrastructure\b') {
         $violations.Add("LAYERING: $($file.FullName) must not reference Infrastructure")
     }
 
