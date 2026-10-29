@@ -29,6 +29,7 @@ public partial class MainWindow : FluentWindow
         {
             "library" => _services.GetRequiredService<LibraryPage>(),
             "gpu" => _services.GetRequiredService<GpuPage>(),
+            "smooth-motion" => _services.GetRequiredService<SmoothMotionPage>(),
             "logs" => _services.GetRequiredService<LogsPage>(),
             "about" => _services.GetRequiredService<AboutPage>(),
             _ => null,

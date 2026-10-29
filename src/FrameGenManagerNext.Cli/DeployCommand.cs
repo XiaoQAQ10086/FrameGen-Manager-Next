@@ -11,11 +11,10 @@ internal static class DeployCommand
         IServiceProvider services,
         string action,
         string targetDirectory,
-        string proxySlot,
+        FrameGenOptions options,
         CancellationToken cancellationToken)
     {
         var service = services.GetRequiredService<IFrameGenDeploymentService>();
-        var options = FrameGenOptions.Default with { ProxySlot = proxySlot };
 
         if (action.Equals("restore", StringComparison.OrdinalIgnoreCase))
         {

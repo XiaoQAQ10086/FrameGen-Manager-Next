@@ -22,7 +22,7 @@
 | 帧生成部署 | `deploy.rs`、`ui/deploy.js` | `Core/Features/Deployment` + `Infrastructure/Deployment` | [已实现](deployment.md) |
 | 备份/还原 | `deploy.rs`、`backup_restore.rs`、`sm.rs`、`dlss5.rs` | `Infrastructure/Deployment` | [已实现](deployment.md) |
 | INI 写入 | `update.rs::prepare_deploy_ini` | `Domain/Ini` | [已实现](ini.md) |
-| Smooth Motion | `sm.rs`、`ui/sm.js` | `Core/Features/SmoothMotion` | 待编写 |
+| Smooth Motion | `sm.rs`、`ui/sm.js` | `Core/Features/SmoothMotion` + `Infrastructure/NvApi` | [已实现](smooth-motion.md) |
 | DLSS5 / ReShade | `dlss5.rs`、`ui/dlss5.js` | `Core/Features/Dlss5` | 待编写 |
 | GPU / 驱动闸门 | `gpu.rs`、`scan.rs::classify_gpu`、`ui/settings.js` | `Domain/Gpu` + `Infrastructure/Gpu` | [已实现](gpu.md) |
 | 更新 | `update.rs`、`apps/electron/main.js` | Velopack + `Core/Features/Packs` | 待编写 |

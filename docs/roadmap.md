@@ -63,13 +63,15 @@
 
 验收（夹具 + 便携版 + UI）：部署 8 个文件、备份 2 个原文件；检查 `Installed`；还原后原文件内容恢复、运行时目录移除；196 个测试通过。详见 [Phase 3 验收记录](phase3-acceptance.md)。
 
-## Phase 4 · Smooth Motion + DLSS5
+## Phase 4 · Smooth Motion + DLSS5（进行中）
 
-- NVAPI DRS 适配器
-- ReShade 安装器与哈希校验
-- 两个资产族接入同一引擎
+- [x] NVAPI DRS 适配器：查 profile / 建 profile / 读写设置 / 保存 / 新会话复核
+- [x] Smooth Motion 组件部署（RTX30 / RTX20 pack）与还原
+- [x] Smooth Motion 页面与 CLI（inspect / enable / disable / restore）
+- [x] 真机验证：RTX 3070，写 1 读回 1，写 0 读回 0，还原后组件移除
+- [ ] DLSS5：ReShade 安装器、哈希校验、shader/effects/model、还原
 
-验收：NVAPI 写后读回一致；ReShade 校验通过；硬件实测。
+验收（SM）：NVAPI 写后读回一致；组件部署/还原通过；197 个测试通过。
 
 ## Phase 5 · 发布
 

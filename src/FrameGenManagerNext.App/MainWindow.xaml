@@ -85,6 +85,7 @@
 
                         <ListBoxItem Content="游戏库" Tag="library" />
                         <ListBoxItem Content="GPU 状态" Tag="gpu" />
+                        <ListBoxItem Content="Smooth Motion" Tag="smooth-motion" />
                         <ListBoxItem Content="日志与诊断" Tag="logs" />
                         <ListBoxItem Content="关于" Tag="about" />
                     </ListBox>

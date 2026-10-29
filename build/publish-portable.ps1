@@ -80,14 +80,17 @@ if (Test-Path -LiteralPath $packsSource) {
     Copy-Item -LiteralPath $packsSource -Destination (Join-Path $destination 'packs') -Recurse -Force
 }
 
-$frameGenPayload = Join-Path $root 'assets\packs\framegen.sm86'
-if (-not (Test-Path -LiteralPath $frameGenPayload)) {
-    throw 'FrameGen pack payload not found. Run build\generate-packs.ps1 first.'
-}
+$packIds = @('framegen.sm86', 'smooth-motion.rtx30', 'smooth-motion.rtx20')
+foreach ($packId in $packIds) {
+    $packPayload = Join-Path $root "assets\packs\$packId"
+    if (-not (Test-Path -LiteralPath $packPayload)) {
+        throw "Pack payload not found for $packId. Run build\generate-packs.ps1 first."
+    }
 
-$frameGenTarget = Join-Path $destination 'packs\framegen.sm86'
-New-Item -ItemType Directory -Path $frameGenTarget -Force | Out-Null
-Copy-Item -Path (Join-Path $frameGenPayload '*') -Destination $frameGenTarget -Recurse -Force
+    $packTarget = Join-Path $destination "packs\$packId"
+    New-Item -ItemType Directory -Path $packTarget -Force | Out-Null
+    Copy-Item -Path (Join-Path $packPayload '*') -Destination $packTarget -Recurse -Force
+}
 
 $zipPath = Join-Path $OutputRoot "FrameGen-Manager-Next-$version-$Runtime-portable.zip"
 if (Test-Path -LiteralPath $zipPath) {

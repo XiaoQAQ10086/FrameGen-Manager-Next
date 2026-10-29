@@ -5,12 +5,14 @@ using FrameGenManagerNext.Core.Features.Framegen;
 using FrameGenManagerNext.Core.Features.Gpu;
 using FrameGenManagerNext.Core.Features.Library;
 using FrameGenManagerNext.Core.Features.Packs;
+using FrameGenManagerNext.Core.Features.SmoothMotion;
 using FrameGenManagerNext.Infrastructure.Deployment;
 using FrameGenManagerNext.Infrastructure.Diagnostics;
 using FrameGenManagerNext.Infrastructure.Gpu;
 using FrameGenManagerNext.Infrastructure.Library;
 using FrameGenManagerNext.Infrastructure.Packs;
 using FrameGenManagerNext.Infrastructure.Paths;
+using FrameGenManagerNext.Infrastructure.SmoothMotion;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace FrameGenManagerNext.Infrastructure.Composition;
@@ -43,6 +45,10 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<BackupStore>();
         services.AddSingleton<IDeploymentEngine, DeploymentEngine>();
         services.AddSingleton<IFrameGenDeploymentService, FrameGenDeploymentService>();
+
+        services.AddSingleton<SmProfileStore>();
+        services.AddSingleton<INvApiSmoothMotion, NvApiSmoothMotion>();
+        services.AddSingleton<ISmoothMotionDeploymentService, SmoothMotionDeploymentService>();
 
         return services;
     }

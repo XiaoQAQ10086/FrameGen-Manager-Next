@@ -4,7 +4,7 @@
 
 FrameGen Manager-Next 是 FrameGen Manager 的从零重写版：Windows 桌面端帧生成部署管理器，使用 **C# / .NET 10 LTS + WPF + Wpf.Ui**，单进程架构。
 
-> 当前状态：**Phase 3（部署引擎 + FrameGen）本地验收完成**。游戏库、GPU、日志诊断、统一部署引擎、备份/还原和 FrameGen 部署已完成；Smooth Motion / DLSS5、完整选项 UI 和真实游戏对照尚未完成。
+> 当前状态：**Phase 4（Smooth Motion）本地验收完成，DLSS5 待接入**。游戏库、GPU、日志诊断、统一部署引擎、FrameGen（含完整选项）和 Smooth Motion 已完成；DLSS5、真实游戏对照和 UI 打磨尚未完成。
 
 ## 仓库
 
@@ -71,6 +71,10 @@ fgm-next.exe logs tail --lines 200
 fgm-next.exe deploy inspect <target-dir>
 fgm-next.exe deploy framegen <target-dir> [--proxy version.dll]
 fgm-next.exe deploy restore <target-dir>
+fgm-next.exe sm inspect <target-dir> <game-exe>
+fgm-next.exe sm enable <target-dir> <game-exe>
+fgm-next.exe sm disable <target-dir> <game-exe>
+fgm-next.exe sm restore <target-dir> <game-exe>
 ```
 
 完整门禁（格式 + 构建 + 测试 + 结构检查）：

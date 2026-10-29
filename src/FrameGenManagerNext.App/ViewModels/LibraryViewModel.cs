@@ -33,6 +33,8 @@ public sealed partial class LibraryViewModel : ObservableObject, IDisposable
 
     public ObservableCollection<GameEntryViewModel> Games { get; } = [];
 
+    public FrameGenOptionsViewModel Options { get; } = new();
+
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(ScanCommand))]
     [NotifyCanExecuteChangedFor(nameof(AddGameCommand))]
@@ -229,7 +231,7 @@ public sealed partial class LibraryViewModel : ObservableObject, IDisposable
         {
             var result = await _frameGen.DeployAsync(
                 game.TargetDirectory,
-                FrameGenOptions.Default,
+                Options.ToOptions(),
                 progress,
                 CancellationToken.None);
 
@@ -453,7 +455,7 @@ public sealed partial class LibraryViewModel : ObservableObject, IDisposable
             {
                 var result = await _frameGen.InspectAsync(
                     game.TargetDirectory,
-                    FrameGenOptions.Default,
+                    Options.ToOptions(),
                     CancellationToken.None);
 
                 if (result.IsSuccess)

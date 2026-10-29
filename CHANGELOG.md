@@ -49,6 +49,15 @@
 - 便携版内置 FrameGen 资产包。
 - 行为规格：`deployment.md`；测试增至 196 个。
 
+### Phase 4（Smooth Motion）
+
+- NVAPI DRS 适配器：动态加载 `nvapi64.dll`，查找/创建 profile，读写设置 `0xB0D384C0`，保存并用新会话读回复核。
+- Smooth Motion 组件部署/还原：RTX 30 单文件、RTX 20 三件套，接入统一部署引擎。
+- Smooth Motion 页面与 CLI：`inspect` / `enable` / `disable` / `restore`。
+- FrameGen 完整选项 UI/CLI：代理槽、优化档、帧数、Preset、引擎、SR、XeSS flow/HUD-less。
+- 真机验证：RTX 3070 + 621.01，开启读回 1、关闭读回 0、还原后组件移除。
+- 测试增至 197 个；`smooth-motion.md` 行为规格。
+
 ### Notes
 
 - 不读取或迁移旧版数据。

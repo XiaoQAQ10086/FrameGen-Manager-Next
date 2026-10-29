@@ -16,6 +16,8 @@ public enum ErrorCode
     GpuUnsupported,
     GpuNotNeeded,
     DriverTooOld,
+    NvApiUnavailable,
+    NvApiCallFailed,
     GameRunning,
     AssetMissing,
     PackNotFound,

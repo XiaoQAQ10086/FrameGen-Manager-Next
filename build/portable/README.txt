@@ -23,14 +23,16 @@ FrameGen Manager-Next（便携版 / Portable）
   fgm-next.exe pack validate <pack目录> [--no-hash] [--schema-only]
 
 部署：
-  游戏库中的“部署”会写入默认 FrameGen 组件（version.dll、优化 1、4X、Preset A、DLSS）。
+  游戏库中的“部署”会写入 FrameGen 组件（代理槽/优化/帧数/Preset/引擎/SR 可选）。
   “还原”会恢复部署前备份的原文件；用户改过的文件会保留并提示冲突。
+  Smooth Motion 页面可逐游戏开启/关闭/还原。
   请先关闭游戏，再执行部署或还原。
 
 资产包：
-  packs\framegen.sm86\ 内含本版部署所需的 FrameGen 资产，可直接使用：
+  packs\framegen.sm86\、packs\smooth-motion.rtx30\、packs\smooth-motion.rtx20\
+  内含本版部署所需的资产，可直接使用：
     fgm-next.exe pack validate packs\framegen.sm86
-  其他 pack 只附带清单；Smooth Motion / DLSS5 部署在后续版本接入。
+  DLSS5 资产与部署在后续版本接入。
 
 注意：
   - 这是测试用便携版，不是安装包。

@@ -40,11 +40,13 @@ public partial class App : Application
                 services.AddSingleton<MainWindowViewModel>();
                 services.AddSingleton<LibraryViewModel>();
                 services.AddSingleton<GpuViewModel>();
+                services.AddSingleton<SmoothMotionViewModel>();
                 services.AddSingleton<LogsViewModel>();
                 services.AddSingleton<AboutViewModel>();
 
                 services.AddSingleton<LibraryPage>();
                 services.AddSingleton<GpuPage>();
+                services.AddSingleton<SmoothMotionPage>();
                 services.AddSingleton<LogsPage>();
                 services.AddSingleton<AboutPage>();
                 services.AddSingleton<MainWindow>();
