@@ -1,6 +1,8 @@
 using System.Globalization;
 using System.IO;
 using System.Windows;
+using System.Windows.Interop;
+using System.Windows.Media;
 using FrameGenManagerNext.App.Localization;
 using FrameGenManagerNext.App.Web;
 using FrameGenManagerNext.Core.Features.Settings;
@@ -18,6 +20,10 @@ public partial class App : Application
 
     public App()
     {
+        // The WPF side is only window chrome; WebView2 renders the real UI. Keeping
+        // WPF on software rendering avoids a second D3D device (and RTSS hooking it).
+        RenderOptions.ProcessRenderMode = RenderMode.SoftwareOnly;
+
         var paths = AppPaths.CreateDefault();
         paths.EnsureCreated();
 

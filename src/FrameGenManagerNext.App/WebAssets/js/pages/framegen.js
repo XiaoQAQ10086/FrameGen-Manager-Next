@@ -192,7 +192,9 @@ export default {
 
     function renderGames() {
       const list = q('[data-role="games"]');
-      list.innerHTML = games.map((game, index) => `
+      list.innerHTML = games.map((game, index) => {
+        const deployed = ['Installed', 'Outdated', 'Partial', 'Conflict', 'InstalledWithoutManifest'].includes(game.state);
+        return `
         <article class="gcard" style="animation-delay:${Math.min(index * 35, 350)}ms">
           <div class="gtop">
             ${game.cover ? `<img class="thumb" src="${game.cover}" alt="">` : `<div class="thumb ph2">${esc(game.initial)}</div>`}
@@ -207,12 +209,14 @@ export default {
           </div>
           <div class="gpath" title="${esc(prettyPath(game.targetDirectory))}">${esc(prettyPath(game.targetDirectory))}</div>
           <div class="gactions">
-            <button class="btn small primary" data-action="deploy" data-id="${esc(game.id)}" type="button">${esc(t('Common.Deploy'))}</button>
-            <button class="btn small" data-action="restore" data-id="${esc(game.id)}" type="button">${esc(t('Common.Restore'))}</button>
+            <button class="btn small success" data-action="deploy" data-id="${esc(game.id)}" type="button">${esc(t('Common.Deploy'))}</button>
             <button class="btn small" data-action="open" data-id="${esc(game.id)}" type="button">${esc(t('Library.OpenFolder'))}</button>
-            <button class="btn small danger" data-action="remove" data-id="${esc(game.id)}" type="button">${esc(t('Common.Remove'))}</button>
+            ${deployed ? `<button class="btn small danger" data-action="restore" data-id="${esc(game.id)}" type="button">${esc(t('Common.Restore'))}</button>` : ''}
+            <span class="spacer"></span>
+            <button class="btn small danger icon-only" data-action="remove" data-id="${esc(game.id)}" type="button" title="${esc(t('Common.Remove'))}" aria-label="${esc(t('Common.Remove'))}">🗑</button>
           </div>
-        </article>`).join('');
+        </article>`;
+      }).join('');
       q('[data-role="empty"]').classList.toggle('hidden', games.length > 0);
       list.classList.toggle('hidden', games.length === 0);
       updateRemovedCount();
@@ -361,6 +365,7 @@ export default {
       cancel.disabled = false;
       try {
         await run(() => api.request('games.scan'), null);
+        ui.libraryChanged('framegen');
       } finally {
         buttons.forEach((button) => button.classList.remove('loading'));
         cancel.classList.add('hidden');
@@ -380,6 +385,7 @@ export default {
         addingGame = true;
         try {
           await run(() => api.request('games.add'), null);
+          ui.libraryChanged('framegen');
         } finally {
           setTimeout(() => { addingGame = false; }, 700);
         }
@@ -450,6 +456,7 @@ export default {
         const game = games.find((item) => item.id === id);
         if (!game || !(await confirmDialog(t('Library.Dialog.RemoveTitle'), t('Library.Confirm.Remove').replace('{0}', game.name), t('Common.Remove')))) return;
         await run(() => api.request('games.remove', { id }), null);
+        ui.libraryChanged('framegen');
         return;
       }
       if (action === 'modal-deploy') {
@@ -467,6 +474,12 @@ export default {
       }
     };
     root.addEventListener('click', onRootClick);
+
+    const onLibraryChanged = (event) => {
+      if (event.detail?.source === 'framegen') return;
+      load();
+    };
+    document.addEventListener('fgm:library-changed', onLibraryChanged);
 
     const onOptionsChange = (event) => {
       if (event.target.matches('[data-option="engine"]')) syncEngine();
@@ -487,6 +500,7 @@ export default {
     return () => {
       closeModal();
       closeRemoved();
+      document.removeEventListener('fgm:library-changed', onLibraryChanged);
       root.removeEventListener('click', onRootClick);
       optionsRoot.removeEventListener('change', onOptionsChange);
     };

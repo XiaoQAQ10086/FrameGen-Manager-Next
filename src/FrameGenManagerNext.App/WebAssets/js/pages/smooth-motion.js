@@ -38,7 +38,6 @@ export default {
               <div class="kv2"><span>${t('Gpu.DriverVersion')}</span><b class="badge" data-role="driver"></b></div>
               <div class="kv2"><span>${t('SmoothMotion.MinDriver')}</span><b class="badge" data-role="min-driver">616.64</b></div>
               <p class="hint" data-role="note">${t('SmoothMotion.Status.Checking')}</p>
-              <button class="btn wide" data-action="refresh" type="button">${t('SmoothMotion.Recheck')}</button>
             </section>
             <section class="panel">
               <div class="ctitle">${t('SmoothMotion.Notes')}</div>
@@ -92,8 +91,9 @@ export default {
           <div class="gpath" title="${esc(prettyPath(game.targetDirectory))}">${esc(prettyPath(game.targetDirectory))}</div>
           ${game.detail ? `<div class="hint">${esc(game.detail)}</div>` : ''}
           <div class="gactions">
-            <button class="btn small primary" data-action="enable" data-id="${game.id}" type="button" ${game.available === false || game.enabled === true ? 'disabled' : ''}>${t('SmoothMotion.Enable')}</button>
-            <button class="btn small danger" data-action="disable" data-id="${game.id}" type="button" ${game.available === false || game.enabled !== true ? 'disabled' : ''}>${t('SmoothMotion.Disable')}</button>
+            ${game.enabled === true
+              ? `<button class="btn small danger" data-action="disable" data-id="${game.id}" type="button">${t('SmoothMotion.Disable')}</button>`
+              : `<button class="btn small success" data-action="enable" data-id="${game.id}" type="button" ${game.available === false ? 'disabled' : ''}>${t('SmoothMotion.Enable')}</button>`}
             <button class="btn small" data-action="restore" data-id="${game.id}" type="button">${t('Common.Restore')}</button>
           </div>
         </article>`).join('');
@@ -136,16 +136,13 @@ export default {
       const button = event.target.closest('[data-action]');
       if (!button) return;
       const actionName = button.dataset.action;
-      if (actionName === 'refresh') {
-        api.invalidate();
-        return load();
-      }
       if (actionName === 'add') {
         if (addingGame) return;
         addingGame = true;
         try {
           await api.request('games.add').catch((error) => ui.toast(error.message, 'error'));
           await load();
+          ui.libraryChanged('smooth-motion');
         } finally {
           setTimeout(() => { addingGame = false; }, 700);
         }
@@ -156,6 +153,7 @@ export default {
         try {
           await api.request('games.scan');
           await load();
+          ui.libraryChanged('smooth-motion');
         } catch (error) {
           ui.toast(error.message, 'error');
         } finally {
@@ -180,7 +178,16 @@ export default {
     };
     root.addEventListener('click', onClick);
 
+    const onLibraryChanged = (event) => {
+      if (event.detail?.source === 'smooth-motion') return;
+      load();
+    };
+    document.addEventListener('fgm:library-changed', onLibraryChanged);
+
     await load();
-    return () => root.removeEventListener('click', onClick);
+    return () => {
+      document.removeEventListener('fgm:library-changed', onLibraryChanged);
+      root.removeEventListener('click', onClick);
+    };
   },
 };

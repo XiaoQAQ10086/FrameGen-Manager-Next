@@ -5,7 +5,7 @@
   --ink: #172033;
   --muted: #606b7d;
   --line: #dde4ee;
-  --card: rgba(255, 255, 255, 0.82);
+  --card: rgba(255, 255, 255, 0.92);
   --card-line: rgba(255, 255, 255, 0.78);
   --field: #ffffff;
   --accent: #007aff;
@@ -83,7 +83,6 @@ button, select { font: inherit; }
   border: 1px solid var(--card-line);
   border-radius: var(--radius);
   box-shadow: var(--shadow);
-  backdrop-filter: blur(18px) saturate(1.35);
   padding: 14px;
   margin-bottom: 12px;
   animation: riseIn .34s var(--ease) both;
@@ -99,7 +98,7 @@ button, select { font: inherit; }
 .kv2.stacked > b { max-width: 100%; text-align: left; }
 .kv2.spoof-name > b { max-width: 72%; }
 .spoof-picker { display: grid; gap: 8px; margin-top: 10px; }
-.badge { display: inline-block; max-width: 58%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding: 2px 9px; border-radius: 999px; border: 1px solid var(--line); background: rgba(255,255,255,.55); color: var(--ink); font-size: 11.5px; font-weight: 600; }
+.badge { display: inline-block; max-width: 72%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding: 2px 9px; border-radius: 999px; border: 1px solid var(--line); background: rgba(255,255,255,.55); color: var(--ink); font-size: 11.5px; font-weight: 600; }
 .badge.ok { color: #0b6b3a; border-color: rgba(27,127,59,.35); background: rgba(25,160,95,.1); }
 .badge.warn { color: var(--warn); border-color: rgba(178,106,0,.35); background: rgba(194,110,0,.08); }
 .badge.dim { color: var(--muted); background: rgba(96,107,125,.07); }
@@ -119,7 +118,6 @@ button, select { font: inherit; }
   border-radius: var(--radius);
   background: var(--card);
   box-shadow: var(--shadow);
-  backdrop-filter: blur(18px) saturate(1.35);
   padding: 13px 14px;
   display: grid;
   gap: 10px;
@@ -134,7 +132,8 @@ button, select { font: inherit; }
 .gname { font-size: 15px; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .badges { display: flex; flex-wrap: wrap; gap: 6px; }
 .gpath { color: var(--muted); font-family: Consolas, "Courier New", monospace; font-size: 12px; line-height: 1.45; overflow-wrap: anywhere; }
-.gactions { display: flex; justify-content: flex-end; gap: 8px; flex-wrap: wrap; }
+.gactions { display: flex; justify-content: flex-start; gap: 8px; flex-wrap: wrap; align-items: center; }
+.gactions .spacer { flex: 1 1 auto; }
 .skeleton-card { grid-template-columns: 52px minmax(0, 1fr); align-items: center; min-height: 72px; }
 .sk-cover { width: 52px; height: 70px; border-radius: 10px; background: rgba(96,107,125,.1); animation: shimmer 1.2s ease-in-out infinite; }
 .sk-body { display: grid; gap: 9px; }
@@ -182,7 +181,6 @@ button, select { font: inherit; }
   border: 1px solid var(--card-line);
   border-radius: var(--radius);
   box-shadow: var(--shadow);
-  backdrop-filter: blur(18px) saturate(1.35);
   padding: 14px 16px;
   display: grid;
   grid-template-columns: 48px 14px minmax(0, 1fr);
@@ -226,6 +224,9 @@ button, select { font: inherit; }
 .btn.ghost { background: transparent; border-color: transparent; box-shadow: none; color: var(--accent); }
 .btn.ghost:hover { background: var(--accent-soft); box-shadow: none; }
 .btn.small { padding: 5px 9px; font-size: 12px; border-radius: 9px; }
+.btn.success { background: linear-gradient(180deg, #239f48, #157a33); border-color: #0f632a; color: #fff; font-weight: 650; }
+.btn.success:hover { filter: brightness(1.06); }
+.btn.icon-only { padding: 5px 8px; font-size: 14px; line-height: 1.1; }
 .btn.wide { display: block; width: 100%; margin-top: 9px; text-align: center; }
 
 .empty { margin: auto; text-align: center; color: var(--muted); display: grid; gap: 14px; place-items: center; }

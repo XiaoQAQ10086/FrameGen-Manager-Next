@@ -140,6 +140,7 @@ export default {
           try {
             await api.request('games.add').catch((error) => ui.toast(error.message, 'error'));
             await load();
+            ui.libraryChanged('dlss5');
           } finally {
             setTimeout(() => { addingGame = false; }, 700);
           }
@@ -150,6 +151,7 @@ export default {
           try {
             await api.request('games.scan');
             await load();
+            ui.libraryChanged('dlss5');
           } catch (error) {
             ui.toast(error.message, 'error');
           } finally {
@@ -187,7 +189,16 @@ export default {
     };
     root.addEventListener('click', onClick);
 
+    const onLibraryChanged = (event) => {
+      if (event.detail?.source === 'dlss5') return;
+      load();
+    };
+    document.addEventListener('fgm:library-changed', onLibraryChanged);
+
     await load();
-    return () => root.removeEventListener('click', onClick);
+    return () => {
+      document.removeEventListener('fgm:library-changed', onLibraryChanged);
+      root.removeEventListener('click', onClick);
+    };
   },
 };

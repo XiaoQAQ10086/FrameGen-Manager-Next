@@ -79,6 +79,10 @@ export function confirmDialog(title, message, okLabel = '确定') {
   });
 }
 
+export function libraryChanged(source) {
+  document.dispatchEvent(new CustomEvent('fgm:library-changed', { detail: { source } }));
+}
+
 export function label(code, prefix) {
   return code ? `${prefix}.${code}` : `${prefix}.Unknown`;
 }
