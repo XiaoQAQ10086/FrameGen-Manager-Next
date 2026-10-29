@@ -111,7 +111,8 @@ planned → backingUp → writing → verifying → installed
 - 所有 JSON 带 `schemaVersion`。
 - 写入使用“临时文件 + 原子替换”；损坏文件隔离为 `.bad`。
 - 不读取旧版数据；不做多跳迁移。
-- `FGM_DATA_DIR` 可覆盖根目录，用于测试和便携场景。
+- `FGM_DATA_DIR` 可覆盖根目录，用于测试。
+- 便携版在 exe 同目录放 `portable.flag`，数据写到 `data\`；不写注册表。
 
 ## 8. UI
 
@@ -130,7 +131,8 @@ planned → backingUp → writing → verifying → installed
 
 ## 10. 更新与分发
 
-- Velopack：每用户安装、增量更新、GitHub Releases。
+- 便携版优先：`build/publish-portable.ps1` 生成自包含 win-x64 文件夹和 zip；先验收，后做安装包。
+- Velopack：每用户安装、增量更新、GitHub Releases（Phase 5）。
 - 程序版本与资产包版本分离。
 - 发布前校验 SHA-256；代码签名后续补上。
 - 旧版仓库和旧更新源保持不变。

@@ -29,6 +29,7 @@ dotnet_naming_style.i_prefixed.required_prefix = I
 dotnet_naming_style.i_prefixed.capitalization = pascal_case
 
 # Analyzer policy
+dotnet_diagnostic.CA1000.severity = none
 dotnet_diagnostic.CA1031.severity = none
 dotnet_diagnostic.CA1303.severity = none
 dotnet_diagnostic.CA1812.severity = none

@@ -108,5 +108,7 @@ Core/Features/<Feature>/
 - 分支：`main` 受保护；功能分支 `feat/<module>`，修复 `fix/<module>`。
 - 提交信息：`<type>(<scope>): <summary>`，例如 `feat(deployment): add backup manifest state machine`。
 - 版本：`2.0.0` 起步；程序与资产包版本独立。
+- 便携版优先：`build/publish-portable.ps1`，输出 `artifacts/portable/`。
+- 安装包（Velopack）只在便携版验收通过后生成；不要提前把安装器混入验收流程。
 - 发布：Velopack + GitHub Releases；`packId = FrameGenManagerNext`。
 - 代码签名暂缓，但发布前必须校验 SHA-256。

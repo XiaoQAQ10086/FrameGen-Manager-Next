@@ -39,6 +39,24 @@ Invoke-Dotnet -Arguments @('format', $solution, '--verify-no-changes', '--no-res
 Invoke-Dotnet -Arguments @('build', $solution, '-c', $Configuration, '--no-restore')
 Invoke-Dotnet -Arguments @('test', $solution, '-c', $Configuration, '--no-build')
 
+$packRoot = Join-Path $root 'packs'
+if (Test-Path -LiteralPath $packRoot) {
+    $cliDll = Join-Path $root "src\FrameGenManagerNext.Cli\bin\$Configuration\net10.0-windows\fgm-next.dll"
+    $packDirectories = Get-ChildItem -LiteralPath $packRoot -Directory | Sort-Object Name
+
+    foreach ($packDirectory in $packDirectories) {
+        if (-not (Test-Path -LiteralPath (Join-Path $packDirectory.FullName 'pack.json'))) {
+            continue
+        }
+
+        Write-Host "> pack validate $($packDirectory.Name) (schema only)" -ForegroundColor Cyan
+        & $dotnet $cliDll pack validate $packDirectory.FullName --schema-only
+        if ($LASTEXITCODE -ne 0) {
+            throw "Pack schema validation failed: $($packDirectory.Name)"
+        }
+    }
+}
+
 & (Join-Path $PSScriptRoot 'check-quality.ps1') -Root $root
 if ($LASTEXITCODE -ne 0) {
     throw 'Quality checks failed.'

@@ -1,0 +1,27 @@
+{
+    "schemaVersion":  1,
+    "id":  "smooth-motion.rtx30",
+    "version":  "1.0.0",
+    "displayName":  "Smooth Motion RTX 30 (SmoothMotion-next, sm8792+)",
+    "minAppVersion":  "2.0.0",
+    "gpuRoutes":  [
+                      "Sm86"
+                  ],
+    "files":  [
+                  {
+                      "source":  "rtx30/version.dll",
+                      "target":  "version.dll",
+                      "role":  "runtime",
+                      "required":  true,
+                      "proxySlot":  false,
+                      "sha256":  "0a9684288be14cdfa44a042c6e2f4c490f0114dca1729aef925be95490b74a50",
+                      "size":  1064448
+                  }
+              ],
+    "steps":  [
+                  {
+                      "type":  "copyFiles"
+                  }
+              ],
+    "trust":  "bundled"
+}

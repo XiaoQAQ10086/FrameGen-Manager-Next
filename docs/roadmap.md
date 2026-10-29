@@ -19,15 +19,22 @@
 
 仓库：<https://github.com/XiaoQAQ10086/FrameGen-Manager-Next>
 
-## Phase 1 · 领域与资产包
+## Phase 1 · 领域与资产包（进行中）
 
-- `ErrorCode`、`Result<T>`、`SafePath`、INI 编辑器
-- `pack.json` schema + 校验器
-- 从旧项目生成 FrameGen / Smooth Motion / DLSS5 三个 pack
-- CLI `pack validate`
-- 行为规格：路径安全、INI、GPU 路由
+- [x] `ErrorCode`、`AppError`、`Result<T>`
+- [x] `SafePath` 路径安全规则
+- [x] INI 解析/编辑/stock 覆盖
+- [x] `pack.json` schema + 校验器 + 严格 JSON 读取
+- [x] payload 校验（存在性、大小、SHA-256、INI 模板、安装器）
+- [x] 从旧项目生成 FrameGen / Smooth Motion RTX30/RTX20 / DLSS5 四个 pack
+- [x] CLI `pack validate [--no-hash] [--schema-only]`
+- [x] 行为规格：路径安全、INI、资产包
+- [x] 便携版发布流程（自包含 win-x64 + `portable.flag`）
+- [ ] GPU 路由行为规格（Phase 2 补）
 
-验收：三个 pack 通过校验；规则单测通过。
+验收：四个 pack 通过完整哈希校验；112 个测试通过；便携版可启动。
+
+> 安装包（Velopack）不在此阶段生成；先交付便携版给用户验收，通过后再做安装器。
 
 ## Phase 2 · 只读闭环
 

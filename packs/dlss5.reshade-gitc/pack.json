@@ -1,0 +1,1053 @@
+{
+    "schemaVersion":  1,
+    "id":  "dlss5.reshade-gitc",
+    "version":  "6.8.0",
+    "displayName":  "DLSS5 ReShade 6.8.0 + GITC Uplift",
+    "minAppVersion":  "2.0.0",
+    "gpuRoutes":  [
+                      "Sm86",
+                      "Sm75"
+                  ],
+    "files":  [
+                  {
+                      "source":  "gitc-uplift.addon64",
+                      "target":  "gitc-uplift.addon64",
+                      "role":  "addon",
+                      "required":  true,
+                      "proxySlot":  false,
+                      "sha256":  "c2fa539d8fb4d6cc1a8137cdd764d127926bb0946bef1f153ff593595cf1c0d3",
+                      "size":  5831680
+                  },
+                  {
+                      "source":  "gitc-uplift.addon32",
+                      "target":  "gitc-uplift.addon32",
+                      "role":  "addon",
+                      "required":  true,
+                      "proxySlot":  false,
+                      "sha256":  "8267873cf9dc1288e0256a4bdbe36e81e974c1f55cc4ac07f671b5b00377c503",
+                      "size":  2875904
+                  },
+                  {
+                      "source":  "gitc-uplift-helper64.exe",
+                      "target":  "gitc-uplift-helper64.exe",
+                      "role":  "other",
+                      "required":  true,
+                      "proxySlot":  false,
+                      "sha256":  "eaacf35c93ad7a4a50ef341fc5d003f1f580157ed76e2fb39763e5be383571b9",
+                      "size":  3307520
+                  },
+                  {
+                      "source":  "Uplift.fx",
+                      "target":  "reshade-shaders/Shaders/GITC-Uplift/Uplift.fx",
+                      "role":  "shader",
+                      "required":  true,
+                      "proxySlot":  false,
+                      "sha256":  "8141c9a31e28aabe5e495221af3c145a17412a604721eb26cb3b03ebacafc060",
+                      "size":  11699
+                  },
+                  {
+                      "source":  "UpliftMask.fx",
+                      "target":  "reshade-shaders/Shaders/GITC-Uplift/UpliftMask.fx",
+                      "role":  "shader",
+                      "required":  true,
+                      "proxySlot":  false,
+                      "sha256":  "df89b186d140f28aa27998a524421038aadceb69c8bad9cab24d33bf8d274314",
+                      "size":  1383
+                  },
+                  {
+                      "source":  "nvngx_dlssnr.dll",
+                      "target":  "GITC-Uplift/nvngx_dlssnr.dll",
+                      "role":  "model",
+                      "required":  true,
+                      "proxySlot":  false,
+                      "sha256":  "30b6b599dbc593e5f9a8a0ddb2edac6f2f15ad0eaa967cd6bb0ab6bb224825c3",
+                      "size":  534586880
+                  },
+                  {
+                      "source":  "effects/Shaders/Blending.fxh",
+                      "target":  "reshade-shaders/Shaders/Blending.fxh",
+                      "role":  "shader",
+                      "required":  true,
+                      "proxySlot":  false,
+                      "sha256":  "1eab08b853014fd6aaaae6783c5052de2ec2a74792c149635e4ed44a58660ba3",
+                      "size":  18872
+                  },
+                  {
+                      "source":  "effects/Shaders/Daltonize.fx",
+                      "target":  "reshade-shaders/Shaders/Daltonize.fx",
+                      "role":  "shader",
+                      "required":  true,
+                      "proxySlot":  false,
+                      "sha256":  "ab6006e886db0f1fdb9845b892debe774eda9ec498182373aa6ade601d258d3f",
+                      "size":  2556
+                  },
+                  {
+                      "source":  "effects/Shaders/Deband.fx",
+                      "target":  "reshade-shaders/Shaders/Deband.fx",
+                      "role":  "shader",
+                      "required":  true,
+                      "proxySlot":  false,
+                      "sha256":  "8959ca995090bc89762cc0bf4ba3bb1ffcffdf143e9e0ddaf84f0e004b53dd29",
+                      "size":  9551
+                  },
+                  {
+                      "source":  "effects/Shaders/DisplayDepth.fx",
+                      "target":  "reshade-shaders/Shaders/DisplayDepth.fx",
+                      "role":  "shader",
+                      "required":  true,
+                      "proxySlot":  false,
+                      "sha256":  "b67944bb8a5c6c8127813d332f1fb271222f7aa2c365927b4cbac42bebf749c9",
+                      "size":  10368
+                  },
+                  {
+                      "source":  "effects/Shaders/DisplayDepth_L10N.fxh",
+                      "target":  "reshade-shaders/Shaders/DisplayDepth_L10N.fxh",
+                      "role":  "shader",
+                      "required":  true,
+                      "proxySlot":  false,
+                      "sha256":  "f7d896885ecdb3f4953e069a09c16381ceb0c3a87d12025c3496d6986e67507d",
+                      "size":  17519
+                  },
+                  {
+                      "source":  "effects/Shaders/DrawText.fxh",
+                      "target":  "reshade-shaders/Shaders/DrawText.fxh",
+                      "role":  "shader",
+                      "required":  true,
+                      "proxySlot":  false,
+                      "sha256":  "b79cc4dfb3e98bcf4c06193d00ea7631d74f467f73a4deeeee13e71336d3e680",
+                      "size":  9359
+                  },
+                  {
+                      "source":  "effects/Shaders/iMMERSE/MartysMods/mmx_bxdf.fxh",
+                      "target":  "reshade-shaders/Shaders/iMMERSE/MartysMods/mmx_bxdf.fxh",
+                      "role":  "shader",
+                      "required":  true,
+                      "proxySlot":  false,
+                      "sha256":  "2052c6268c5647f67ab5a04d1147fbd0fe15bb9f597a644cc72a06c65df88e3f",
+                      "size":  8871
+                  },
+                  {
+                      "source":  "effects/Shaders/iMMERSE/MartysMods/mmx_camera.fxh",
+                      "target":  "reshade-shaders/Shaders/iMMERSE/MartysMods/mmx_camera.fxh",
+                      "role":  "shader",
+                      "required":  true,
+                      "proxySlot":  false,
+                      "sha256":  "d59bec69f2aa19f93cc4972fc67da257b94db69675bf730bb1d0ed4c6c029566",
+                      "size":  2436
+                  },
+                  {
+                      "source":  "effects/Shaders/iMMERSE/MartysMods/mmx_colorspaces.fxh",
+                      "target":  "reshade-shaders/Shaders/iMMERSE/MartysMods/mmx_colorspaces.fxh",
+                      "role":  "shader",
+                      "required":  true,
+                      "proxySlot":  false,
+                      "sha256":  "c5a6ddf47a3896b9c439c440ba3dfe145864d896d89cd78d60d653165b04201e",
+                      "size":  5704
+                  },
+                  {
+                      "source":  "effects/Shaders/iMMERSE/MartysMods/mmx_debug.fxh",
+                      "target":  "reshade-shaders/Shaders/iMMERSE/MartysMods/mmx_debug.fxh",
+                      "role":  "shader",
+                      "required":  true,
+                      "proxySlot":  false,
+                      "sha256":  "1425c64bef0ba76875636c6aec17f1ce877b434f6ed354cf24b6da72107c4001",
+                      "size":  2565
+                  },
+                  {
+                      "source":  "effects/Shaders/iMMERSE/MartysMods/mmx_deferred.fxh",
+                      "target":  "reshade-shaders/Shaders/iMMERSE/MartysMods/mmx_deferred.fxh",
+                      "role":  "shader",
+                      "required":  true,
+                      "proxySlot":  false,
+                      "sha256":  "34efa062ffb5819ae89855e18060872ab8c50e8c13cf32127e1d49a4b62057e5",
+                      "size":  3951
+                  },
+                  {
+                      "source":  "effects/Shaders/iMMERSE/MartysMods/mmx_depth.fxh",
+                      "target":  "reshade-shaders/Shaders/iMMERSE/MartysMods/mmx_depth.fxh",
+                      "role":  "shader",
+                      "required":  true,
+                      "proxySlot":  false,
+                      "sha256":  "14d747980ff5d0e7197be4e1196361eb51716fd813684ead0fefac23d7ec3dca",
+                      "size":  4174
+                  },
+                  {
+                      "source":  "effects/Shaders/iMMERSE/MartysMods/mmx_fft.fxh",
+                      "target":  "reshade-shaders/Shaders/iMMERSE/MartysMods/mmx_fft.fxh",
+                      "role":  "shader",
+                      "required":  true,
+                      "proxySlot":  false,
+                      "sha256":  "98cd9d4254ce7fe1da856e649804d672bf009e448f0b87f18aeba5fd596da9a3",
+                      "size":  9124
+                  },
+                  {
+                      "source":  "effects/Shaders/iMMERSE/MartysMods/mmx_global.fxh",
+                      "target":  "reshade-shaders/Shaders/iMMERSE/MartysMods/mmx_global.fxh",
+                      "role":  "shader",
+                      "required":  true,
+                      "proxySlot":  false,
+                      "sha256":  "ecbff2770f0c3aa72442c4f42512c23a23c14759794c71c2f5787f24688f9d30",
+                      "size":  11304
+                  },
+                  {
+                      "source":  "effects/Shaders/iMMERSE/MartysMods/mmx_harmonics.fxh",
+                      "target":  "reshade-shaders/Shaders/iMMERSE/MartysMods/mmx_harmonics.fxh",
+                      "role":  "shader",
+                      "required":  true,
+                      "proxySlot":  false,
+                      "sha256":  "f5c7490c8d5bc85adab0fd368dfa857089e766d554273175d91f31d6ae841729",
+                      "size":  2751
+                  },
+                  {
+                      "source":  "effects/Shaders/iMMERSE/MartysMods/mmx_hash.fxh",
+                      "target":  "reshade-shaders/Shaders/iMMERSE/MartysMods/mmx_hash.fxh",
+                      "role":  "shader",
+                      "required":  true,
+                      "proxySlot":  false,
+                      "sha256":  "4c1bf89bb3881434aeffca4e7afa03355bf7e461e7438569fda5af9c45e8237d",
+                      "size":  2365
+                  },
+                  {
+                      "source":  "effects/Shaders/iMMERSE/MartysMods/mmx_input.fxh",
+                      "target":  "reshade-shaders/Shaders/iMMERSE/MartysMods/mmx_input.fxh",
+                      "role":  "shader",
+                      "required":  true,
+                      "proxySlot":  false,
+                      "sha256":  "4564cd9ba6dd12d4ee24f03291d05ae3477c6e5b21ad64e3a948560c8644dbef",
+                      "size":  2175
+                  },
+                  {
+                      "source":  "effects/Shaders/iMMERSE/MartysMods/mmx_math.fxh",
+                      "target":  "reshade-shaders/Shaders/iMMERSE/MartysMods/mmx_math.fxh",
+                      "role":  "shader",
+                      "required":  true,
+                      "proxySlot":  false,
+                      "sha256":  "775014fcb7e37a1c60311c817ee3fc517346e19721cd131b3d3f644f755ef034",
+                      "size":  11756
+                  },
+                  {
+                      "source":  "effects/Shaders/iMMERSE/MartysMods/mmx_qmc.fxh",
+                      "target":  "reshade-shaders/Shaders/iMMERSE/MartysMods/mmx_qmc.fxh",
+                      "role":  "shader",
+                      "required":  true,
+                      "proxySlot":  false,
+                      "sha256":  "58dac456c2ed37f3f79b58432fc71769b2c8a2ca637671998597cbb2131f362b",
+                      "size":  6365
+                  },
+                  {
+                      "source":  "effects/Shaders/iMMERSE/MartysMods/mmx_sfc.fxh",
+                      "target":  "reshade-shaders/Shaders/iMMERSE/MartysMods/mmx_sfc.fxh",
+                      "role":  "shader",
+                      "required":  true,
+                      "proxySlot":  false,
+                      "sha256":  "3ac268e3581a5057fdb45d40ae63a9190174da06e3d3e9c8c50acc86b4a2c46f",
+                      "size":  3606
+                  },
+                  {
+                      "source":  "effects/Shaders/iMMERSE/MartysMods/mmx_texture.fxh",
+                      "target":  "reshade-shaders/Shaders/iMMERSE/MartysMods/mmx_texture.fxh",
+                      "role":  "shader",
+                      "required":  true,
+                      "proxySlot":  false,
+                      "sha256":  "b263d2d9c1c97d642547036cf1a0cd6d80c2230c8709f4582aff017fb2f73248",
+                      "size":  5271
+                  },
+                  {
+                      "source":  "effects/Shaders/iMMERSE/MartysMods_FILMGRAIN.fx",
+                      "target":  "reshade-shaders/Shaders/iMMERSE/MartysMods_FILMGRAIN.fx",
+                      "role":  "shader",
+                      "required":  true,
+                      "proxySlot":  false,
+                      "sha256":  "5802367eef68052a592b3bc5e23be2cc62023f908d46a57abb22a4db7ec10f91",
+                      "size":  20101
+                  },
+                  {
+                      "source":  "effects/Shaders/iMMERSE/MartysMods_LAUNCHPAD.fx",
+                      "target":  "reshade-shaders/Shaders/iMMERSE/MartysMods_LAUNCHPAD.fx",
+                      "role":  "shader",
+                      "required":  true,
+                      "proxySlot":  false,
+                      "sha256":  "fbe62772ad6782f5c8126f73470ae586f5395455719ad90b1287e8bb57b7b033",
+                      "size":  64226
+                  },
+                  {
+                      "source":  "effects/Shaders/iMMERSE/MartysMods_MXAO.fx",
+                      "target":  "reshade-shaders/Shaders/iMMERSE/MartysMods_MXAO.fx",
+                      "role":  "shader",
+                      "required":  true,
+                      "proxySlot":  false,
+                      "sha256":  "1a4380dcba3b365ca53e52f6130b89e8c4ec71f772a06c00d433d4bc0a831734",
+                      "size":  33299
+                  },
+                  {
+                      "source":  "effects/Shaders/iMMERSE/MartysMods_SHARPEN.fx",
+                      "target":  "reshade-shaders/Shaders/iMMERSE/MartysMods_SHARPEN.fx",
+                      "role":  "shader",
+                      "required":  true,
+                      "proxySlot":  false,
+                      "sha256":  "c6a75d1f6bec660b991795d449e48dd92b664832f9eeeef0401d328a4e35821d",
+                      "size":  9064
+                  },
+                  {
+                      "source":  "effects/Shaders/iMMERSE/MartysMods_SMAA.fx",
+                      "target":  "reshade-shaders/Shaders/iMMERSE/MartysMods_SMAA.fx",
+                      "role":  "shader",
+                      "required":  true,
+                      "proxySlot":  false,
+                      "sha256":  "43ec8f7f397648775dc3e5ab6fab879d056298fa7509cbd3a2640c4da29747b2",
+                      "size":  41836
+                  },
+                  {
+                      "source":  "effects/Shaders/iMMERSE/MartysMods_SOLARIS.fx",
+                      "target":  "reshade-shaders/Shaders/iMMERSE/MartysMods_SOLARIS.fx",
+                      "role":  "shader",
+                      "required":  true,
+                      "proxySlot":  false,
+                      "sha256":  "3f99de4727a09b5e584abe6df71877759a0bbc64ae3af069947e6eb476199aa3",
+                      "size":  23689
+                  },
+                  {
+                      "source":  "effects/Shaders/LUT.fx",
+                      "target":  "reshade-shaders/Shaders/LUT.fx",
+                      "role":  "shader",
+                      "required":  true,
+                      "proxySlot":  false,
+                      "sha256":  "e3179c023a599d1ebe0c73fa00084a64d0be66f4e5b43a45c1bb25c3c9df0363",
+                      "size":  2714
+                  },
+                  {
+                      "source":  "effects/Shaders/Macros.fxh",
+                      "target":  "reshade-shaders/Shaders/Macros.fxh",
+                      "role":  "shader",
+                      "required":  true,
+                      "proxySlot":  false,
+                      "sha256":  "78d8974469b0e7bb2fdd5c6a98ee6304d03a614ffd2bc2a66985a54ff5f9b3a0",
+                      "size":  21411
+                  },
+                  {
+                      "source":  "effects/Shaders/ReShade.fxh",
+                      "target":  "reshade-shaders/Shaders/ReShade.fxh",
+                      "role":  "shader",
+                      "required":  true,
+                      "proxySlot":  false,
+                      "sha256":  "6dabfbbaf968c3871905d2ea17f96572ff7b1cec01310b5d0e5252b66b30174f",
+                      "size":  4250
+                  },
+                  {
+                      "source":  "effects/Shaders/ReShade_HDR_shaders/lilium__blue_noise_dithering.fx",
+                      "target":  "reshade-shaders/Shaders/ReShade_HDR_shaders/lilium__blue_noise_dithering.fx",
+                      "role":  "shader",
+                      "required":  true,
+                      "proxySlot":  false,
+                      "sha256":  "fa5153779332c62af3615015519ee4c2cfccd9df487923fb7e4ccbca538ea00a",
+                      "size":  23566
+                  },
+                  {
+                      "source":  "effects/Shaders/ReShade_HDR_shaders/lilium__hdr_brightness_adjustment.fx",
+                      "target":  "reshade-shaders/Shaders/ReShade_HDR_shaders/lilium__hdr_brightness_adjustment.fx",
+                      "role":  "shader",
+                      "required":  true,
+                      "proxySlot":  false,
+                      "sha256":  "9a97398b91f156de6149e5a49e2203685e8ef6c3779c780def63ae3e9c6a62cc",
+                      "size":  5741
+                  },
+                  {
+                      "source":  "effects/Shaders/ReShade_HDR_shaders/lilium__include/cas.fxh",
+                      "target":  "reshade-shaders/Shaders/ReShade_HDR_shaders/lilium__include/cas.fxh",
+                      "role":  "shader",
+                      "required":  true,
+                      "proxySlot":  false,
+                      "sha256":  "ee7d347f971b85abeb6eb00e169dd66326a412d91a3f77dab9e9dccf64be0df6",
+                      "size":  4581
+                  },
+                  {
+                      "source":  "effects/Shaders/ReShade_HDR_shaders/lilium__include/cas_helpers.fxh",
+                      "target":  "reshade-shaders/Shaders/ReShade_HDR_shaders/lilium__include/cas_helpers.fxh",
+                      "role":  "shader",
+                      "required":  true,
+                      "proxySlot":  false,
+                      "sha256":  "7f2f5d3eb0979a9e653d709578d7d8ff891e5f8d132df5bb89d5419662c32046",
+                      "size":  5701
+                  },
+                  {
+                      "source":  "effects/Shaders/ReShade_HDR_shaders/lilium__include/colour_space/cie_xyz_xy_uv.fxh",
+                      "target":  "reshade-shaders/Shaders/ReShade_HDR_shaders/lilium__include/colour_space/cie_xyz_xy_uv.fxh",
+                      "role":  "shader",
+                      "required":  true,
+                      "proxySlot":  false,
+                      "sha256":  "e93b517ed6e901ffddcceeb1b51ba9a1911fc027e762f4b4944a3fa3c5e4caf7",
+                      "size":  3054
+                  },
+                  {
+                      "source":  "effects/Shaders/ReShade_HDR_shaders/lilium__include/colour_space/colour_object.fxh",
+                      "target":  "reshade-shaders/Shaders/ReShade_HDR_shaders/lilium__include/colour_space/colour_object.fxh",
+                      "role":  "shader",
+                      "required":  true,
+                      "proxySlot":  false,
+                      "sha256":  "cb54f3624acd5018810b58a7d93f1b37eeb4b204c65eaaa1800f5f9fc6b29be4",
+                      "size":  20393
+                  },
+                  {
+                      "source":  "effects/Shaders/ReShade_HDR_shaders/lilium__include/colour_space/darktable_ucs.fxh",
+                      "target":  "reshade-shaders/Shaders/ReShade_HDR_shaders/lilium__include/colour_space/darktable_ucs.fxh",
+                      "role":  "shader",
+                      "required":  true,
+                      "proxySlot":  false,
+                      "sha256":  "f6b749cda7666442edb47224c7f540810e05314332fdf192984c8325899bf020",
+                      "size":  11930
+                  },
+                  {
+                      "source":  "effects/Shaders/ReShade_HDR_shaders/lilium__include/colour_space/hdr_trcs.fxh",
+                      "target":  "reshade-shaders/Shaders/ReShade_HDR_shaders/lilium__include/colour_space/hdr_trcs.fxh",
+                      "role":  "shader",
+                      "required":  true,
+                      "proxySlot":  false,
+                      "sha256":  "8674759b781874e5c501a0b1529a70127aab9b893044167ab1bce28f1ac34578",
+                      "size":  7960
+                  },
+                  {
+                      "source":  "effects/Shaders/ReShade_HDR_shaders/lilium__include/colour_space/hdr10_to_linear_lut.fxh",
+                      "target":  "reshade-shaders/Shaders/ReShade_HDR_shaders/lilium__include/colour_space/hdr10_to_linear_lut.fxh",
+                      "role":  "shader",
+                      "required":  true,
+                      "proxySlot":  false,
+                      "sha256":  "ef459a7481a47f91e72c2a47425fbd21bfc92701cf1e27e2a17a659962e91d93",
+                      "size":  8452
+                  },
+                  {
+                      "source":  "effects/Shaders/ReShade_HDR_shaders/lilium__include/colour_space/helpers.fxh",
+                      "target":  "reshade-shaders/Shaders/ReShade_HDR_shaders/lilium__include/colour_space/helpers.fxh",
+                      "role":  "shader",
+                      "required":  true,
+                      "proxySlot":  false,
+                      "sha256":  "64e642d959696f3c12590f0c95ce1989a51a1dde1641c975c7674063e41c4448",
+                      "size":  4247
+                  },
+                  {
+                      "source":  "effects/Shaders/ReShade_HDR_shaders/lilium__include/colour_space/ictcp.fxh",
+                      "target":  "reshade-shaders/Shaders/ReShade_HDR_shaders/lilium__include/colour_space/ictcp.fxh",
+                      "role":  "shader",
+                      "required":  true,
+                      "proxySlot":  false,
+                      "sha256":  "3e09cbbf890fc5c3149218b7d42393db2dd48774d586625773139d151659d99d",
+                      "size":  7939
+                  },
+                  {
+                      "source":  "effects/Shaders/ReShade_HDR_shaders/lilium__include/colour_space/ipt.fxh",
+                      "target":  "reshade-shaders/Shaders/ReShade_HDR_shaders/lilium__include/colour_space/ipt.fxh",
+                      "role":  "shader",
+                      "required":  true,
+                      "proxySlot":  false,
+                      "sha256":  "190b31f66fb78c58e7f5313d9785d44ea923d5a4f0d5b1433ab9f448d5728a67",
+                      "size":  4525
+                  },
+                  {
+                      "source":  "effects/Shaders/ReShade_HDR_shaders/lilium__include/colour_space/jzazbz.fxh",
+                      "target":  "reshade-shaders/Shaders/ReShade_HDR_shaders/lilium__include/colour_space/jzazbz.fxh",
+                      "role":  "shader",
+                      "required":  true,
+                      "proxySlot":  false,
+                      "sha256":  "662392bba466baf821bfeef33cbe9df169715e4ffa5ab279875c12e74d6ea5cd",
+                      "size":  10894
+                  },
+                  {
+                      "source":  "effects/Shaders/ReShade_HDR_shaders/lilium__include/colour_space/matrices.fxh",
+                      "target":  "reshade-shaders/Shaders/ReShade_HDR_shaders/lilium__include/colour_space/matrices.fxh",
+                      "role":  "shader",
+                      "required":  true,
+                      "proxySlot":  false,
+                      "sha256":  "ff9ec7aa7757cafdc3e530c500ffdfcf980ccb87da5b30fa8ce430ff40c459ce",
+                      "size":  18559
+                  },
+                  {
+                      "source":  "effects/Shaders/ReShade_HDR_shaders/lilium__include/colour_space/oklab.fxh",
+                      "target":  "reshade-shaders/Shaders/ReShade_HDR_shaders/lilium__include/colour_space/oklab.fxh",
+                      "role":  "shader",
+                      "required":  true,
+                      "proxySlot":  false,
+                      "sha256":  "19c3ab49653248f1b9634a5d38251503d0cf86d756f8400b9818049229349468",
+                      "size":  21371
+                  },
+                  {
+                      "source":  "effects/Shaders/ReShade_HDR_shaders/lilium__include/colour_space/sdr_trcs.fxh",
+                      "target":  "reshade-shaders/Shaders/ReShade_HDR_shaders/lilium__include/colour_space/sdr_trcs.fxh",
+                      "role":  "shader",
+                      "required":  true,
+                      "proxySlot":  false,
+                      "sha256":  "23a7b7a91219739e16c56cddc34a2a82a651cfa946542c68ed17709e3c539051",
+                      "size":  16574
+                  },
+                  {
+                      "source":  "effects/Shaders/ReShade_HDR_shaders/lilium__include/colour_space/ycbcr.fxh",
+                      "target":  "reshade-shaders/Shaders/ReShade_HDR_shaders/lilium__include/colour_space/ycbcr.fxh",
+                      "role":  "shader",
+                      "required":  true,
+                      "proxySlot":  false,
+                      "sha256":  "e3c79a9fd708bc9f80bc2459d80814525b6d466f02394173a5a0dfc1c7d19a98",
+                      "size":  4280
+                  },
+                  {
+                      "source":  "effects/Shaders/ReShade_HDR_shaders/lilium__include/draw_font.fxh",
+                      "target":  "reshade-shaders/Shaders/ReShade_HDR_shaders/lilium__include/draw_font.fxh",
+                      "role":  "shader",
+                      "required":  true,
+                      "proxySlot":  false,
+                      "sha256":  "7aa83e9e2ed9fbb2c31353c85fa94e8e8bf6e7ad838e923789c792c3ece4fa88",
+                      "size":  9342
+                  },
+                  {
+                      "source":  "effects/Shaders/ReShade_HDR_shaders/lilium__include/draw_text_fix.fxh",
+                      "target":  "reshade-shaders/Shaders/ReShade_HDR_shaders/lilium__include/draw_text_fix.fxh",
+                      "role":  "shader",
+                      "required":  true,
+                      "proxySlot":  false,
+                      "sha256":  "f1fb1664b846014a7573d34e30cb8ce790e737b8fd10ad16f828a04ce64b7295",
+                      "size":  11642
+                  },
+                  {
+                      "source":  "effects/Shaders/ReShade_HDR_shaders/lilium__include/hdr_and_sdr_analysis/active_area.fxh",
+                      "target":  "reshade-shaders/Shaders/ReShade_HDR_shaders/lilium__include/hdr_and_sdr_analysis/active_area.fxh",
+                      "role":  "shader",
+                      "required":  true,
+                      "proxySlot":  false,
+                      "sha256":  "bb4ea5946892787a76e7af96abc15775cca1c08f8c23d505998001ab6694838c",
+                      "size":  2035
+                  },
+                  {
+                      "source":  "effects/Shaders/ReShade_HDR_shaders/lilium__include/hdr_and_sdr_analysis/cie.fxh",
+                      "target":  "reshade-shaders/Shaders/ReShade_HDR_shaders/lilium__include/hdr_and_sdr_analysis/cie.fxh",
+                      "role":  "shader",
+                      "required":  true,
+                      "proxySlot":  false,
+                      "sha256":  "878e8ea23769d27d3bebfe5778fc4c1928d1b6466c0a23dff4dbf624e0aad3f6",
+                      "size":  32669
+                  },
+                  {
+                      "source":  "effects/Shaders/ReShade_HDR_shaders/lilium__include/hdr_and_sdr_analysis/cie_datasets.fxh",
+                      "target":  "reshade-shaders/Shaders/ReShade_HDR_shaders/lilium__include/hdr_and_sdr_analysis/cie_datasets.fxh",
+                      "role":  "shader",
+                      "required":  true,
+                      "proxySlot":  false,
+                      "sha256":  "6e49f3d8bb3177b5ae0c980887c1ed83098933100c85eb4e15477d7757db4998",
+                      "size":  32732
+                  },
+                  {
+                      "source":  "effects/Shaders/ReShade_HDR_shaders/lilium__include/hdr_and_sdr_analysis/draw_text.fxh",
+                      "target":  "reshade-shaders/Shaders/ReShade_HDR_shaders/lilium__include/hdr_and_sdr_analysis/draw_text.fxh",
+                      "role":  "shader",
+                      "required":  true,
+                      "proxySlot":  false,
+                      "sha256":  "6c6aecdc1472fb885b3ae314d7616d9621b2362d12dbb07569aa4949105c249f",
+                      "size":  54309
+                  },
+                  {
+                      "source":  "effects/Shaders/ReShade_HDR_shaders/lilium__include/hdr_and_sdr_analysis/gamut.fxh",
+                      "target":  "reshade-shaders/Shaders/ReShade_HDR_shaders/lilium__include/hdr_and_sdr_analysis/gamut.fxh",
+                      "role":  "shader",
+                      "required":  true,
+                      "proxySlot":  false,
+                      "sha256":  "7a9edc59bd4a299760d447bc76d1321ba159262c7155c51bf29151c892b41434",
+                      "size":  11913
+                  },
+                  {
+                      "source":  "effects/Shaders/ReShade_HDR_shaders/lilium__include/hdr_and_sdr_analysis/luminance.fxh",
+                      "target":  "reshade-shaders/Shaders/ReShade_HDR_shaders/lilium__include/hdr_and_sdr_analysis/luminance.fxh",
+                      "role":  "shader",
+                      "required":  true,
+                      "proxySlot":  false,
+                      "sha256":  "0de70b1fa04016f1918af54ec49e3591642ded9ac873b79ee8970e84719562a0",
+                      "size":  23558
+                  },
+                  {
+                      "source":  "effects/Shaders/ReShade_HDR_shaders/lilium__include/hdr_and_sdr_analysis/main.fxh",
+                      "target":  "reshade-shaders/Shaders/ReShade_HDR_shaders/lilium__include/hdr_and_sdr_analysis/main.fxh",
+                      "role":  "shader",
+                      "required":  true,
+                      "proxySlot":  false,
+                      "sha256":  "1903eeb552eb28bf36ffc9b537be0b14510a6cc1f2b60a336e7b33acb0e2da50",
+                      "size":  35036
+                  },
+                  {
+                      "source":  "effects/Shaders/ReShade_HDR_shaders/lilium__include/hdr_and_sdr_analysis/waveform.fxh",
+                      "target":  "reshade-shaders/Shaders/ReShade_HDR_shaders/lilium__include/hdr_and_sdr_analysis/waveform.fxh",
+                      "role":  "shader",
+                      "required":  true,
+                      "proxySlot":  false,
+                      "sha256":  "85b6486b04ca3fbcf47b6ab582a8a5399036b0131c22afdda1486d0b7d8ed5dc",
+                      "size":  83782
+                  },
+                  {
+                      "source":  "effects/Shaders/ReShade_HDR_shaders/lilium__include/hdr_black_floor_fix.fxh",
+                      "target":  "reshade-shaders/Shaders/ReShade_HDR_shaders/lilium__include/hdr_black_floor_fix.fxh",
+                      "role":  "shader",
+                      "required":  true,
+                      "proxySlot":  false,
+                      "sha256":  "5d49d02ba80b971395c0e669d9cdf8d5ca03f14d4a336ee114dbcaa55e39210f",
+                      "size":  16105
+                  },
+                  {
+                      "source":  "effects/Shaders/ReShade_HDR_shaders/lilium__include/include_main.fxh",
+                      "target":  "reshade-shaders/Shaders/ReShade_HDR_shaders/lilium__include/include_main.fxh",
+                      "role":  "shader",
+                      "required":  true,
+                      "proxySlot":  false,
+                      "sha256":  "5b3543ee59c82d0e8bd477f4f8d4dff2e469bd6828c917cf8ff224071fabc11f",
+                      "size":  555
+                  },
+                  {
+                      "source":  "effects/Shaders/ReShade_HDR_shaders/lilium__include/inverse_tone_mappers.fxh",
+                      "target":  "reshade-shaders/Shaders/ReShade_HDR_shaders/lilium__include/inverse_tone_mappers.fxh",
+                      "role":  "shader",
+                      "required":  true,
+                      "proxySlot":  false,
+                      "sha256":  "2d18f85a5a8c2164b804d70e708544c51becd36a5e2b9ddeff282311c5afe818",
+                      "size":  19740
+                  },
+                  {
+                      "source":  "effects/Shaders/ReShade_HDR_shaders/lilium__include/math.fxh",
+                      "target":  "reshade-shaders/Shaders/ReShade_HDR_shaders/lilium__include/math.fxh",
+                      "role":  "shader",
+                      "required":  true,
+                      "proxySlot":  false,
+                      "sha256":  "f4e24157f6cfa37ec37ec533b540649f43ee190910c04891a800acf2a1e75880",
+                      "size":  6414
+                  },
+                  {
+                      "source":  "effects/Shaders/ReShade_HDR_shaders/lilium__include/rcas.fxh",
+                      "target":  "reshade-shaders/Shaders/ReShade_HDR_shaders/lilium__include/rcas.fxh",
+                      "role":  "shader",
+                      "required":  true,
+                      "proxySlot":  false,
+                      "sha256":  "5be72fb3f3fbb178ba21c2eb949a371aa318b74e6c91260c973cd441caa478af",
+                      "size":  16181
+                  },
+                  {
+                      "source":  "effects/Shaders/ReShade_HDR_shaders/lilium__include/reshade_setup.fxh",
+                      "target":  "reshade-shaders/Shaders/ReShade_HDR_shaders/lilium__include/reshade_setup.fxh",
+                      "role":  "shader",
+                      "required":  true,
+                      "proxySlot":  false,
+                      "sha256":  "4d7db86fb16c9f9ed339f4084b0935591ad471b6a34b231a46e505cc91ef8352",
+                      "size":  44747
+                  },
+                  {
+                      "source":  "effects/Shaders/ReShade_HDR_shaders/lilium__include/tone_mappers.fxh",
+                      "target":  "reshade-shaders/Shaders/ReShade_HDR_shaders/lilium__include/tone_mappers.fxh",
+                      "role":  "shader",
+                      "required":  true,
+                      "proxySlot":  false,
+                      "sha256":  "c65d0dbc5fe0f895becbc0b3ce899760b8345f4a28d9d4153532a9f7f24c79f7",
+                      "size":  21854
+                  },
+                  {
+                      "source":  "effects/Shaders/ReShade_HDR_shaders/lilium__rcas_hdr.fx",
+                      "target":  "reshade-shaders/Shaders/ReShade_HDR_shaders/lilium__rcas_hdr.fx",
+                      "role":  "shader",
+                      "required":  true,
+                      "proxySlot":  false,
+                      "sha256":  "45227c02b539dc5d21206c2815ae756f8cb979bae41a518604fba1073dff6022",
+                      "size":  1568
+                  },
+                  {
+                      "source":  "effects/Shaders/ReShadeUI.fxh",
+                      "target":  "reshade-shaders/Shaders/ReShadeUI.fxh",
+                      "role":  "shader",
+                      "required":  true,
+                      "proxySlot":  false,
+                      "sha256":  "78adf672df47460297eb9fe6dd238d2aafa24510b52b84feb1a745dff70eb901",
+                      "size":  9930
+                  },
+                  {
+                      "source":  "effects/Shaders/SweetFX/ASCII.fx",
+                      "target":  "reshade-shaders/Shaders/SweetFX/ASCII.fx",
+                      "role":  "shader",
+                      "required":  true,
+                      "proxySlot":  false,
+                      "sha256":  "2a61173381663357ee2542f342b6650456c2cc77e80a762852de78d92ae719a2",
+                      "size":  16023
+                  },
+                  {
+                      "source":  "effects/Shaders/SweetFX/Border.fx",
+                      "target":  "reshade-shaders/Shaders/SweetFX/Border.fx",
+                      "role":  "shader",
+                      "required":  true,
+                      "proxySlot":  false,
+                      "sha256":  "4dde98aa5c55ff354c9d98d545d30724bda4108049dcd5d6cbf1b9ba27d77d3b",
+                      "size":  2298
+                  },
+                  {
+                      "source":  "effects/Shaders/SweetFX/Cartoon.fx",
+                      "target":  "reshade-shaders/Shaders/SweetFX/Cartoon.fx",
+                      "role":  "shader",
+                      "required":  true,
+                      "proxySlot":  false,
+                      "sha256":  "5d90e1c72318a28255d268ff3ac3fcb64d1e9469f5ca1334a50fb7d1b1a005f4",
+                      "size":  1378
+                  },
+                  {
+                      "source":  "effects/Shaders/SweetFX/CAS.fx",
+                      "target":  "reshade-shaders/Shaders/SweetFX/CAS.fx",
+                      "role":  "shader",
+                      "required":  true,
+                      "proxySlot":  false,
+                      "sha256":  "5cbf1468b75d0d221067bdc7bca658f531816c3b24e0eef8654d9d2a7d1a1c46",
+                      "size":  7005
+                  },
+                  {
+                      "source":  "effects/Shaders/SweetFX/ChromaticAberration.fx",
+                      "target":  "reshade-shaders/Shaders/SweetFX/ChromaticAberration.fx",
+                      "role":  "shader",
+                      "required":  true,
+                      "proxySlot":  false,
+                      "sha256":  "a6bfe5c0770c09be949b3548c4979dab1dd347478b7fa50108ef144c82beab72",
+                      "size":  1187
+                  },
+                  {
+                      "source":  "effects/Shaders/SweetFX/ColorMatrix.fx",
+                      "target":  "reshade-shaders/Shaders/SweetFX/ColorMatrix.fx",
+                      "role":  "shader",
+                      "required":  true,
+                      "proxySlot":  false,
+                      "sha256":  "5162503f77e4d3af52e068ab74778226105d065199a25302c3583890fed75a3b",
+                      "size":  1692
+                  },
+                  {
+                      "source":  "effects/Shaders/SweetFX/Compare.fx",
+                      "target":  "reshade-shaders/Shaders/SweetFX/Compare.fx",
+                      "role":  "shader",
+                      "required":  true,
+                      "proxySlot":  false,
+                      "sha256":  "8c86c8cb2a32807d7de978569d6f9fd7e53133ad60d572320767abcfb6ee1d56",
+                      "size":  5585
+                  },
+                  {
+                      "source":  "effects/Shaders/SweetFX/CRT.fx",
+                      "target":  "reshade-shaders/Shaders/SweetFX/CRT.fx",
+                      "role":  "shader",
+                      "required":  true,
+                      "proxySlot":  false,
+                      "sha256":  "0671a6d4369330299173ade6c9d9cb466248710b7f7a6fed60b14aeccd04187d",
+                      "size":  10791
+                  },
+                  {
+                      "source":  "effects/Shaders/SweetFX/Curves.fx",
+                      "target":  "reshade-shaders/Shaders/SweetFX/Curves.fx",
+                      "role":  "shader",
+                      "required":  true,
+                      "proxySlot":  false,
+                      "sha256":  "8368029d2254856505abf7dd789342024465403da49434dd776c6d1af4079a98",
+                      "size":  6274
+                  },
+                  {
+                      "source":  "effects/Shaders/SweetFX/DPX.fx",
+                      "target":  "reshade-shaders/Shaders/SweetFX/DPX.fx",
+                      "role":  "shader",
+                      "required":  true,
+                      "proxySlot":  false,
+                      "sha256":  "3dafebab5bfd6909dff9e4980af17c903f2c6b8cb573da2378de936ae57305ad",
+                      "size":  2007
+                  },
+                  {
+                      "source":  "effects/Shaders/SweetFX/FakeHDR.fx",
+                      "target":  "reshade-shaders/Shaders/SweetFX/FakeHDR.fx",
+                      "role":  "shader",
+                      "required":  true,
+                      "proxySlot":  false,
+                      "sha256":  "f6ca5ed2c4f0698695cca7fc0a2b917e1934b6cb34064a0bc7aa098051727cf9",
+                      "size":  2879
+                  },
+                  {
+                      "source":  "effects/Shaders/SweetFX/FilmGrain.fx",
+                      "target":  "reshade-shaders/Shaders/SweetFX/FilmGrain.fx",
+                      "role":  "shader",
+                      "required":  true,
+                      "proxySlot":  false,
+                      "sha256":  "520f0c40247c457a23a8f66a761c71eb43e5ca85db5f68a92f1fbf0700f37154",
+                      "size":  3514
+                  },
+                  {
+                      "source":  "effects/Shaders/SweetFX/FXAA.fx",
+                      "target":  "reshade-shaders/Shaders/SweetFX/FXAA.fx",
+                      "role":  "shader",
+                      "required":  true,
+                      "proxySlot":  false,
+                      "sha256":  "51c253997af3da6a48d3eb3359ef1f8da9565e7ceec6369fe151858568ca9a03",
+                      "size":  3328
+                  },
+                  {
+                      "source":  "effects/Shaders/SweetFX/FXAA.fxh",
+                      "target":  "reshade-shaders/Shaders/SweetFX/FXAA.fxh",
+                      "role":  "shader",
+                      "required":  true,
+                      "proxySlot":  false,
+                      "sha256":  "26435f77adef392fd751ed6a648a05d375c57ac88d00bbad19653c75ac9c36fa",
+                      "size":  85880
+                  },
+                  {
+                      "source":  "effects/Shaders/SweetFX/Layer.fx",
+                      "target":  "reshade-shaders/Shaders/SweetFX/Layer.fx",
+                      "role":  "shader",
+                      "required":  true,
+                      "proxySlot":  false,
+                      "sha256":  "b7a39bc6bd4989f1e568880d1aace900f0f5a531322e61afdc51b248c51f10ea",
+                      "size":  2539
+                  },
+                  {
+                      "source":  "effects/Shaders/SweetFX/Levels.fx",
+                      "target":  "reshade-shaders/Shaders/SweetFX/Levels.fx",
+                      "role":  "shader",
+                      "required":  true,
+                      "proxySlot":  false,
+                      "sha256":  "c603d3ea12d6d5710f2246bb7dd446d19e561154656f1fa8d579ca7fbbeef70e",
+                      "size":  2976
+                  },
+                  {
+                      "source":  "effects/Shaders/SweetFX/LiftGammaGain.fx",
+                      "target":  "reshade-shaders/Shaders/SweetFX/LiftGammaGain.fx",
+                      "role":  "shader",
+                      "required":  true,
+                      "proxySlot":  false,
+                      "sha256":  "5a6b6c85d0e09ed4c507f3b5f1b3b2f4f0f1268e24bb0ec81edbd431e28566df",
+                      "size":  1243
+                  },
+                  {
+                      "source":  "effects/Shaders/SweetFX/LumaSharpen.fx",
+                      "target":  "reshade-shaders/Shaders/SweetFX/LumaSharpen.fx",
+                      "role":  "shader",
+                      "required":  true,
+                      "proxySlot":  false,
+                      "sha256":  "7b358ebbdaa7bc4c44ebf6e9d41afcb3f21ee3dde5c5f85bf40201d5c6044680",
+                      "size":  8688
+                  },
+                  {
+                      "source":  "effects/Shaders/SweetFX/Monochrome.fx",
+                      "target":  "reshade-shaders/Shaders/SweetFX/Monochrome.fx",
+                      "role":  "shader",
+                      "required":  true,
+                      "proxySlot":  false,
+                      "sha256":  "36e0c42ce96f7ca61d44fdeedbdb2e2b859d3359b29ad1e5dc3f1772d3b2459e",
+                      "size":  3183
+                  },
+                  {
+                      "source":  "effects/Shaders/SweetFX/Nostalgia.fx",
+                      "target":  "reshade-shaders/Shaders/SweetFX/Nostalgia.fx",
+                      "role":  "shader",
+                      "required":  true,
+                      "proxySlot":  false,
+                      "sha256":  "7b4264e7b7bc9486f2555b11a159e3cd8f5c480c2a5d7c56816f60d44517508e",
+                      "size":  22270
+                  },
+                  {
+                      "source":  "effects/Shaders/SweetFX/Sepia.fx",
+                      "target":  "reshade-shaders/Shaders/SweetFX/Sepia.fx",
+                      "role":  "shader",
+                      "required":  true,
+                      "proxySlot":  false,
+                      "sha256":  "4a4c7b4a3cc6cdf717aa96f0d3586b98c143a5584a29fd3a9d57aecd895b0bc6",
+                      "size":  549
+                  },
+                  {
+                      "source":  "effects/Shaders/SweetFX/SMAA.fx",
+                      "target":  "reshade-shaders/Shaders/SweetFX/SMAA.fx",
+                      "role":  "shader",
+                      "required":  true,
+                      "proxySlot":  false,
+                      "sha256":  "fd6591eeb70ff584ac4d774ed3c79af5efac34f5de1a36f8f873e959259c0007",
+                      "size":  9523
+                  },
+                  {
+                      "source":  "effects/Shaders/SweetFX/SMAA.fxh",
+                      "target":  "reshade-shaders/Shaders/SweetFX/SMAA.fxh",
+                      "role":  "shader",
+                      "required":  true,
+                      "proxySlot":  false,
+                      "sha256":  "ee18b0f376585338cdb477a0900757cebac86d3c476ef99955348b55818c8310",
+                      "size":  57679
+                  },
+                  {
+                      "source":  "effects/Shaders/SweetFX/Splitscreen.fx",
+                      "target":  "reshade-shaders/Shaders/SweetFX/Splitscreen.fx",
+                      "role":  "shader",
+                      "required":  true,
+                      "proxySlot":  false,
+                      "sha256":  "5faeaa709bb333815d1927c4ab9b8bca9947177bf8127c517720bcf6483c5e0a",
+                      "size":  4315
+                  },
+                  {
+                      "source":  "effects/Shaders/SweetFX/Technicolor.fx",
+                      "target":  "reshade-shaders/Shaders/SweetFX/Technicolor.fx",
+                      "role":  "shader",
+                      "required":  true,
+                      "proxySlot":  false,
+                      "sha256":  "51169a82dde7929a500791417cedb96d7f1131c0d8d33289d30b5249796ac1d2",
+                      "size":  1549
+                  },
+                  {
+                      "source":  "effects/Shaders/SweetFX/Technicolor2.fx",
+                      "target":  "reshade-shaders/Shaders/SweetFX/Technicolor2.fx",
+                      "role":  "shader",
+                      "required":  true,
+                      "proxySlot":  false,
+                      "sha256":  "eb54498ae1699144fead73284d047d8428eab77d515ea5ce136cb84c2b3098c3",
+                      "size":  1416
+                  },
+                  {
+                      "source":  "effects/Shaders/SweetFX/Tonemap.fx",
+                      "target":  "reshade-shaders/Shaders/SweetFX/Tonemap.fx",
+                      "role":  "shader",
+                      "required":  true,
+                      "proxySlot":  false,
+                      "sha256":  "bbe2e7eb8d6f9fb4316bad8c85b5bfd1d98f0903d2cd962fd5d4c0ebbde3c5f3",
+                      "size":  2000
+                  },
+                  {
+                      "source":  "effects/Shaders/SweetFX/Vibrance.fx",
+                      "target":  "reshade-shaders/Shaders/SweetFX/Vibrance.fx",
+                      "role":  "shader",
+                      "required":  true,
+                      "proxySlot":  false,
+                      "sha256":  "b9189a28ca4a645a0e188f8396c81889d217e3c706e8900dfe6594d43e7c33eb",
+                      "size":  2217
+                  },
+                  {
+                      "source":  "effects/Shaders/SweetFX/Vignette.fx",
+                      "target":  "reshade-shaders/Shaders/SweetFX/Vignette.fx",
+                      "role":  "shader",
+                      "required":  true,
+                      "proxySlot":  false,
+                      "sha256":  "a7358b592830fa74a0a50a842682c99db751e35666e49c229567daf9ea59afa2",
+                      "size":  3502
+                  },
+                  {
+                      "source":  "effects/Shaders/TriDither.fxh",
+                      "target":  "reshade-shaders/Shaders/TriDither.fxh",
+                      "role":  "shader",
+                      "required":  true,
+                      "proxySlot":  false,
+                      "sha256":  "d6f780996889c0ea2efebde26b515c4acc1ad4310e06affc3d5d42e2f325c42d",
+                      "size":  3475
+                  },
+                  {
+                      "source":  "effects/Shaders/UIMask.fx",
+                      "target":  "reshade-shaders/Shaders/UIMask.fx",
+                      "role":  "shader",
+                      "required":  true,
+                      "proxySlot":  false,
+                      "sha256":  "6d4956102ec8813ed6229b6f3124c4be289d154135b79eea4c28994888c3e9e3",
+                      "size":  8169
+                  },
+                  {
+                      "source":  "effects/Textures/FontAtlas.png",
+                      "target":  "reshade-shaders/Textures/FontAtlas.png",
+                      "role":  "texture",
+                      "required":  true,
+                      "proxySlot":  false,
+                      "sha256":  "11a711a8167d1c1606892e6fa6f661a477e749d6cbdb1ff700ac381842066ec3",
+                      "size":  14853
+                  },
+                  {
+                      "source":  "effects/Textures/iMMERSE/AreaLUT.png",
+                      "target":  "reshade-shaders/Textures/iMMERSE/AreaLUT.png",
+                      "role":  "texture",
+                      "required":  true,
+                      "proxySlot":  false,
+                      "sha256":  "fc32b4d55e2f0dc74490f9b507b35133a267e725bc299bf8a3e4ae3b19669c3b",
+                      "size":  29012
+                  },
+                  {
+                      "source":  "effects/Textures/iMMERSE/iMMERSE_bluenoise_opt.png",
+                      "target":  "reshade-shaders/Textures/iMMERSE/iMMERSE_bluenoise_opt.png",
+                      "role":  "texture",
+                      "required":  true,
+                      "proxySlot":  false,
+                      "sha256":  "0b781553f3fe3ba74ab6dad8d759f3c2a07da67371a7a1355e6ba738864b53b0",
+                      "size":  190174
+                  },
+                  {
+                      "source":  "effects/Textures/iMMERSE/iMMERSE_bluenoise_temporal.png",
+                      "target":  "reshade-shaders/Textures/iMMERSE/iMMERSE_bluenoise_temporal.png",
+                      "role":  "texture",
+                      "required":  true,
+                      "proxySlot":  false,
+                      "sha256":  "39f098bf2edc84aced80c444095f22f3929510fc1c87b6208156baa07e0cf3c5",
+                      "size":  768137
+                  },
+                  {
+                      "source":  "effects/Textures/lut.png",
+                      "target":  "reshade-shaders/Textures/lut.png",
+                      "role":  "texture",
+                      "required":  true,
+                      "proxySlot":  false,
+                      "sha256":  "c81d61b0c7caa5cb8ff77b10183f2a00ffc5b4601ef328f7b9368e625fa9a214",
+                      "size":  273
+                  },
+                  {
+                      "source":  "effects/Textures/ReShade_HDR_shaders/lilium__blue_noise_64x64.png",
+                      "target":  "reshade-shaders/Textures/ReShade_HDR_shaders/lilium__blue_noise_64x64.png",
+                      "role":  "texture",
+                      "required":  true,
+                      "proxySlot":  false,
+                      "sha256":  "53281972ecf792473ec5ca390e96353facf10a8e8677b64e8316a3178a9290cb",
+                      "size":  4173
+                  },
+                  {
+                      "source":  "effects/Textures/ReShade_HDR_shaders/lilium__font_atlas.png",
+                      "target":  "reshade-shaders/Textures/ReShade_HDR_shaders/lilium__font_atlas.png",
+                      "role":  "texture",
+                      "required":  true,
+                      "proxySlot":  false,
+                      "sha256":  "11a711a8167d1c1606892e6fa6f661a477e749d6cbdb1ff700ac381842066ec3",
+                      "size":  14853
+                  },
+                  {
+                      "source":  "effects/Textures/ReShade_HDR_shaders/lilium__font_atlas_mtsdf.png",
+                      "target":  "reshade-shaders/Textures/ReShade_HDR_shaders/lilium__font_atlas_mtsdf.png",
+                      "role":  "texture",
+                      "required":  true,
+                      "proxySlot":  false,
+                      "sha256":  "fcfc9e30cd66af73f5e9d51f2bd881bab805e38196aaf4de874b63132ec8f738",
+                      "size":  68749
+                  },
+                  {
+                      "source":  "effects/Textures/SweetFX/AreaTex.png",
+                      "target":  "reshade-shaders/Textures/SweetFX/AreaTex.png",
+                      "role":  "texture",
+                      "required":  true,
+                      "proxySlot":  false,
+                      "sha256":  "0044e6b420a8d98a9dc6a60bedbd43f75cd15ac6052fdedfb2f2f55d3077beed",
+                      "size":  30346
+                  },
+                  {
+                      "source":  "effects/Textures/SweetFX/Layer.png",
+                      "target":  "reshade-shaders/Textures/SweetFX/Layer.png",
+                      "role":  "texture",
+                      "required":  true,
+                      "proxySlot":  false,
+                      "sha256":  "c9dc422c85df2c9c1ed04dbfc0421f0b4a41bf736adf50d009d172e49b3c05fc",
+                      "size":  9283
+                  },
+                  {
+                      "source":  "effects/Textures/SweetFX/SearchTex.png",
+                      "target":  "reshade-shaders/Textures/SweetFX/SearchTex.png",
+                      "role":  "texture",
+                      "required":  true,
+                      "proxySlot":  false,
+                      "sha256":  "55a97853ab64174245701accf315ab63d41776c9cb2aa14c675e653684fd96f3",
+                      "size":  126
+                  }
+              ],
+    "steps":  [
+                  {
+                      "type":  "copyFiles"
+                  },
+                  {
+                      "type":  "runInstaller",
+                      "arguments":  {
+                                        "source":  "ReShade_Setup_6.8.0_Addon.exe",
+                                        "sha256":  "afe4c8f13048306307983b8b3d41d5bf00a86820440b0e57dea10950e1176445",
+                                        "arguments":  "--headless --api {api}"
+                                    }
+                  }
+              ],
+    "trust":  "bundled"
+}

@@ -8,14 +8,24 @@ namespace FrameGenManagerNext.Infrastructure.Paths;
 public sealed class AppPaths
 {
     public const string DataDirectoryEnvironmentVariable = "FGM_DATA_DIR";
+    public const string PortableMarkerFileName = "portable.flag";
+    public const string PortableDataDirectoryName = "data";
 
     public AppPaths(string rootDirectory)
+        : this(rootDirectory, isPortable: false)
+    {
+    }
+
+    private AppPaths(string rootDirectory, bool isPortable)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(rootDirectory);
         RootDirectory = Path.GetFullPath(rootDirectory);
+        IsPortable = isPortable;
     }
 
     public string RootDirectory { get; }
+
+    public bool IsPortable { get; }
 
     public string LogsDirectory => Path.Combine(RootDirectory, "logs");
 
@@ -31,12 +41,22 @@ public sealed class AppPaths
 
     public string StateDirectory => Path.Combine(RootDirectory, "state");
 
-    public static AppPaths CreateDefault()
+    public static AppPaths CreateDefault(string? applicationDirectory = null)
     {
         var overrideRoot = Environment.GetEnvironmentVariable(DataDirectoryEnvironmentVariable);
         if (!string.IsNullOrWhiteSpace(overrideRoot))
         {
             return new AppPaths(overrideRoot);
+        }
+
+        var baseDirectory = string.IsNullOrWhiteSpace(applicationDirectory)
+            ? AppContext.BaseDirectory
+            : applicationDirectory;
+
+        var markerPath = Path.Combine(baseDirectory, PortableMarkerFileName);
+        if (File.Exists(markerPath))
+        {
+            return new AppPaths(Path.Combine(baseDirectory, PortableDataDirectoryName), isPortable: true);
         }
 
         var localAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);

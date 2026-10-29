@@ -1,3 +1,4 @@
+using FrameGenManagerNext.Domain;
 using FrameGenManagerNext.Infrastructure.Paths;
 using Shouldly;
 
@@ -39,10 +40,56 @@ public sealed class AppPathsTests : IDisposable
             var paths = AppPaths.CreateDefault();
 
             paths.RootDirectory.ShouldBe(Path.GetFullPath(_rootDirectory));
+            paths.IsPortable.ShouldBeFalse();
         }
         finally
         {
             Environment.SetEnvironmentVariable(AppPaths.DataDirectoryEnvironmentVariable, previous);
+        }
+    }
+
+    [Fact]
+    public void PortableMarkerUsesDataDirectoryNextToApplication()
+    {
+        var previous = ClearOverride();
+        try
+        {
+            Directory.CreateDirectory(_rootDirectory);
+            File.WriteAllText(Path.Combine(_rootDirectory, AppPaths.PortableMarkerFileName), "portable");
+
+            var paths = AppPaths.CreateDefault(_rootDirectory);
+            paths.EnsureCreated();
+
+            paths.IsPortable.ShouldBeTrue();
+            paths.RootDirectory.ShouldBe(Path.GetFullPath(Path.Combine(_rootDirectory, AppPaths.PortableDataDirectoryName)));
+            Directory.Exists(Path.Combine(_rootDirectory, AppPaths.PortableDataDirectoryName, "logs")).ShouldBeTrue();
+        }
+        finally
+        {
+            RestoreOverride(previous);
+        }
+    }
+
+    [Fact]
+    public void DefaultPathUsesLocalAppDataWithoutPortableMarker()
+    {
+        var previous = ClearOverride();
+        try
+        {
+            var emptyApplicationDirectory = Path.Combine(_rootDirectory, "app");
+            Directory.CreateDirectory(emptyApplicationDirectory);
+
+            var paths = AppPaths.CreateDefault(emptyApplicationDirectory);
+
+            paths.IsPortable.ShouldBeFalse();
+            var expectedRoot = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                AppInfo.DataDirectoryName);
+            paths.RootDirectory.ShouldBe(Path.GetFullPath(expectedRoot));
+        }
+        finally
+        {
+            RestoreOverride(previous);
         }
     }
 
@@ -52,5 +99,17 @@ public sealed class AppPathsTests : IDisposable
         {
             Directory.Delete(_rootDirectory, recursive: true);
         }
+    }
+
+    private static string? ClearOverride()
+    {
+        var previous = Environment.GetEnvironmentVariable(AppPaths.DataDirectoryEnvironmentVariable);
+        Environment.SetEnvironmentVariable(AppPaths.DataDirectoryEnvironmentVariable, null);
+        return previous;
+    }
+
+    private static void RestoreOverride(string? previous)
+    {
+        Environment.SetEnvironmentVariable(AppPaths.DataDirectoryEnvironmentVariable, previous);
     }
 }

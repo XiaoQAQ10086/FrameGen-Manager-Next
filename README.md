@@ -4,7 +4,7 @@
 
 FrameGen Manager-Next 是 FrameGen Manager 的从零重写版：Windows 桌面端帧生成部署管理器，使用 **C# / .NET 10 LTS + WPF + Wpf.Ui**，单进程架构。
 
-> 当前状态：**Phase 0（基础脚手架）已完成**。UI 空壳、DI、日志、测试与 CLI 已跑通；GitHub 仓库与 CI 已启用，业务模块尚未迁移。
+> 当前状态：**Phase 1（领域与资产包）进行中**。领域模型、错误码、路径安全、INI 编辑、资产包 schema/校验器、三个真实 pack、便携版发布脚本已完成；部署引擎尚未开始。
 
 ## 仓库
 
@@ -69,6 +69,31 @@ pwsh ./build/verify.ps1 -Configuration Debug
 powershell -NoProfile -ExecutionPolicy Bypass -File ./build/verify.ps1 -Configuration Debug
 ```
 
+## 便携版（测试用）
+
+```powershell
+pwsh ./build/publish-portable.ps1 -Configuration Release
+```
+
+输出：
+
+- `artifacts/portable/FrameGen-Manager-Next-2.0.0-win-x64/`
+- `artifacts/portable/FrameGen-Manager-Next-2.0.0-win-x64-portable.zip`
+
+便携版带 `portable.flag`，数据写到程序目录下的 `data\`，不写注册表。  
+**安装包暂不生成**；等便携版验收通过后再做 Velopack 安装器。
+
+## 资产包
+
+```powershell
+pwsh ./build/generate-packs.ps1
+fgm-next pack validate assets/packs/framegen.sm86
+```
+
+- 清单：`packs/<id>/pack.json`（提交到 git）
+- payload：`assets/packs/<id>/`（不进 git）
+- 详见 [packs/README.md](packs/README.md)
+
 ## 目录结构
 
 ```
@@ -79,9 +104,10 @@ src/
   FrameGenManagerNext.App/             WPF（View + ViewModel）
   FrameGenManagerNext.Cli/             无 UI 验收入口
 tests/                          单元、基础设施、集成测试
+packs/                          资产包清单（提交）
+assets/                         本地资产与 pack payload（不进 git）
 docs/                           architecture / behavior / decisions / roadmap
-build/                          质量门禁与构建脚本
-assets/                         本地资产（不进 git）
+build/                          质量门禁、打包与资产包生成脚本
 ```
 
 依赖方向：`Domain ← Core ← Infrastructure`，`App → Core + Infrastructure`（只在组合根引用 Infrastructure）。
@@ -91,9 +117,11 @@ assets/                         本地资产（不进 git）
 默认：
 
 ```
-%LOCALAPPDATA%\FrameGenManagerNext\
+%LOCALAPPDATA%\FrameGen-Manager-Next\
   config\  library\  packs\  backups\  logs\  cache\  state\
 ```
+
+便携版使用 exe 同目录的 `data\`。
 
 测试或便携场景可用环境变量覆盖：
 

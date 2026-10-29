@@ -490,7 +490,10 @@ $RECYCLE.BIN/
 artifacts/
 publish/
 logs/
-packs/
+packs/*
+!packs/README.md
+!packs/*/
+!packs/*/pack.json
 *.pack.zip
 coverage/
 assets/*
