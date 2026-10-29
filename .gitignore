@@ -482,7 +482,6 @@ $RECYCLE.BIN/
 *.swp
 
 # FrameGen Manager-Next
-.zcode/
 .vs/
 .idea/
 *.user

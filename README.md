@@ -151,4 +151,4 @@ $env:FGM_DATA_DIR = "D:\FrameGenManagerNextData"
 - [行为规格](docs/behavior/README.md)
 - [架构决策](docs/decisions)
 - [路线图](docs/roadmap.md)
-- [AGENTS.md](AGENTS.md)（面向 AI/协作者的硬约束）
+- [CONTRIBUTING.md](CONTRIBUTING.md)（构建、测试、架构和提交规范）
