@@ -12,8 +12,6 @@ export default {
           </div>
         </header>
         <div class="panel">
-          <div class="panel-head"><div><h2>${t('Logs.Title')}</h2><p class="muted" data-role="path"></p></div>
-            <button class="btn small" data-action="refresh" type="button">${t('Common.Refresh')}</button></div>
           <pre class="log-box" data-role="log"></pre>
         </div>
       </section>`;
@@ -25,7 +23,6 @@ export default {
       try {
         const data = await api.request('logs.tail', { lines: 800 });
         q('[data-role="log"]').textContent = data.text || t('Logs.Status.Empty');
-        q('[data-role="path"]').textContent = data.directory;
       } catch (error) {
         q('[data-role="log"]').textContent = error.message || '读取失败';
         ui.toast(error.message, 'error');
@@ -35,7 +32,6 @@ export default {
     const onClick = async (event) => {
       const button = event.target.closest('[data-action]');
       if (!button) return;
-      if (button.dataset.action === 'refresh') return load();
       if (button.dataset.action === 'open') {
         await api.request('logs.openFolder').catch((error) => ui.toast(error.message, 'error'));
         return;

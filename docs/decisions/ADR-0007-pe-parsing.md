@@ -1,25 +1,21 @@
-# ADR-0007：使用 PeNet 解析 PE 导入表
+# ADR-0007：流式解析 PE 导入表
 
-- 状态：已接受
+- 状态：已接受（取代 PeNet 方案）
 - 日期：2026-10-29
 
 ## 背景
 
-游戏库扫描需要从 EXE 的导入表判断图形 API（D3D9/10/11/12、Vulkan、OpenGL）。旧项目手写了 PE 导入表解析；新项目不应重复实现容易出错的二进制解析。
+游戏库扫描需要从 EXE 的导入表判断图形 API（D3D9/10/11/12、Vulkan、OpenGL）。部分游戏 EXE 达到 200–450 MB；PeNet 的 `PeFile(string)` 会把整个文件读入内存，切换到 DLSS5 页面时会触发数百 MB 的瞬时分配。
 
 ## 决策
 
-- 使用 NuGet 包 **PeNet 6.1.2**，只在 `Infrastructure/Library` 中使用。
-- Domain 只接收提取后的模块名列表（`GraphicsApiFacts`），不依赖 PeNet。
-- 解析失败视为 `Unknown`，不阻断扫描。
-- PeNet 版本锁定在 `Directory.Packages.props`，升级走 Dependabot + 完整 CI。
-
-## 备选方案
-
-- `System.Reflection.PortableExecutable`：能读 PE 头和节表，但导入表仍需手写解析。
-- 手写解析器：旧项目已经证明容易遗漏边界情况，且测试困难。
+- 使用 BCL `System.Reflection.PortableExecutable.PEReader` 读取 PE 头和节表，按 RVA → 文件偏移只读取导入描述符和模块名。
+- 同时读取普通导入表与延迟导入表；解析失败视为 `Unknown`，不阻断扫描。
+- 不再依赖 PeNet；`GraphicsApiClassifier` 与 `GraphicsApiFacts` 保持纯函数。
+- DLSS5 检查优先使用游戏库已存储的图形 API，只有 `Unknown` 时才重新探测。
 
 ## 后果
 
-- 新增一个纯托管依赖；不引入原生库。
-- `GraphicsApiClassifier` 保持纯函数，PE 读取可以单独替换。
+- 读取 400 MB EXE 的导入表时不再分配整文件大小的缓冲区。
+- 导入表格式的边界处理由 `PeImportReaderTests` 覆盖；缺失/损坏文件返回空列表。
+- 不再新增第三方 PE 解析依赖，发布目录更小。

@@ -45,9 +45,12 @@ public sealed partial class Dlss5DeploymentService : IDlss5DeploymentService
     public async Task<Result<Dlss5Inspection>> InspectAsync(
         string targetDirectory,
         string exePath,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        GraphicsApi? knownApi = null)
     {
-        var api = await DetectApiAsync(exePath, false, cancellationToken);
+        var api = knownApi is { } apiValue && apiValue != GraphicsApi.Unknown
+            ? Result<GraphicsApi>.Ok(apiValue)
+            : await DetectApiAsync(exePath, false, cancellationToken);
         if (api.IsFailure)
         {
             return Result<Dlss5Inspection>.Fail(api.Error!);

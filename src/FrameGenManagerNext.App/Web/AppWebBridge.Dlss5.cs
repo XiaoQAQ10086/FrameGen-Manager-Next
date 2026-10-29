@@ -38,7 +38,8 @@ public sealed partial class AppWebBridge
             var inspection = await _dlss5.InspectAsync(
                 game.TargetDirectory,
                 game.RenderExePath,
-                CancellationToken.None);
+                CancellationToken.None,
+                game.GraphicsApi);
             if (inspection.IsFailure)
             {
                 games.Add(new

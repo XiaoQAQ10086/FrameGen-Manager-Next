@@ -10,6 +10,8 @@ param(
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
+$env:MSBUILDDISABLENODEREUSE = '1'
+$env:DOTNET_CLI_USE_MSBUILD_SERVER = '0'
 
 $root = Split-Path -Parent $PSScriptRoot
 if ([string]::IsNullOrWhiteSpace($OutputRoot)) {
@@ -65,6 +67,7 @@ function Invoke-Publish {
         --self-contained true `
         -p:PublishSingleFile=false `
         -p:PublishTrimmed=false `
+        -p:PublishReadyToRun=true `
         -p:DebugType=None `
         -p:DebugSymbols=false `
         -o $destination

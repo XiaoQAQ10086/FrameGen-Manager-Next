@@ -6,6 +6,8 @@ param(
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
+$env:MSBUILDDISABLENODEREUSE = '1'
+$env:DOTNET_CLI_USE_MSBUILD_SERVER = '0'
 
 $root = Split-Path -Parent $PSScriptRoot
 $solution = Join-Path $root 'FrameGenManagerNext.slnx'
