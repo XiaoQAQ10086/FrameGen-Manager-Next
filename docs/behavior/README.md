@@ -19,8 +19,8 @@
 | 游戏库扫描 | `crates/core/src/scan.rs`、`ui/library.js` | `Core/Features/Library` + `Infrastructure/Library` | [已实现](library.md) |
 | 渲染 EXE 识别 | `scan.rs::find_render_exe` 及评分逻辑 | `Domain/Library` | [已实现](library.md) |
 | 图形 API 检测 | `scan.rs::pe_imports`、`api_from_facts` | `Domain/Library` + `Infrastructure/Library` | [已实现](library.md) |
-| 帧生成部署 | `deploy.rs`、`ui/deploy.js` | `Core/Features/Deployment` | 待编写 |
-| 备份/还原 | `deploy.rs`、`backup_restore.rs`、`sm.rs`、`dlss5.rs` | `Core/Features/Deployment` | 待编写 |
+| 帧生成部署 | `deploy.rs`、`ui/deploy.js` | `Core/Features/Deployment` + `Infrastructure/Deployment` | [已实现](deployment.md) |
+| 备份/还原 | `deploy.rs`、`backup_restore.rs`、`sm.rs`、`dlss5.rs` | `Infrastructure/Deployment` | [已实现](deployment.md) |
 | INI 写入 | `update.rs::prepare_deploy_ini` | `Domain/Ini` | [已实现](ini.md) |
 | Smooth Motion | `sm.rs`、`ui/sm.js` | `Core/Features/SmoothMotion` | 待编写 |
 | DLSS5 / ReShade | `dlss5.rs`、`ui/dlss5.js` | `Core/Features/Dlss5` | 待编写 |

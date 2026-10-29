@@ -80,6 +80,15 @@ if (Test-Path -LiteralPath $packsSource) {
     Copy-Item -LiteralPath $packsSource -Destination (Join-Path $destination 'packs') -Recurse -Force
 }
 
+$frameGenPayload = Join-Path $root 'assets\packs\framegen.sm86'
+if (-not (Test-Path -LiteralPath $frameGenPayload)) {
+    throw 'FrameGen pack payload not found. Run build\generate-packs.ps1 first.'
+}
+
+$frameGenTarget = Join-Path $destination 'packs\framegen.sm86'
+New-Item -ItemType Directory -Path $frameGenTarget -Force | Out-Null
+Copy-Item -Path (Join-Path $frameGenPayload '*') -Destination $frameGenTarget -Recurse -Force
+
 $zipPath = Join-Path $OutputRoot "FrameGen-Manager-Next-$version-$Runtime-portable.zip"
 if (Test-Path -LiteralPath $zipPath) {
     Remove-Item -LiteralPath $zipPath -Force

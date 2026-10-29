@@ -4,7 +4,7 @@
 
 FrameGen Manager-Next 是 FrameGen Manager 的从零重写版：Windows 桌面端帧生成部署管理器，使用 **C# / .NET 10 LTS + WPF + Wpf.Ui**，单进程架构。
 
-> 当前状态：**Phase 2（只读扫描）已完成本地验收**。领域模型、资产包、游戏库扫描、GPU 状态、日志诊断和四页 UI 已完成；部署引擎（Phase 3）尚未开始。
+> 当前状态：**Phase 3（部署引擎 + FrameGen）本地验收完成**。游戏库、GPU、日志诊断、统一部署引擎、备份/还原和 FrameGen 部署已完成；Smooth Motion / DLSS5、完整选项 UI 和真实游戏对照尚未完成。
 
 ## 仓库
 
@@ -68,6 +68,9 @@ fgm-next.exe gpu
 fgm-next.exe library list [--json]
 fgm-next.exe library scan [--json]
 fgm-next.exe logs tail --lines 200
+fgm-next.exe deploy inspect <target-dir>
+fgm-next.exe deploy framegen <target-dir> [--proxy version.dll]
+fgm-next.exe deploy restore <target-dir>
 ```
 
 完整门禁（格式 + 构建 + 测试 + 结构检查）：
@@ -90,6 +93,7 @@ pwsh ./build/publish-portable.ps1 -Configuration Release
 - `artifacts/portable/FrameGen-Manager-Next-2.0.0-win-x64-portable.zip`
 
 便携版带 `portable.flag`，数据写到程序目录下的 `data\`，不写注册表。  
+当前便携版内置 FrameGen 资产包，可在游戏库直接部署/还原；Smooth Motion 和 DLSS5 部署后续接入。  
 **安装包暂不生成**；等便携版验收通过后再做 Velopack 安装器。
 
 ## 资产包

@@ -79,6 +79,41 @@ if (args.Length >= 2 &&
 }
 
 if (args.Length >= 3 &&
+    args[0].Equals("deploy", StringComparison.OrdinalIgnoreCase))
+{
+    var action = args[1].ToLowerInvariant();
+    if (action is not ("inspect" or "framegen" or "restore"))
+    {
+        Console.Error.WriteLine("Usage: fgm-next deploy <inspect|framegen|restore> <target-dir> [--proxy version.dll]");
+        return 2;
+    }
+
+    var proxySlot = "version.dll";
+    for (var index = 3; index < args.Length; index++)
+    {
+        if (!action.Equals("restore", StringComparison.OrdinalIgnoreCase) &&
+            args[index].Equals("--proxy", StringComparison.OrdinalIgnoreCase) &&
+            index + 1 < args.Length)
+        {
+            proxySlot = args[index + 1];
+            index++;
+            continue;
+        }
+
+        Console.Error.WriteLine($"Unknown option: {args[index]}");
+        return 2;
+    }
+
+    using var services = CliServices.Create();
+    return await DeployCommand.RunAsync(
+        services,
+        action,
+        args[2],
+        proxySlot,
+        CancellationToken.None);
+}
+
+if (args.Length >= 3 &&
     args[0].Equals("pack", StringComparison.OrdinalIgnoreCase) &&
     args[1].Equals("validate", StringComparison.OrdinalIgnoreCase))
 {
@@ -118,5 +153,6 @@ Console.WriteLine("  fgm-next gpu");
 Console.WriteLine("  fgm-next library list [--json]");
 Console.WriteLine("  fgm-next library scan [--json]");
 Console.WriteLine("  fgm-next logs tail [--lines N]");
+Console.WriteLine("  fgm-next deploy <inspect|framegen|restore> <target-dir> [--proxy version.dll]");
 Console.WriteLine("  fgm-next pack validate <pack-dir> [--no-hash] [--schema-only]");
 return 0;

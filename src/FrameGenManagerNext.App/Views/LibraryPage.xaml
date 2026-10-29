@@ -29,7 +29,7 @@
                 <TextBlock Text="游戏库" FontSize="26" FontWeight="SemiBold" />
                 <TextBlock Margin="0,4,0,0"
                            Opacity="0.6"
-                           Text="只读扫描 Steam / Epic / WeGame / 散装目录；添加游戏可选单个 EXE。" />
+                           Text="扫描只读；部署会写入游戏目录并备份原文件，还原可恢复。" />
             </StackPanel>
             <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
                 <ui:Button Content="扫描游戏" Command="{Binding ScanCommand}" Margin="0,0,8,0" />
@@ -88,27 +88,40 @@
                     </Style>
                 </DataGrid.CellStyle>
                 <DataGrid.Columns>
-                    <DataGridTextColumn Header="名称" Binding="{Binding Name}" Width="1.2*" ElementStyle="{StaticResource TrimmedCell}" />
-                    <DataGridTextColumn Header="平台" Binding="{Binding LauncherDisplay}" Width="72" ElementStyle="{StaticResource TrimmedCell}" />
-                    <DataGridTextColumn Header="API" Binding="{Binding ApiDisplay}" Width="60" ElementStyle="{StaticResource TrimmedCell}" />
-                    <DataGridTextColumn Header="目标目录" Binding="{Binding TargetDirectory}" Width="1.7*" ElementStyle="{StaticResource TrimmedCell}" />
-                    <DataGridTextColumn Header="渲染 EXE" Binding="{Binding RenderExeDisplay}" Width="1.7*" ElementStyle="{StaticResource TrimmedCell}" />
-                    <DataGridTemplateColumn Header="操作" Width="124">
+                    <DataGridTextColumn Header="名称" Binding="{Binding Name}" Width="1.1*" ElementStyle="{StaticResource TrimmedCell}" />
+                    <DataGridTextColumn Header="平台" Binding="{Binding LauncherDisplay}" Width="66" ElementStyle="{StaticResource TrimmedCell}" />
+                    <DataGridTextColumn Header="API" Binding="{Binding ApiDisplay}" Width="52" ElementStyle="{StaticResource TrimmedCell}" />
+                    <DataGridTextColumn Header="部署状态" Binding="{Binding DeploymentStateDisplay}" Width="92" ElementStyle="{StaticResource TrimmedCell}" />
+                    <DataGridTextColumn Header="目标目录" Binding="{Binding TargetDirectory}" Width="1.35*" ElementStyle="{StaticResource TrimmedCell}" />
+                    <DataGridTextColumn Header="渲染 EXE" Binding="{Binding RenderExeDisplay}" Width="1.35*" ElementStyle="{StaticResource TrimmedCell}" />
+                    <DataGridTemplateColumn Header="操作" Width="188">
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
-                                <StackPanel Orientation="Horizontal">
+                                <WrapPanel Orientation="Horizontal">
+                                    <ui:Button Content="部署"
+                                               Margin="0,0,4,0"
+                                               Padding="4,1"
+                                               FontSize="11"
+                                               Command="{Binding DataContext.DeployGameCommand, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}}"
+                                               CommandParameter="{Binding}" />
+                                    <ui:Button Content="还原"
+                                               Margin="0,0,4,0"
+                                               Padding="4,1"
+                                               FontSize="11"
+                                               Command="{Binding DataContext.RestoreGameCommand, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}}"
+                                               CommandParameter="{Binding}" />
                                     <ui:Button Content="打开"
                                                Margin="0,0,4,0"
-                                               Padding="6,1"
+                                               Padding="4,1"
                                                FontSize="11"
                                                Command="{Binding DataContext.OpenFolderCommand, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}}"
                                                CommandParameter="{Binding}" />
                                     <ui:Button Content="移除"
-                                               Padding="6,1"
+                                               Padding="4,1"
                                                FontSize="11"
                                                Command="{Binding DataContext.RemoveGameCommand, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}}"
                                                CommandParameter="{Binding}" />
-                                </StackPanel>
+                                </WrapPanel>
                             </DataTemplate>
                         </DataGridTemplateColumn.CellTemplate>
                     </DataGridTemplateColumn>

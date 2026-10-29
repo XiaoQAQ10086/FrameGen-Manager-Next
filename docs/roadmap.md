@@ -50,13 +50,18 @@
 
 验收（2026-10-29）：真机扫描 7 个游戏（旧缓存 6 个 + 新增散装 1 个）；霍格沃茨/PUBG/VTube/Nomad DX12、Wallpaper DX11、CS2 Unknown，与旧版一致；GPU RTX 3070 / SM86 / 621.01。全程未写入游戏目录。详见 [Phase 2 验收记录](phase2-acceptance.md)。
 
-## Phase 3 · 部署引擎 + 帧生成
+## Phase 3 · 部署引擎 + 帧生成（本地夹具验收完成）
 
-- 统一部署/还原/状态检测
-- 帧生成资产族
-- 部署页面与进度/取消
+- [x] 统一部署引擎：plan → lock → backup → atomic write → verify → manifest
+- [x] 备份存储、manifest 状态机、跨进程文件锁
+- [x] 冲突/缺失/锁定/无 manifest 状态检测
+- [x] FrameGen 选项校验与 INI 生成
+- [x] FrameGen 部署/还原/检查（CLI + 游戏库 UI）
+- [x] 便携版内置 FrameGen 资产包
+- [ ] 完整代理/画质选项 UI
+- [ ] 真实游戏部署/还原对照
 
-验收：夹具覆盖回滚、文件占用、用户修改冲突；真实游戏部署/还原通过。
+验收（夹具 + 便携版 + UI）：部署 8 个文件、备份 2 个原文件；检查 `Installed`；还原后原文件内容恢复、运行时目录移除；196 个测试通过。详见 [Phase 3 验收记录](phase3-acceptance.md)。
 
 ## Phase 4 · Smooth Motion + DLSS5
 

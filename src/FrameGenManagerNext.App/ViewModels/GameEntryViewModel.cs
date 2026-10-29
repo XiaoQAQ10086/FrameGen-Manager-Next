@@ -1,8 +1,10 @@
+using CommunityToolkit.Mvvm.ComponentModel;
+using FrameGenManagerNext.Domain.Deployment;
 using FrameGenManagerNext.Domain.Library;
 
 namespace FrameGenManagerNext.App.ViewModels;
 
-public sealed class GameEntryViewModel
+public sealed partial class GameEntryViewModel : ObservableObject
 {
     public GameEntryViewModel(GameEntry entry)
     {
@@ -28,6 +30,37 @@ public sealed class GameEntryViewModel
     public string RenderExeDisplay { get; }
 
     public bool IsManual { get; }
+
+    [ObservableProperty]
+    private string _deploymentStateDisplay = "检查中";
+
+    [ObservableProperty]
+    private DeploymentState _deploymentStateValue;
+
+    public void ApplyInspection(DeploymentInspection inspection)
+    {
+        DeploymentStateValue = inspection.State;
+        DeploymentStateDisplay = StateLabel(inspection.State);
+    }
+
+    public void SetState(DeploymentState state)
+    {
+        DeploymentStateValue = state;
+        DeploymentStateDisplay = StateLabel(state);
+    }
+
+    private static string StateLabel(DeploymentState state)
+    {
+        return state switch
+        {
+            DeploymentState.Installed => "已部署",
+            DeploymentState.Outdated => "需更新",
+            DeploymentState.Partial => "不完整",
+            DeploymentState.Conflict => "文件冲突",
+            DeploymentState.InstalledWithoutManifest => "已安装（无记录）",
+            _ => "未部署",
+        };
+    }
 
     private static string LauncherLabel(LauncherKind launcher)
     {

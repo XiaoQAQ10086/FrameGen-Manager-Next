@@ -22,10 +22,15 @@ FrameGen Manager-Next（便携版 / Portable）
   fgm-next.exe logs tail [--lines N]
   fgm-next.exe pack validate <pack目录> [--no-hash] [--schema-only]
 
+部署：
+  游戏库中的“部署”会写入默认 FrameGen 组件（version.dll、优化 1、4X、Preset A、DLSS）。
+  “还原”会恢复部署前备份的原文件；用户改过的文件会保留并提示冲突。
+  请先关闭游戏，再执行部署或还原。
+
 资产包：
-  packs\ 下是本版附带的只读清单，可做 schema 校验：
-    fgm-next.exe pack validate packs\framegen.sm86 --schema-only
-  完整 payload 校验需要 assets\packs 下的资产（开发目录中生成）。
+  packs\framegen.sm86\ 内含本版部署所需的 FrameGen 资产，可直接使用：
+    fgm-next.exe pack validate packs\framegen.sm86
+  其他 pack 只附带清单；Smooth Motion / DLSS5 部署在后续版本接入。
 
 注意：
   - 这是测试用便携版，不是安装包。
