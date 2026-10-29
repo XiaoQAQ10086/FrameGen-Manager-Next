@@ -291,7 +291,13 @@ export default {
     }
 
     async function scan() {
-      await run(() => api.request('games.scan'), null);
+      const buttons = root.querySelectorAll('[data-action="scan"]');
+      buttons.forEach((button) => button.classList.add('loading'));
+      try {
+        await run(() => api.request('games.scan'), null);
+      } finally {
+        buttons.forEach((button) => button.classList.remove('loading'));
+      }
     }
 
     const onRootClick = async (event) => {

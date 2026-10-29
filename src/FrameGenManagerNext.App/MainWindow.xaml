@@ -20,6 +20,7 @@
         </Grid.RowDefinitions>
 
         <ui:TitleBar Grid.Row="0"
+                      Height="32"
                       Title="FrameGen Manager-Next"
                       Icon="{ui:ImageIcon 'pack://application:,,,/Assets/app.png'}" />
 
