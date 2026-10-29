@@ -119,7 +119,7 @@
                       Foreground="#E8E8E8"
                       RowBackground="Transparent"
                       AlternatingRowBackground="#1A1A1A"
-                      RowHeight="42"
+                      RowHeight="56"
                       EnableRowVirtualization="True"
                       ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                       ScrollViewer.VerticalScrollBarVisibility="Auto"
@@ -140,6 +140,19 @@
                     </Style>
                 </DataGrid.CellStyle>
                 <DataGrid.Columns>
+                    <DataGridTemplateColumn Header="" Width="46">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <Border Width="34"
+                                        Height="46"
+                                        CornerRadius="4"
+                                        Background="#242424"
+                                        ClipToBounds="True">
+                                    <Image Source="{Binding CoverPath}" Stretch="UniformToFill" />
+                                </Border>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
                     <DataGridTextColumn Header="名称" Binding="{Binding Name}" Width="1.1*" ElementStyle="{StaticResource TrimmedCell}" />
                     <DataGridTextColumn Header="平台" Binding="{Binding LauncherDisplay}" Width="66" ElementStyle="{StaticResource TrimmedCell}" />
                     <DataGridTextColumn Header="API" Binding="{Binding ApiDisplay}" Width="52" ElementStyle="{StaticResource TrimmedCell}" />

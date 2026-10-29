@@ -12,7 +12,7 @@ using Microsoft.Extensions.Logging;
 
 namespace FrameGenManagerNext.Core.Features.Dlss5;
 
-public sealed class Dlss5DeploymentService : IDlss5DeploymentService
+public sealed partial class Dlss5DeploymentService : IDlss5DeploymentService
 {
     public const string FamilyId = "dlss5";
     public const string PackId = "dlss5.reshade-gitc";
@@ -47,7 +47,7 @@ public sealed class Dlss5DeploymentService : IDlss5DeploymentService
         string exePath,
         CancellationToken cancellationToken)
     {
-        var api = await ResolveApiAsync(exePath, cancellationToken);
+        var api = await DetectApiAsync(exePath, false, cancellationToken);
         if (api.IsFailure)
         {
             return Result<Dlss5Inspection>.Fail(api.Error!);
@@ -65,10 +65,14 @@ public sealed class Dlss5DeploymentService : IDlss5DeploymentService
             return Result<Dlss5Inspection>.Fail(fileState.Error!);
         }
 
+        var inventory = ScanTarget(plan.Value.TargetDirectory);
         return Result<Dlss5Inspection>.Ok(new Dlss5Inspection(
             fileState.Value.State,
             api.Value,
-            File.Exists(Path.Combine(plan.Value.TargetDirectory, "ReShade.ini"))));
+            inventory.ReShadePresent,
+            inventory.ReShadeModule,
+            inventory.LegacyRenoDx,
+            inventory.HasLeftovers));
     }
 
     public async Task<Result<Dlss5Report>> InstallAsync(
@@ -82,7 +86,7 @@ public sealed class Dlss5DeploymentService : IDlss5DeploymentService
             return Result<Dlss5Report>.Fail(new AppError(ErrorCode.InvalidPath, $"executable not found: {exePath}"));
         }
 
-        var api = await ResolveApiAsync(exePath, cancellationToken);
+        var api = await DetectApiAsync(exePath, true, cancellationToken);
         if (api.IsFailure)
         {
             return Result<Dlss5Report>.Fail(api.Error!);
@@ -108,6 +112,15 @@ public sealed class Dlss5DeploymentService : IDlss5DeploymentService
         if (plan.IsFailure)
         {
             return Result<Dlss5Report>.Fail(plan.Error!);
+        }
+
+        var inventory = ScanTarget(plan.Value.TargetDirectory);
+        if (inventory.LegacyRenoDx)
+        {
+            return Result<Dlss5Report>.Fail(AppError.Create(
+                ErrorCode.LegacyInstallPresent,
+                ("target", plan.Value.TargetDirectory),
+                ("reason", "legacy RenoDX files must be removed before installing the GITC pack")));
         }
 
         var installer = ResolveInstaller(location);
@@ -192,8 +205,9 @@ public sealed class Dlss5DeploymentService : IDlss5DeploymentService
                 "DLSS5 pack files were restored. ReShade module/INI/log files are left in place; use the official ReShade uninstaller if they are not needed."));
     }
 
-    private async Task<Result<GraphicsApi>> ResolveApiAsync(
+    private async Task<Result<GraphicsApi>> DetectApiAsync(
         string exePath,
+        bool requireKnown,
         CancellationToken cancellationToken)
     {
         if (string.IsNullOrWhiteSpace(exePath) || !File.Exists(exePath))
@@ -202,7 +216,7 @@ public sealed class Dlss5DeploymentService : IDlss5DeploymentService
         }
 
         var api = await _apiProbe.DetectAsync(exePath, cancellationToken);
-        if (api == GraphicsApi.Unknown)
+        if (requireKnown && api == GraphicsApi.Unknown)
         {
             return Result<GraphicsApi>.Fail(new AppError(
                 ErrorCode.InvalidArgument,

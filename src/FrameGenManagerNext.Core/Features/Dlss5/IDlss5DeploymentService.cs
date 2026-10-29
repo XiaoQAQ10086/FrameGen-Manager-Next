@@ -20,4 +20,10 @@ public interface IDlss5DeploymentService
         string targetDirectory,
         IProgress<DeploymentProgress>? progress,
         CancellationToken cancellationToken);
+
+    Task<Result<Dlss5UninstallReport>> UninstallAsync(
+        string targetDirectory,
+        string? exePath,
+        IProgress<DeploymentProgress>? progress,
+        CancellationToken cancellationToken);
 }

@@ -58,12 +58,12 @@
 - [x] FrameGen 选项校验与 INI 生成
 - [x] FrameGen 部署/还原/检查（CLI + 游戏库 UI）
 - [x] 便携版内置 FrameGen 资产包
-- [ ] 完整代理/画质选项 UI
+- [x] 完整代理/画质选项 UI
 - [ ] 真实游戏部署/还原对照
 
 验收（夹具 + 便携版 + UI）：部署 8 个文件、备份 2 个原文件；检查 `Installed`；还原后原文件内容恢复、运行时目录移除；196 个测试通过。详见 [Phase 3 验收记录](phase3-acceptance.md)。
 
-## Phase 4 · Smooth Motion + DLSS5（进行中）
+## Phase 4 · Smooth Motion + DLSS5（功能完成）
 
 - [x] NVAPI DRS 适配器：查 profile / 建 profile / 读写设置 / 保存 / 新会话复核
 - [x] Smooth Motion 组件部署（RTX30 / RTX20 pack）与还原
@@ -71,17 +71,20 @@
 - [x] 真机验证：RTX 3070，写 1 读回 1，写 0 读回 0，还原后组件移除
 - [x] DLSS5 核心：API 探测、ReShade 安装器、哈希校验、114 个文件部署、还原
 - [x] DLSS5 页面与 GPU 路由闸门
-- [ ] ReShade 卸载/旧版 RenoDX 清理
+- [x] ReShade 卸载/旧版 RenoDX 清理（官方卸载器 + 直接删除回退，夹具验证）
 
-验收（SM + DLSS5）：NVAPI 写后读回一致；DLSS5 真机安装/还原通过；197 个测试通过。
+验收（SM + DLSS5）：NVAPI 写后读回一致；DLSS5 真机安装/还原通过；卸载夹具剩余 0；206 个测试通过。
 
-## Phase 5 · 发布
+## Phase 5 · 发布与系统集成
 
-- Velopack 安装/更新
-- 中英文 resx
-- 主题与页面完善
-- 诊断包
-- 离线资产包
+- [x] 显卡名称伪装（固定型号白名单、备份/读回校验、独立提权助手）
+- [x] 设置页（主题、自动扫描、封面开关、数据目录、HAGS 快捷入口）
+- [x] Steam 本地封面 + CDN 缓存
+- [x] 诊断包
+- [ ] 中英文 resx
+- [ ] Velopack 安装/更新
+- [ ] 主题与页面视觉打磨
+- [ ] 离线资产包
 
 验收：安装/更新/卸载完整走通；发布候选。
 
@@ -93,6 +96,5 @@
 
 ## 后续
 
-- GPU 顶号（高级功能，独立提权工具 + 明确风险提示）
 - 代码签名（Azure Trusted Signing 等）
-- 可选便携版
+- 可选离线资产包

@@ -36,12 +36,40 @@ public sealed partial class Dlss5EntryViewModel : ObservableObject
     [ObservableProperty]
     private string _statusDisplay = "检查中";
 
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(CanInstall))]
+    [NotifyPropertyChangedFor(nameof(CanUninstall))]
+    private bool _legacyRenoDxPresent;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(CanUninstall))]
+    private bool _hasLeftovers;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(CanUninstall))]
+    private bool _reShadePresent;
+
+    public bool CanInstall => HasExecutable && !LegacyRenoDxPresent;
+
+    public bool CanUninstall => HasExecutable && (ReShadePresent || LegacyRenoDxPresent || HasLeftovers);
+
     public void ApplyInspection(Dlss5Inspection inspection)
     {
         ApiDisplay = ApiLabel(inspection.Api);
         FileDisplay = FileLabel(inspection.FileState);
-        ReShadeDisplay = inspection.ReShadePresent ? "已安装" : "未安装";
-        StatusDisplay = inspection.FileState == DeploymentState.Installed ? "已安装" : "未安装";
+        LegacyRenoDxPresent = inspection.LegacyRenoDxPresent;
+        HasLeftovers = inspection.HasLeftovers;
+        ReShadePresent = inspection.ReShadePresent;
+
+        ReShadeDisplay = inspection.LegacyRenoDxPresent
+            ? "旧版 RenoDX"
+            : inspection.ReShadePresent
+                ? inspection.ReShadeModule ?? "已安装"
+                : "未安装";
+
+        StatusDisplay = inspection.LegacyRenoDxPresent
+            ? "需先彻底卸载"
+            : FileLabel(inspection.FileState);
     }
 
     public void SetUnavailable(string message)
@@ -50,6 +78,9 @@ public sealed partial class Dlss5EntryViewModel : ObservableObject
         FileDisplay = "—";
         ReShadeDisplay = "—";
         StatusDisplay = message;
+        LegacyRenoDxPresent = false;
+        HasLeftovers = false;
+        ReShadePresent = false;
     }
 
     private static string ApiLabel(GraphicsApi api)

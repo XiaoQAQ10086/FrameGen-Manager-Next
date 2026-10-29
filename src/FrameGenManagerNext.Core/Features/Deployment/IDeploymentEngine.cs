@@ -19,4 +19,9 @@ public interface IDeploymentEngine
         string targetDirectory,
         IProgress<DeploymentProgress>? progress,
         CancellationToken cancellationToken);
+
+    Task<Result> DiscardBackupAsync(
+        string familyId,
+        string targetDirectory,
+        CancellationToken cancellationToken);
 }

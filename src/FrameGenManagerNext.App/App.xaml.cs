@@ -1,8 +1,10 @@
 using System.Globalization;
 using System.IO;
 using System.Windows;
+using FrameGenManagerNext.App.Services;
 using FrameGenManagerNext.App.ViewModels;
 using FrameGenManagerNext.App.Views;
+using FrameGenManagerNext.Core.Features.Settings;
 using FrameGenManagerNext.Infrastructure.Composition;
 using FrameGenManagerNext.Infrastructure.Paths;
 using Microsoft.Extensions.DependencyInjection;
@@ -31,6 +33,25 @@ public partial class App : Application
                 shared: true)
             .CreateLogger();
 
+        DispatcherUnhandledException += (_, eventArgs) =>
+        {
+            Log.Fatal(eventArgs.Exception, "Unhandled UI exception");
+            MessageBox.Show(
+                $"FrameGen Manager-Next hit an unexpected error.\n\n{eventArgs.Exception.Message}",
+                "FrameGen Manager-Next",
+                MessageBoxButton.OK,
+                MessageBoxImage.Error);
+            eventArgs.Handled = true;
+        };
+
+        AppDomain.CurrentDomain.UnhandledException += (_, eventArgs) =>
+        {
+            if (eventArgs.ExceptionObject is Exception exception)
+            {
+                Log.Fatal(exception, "Unhandled application exception");
+            }
+        };
+
         _host = Host.CreateDefaultBuilder()
             .UseSerilog()
             .ConfigureServices(services =>
@@ -44,6 +65,7 @@ public partial class App : Application
                 services.AddSingleton<Dlss5ViewModel>();
                 services.AddSingleton<LogsViewModel>();
                 services.AddSingleton<AboutViewModel>();
+                services.AddSingleton<SettingsViewModel>();
 
                 services.AddSingleton<LibraryPage>();
                 services.AddSingleton<GpuPage>();
@@ -51,6 +73,7 @@ public partial class App : Application
                 services.AddSingleton<Dlss5Page>();
                 services.AddSingleton<LogsPage>();
                 services.AddSingleton<AboutPage>();
+                services.AddSingleton<SettingsPage>();
                 services.AddSingleton<MainWindow>();
             })
             .Build();
@@ -61,6 +84,8 @@ public partial class App : Application
         try
         {
             _host.Start();
+            var settings = _host.Services.GetRequiredService<ISettingsService>().Load();
+            ThemeService.Apply(settings.Theme);
         }
         catch (Exception exception)
         {

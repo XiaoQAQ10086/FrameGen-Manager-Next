@@ -11,13 +11,19 @@ internal static class Dlss5Command
         IServiceProvider services,
         string action,
         string targetDirectory,
-        string exePath,
+        string? exePath,
         CancellationToken cancellationToken)
     {
         var service = services.GetRequiredService<IDlss5DeploymentService>();
 
         if (action == "inspect")
         {
+            if (string.IsNullOrWhiteSpace(exePath))
+            {
+                Console.Error.WriteLine("Usage: fgm-next dlss5 inspect <target-dir> <game-exe>");
+                return 2;
+            }
+
             var result = await service.InspectAsync(targetDirectory, exePath, cancellationToken);
             if (result.IsFailure)
             {
@@ -28,6 +34,9 @@ internal static class Dlss5Command
             Console.WriteLine($"files={result.Value.FileState}");
             Console.WriteLine($"api={result.Value.Api}");
             Console.WriteLine($"reShadePresent={result.Value.ReShadePresent}");
+            Console.WriteLine($"reShadeModule={result.Value.ReShadeModule ?? "-"}");
+            Console.WriteLine($"legacyRenoDx={result.Value.LegacyRenoDxPresent}");
+            Console.WriteLine($"leftovers={result.Value.HasLeftovers}");
             return 0;
         }
 
@@ -52,6 +61,41 @@ internal static class Dlss5Command
             }
 
             return report.Conflicts == 0 ? 0 : 1;
+        }
+
+        if (action == "uninstall")
+        {
+            var result = await service.UninstallAsync(
+                targetDirectory,
+                exePath,
+                CreateProgress(),
+                cancellationToken);
+            if (result.IsFailure)
+            {
+                PrintError(result.Error!);
+                return 1;
+            }
+
+            Console.WriteLine($"removed={result.Value.Removed.Count}");
+            foreach (var name in result.Value.Removed)
+            {
+                Console.WriteLine($"removed: {name}");
+            }
+
+            Console.WriteLine($"remaining={result.Value.Remaining.Count}");
+            foreach (var name in result.Value.Remaining)
+            {
+                Console.Error.WriteLine($"remaining: {name}");
+            }
+
+            Console.Error.WriteLine(result.Value.Message);
+            return result.Value.IsClean ? 0 : 1;
+        }
+
+        if (string.IsNullOrWhiteSpace(exePath))
+        {
+            Console.Error.WriteLine("Usage: fgm-next dlss5 install <target-dir> <game-exe>");
+            return 2;
         }
 
         var install = await service.InstallAsync(

@@ -38,6 +38,7 @@ public sealed partial class Dlss5ViewModel : ObservableObject
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(InstallCommand))]
     [NotifyCanExecuteChangedFor(nameof(RestoreCommand))]
+    [NotifyCanExecuteChangedFor(nameof(UninstallCommand))]
     private bool _isBusy;
 
     [ObservableProperty]
@@ -99,10 +100,10 @@ public sealed partial class Dlss5ViewModel : ObservableObject
         }
     }
 
-    [RelayCommand(CanExecute = nameof(CanModify))]
+    [RelayCommand(CanExecute = nameof(CanInstall))]
     private async Task InstallAsync(Dlss5EntryViewModel? game)
     {
-        if (game is null || !game.HasExecutable || !_gpuSupported)
+        if (game is null || !game.HasExecutable || !game.CanInstall || !_gpuSupported)
         {
             return;
         }
@@ -146,6 +147,66 @@ public sealed partial class Dlss5ViewModel : ObservableObject
             "DLSS5 还原完成");
     }
 
+    [RelayCommand(CanExecute = nameof(CanModify))]
+    private async Task UninstallAsync(Dlss5EntryViewModel? game)
+    {
+        if (game is null || IsBusy)
+        {
+            return;
+        }
+
+        if (!Confirm(
+                $"将彻底卸载“{game.GameName}”目录中的 ReShade、DLSS5 插件和旧版 RenoDX 残留。\n\n" +
+                "文件会被永久删除（不进回收站），且不可恢复。请确认游戏已关闭。\n\n继续？"))
+        {
+            return;
+        }
+
+        IsBusy = true;
+        StatusText = "正在彻底卸载 ReShade / DLSS5...";
+        Warnings = string.Empty;
+        HasWarnings = false;
+
+        try
+        {
+            var result = await _dlss5.UninstallAsync(
+                game.TargetDirectory,
+                game.ExePath,
+                CreateProgress(),
+                CancellationToken.None);
+
+            if (result.IsFailure)
+            {
+                StatusText = $"卸载失败：{result.Error!.Code}";
+                Warnings = result.Error.Diagnostic ?? result.Error.Code.ToString();
+                HasWarnings = true;
+                return;
+            }
+
+            StatusText = result.Value.IsClean
+                ? "已彻底卸载 ReShade / DLSS5"
+                : "卸载完成，但仍有文件被占用";
+            if (!result.Value.IsClean)
+            {
+                Warnings = string.Join("、", result.Value.Remaining);
+                HasWarnings = true;
+            }
+
+            await RefreshEntryAsync(game);
+        }
+        catch (Exception exception)
+        {
+            _logger.LogError(exception, "DLSS5 uninstall failed for {Game}", game.GameName);
+            StatusText = "卸载失败";
+            Warnings = exception.Message;
+            HasWarnings = true;
+        }
+        finally
+        {
+            IsBusy = false;
+        }
+    }
+
     [RelayCommand]
     private async Task RefreshStatesAsync()
     {
@@ -169,31 +230,36 @@ public sealed partial class Dlss5ViewModel : ObservableObject
     {
         foreach (var game in Games)
         {
-            if (!_gpuSupported)
-            {
-                game.SetUnavailable("当前 GPU 不支持");
-                continue;
-            }
-
             if (!game.HasExecutable)
             {
                 game.SetUnavailable("未识别渲染 EXE");
                 continue;
             }
 
-            var result = await _dlss5.InspectAsync(
-                game.TargetDirectory,
-                game.ExePath!,
-                CancellationToken.None);
+            await RefreshEntryAsync(game);
+        }
+    }
 
-            if (result.IsSuccess)
-            {
-                game.ApplyInspection(result.Value);
-            }
-            else
-            {
-                game.SetUnavailable(result.Error!.Code.ToString());
-            }
+    private async Task RefreshEntryAsync(Dlss5EntryViewModel game)
+    {
+        if (!game.HasExecutable)
+        {
+            game.SetUnavailable("未识别渲染 EXE");
+            return;
+        }
+
+        var result = await _dlss5.InspectAsync(
+            game.TargetDirectory,
+            game.ExePath!,
+            CancellationToken.None);
+
+        if (result.IsSuccess)
+        {
+            game.ApplyInspection(result.Value);
+        }
+        else
+        {
+            game.SetUnavailable(result.Error!.Code.ToString());
         }
     }
 
@@ -269,8 +335,13 @@ public sealed partial class Dlss5ViewModel : ObservableObject
             MessageBoxImage.Warning) == MessageBoxResult.Yes;
     }
 
-    private bool CanModify()
+    private bool CanInstall()
     {
         return !IsBusy && _gpuSupported;
+    }
+
+    private bool CanModify()
+    {
+        return !IsBusy;
     }
 }

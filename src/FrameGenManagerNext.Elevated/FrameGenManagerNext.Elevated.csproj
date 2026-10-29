@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <AssemblyName>fgm-next-elevated</AssemblyName>
+    <RootNamespace>FrameGenManagerNext.Elevated</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\FrameGenManagerNext.Domain\FrameGenManagerNext.Domain.csproj" />
+    <ProjectReference Include="..\FrameGenManagerNext.Infrastructure\FrameGenManagerNext.Infrastructure.csproj" />
+  </ItemGroup>
+
+</Project>

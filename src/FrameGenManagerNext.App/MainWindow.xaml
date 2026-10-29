@@ -9,7 +9,7 @@
                  MinHeight="640"
                  WindowStartupLocation="CenterScreen"
                  ExtendsContentIntoTitleBar="True"
-                 WindowBackdropType="Mica"
+                 WindowBackdropType="None"
                  WindowCornerPreference="Round"
                  Background="#101010">
     <Grid>
@@ -88,11 +88,12 @@
                         <ListBoxItem Content="Smooth Motion" Tag="smooth-motion" />
                         <ListBoxItem Content="DLSS5 / ReShade" Tag="dlss5" />
                         <ListBoxItem Content="日志与诊断" Tag="logs" />
+                        <ListBoxItem Content="设置" Tag="settings" />
                         <ListBoxItem Content="关于" Tag="about" />
                     </ListBox>
 
                     <StackPanel Grid.Row="2" Margin="8,16,8,4">
-                        <TextBlock Text="Phase 4 · 部署 / SM / DLSS5"
+                        <TextBlock Text="Phase 5 · 设置 / 伪装 / 更新"
                                    FontSize="11"
                                    Opacity="0.5" />
                         <TextBlock Margin="0,4,0,0"

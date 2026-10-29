@@ -10,13 +10,19 @@ FrameGen Manager-Next（便携版 / Portable）
   不写注册表；删除整个文件夹即可卸载。
 
 界面：
-  游戏库 / GPU 状态 / 日志与诊断 / 关于
-  游戏库支持扫描 Steam、Epic、WeGame、散装目录，也可手动添加 EXE。
+  游戏库 / GPU 状态 / Smooth Motion / DLSS5 / 日志与诊断 / 设置 / 关于
+  游戏库支持扫描 Steam、Epic、WeGame、散装目录，也可手动添加 EXE；
+  Steam 游戏会显示本地或缓存封面。
+  GPU 页面可选择性修改显卡名称（需要管理员权限，可随时还原）。
+  设置页可切换主题、启动自动扫描、封面开关，并打开数据目录/HAGS 设置。
 
 命令行：
   fgm-next.exe --version
   fgm-next.exe --paths
   fgm-next.exe gpu
+  fgm-next.exe gpu spoof inspect
+  fgm-next.exe gpu spoof apply "NVIDIA GeForce RTX 5090"
+  fgm-next.exe gpu spoof restore driver
   fgm-next.exe library list [--json]
   fgm-next.exe library scan [--json]
   fgm-next.exe logs tail [--lines N]
@@ -26,13 +32,17 @@ FrameGen Manager-Next（便携版 / Portable）
   游戏库中的“部署”会写入 FrameGen 组件（代理槽/优化/帧数/Preset/引擎/SR 可选）。
   “还原”会恢复部署前备份的原文件；用户改过的文件会保留并提示冲突。
   Smooth Motion 页面可逐游戏开启/关闭/还原。
-  请先关闭游戏，再执行部署或还原。
+  DLSS5 页面可逐游戏安装/还原/卸载；卸载会清理 ReShade、GITC 组件和旧版 RenoDX 残留。
+  请先关闭游戏，再执行部署、还原或卸载。
 
 资产包：
   packs\framegen.sm86\、packs\smooth-motion.rtx30\、packs\smooth-motion.rtx20\、
   packs\dlss5.reshade-gitc\ 内含本版部署所需的资产，可直接使用：
     fgm-next.exe pack validate packs\framegen.sm86
-  DLSS5 页面可逐游戏安装/还原；CLI 也支持 dlss5 inspect/install/restore。
+
+提权助手：
+  fgm-next-elevated.exe 只用于显卡名称伪装；主程序会自动请求 UAC，
+  请勿手动运行或替换该文件。
 
 注意：
   - 这是测试用便携版，不是安装包。

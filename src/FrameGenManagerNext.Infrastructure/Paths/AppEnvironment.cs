@@ -15,5 +15,11 @@ public sealed class AppEnvironment : IAppEnvironment
 
     public string LogsDirectory => _paths.LogsDirectory;
 
+    public string PacksDirectory => _paths.PacksDirectory;
+
+    public string BackupsDirectory => _paths.BackupsDirectory;
+
+    public string ConfigDirectory => _paths.ConfigDirectory;
+
     public bool IsPortable => _paths.IsPortable;
 }

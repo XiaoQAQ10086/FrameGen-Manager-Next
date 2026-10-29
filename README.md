@@ -4,7 +4,7 @@
 
 FrameGen Manager-Next 是 FrameGen Manager 的从零重写版：Windows 桌面端帧生成部署管理器，使用 **C# / .NET 10 LTS + WPF + Wpf.Ui**，单进程架构。
 
-> 当前状态：**Phase 4（Smooth Motion + DLSS5）本地验收完成**。游戏库、GPU、日志诊断、统一部署引擎、FrameGen（含完整选项）、Smooth Motion、DLSS5 页面与 CLI 已完成；剩余 GPU 顶号、设置/i18n/封面、ReShade 卸载/旧版清理、真实游戏对照和 UI 打磨。
+> 当前状态：**Phase 4/5 功能本地验收完成**。游戏库（Steam 封面）、GPU 状态与显卡名称伪装、日志诊断、统一部署引擎、FrameGen、Smooth Motion、DLSS5（含彻底卸载/旧版 RenoDX 清理）、设置页、CLI 已完成；剩余 i18n、真实游戏对照和 UI 打磨，安装包等便携版验收后再做。
 
 ## 仓库
 
@@ -13,10 +13,11 @@ FrameGen Manager-Next 是 FrameGen Manager 的从零重写版：Windows 桌面�
 
 ## 这个程序做什么
 
-- 扫描 Steam / Epic / WeGame / 手动添加的游戏库。
+- 扫描 Steam / Epic / WeGame / 手动添加的游戏库，Steam 游戏显示本地或缓存封面。
 - 把帧生成代理 DLL、运行时和配置部署到游戏渲染目录，并支持安全还原。
-- 管理 Smooth Motion、DLSS5 / ReShade 等可选组件。
-- 显示 GPU、驱动和兼容性状态。
+- 管理 Smooth Motion、DLSS5 / ReShade 等可选组件，支持彻底卸载和旧版 RenoDX 清理。
+- 显示 GPU、驱动和兼容性状态；可选地将显卡名称伪装成固定型号（需管理员权限，可还原）。
+- 设置页：主题、启动自动扫描、封面开关、数据目录入口、HAGS 系统设置快捷入口。
 - 导出日志与诊断包。
 
 它不是帧生成渲染器：真正的帧生成由游戏、NVIDIA 运行时或 ReShade 执行。
@@ -65,6 +66,9 @@ dotnet run --project src/FrameGenManagerNext.App
 
 ```powershell
 fgm-next.exe gpu
+fgm-next.exe gpu spoof inspect
+fgm-next.exe gpu spoof apply "NVIDIA GeForce RTX 5090"
+fgm-next.exe gpu spoof restore driver
 fgm-next.exe library list [--json]
 fgm-next.exe library scan [--json]
 fgm-next.exe logs tail --lines 200
@@ -75,6 +79,10 @@ fgm-next.exe sm inspect <target-dir> <game-exe>
 fgm-next.exe sm enable <target-dir> <game-exe>
 fgm-next.exe sm disable <target-dir> <game-exe>
 fgm-next.exe sm restore <target-dir> <game-exe>
+fgm-next.exe dlss5 inspect <target-dir> <game-exe>
+fgm-next.exe dlss5 install <target-dir> <game-exe>
+fgm-next.exe dlss5 restore <target-dir>
+fgm-next.exe dlss5 uninstall <target-dir> [game-exe]
 ```
 
 完整门禁（格式 + 构建 + 测试 + 结构检查）：
@@ -96,7 +104,7 @@ pwsh ./build/publish-portable.ps1 -Configuration Release
 - `artifacts/portable/FrameGen-Manager-Next-2.0.0-win-x64/`（直接打开该文件夹测试，不再打 zip）
 
 便携版带 `portable.flag`，数据写到程序目录下的 `data\`，不写注册表。  
-当前便携版内置 FrameGen 资产包，可在游戏库直接部署/还原；Smooth Motion 和 DLSS5 部署后续接入。  
+当前便携版内置 FrameGen、Smooth Motion、DLSS5 全部资产包；显卡名称伪装通过同目录的 `fgm-next-elevated.exe` 提权执行。  
 **安装包暂不生成**；等便携版验收通过后再做 Velopack 安装器。
 
 ## 资产包
@@ -119,6 +127,7 @@ src/
   FrameGenManagerNext.Infrastructure/  Windows / 文件 / 网络 / NVAPI / ReShade 实现
   FrameGenManagerNext.App/             WPF（View + ViewModel）
   FrameGenManagerNext.Cli/             无 UI 验收入口
+  FrameGenManagerNext.Elevated/        显卡名称伪装提权助手（只接受白名单参数）
 tests/                          单元、基础设施、集成测试
 packs/                          资产包清单（提交）
 assets/                         本地资产与 pack payload（不进 git）

@@ -32,6 +32,7 @@ public partial class MainWindow : FluentWindow
             "smooth-motion" => _services.GetRequiredService<SmoothMotionPage>(),
             "dlss5" => _services.GetRequiredService<Dlss5Page>(),
             "logs" => _services.GetRequiredService<LogsPage>(),
+            "settings" => _services.GetRequiredService<SettingsPage>(),
             "about" => _services.GetRequiredService<AboutPage>(),
             _ => null,
         };

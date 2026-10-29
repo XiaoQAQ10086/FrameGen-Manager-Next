@@ -32,21 +32,38 @@
 ## 状态检查
 
 - pack 文件状态来自部署引擎（未部署/已部署/需更新/不完整/冲突）。
-- `ReShade.ini` 存在 → `reShadePresent=true`。
-- 同时显示探测到的 API。
+- 通过文件版本信息识别 ReShade 模块（`d3d9/d3d10/d3d11/d3d12/dxgi/opengl32.dll`，ProductName/FileDescription 含 `ReShade`），避免误删游戏自带 DLL。
+- 同时报告旧版 RenoDX 残留（根目录 `renodx-dlss5*.addon64` 或旧布局根目录 `nvngx_dlssnr.dll`）与插件运行时残渣。
+- 检测到旧版 RenoDX 时拒绝安装 GITC pack，返回 `LegacyInstallPresent`，必须先执行卸载。
 
 ## 还原
 
 - 通过部署引擎还原 114 个 pack 文件，恢复部署前备份。
 - **不自动运行 ReShade 卸载器**；ReShade 模块、`ReShade.ini`、`ReShade.log`、`ReShadePreset.ini` 会保留，并明确提示。
-- 真实游戏卸载/清理留到后续“卸载 DLSS5”功能。
+- 需要彻底清理时使用“卸载”。
+
+## 彻底卸载
+
+1. 先调用部署引擎还原并清理 manifest/备份：只删除仍匹配部署哈希的文件，用户改过的文件保留。
+2. 如果识别到 ReShade 模块、游戏 EXE 和已校验的安装器，运行官方卸载器：
+   ```
+   ReShade_Setup_6.8.0_Addon.exe --headless --api <api> --state uninstall "<game-exe>"
+   ```
+   失败或超时则回退到直接删除。
+3. 删除 ReShade 模块、`ReShade.ini`、`ReShade.log`、`ReShadePreset.ini`。
+4. 删除 GITC 组件（`gitc-uplift.addon32/64`、`gitc-uplift-helper64.exe`、`GITC-Uplift/`）与已知 shader。
+5. 清理旧版 RenoDX：`renodx-dlss5*.addon*`、旧布局根目录 `nvngx_dlssnr.dll`。
+6. 清理插件运行时残渣（`renodx-dlss5-report*`、`ReShade.ini.renodx-dlss5*`、崩溃日志、trace）。
+7. 仅当 `D3D12\` 只有 `D3D12Core.dll` 且版本信息含 Microsoft 时删除该 Agility SDK 文件。
+8. 删除后重新扫描，返回已删除项与仍被占用的项；删除是永久的，不进回收站。
 
 ## 命令
 
 ```powershell
 fgm-next dlss5 inspect <target-dir> <game-exe>
 fgm-next dlss5 install <target-dir> <game-exe>
-fgm-next dlss5 restore <target-dir> <game-exe>
+fgm-next dlss5 restore <target-dir> [game-exe]
+fgm-next dlss5 uninstall <target-dir> [game-exe]
 ```
 
 ## 真机验证（2026-10-29）
@@ -56,10 +73,9 @@ fgm-next dlss5 restore <target-dir> <game-exe>
 - `inspect`：`NotDeployed`，`Direct3D12`，`reShadePresent=false`。
 - `install`：114 个文件写入，ReShade 安装器输出 `Successfully installed ReShade.`，`reShadePresent=true`。
 - `restore`：移除 114 个 pack 文件，`conflicts=0`；ReShade 模块/INI/日志按预期保留。
+- `uninstall` 夹具：识别旧版 RenoDX 并阻止安装；卸载删除 ReShade 模块/INI/日志、GITC 组件、shader、旧版 addon、运行时残渣，剩余 0。
 
 ## 已知限制
 
-- 未接入 GPU 路由闸门（UI 层后续加）。
-- 不支持旧版 RenoDX 清理/官方 ReShade 卸载。
 - `ReShade.ini` 搜索路径目前是覆盖写入，不保留用户自定义路径；后续改成合并。
 - 安装器下载“compatibility information”依赖网络；离线场景需要预先准备。

@@ -24,6 +24,19 @@ if (arguments.Contains("--paths"))
 if (args.Length >= 1 && args[0].Equals("gpu", StringComparison.OrdinalIgnoreCase))
 {
     using var services = CliServices.Create();
+    if (args.Length >= 2 && args[1].Equals("spoof", StringComparison.OrdinalIgnoreCase))
+    {
+        var action = args.Length > 2 ? args[2].ToLowerInvariant() : "inspect";
+        var value = args.Length > 3 ? string.Join(' ', args.Skip(3)) : null;
+        return await GpuCommand.RunSpoofAsync(services, action, value, CancellationToken.None);
+    }
+
+    if (args.Length != 1)
+    {
+        Console.Error.WriteLine("Usage: fgm-next gpu [spoof [inspect|apply|restore] [value]]");
+        return 2;
+    }
+
     return await GpuCommand.RunAsync(services, CancellationToken.None);
 }
 
@@ -98,13 +111,13 @@ if (args.Length >= 4 &&
         CancellationToken.None);
 }
 
-if (args.Length >= 4 &&
+if (args.Length >= 3 &&
     args[0].Equals("dlss5", StringComparison.OrdinalIgnoreCase))
 {
     var action = args[1].ToLowerInvariant();
-    if (action is not ("inspect" or "install" or "restore"))
+    if (action is not ("inspect" or "install" or "restore" or "uninstall"))
     {
-        Console.Error.WriteLine("Usage: fgm-next dlss5 <inspect|install|restore> <target-dir> <game-exe>");
+        Console.Error.WriteLine("Usage: fgm-next dlss5 <inspect|install|restore|uninstall> <target-dir> [game-exe]");
         return 2;
     }
 
@@ -113,7 +126,7 @@ if (args.Length >= 4 &&
         services,
         action,
         args[2],
-        args[3],
+        args.Length > 3 ? args[3] : null,
         CancellationToken.None);
 }
 

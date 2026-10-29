@@ -4,6 +4,7 @@
     <Project Path="src/FrameGenManagerNext.Cli/FrameGenManagerNext.Cli.csproj" />
     <Project Path="src/FrameGenManagerNext.Core/FrameGenManagerNext.Core.csproj" />
     <Project Path="src/FrameGenManagerNext.Domain/FrameGenManagerNext.Domain.csproj" />
+    <Project Path="src/FrameGenManagerNext.Elevated/FrameGenManagerNext.Elevated.csproj" />
     <Project Path="src/FrameGenManagerNext.Infrastructure/FrameGenManagerNext.Infrastructure.csproj" />
   </Folder>
   <Folder Name="/tests/">

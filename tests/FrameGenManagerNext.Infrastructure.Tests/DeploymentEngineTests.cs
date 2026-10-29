@@ -13,6 +13,7 @@ public sealed class DeploymentEngineTests : IDisposable
     private const string Family = "test-family";
     private readonly TestDirectory _directory = new("fgm-deploy-tests");
     private readonly AppPaths _paths;
+    private readonly BackupStore _backups;
     private readonly DeploymentEngine _engine;
     private readonly string _target;
 
@@ -21,8 +22,8 @@ public sealed class DeploymentEngineTests : IDisposable
         _paths = new AppPaths(_directory.GetPath("data"));
         _paths.EnsureCreated();
         _target = _directory.CreateDirectory("game");
-        var backups = new BackupStore(_paths, NullLogger<BackupStore>.Instance);
-        _engine = new DeploymentEngine(_paths, backups, NullLogger<DeploymentEngine>.Instance);
+        _backups = new BackupStore(_paths, NullLogger<BackupStore>.Instance);
+        _engine = new DeploymentEngine(_paths, _backups, NullLogger<DeploymentEngine>.Instance);
     }
 
     [Fact]
@@ -144,6 +145,31 @@ public sealed class DeploymentEngineTests : IDisposable
 
         restored.IsFailure.ShouldBeTrue();
         restored.Error!.Code.ShouldBe(Domain.Errors.ErrorCode.ManifestMissing);
+    }
+
+    [Fact]
+    public async Task DiscardBackupRemovesManifestAndBackupFiles()
+    {
+        var plan = BuildPlan();
+        var deployed = await _engine.DeployAsync(
+            plan,
+            progress: null,
+            TestContext.Current.CancellationToken);
+        deployed.IsSuccess.ShouldBeTrue(deployed.Error?.ToString());
+
+        var backupDirectory = _backups.GetBackupDirectory(Family, _target);
+        Directory.Exists(backupDirectory).ShouldBeTrue();
+
+        var discarded = await _engine.DiscardBackupAsync(
+            Family,
+            _target,
+            TestContext.Current.CancellationToken);
+
+        discarded.IsSuccess.ShouldBeTrue(discarded.Error?.ToString());
+        Directory.Exists(backupDirectory).ShouldBeFalse();
+
+        var inspected = await _engine.InspectAsync(plan, TestContext.Current.CancellationToken);
+        inspected.Value.HasManifest.ShouldBeFalse();
     }
 
     public void Dispose()

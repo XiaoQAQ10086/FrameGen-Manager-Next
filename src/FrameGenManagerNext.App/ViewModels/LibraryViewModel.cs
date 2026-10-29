@@ -6,6 +6,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using FrameGenManagerNext.Core.Features.Framegen;
 using FrameGenManagerNext.Core.Features.Library;
+using FrameGenManagerNext.Core.Features.Settings;
 using FrameGenManagerNext.Domain.Deployment;
 using FrameGenManagerNext.Domain.Library;
 using Microsoft.Extensions.Logging;
@@ -17,6 +18,8 @@ public sealed partial class LibraryViewModel : ObservableObject, IDisposable
 {
     private readonly IGameLibraryService _library;
     private readonly IFrameGenDeploymentService _frameGen;
+    private readonly IGameCoverService _covers;
+    private readonly ISettingsService _settings;
     private readonly ILogger<LibraryViewModel> _logger;
     private CancellationTokenSource? _scanCancellation;
     private bool _initialized;
@@ -24,10 +27,14 @@ public sealed partial class LibraryViewModel : ObservableObject, IDisposable
     public LibraryViewModel(
         IGameLibraryService library,
         IFrameGenDeploymentService frameGen,
+        IGameCoverService covers,
+        ISettingsService settings,
         ILogger<LibraryViewModel> logger)
     {
         _library = library;
         _frameGen = frameGen;
+        _covers = covers;
+        _settings = settings;
         _logger = logger;
     }
 
@@ -90,6 +97,11 @@ public sealed partial class LibraryViewModel : ObservableObject, IDisposable
         finally
         {
             IsBusy = false;
+        }
+
+        if (_settings.Load().AutoScanOnStartup && Games.Count == 0)
+        {
+            await ScanAsync();
         }
     }
 
@@ -441,44 +453,12 @@ public sealed partial class LibraryViewModel : ObservableObject, IDisposable
 
         HasGames = Games.Count > 0;
         IsEmpty = !HasGames;
-        _ = RefreshDeploymentStatesAsync();
-    }
-
-    private async Task RefreshDeploymentStatesAsync()
-    {
-        var games = Games.ToList();
-        using var gate = new SemaphoreSlim(4);
-        var tasks = games.Select(async game =>
+        if (_settings.Load().ShowCovers)
         {
-            await gate.WaitAsync();
-            try
-            {
-                var result = await _frameGen.InspectAsync(
-                    game.TargetDirectory,
-                    Options.ToOptions(),
-                    CancellationToken.None);
+            _ = LoadCoversAsync();
+        }
 
-                if (result.IsSuccess)
-                {
-                    game.ApplyInspection(result.Value);
-                }
-                else
-                {
-                    game.DeploymentStateDisplay = result.Error!.Code.ToString();
-                }
-            }
-            catch (Exception exception)
-            {
-                _logger.LogWarning(exception, "Could not inspect deployment state for {Game}", game.Name);
-                game.DeploymentStateDisplay = "检查失败";
-            }
-            finally
-            {
-                gate.Release();
-            }
-        });
-
-        await Task.WhenAll(tasks);
+        _ = RefreshDeploymentStatesAsync();
     }
 
     private static string ProgressLabel(DeploymentProgress update)

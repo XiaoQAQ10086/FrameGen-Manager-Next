@@ -6,8 +6,11 @@ namespace FrameGenManagerNext.App.ViewModels;
 
 public sealed partial class GameEntryViewModel : ObservableObject
 {
+    private readonly GameEntry _entry;
+
     public GameEntryViewModel(GameEntry entry)
     {
+        _entry = entry;
         Id = entry.Id;
         Name = entry.Name;
         LauncherDisplay = LauncherLabel(entry.Launcher);
@@ -31,11 +34,22 @@ public sealed partial class GameEntryViewModel : ObservableObject
 
     public bool IsManual { get; }
 
+    public GameEntry ToEntry()
+    {
+        return _entry;
+    }
+
     [ObservableProperty]
     private string _deploymentStateDisplay = "检查中";
 
     [ObservableProperty]
     private DeploymentState _deploymentStateValue;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasCover))]
+    private string? _coverPath;
+
+    public bool HasCover => !string.IsNullOrWhiteSpace(CoverPath);
 
     public void ApplyInspection(DeploymentInspection inspection)
     {

@@ -35,4 +35,9 @@ public enum ErrorCode
     ConfigCorrupt,
     OperationCancelled,
     InternalError,
+    LegacyInstallPresent,
+    NothingToUninstall,
+    ElevationRequired,
+    ElevationCancelled,
+    GpuSpoofFailed,
 }

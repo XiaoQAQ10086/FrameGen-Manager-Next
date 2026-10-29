@@ -22,6 +22,7 @@ FrameGenManagerNext.Core            用例服务 + 端口接口，只依赖 Doma
 FrameGenManagerNext.Infrastructure  端口实现，依赖 Core/Domain
 FrameGenManagerNext.App             WPF，依赖 Core，组合根引用 Infrastructure
 FrameGenManagerNext.Cli             无 UI 验收入口
+FrameGenManagerNext.Elevated        显卡名称伪装提权助手，只接受白名单参数
 ```
 
 依赖规则由项目引用和架构测试共同保证：

@@ -6,5 +6,11 @@ public interface IAppEnvironment
 
     string LogsDirectory { get; }
 
+    string PacksDirectory { get; }
+
+    string BackupsDirectory { get; }
+
+    string ConfigDirectory { get; }
+
     bool IsPortable { get; }
 }

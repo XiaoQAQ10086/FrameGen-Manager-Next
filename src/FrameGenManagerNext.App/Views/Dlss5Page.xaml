@@ -81,9 +81,9 @@
                     <DataGridTextColumn Header="游戏" Binding="{Binding GameName}" Width="1.4*" ElementStyle="{StaticResource TrimmedCell}" />
                     <DataGridTextColumn Header="API" Binding="{Binding ApiDisplay}" Width="80" ElementStyle="{StaticResource TrimmedCell}" />
                     <DataGridTextColumn Header="文件" Binding="{Binding FileDisplay}" Width="100" ElementStyle="{StaticResource TrimmedCell}" />
-                    <DataGridTextColumn Header="ReShade" Binding="{Binding ReShadeDisplay}" Width="100" ElementStyle="{StaticResource TrimmedCell}" />
-                    <DataGridTextColumn Header="状态" Binding="{Binding StatusDisplay}" Width="100" ElementStyle="{StaticResource TrimmedCell}" />
-                    <DataGridTemplateColumn Header="操作" Width="140">
+                    <DataGridTextColumn Header="ReShade" Binding="{Binding ReShadeDisplay}" Width="130" ElementStyle="{StaticResource TrimmedCell}" />
+                    <DataGridTextColumn Header="状态" Binding="{Binding StatusDisplay}" Width="120" ElementStyle="{StaticResource TrimmedCell}" />
+                    <DataGridTemplateColumn Header="操作" Width="210">
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
                                 <WrapPanel>
@@ -91,12 +91,21 @@
                                                Margin="0,0,4,0"
                                                Padding="5,1"
                                                FontSize="11"
+                                               IsEnabled="{Binding CanInstall}"
                                                Command="{Binding DataContext.InstallCommand, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}}"
                                                CommandParameter="{Binding}" />
                                     <ui:Button Content="还原"
+                                               Margin="0,0,4,0"
                                                Padding="5,1"
                                                FontSize="11"
                                                Command="{Binding DataContext.RestoreCommand, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}}"
+                                               CommandParameter="{Binding}" />
+                                    <ui:Button Content="卸载"
+                                               Padding="5,1"
+                                               FontSize="11"
+                                               IsEnabled="{Binding CanUninstall}"
+                                               ToolTip="永久删除 ReShade、DLSS5 组件和旧版 RenoDX 残留"
+                                               Command="{Binding DataContext.UninstallCommand, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}}"
                                                CommandParameter="{Binding}" />
                                 </WrapPanel>
                             </DataTemplate>

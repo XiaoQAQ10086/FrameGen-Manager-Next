@@ -40,6 +40,7 @@ $version = $versionNode.InnerText.Trim()
 
 $appProject = Join-Path $root 'src\FrameGenManagerNext.App\FrameGenManagerNext.App.csproj'
 $cliProject = Join-Path $root 'src\FrameGenManagerNext.Cli\FrameGenManagerNext.Cli.csproj'
+$elevatedProject = Join-Path $root 'src\FrameGenManagerNext.Elevated\FrameGenManagerNext.Elevated.csproj'
 $folderName = "FrameGen-Manager-Next-$version-$Runtime"
 $destination = Join-Path $OutputRoot $folderName
 
@@ -71,6 +72,7 @@ function Invoke-Publish {
 
 Invoke-Publish -Project $appProject
 Invoke-Publish -Project $cliProject
+Invoke-Publish -Project $elevatedProject
 
 Set-Content -LiteralPath (Join-Path $destination 'portable.flag') -Value 'FrameGen Manager-Next portable build' -Encoding ascii
 Copy-Item -LiteralPath (Join-Path $PSScriptRoot 'portable\README.txt') -Destination (Join-Path $destination 'README.txt')

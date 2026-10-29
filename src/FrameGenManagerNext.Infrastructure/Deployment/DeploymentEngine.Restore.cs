@@ -1,6 +1,7 @@
 using FrameGenManagerNext.Domain.Deployment;
 using FrameGenManagerNext.Domain.Errors;
 using FrameGenManagerNext.Domain.Results;
+using Microsoft.Extensions.Logging;
 
 namespace FrameGenManagerNext.Infrastructure.Deployment;
 
@@ -130,5 +131,40 @@ public sealed partial class DeploymentEngine
         progress?.Report(new DeploymentProgress("done", string.Empty, manifest.Files.Count, manifest.Files.Count));
 
         return Result<RestoreReport>.Ok(new RestoreReport(restored, removed, conflicts, leftovers, warnings));
+    }
+
+    public Task<Result> DiscardBackupAsync(
+        string familyId,
+        string targetDirectory,
+        CancellationToken cancellationToken)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(familyId);
+        cancellationToken.ThrowIfCancellationRequested();
+
+        var target = ValidateTarget(targetDirectory);
+        if (target.IsFailure)
+        {
+            return Task.FromResult(Result.Fail(target.Error!));
+        }
+
+        var backupDirectory = _backups.GetBackupDirectory(familyId, target.Value);
+        if (!Directory.Exists(backupDirectory))
+        {
+            return Task.FromResult(Result.Ok());
+        }
+
+        try
+        {
+            Directory.Delete(backupDirectory, recursive: true);
+            _logger.LogInformation("Discarded deployment backup at {Path}", backupDirectory);
+            return Task.FromResult(Result.Ok());
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
+        {
+            _logger.LogWarning(exception, "Could not discard deployment backup at {Path}", backupDirectory);
+            return Task.FromResult(Result.Fail(new AppError(
+                exception is UnauthorizedAccessException ? ErrorCode.AccessDenied : ErrorCode.FileLocked,
+                exception.Message)));
+        }
     }
 }

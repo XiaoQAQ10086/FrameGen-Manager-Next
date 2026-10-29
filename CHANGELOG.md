@@ -21,7 +21,7 @@
 - 资产包协议：`pack.json` schema、严格 JSON 读取、payload 大小/SHA-256/INI 模板/安装器校验。
 - 四个真实 pack：FrameGen、Smooth Motion RTX30、Smooth Motion RTX20、DLSS5/ReShade。
 - CLI：`pack validate <dir> [--no-hash] [--schema-only]`。
-- 便携版发布流程：自包含 win-x64、`portable.flag`、`data\` 数据目录、zip 输出。
+- 便携版发布流程：自包含 win-x64、`portable.flag`、`data\` 数据目录、纯文件夹输出。
 - 行为规格：路径安全、INI、资产包。
 - 112 个单元/集成测试。
 
@@ -68,9 +68,27 @@
 - 真机验证：VTube Studio 临时副本，ReShade 安装成功、114 个文件部署、还原无冲突。
 - DLSS5 页面：逐游戏安装/还原，带 GPU 路由闸门；便携版改为纯文件夹输出。
 
+### Phase 4（DLSS5 卸载）
+
+- 检测 ReShade 模块（文件版本信息）与旧版 RenoDX 残留；检测到旧版时阻止安装并返回 `LegacyInstallPresent`。
+- `dlss5 uninstall`：部署引擎还原、官方 ReShade 卸载器（`--state uninstall`）、直接删除回退。
+- 清理 GITC 组件、已知 shader、旧版 addon/model、插件运行时残渣、Agility SDK `D3D12Core.dll`。
+- 删除前需用户在 UI 二次确认；返回已删除与仍被占用的文件列表。
+- DLSS5 页面增加卸载按钮；夹具验证剩余 0。
+
+### Phase 5（系统集成）
+
+- 显卡名称伪装：固定型号白名单、`DeviceDesc` 单值修改、备份与读回校验、驱动名/原始值两种还原。
+- 独立提权助手 `fgm-next-elevated.exe`：只接受 `--gpu-apply` / `--gpu-restore` 白名单参数，结果写临时 JSON。
+- GPU 页面伪装卡片：型号选择、风险提示、UAC 提权、状态刷新。
+- 设置页：主题、启动自动扫描、Steam 封面开关、数据目录入口、HAGS 系统设置快捷入口。
+- 设置持久化到 `config/app.json`，损坏文件隔离为 `.bad`。
+- Steam 封面：本地 grid/librarycache 优先，缺失时从 Steam CDN 下载到 `cache/covers`。
+- 修复窗口启动时使用 Mica 背景导致内容不绘制的问题，改用不透明背景。
+
 ### Notes
 
 - 不读取或迁移旧版数据。
 - 旧仓库和旧版更新源保持不变。
 - 安装包（Velopack）暂缓；先交付便携版验收。
-- 业务模块（游戏库、部署引擎、SM、DLSS5、更新）尚未实现。
+- 中英文切换、真实游戏对照和 UI 打磨仍在进行。
