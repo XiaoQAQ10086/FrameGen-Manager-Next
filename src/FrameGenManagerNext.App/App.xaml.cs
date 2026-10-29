@@ -41,12 +41,14 @@ public partial class App : Application
                 services.AddSingleton<LibraryViewModel>();
                 services.AddSingleton<GpuViewModel>();
                 services.AddSingleton<SmoothMotionViewModel>();
+                services.AddSingleton<Dlss5ViewModel>();
                 services.AddSingleton<LogsViewModel>();
                 services.AddSingleton<AboutViewModel>();
 
                 services.AddSingleton<LibraryPage>();
                 services.AddSingleton<GpuPage>();
                 services.AddSingleton<SmoothMotionPage>();
+                services.AddSingleton<Dlss5Page>();
                 services.AddSingleton<LogsPage>();
                 services.AddSingleton<AboutPage>();
                 services.AddSingleton<MainWindow>();

@@ -92,14 +92,5 @@ foreach ($packId in $packIds) {
     Copy-Item -Path (Join-Path $packPayload '*') -Destination $packTarget -Recurse -Force
 }
 
-$zipPath = Join-Path $OutputRoot "FrameGen-Manager-Next-$version-$Runtime-portable.zip"
-if (Test-Path -LiteralPath $zipPath) {
-    Remove-Item -LiteralPath $zipPath -Force
-}
-
-Write-Host '> Compressing portable build' -ForegroundColor Cyan
-Compress-Archive -Path (Join-Path $destination '*') -DestinationPath $zipPath -CompressionLevel Optimal
-
 Write-Host ''
 Write-Host "Portable folder: $destination" -ForegroundColor Green
-Write-Host "Portable zip:    $zipPath" -ForegroundColor Green

@@ -93,8 +93,7 @@ pwsh ./build/publish-portable.ps1 -Configuration Release
 
 输出：
 
-- `artifacts/portable/FrameGen-Manager-Next-2.0.0-win-x64/`
-- `artifacts/portable/FrameGen-Manager-Next-2.0.0-win-x64-portable.zip`
+- `artifacts/portable/FrameGen-Manager-Next-2.0.0-win-x64/`（直接打开该文件夹测试，不再打 zip）
 
 便携版带 `portable.flag`，数据写到程序目录下的 `data\`，不写注册表。  
 当前便携版内置 FrameGen 资产包，可在游戏库直接部署/还原；Smooth Motion 和 DLSS5 部署后续接入。  
