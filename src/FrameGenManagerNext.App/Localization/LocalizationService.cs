@@ -40,6 +40,14 @@ public sealed class LocalizationService : INotifyPropertyChanged
         LanguageChanged?.Invoke(this, EventArgs.Empty);
     }
 
+    public IReadOnlyDictionary<string, string> Snapshot()
+    {
+        return StringCatalog.Entries.ToDictionary(
+            pair => pair.Key,
+            pair => _language == AppLanguage.English ? pair.Value.English : pair.Value.Chinese,
+            StringComparer.Ordinal);
+    }
+
     public string Get(string key)
     {
         if (!StringCatalog.Entries.TryGetValue(key, out var entry))

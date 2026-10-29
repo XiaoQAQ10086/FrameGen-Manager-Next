@@ -2,17 +2,19 @@
 
 ## 1. 进程模型
 
-单进程：
+单进程宿主：
 
 ```
-WPF View / ViewModel
+WPF 宿主（FluentWindow + WebView2）
+        ↓ WebMessage / PostWebMessageAsJson
+AppWebBridge（App 层，命令路由 + 状态投影）
         ↓ DI
 FrameGenManagerNext.Core（用例 + 端口）
         ↓
 FrameGenManagerNext.Infrastructure（Windows / 文件 / 网络 / NVAPI / ReShade）
 ```
 
-没有 sidecar，没有 stdin/stdout JSON 协议，没有第二语言运行时。长操作通过 `async` + `IProgress<OperationProgress>` + `CancellationToken` 执行，写操作由 `OperationRunner` 串行化。
+没有 Electron、没有 Node 运行时、没有本地 HTTP 服务、没有 sidecar。Web UI 是本地静态资源，通过 `https://fgm.local` 虚拟主机加载；所有系统操作仍由 C# 执行。长操作通过 `async` + `IProgress` + `CancellationToken` 执行，写操作由桥接层串行闸门和部署引擎锁保护。
 
 ## 2. 项目与依赖
 
@@ -20,7 +22,7 @@ FrameGenManagerNext.Infrastructure（Windows / 文件 / 网络 / NVAPI / ReShade
 FrameGenManagerNext.Domain          纯领域，零外部依赖
 FrameGenManagerNext.Core            用例服务 + 端口接口，只依赖 Domain
 FrameGenManagerNext.Infrastructure  端口实现，依赖 Core/Domain
-FrameGenManagerNext.App             WPF，依赖 Core，组合根引用 Infrastructure
+FrameGenManagerNext.App             WPF/WebView2 宿主 + AppWebBridge，组合根引用 Infrastructure
 FrameGenManagerNext.Cli             无 UI 验收入口
 FrameGenManagerNext.Elevated        显卡名称伪装提权助手，只接受白名单参数
 ```
@@ -117,11 +119,16 @@ planned → backingUp → writing → verifying → installed
 
 ## 8. UI
 
-- Wpf.Ui `FluentWindow` + NavigationView 外壳。
-- 页面：游戏库 / 帧生成 / Smooth Motion / DLSS5 / 日志 / 设置 / 关于。
-- MVVM：CommunityToolkit.Mvvm；View 只绑定 ViewModel。
-- 所有耗时操作走 `OperationRunner`，带进度、取消、错误展示和日志关联。
-- 游戏列表虚拟化；封面异步加载并缓存。
+- WPF 只保留 `FluentWindow` 外壳和 WebView2 宿主，业务界面全部在 `WebAssets/`。
+- 页面：帧生成 / Smooth Motion / DLSS5 / 日志 / 设置 / 关于；GPU 状态嵌在帧生成页左侧。
+- 前端结构：
+  - `js/app.js`：启动、导航、语言和全局进度。
+  - `js/api.js`：请求/响应与事件桥。
+  - `js/i18n.js`：从 C# 获取本地化字符串。
+  - `js/ui.js`：Toast、弹层、确认框和 DOM 辅助。
+  - `js/pages/*.js`：每个页面一个模块。
+- C# 桥接按功能拆分：`AppWebBridge.*.cs`，只暴露白名单命令。
+- 耗时操作带进度事件、错误码和日志关联；封面由宿主转成 data URL，前端不直接读文件系统。
 
 ## 9. 原生互操作
 
@@ -132,7 +139,7 @@ planned → backingUp → writing → verifying → installed
 
 ## 10. 更新与分发
 
-- 便携版优先：`build/publish-portable.ps1` 生成自包含 win-x64 文件夹和 zip；先验收，后做安装包。
+- 便携版优先：`build/publish-portable.ps1` 生成自包含 win-x64 纯文件夹；先验收，后做安装包。WebView2 Runtime 使用系统 Evergreen 运行时。
 - Velopack：每用户安装、增量更新、GitHub Releases（Phase 5）。
 - 程序版本与资产包版本分离。
 - 发布前校验 SHA-256；代码签名后续补上。

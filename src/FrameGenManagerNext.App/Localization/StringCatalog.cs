@@ -15,6 +15,13 @@ internal static class StringCatalog
         ["Nav.Footer2"] = ("部署前会备份原文件", "Original files are backed up before deployment"),
 
         ["Common.Refresh"] = ("刷新", "Refresh"),
+        ["Common.OperationDone"] = ("操作完成", "Done"),
+        ["Progress.planning"] = ("准备", "Preparing"),
+        ["Progress.writing"] = ("写入", "Writing"),
+        ["Progress.restoring"] = ("还原", "Restoring"),
+        ["Progress.launchers"] = ("扫描启动器", "Scanning launchers"),
+        ["Progress.games"] = ("探测游戏", "Probing games"),
+        ["Progress.done"] = ("完成", "Done"),
         ["Common.RefreshState"] = ("刷新状态", "Refresh status"),
         ["Common.Cancel"] = ("取消", "Cancel"),
         ["Common.Open"] = ("打开", "Open"),

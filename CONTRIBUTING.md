@@ -2,7 +2,7 @@
 
 ## Scope
 
-FrameGen Manager-Next is a Windows-only frame-generation deployment manager built with .NET 10, WPF and Wpf.Ui. It scans game libraries, deploys proxy/runtime assets, and records backups so users can restore their game directories safely.
+FrameGen Manager-Next is a Windows-only frame-generation deployment manager built with .NET 10, a WPF host and a WebView2 HTML/CSS UI. It scans game libraries, deploys proxy/runtime assets, and records backups so users can restore their game directories safely.
 
 The old `FrameGen Manager` repository is kept for reference and is not modified.
 
@@ -40,7 +40,7 @@ App / Cli  ─────┘
 - `FrameGenManagerNext.Domain`: models, rules, error codes and pack contracts. No OS or UI dependencies.
 - `FrameGenManagerNext.Core`: use cases and port interfaces.
 - `FrameGenManagerNext.Infrastructure`: Windows, file system, HTTP, NVAPI, ReShade and persistence implementations.
-- `FrameGenManagerNext.App`: WPF views, view models and the composition root.
+- `FrameGenManagerNext.App`: WPF host, WebView2 bridge and web assets.
 - `FrameGenManagerNext.Cli`: headless commands used by tests and diagnostics.
 
 Features live in vertical slices under `Core/Features/<Feature>`. Keep each feature's service, models and tests together.

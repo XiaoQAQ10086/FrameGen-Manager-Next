@@ -1,56 +1,56 @@
-using System.Windows.Controls;
-using System.Windows.Media;
-using System.Windows.Media.Animation;
-using FrameGenManagerNext.App.ViewModels;
-using FrameGenManagerNext.App.Views;
-using Microsoft.Extensions.DependencyInjection;
+using System.IO;
+using System.Windows;
+using FrameGenManagerNext.App.Web;
+using Microsoft.Extensions.Logging;
+using Microsoft.Web.WebView2.Core;
 using Wpf.Ui.Controls;
 
 namespace FrameGenManagerNext.App;
 
 public partial class MainWindow : FluentWindow
 {
-    private readonly IServiceProvider _services;
-    private readonly TranslateTransform _pageTransform = new();
+    private readonly AppWebBridge _bridge;
+    private readonly ILogger<MainWindow> _logger;
+    private bool _initialized;
 
-    public MainWindow(IServiceProvider services, MainWindowViewModel viewModel)
+    public MainWindow(AppWebBridge bridge, ILogger<MainWindow> logger)
     {
-        _services = services;
+        _bridge = bridge;
+        _logger = logger;
         InitializeComponent();
-        DataContext = viewModel;
-        PageHost.RenderTransform = _pageTransform;
-        NavList.SelectedIndex = 0;
+        _bridge.Failed += OnBridgeFailed;
+        Loaded += OnLoaded;
     }
 
-    private void NavList_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    private async void OnLoaded(object sender, RoutedEventArgs e)
     {
-        if (NavList.SelectedItem is not ListBoxItem item || item.Tag is not string tag)
+        if (_initialized)
         {
             return;
         }
 
-        PageHost.Content = tag switch
+        _initialized = true;
+        try
         {
-            "library" => _services.GetRequiredService<WebFrameGenPage>(),
-            "smooth-motion" => _services.GetRequiredService<SmoothMotionPage>(),
-            "dlss5" => _services.GetRequiredService<Dlss5Page>(),
-            "logs" => _services.GetRequiredService<LogsPage>(),
-            "settings" => _services.GetRequiredService<SettingsPage>(),
-            "about" => _services.GetRequiredService<AboutPage>(),
-            _ => null,
-        };
+            await _bridge.InitializeAsync(Browser);
+        }
+        catch (Exception exception) when (
+            exception is WebView2RuntimeNotFoundException or InvalidOperationException or IOException)
+        {
+            _logger.LogError(exception, "WebView2 initialization failed");
+            ShowFallback(exception.Message);
+        }
+    }
 
-        PageHost.BeginAnimation(
-            OpacityProperty,
-            new DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(220))
-            {
-                EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut },
-            });
-        _pageTransform.BeginAnimation(
-            TranslateTransform.YProperty,
-            new DoubleAnimation(10, 0, TimeSpan.FromMilliseconds(240))
-            {
-                EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut },
-            });
+    private void OnBridgeFailed(object? sender, string reason)
+    {
+        Dispatcher.Invoke(() => ShowFallback($"WebView2 浏览器进程异常退出：{reason}"));
+    }
+
+    private void ShowFallback(string message)
+    {
+        Browser.Visibility = Visibility.Collapsed;
+        Fallback.Visibility = Visibility.Visible;
+        FallbackText.Text = message;
     }
 }

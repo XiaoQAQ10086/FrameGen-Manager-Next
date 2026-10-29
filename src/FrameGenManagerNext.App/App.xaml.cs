@@ -2,9 +2,6 @@ using System.Globalization;
 using System.IO;
 using System.Windows;
 using FrameGenManagerNext.App.Localization;
-using FrameGenManagerNext.App.Services;
-using FrameGenManagerNext.App.ViewModels;
-using FrameGenManagerNext.App.Views;
 using FrameGenManagerNext.App.Web;
 using FrameGenManagerNext.Core.Features.Settings;
 using FrameGenManagerNext.Infrastructure.Composition;
@@ -59,24 +56,7 @@ public partial class App : Application
             .ConfigureServices(services =>
             {
                 services.AddFrameGenServices(paths);
-
-                services.AddSingleton<MainWindowViewModel>();
-                services.AddSingleton<LibraryViewModel>();
-                services.AddSingleton<GpuViewModel>();
-                services.AddSingleton<SmoothMotionViewModel>();
-                services.AddSingleton<Dlss5ViewModel>();
-                services.AddSingleton<LogsViewModel>();
-                services.AddSingleton<AboutViewModel>();
-                services.AddSingleton<SettingsViewModel>();
-                services.AddSingleton<WebFrameGenBridge>();
-
-                services.AddSingleton<LibraryPage>();
-                services.AddSingleton<SmoothMotionPage>();
-                services.AddSingleton<Dlss5Page>();
-                services.AddSingleton<LogsPage>();
-                services.AddSingleton<AboutPage>();
-                services.AddSingleton<SettingsPage>();
-                services.AddSingleton<WebFrameGenPage>();
+                services.AddSingleton<AppWebBridge>();
                 services.AddSingleton<MainWindow>();
             })
             .Build();
@@ -89,7 +69,6 @@ public partial class App : Application
             _host.Start();
             var settings = _host.Services.GetRequiredService<ISettingsService>().Load();
             LocalizationService.Current.SetLanguage(settings.Language);
-            ThemeService.Apply(settings.Theme);
         }
         catch (Exception exception)
         {

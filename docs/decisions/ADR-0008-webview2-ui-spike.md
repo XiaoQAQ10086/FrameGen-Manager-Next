@@ -1,6 +1,6 @@
-# ADR-0008：WebView2 帧生成页 UI spike
+# ADR-0008：WebView2 UI 架构
 
-- 状态：试验中（仅“帧生成”页）
+- 状态：已接受（全部业务页面）
 - 日期：2026-10-29
 
 ## 背景
@@ -11,14 +11,14 @@ WPF/Wpf.Ui 页面在功能上已经可用，但视觉和动效达不到旧版 HT
 
 保留现有 C# Domain/Core/Infrastructure，新增 **WebView2 单页 spike**：
 
-- 只在“帧生成”页用 WebView2 承载本地 HTML/CSS/JS。
+- 全部业务页面由 WebView2 承载本地 HTML/CSS/JS；WPF 只保留窗口外壳。
 - `WebAssets/` 下的静态资源通过 `https://fgm.local` 虚拟主机加载，不允许远程页面。
 - C# 通过 `WebMessageReceived` / `PostWebMessageAsJson` 暴露白名单消息：
   - `ready`、`scan`、`refresh`、`addGame`、`cancelScan`
   - `deploy`、`restore`、`remove`、`openFolder`、`openHags`
 - 前端只接收结构化状态和进度，不直接访问文件系统。
 - WebView2 用户数据放在 `%LOCALAPPDATA%\FrameGen-Manager-Next\webview2`（避免便携目录中的空格导致浏览器进程异常）。
-- WPF 侧保留 `LibraryPage` 作为回退；`MainWindow` 切回 `LibraryPage` 即可撤销本 spike。
+- WPF 旧页面、ViewModel 和主题服务已删除；需要回退时从 git 历史恢复。
 
 ## 依赖
 
@@ -28,7 +28,7 @@ WPF/Wpf.Ui 页面在功能上已经可用，但视觉和动效达不到旧版 HT
 
 ## 结果与限制
 
-- 已验证：WebView2 初始化、C# 状态下发、GPU/游戏列表渲染、部署参数面板、刷新消息。
-- 未验证：部署/还原的真实游戏执行；目前仅“帧生成”页迁移，其他页面仍是 WPF。
+- 已验证：WebView2 初始化、导航、GPU/游戏列表、部署参数面板、扫描/刷新、Smooth Motion/DLSS5 状态页、日志、设置和关于页。
+- 未验证：部署/还原/SM/DLSS5 的真实游戏写操作仍待验收。
 - 风险：WebView2 Runtime 缺失时显示回退提示；多一套前端资源需要维护；离线安装包需确认 Runtime 可用。
-- 后续若验收通过，再逐页迁移 Smooth Motion、DLSS5、日志、设置，并删除对应的 WPF 页面。
+- 前端结构：`WebAssets/js/api.js`、`i18n.js`、`ui.js`、`app.js`、`pages/*.js`；C# 桥按功能拆分 `AppWebBridge.*.cs`。

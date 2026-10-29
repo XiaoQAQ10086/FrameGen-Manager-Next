@@ -2,7 +2,7 @@
                  xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                  xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
-                 xmlns:loc="clr-namespace:FrameGenManagerNext.App.Localization"
+                 xmlns:wv2="clr-namespace:Microsoft.Web.WebView2.Wpf;assembly=Microsoft.Web.WebView2.Wpf"
                  Title="FrameGen Manager-Next"
                  Icon="pack://application:,,,/Assets/app.ico"
                  Width="1180"
@@ -10,14 +10,9 @@
                  MinWidth="980"
                  MinHeight="640"
                  WindowStartupLocation="CenterScreen"
-                 FontFamily="Microsoft YaHei UI, Segoe UI Variable Text, Segoe UI"
-                 FontSize="14"
-                 UseLayoutRounding="True"
-                 SnapsToDevicePixels="True"
-                 ExtendsContentIntoTitleBar="True"
                  WindowBackdropType="None"
                  WindowCornerPreference="Round"
-                 Background="{DynamicResource AppBackgroundBrush}">
+                 Background="#F6F8FB">
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
@@ -29,153 +24,26 @@
                       Icon="{ui:ImageIcon 'pack://application:,,,/Assets/app.png'}" />
 
         <Grid Grid.Row="1">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="222" />
-                <ColumnDefinition Width="*" />
-            </Grid.ColumnDefinitions>
-
-            <Border Grid.Column="0"
-                    Background="{DynamicResource SidebarBackgroundBrush}"
-                    BorderBrush="{DynamicResource CardBorderBrush}"
-                    BorderThickness="0,0,1,0">
-                <Grid Margin="12,18,12,12">
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="*" />
-                        <RowDefinition Height="Auto" />
-                    </Grid.RowDefinitions>
-
-                    <StackPanel Grid.Row="0" Margin="8,0,8,20">
-                        <TextBlock Text="{Binding ProductName}"
-                                   FontSize="17"
-                                   FontWeight="SemiBold"
-                                   TextWrapping="Wrap" />
-                        <TextBlock Margin="0,4,0,0"
-                                   Opacity="0.72"
-                                   FontSize="14"
-                                   Text="{Binding Version}" />
-                    </StackPanel>
-
-                    <ListBox x:Name="NavList"
-                             Grid.Row="1"
-                             Background="Transparent"
-                             BorderThickness="0"
-                             SelectionChanged="NavList_SelectionChanged">
-                        <ListBox.ItemContainerStyle>
-                            <Style TargetType="ListBoxItem">
-                                <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
-                                <Setter Property="Padding" Value="12,9" />
-                                <Setter Property="HorizontalContentAlignment" Value="Stretch" />
-                                <Setter Property="Template">
-                                    <Setter.Value>
-                                        <ControlTemplate TargetType="ListBoxItem">
-                                            <Grid>
-                                                <Border x:Name="Selection"
-                                                        Background="{DynamicResource AccentMutedBrush}"
-                                                        CornerRadius="9"
-                                                        Margin="0,2,0,2"
-                                                        Opacity="0"
-                                                        IsHitTestVisible="False" />
-                                                <Border x:Name="Root"
-                                                        Background="Transparent"
-                                                        CornerRadius="9"
-                                                        Margin="0,2,0,2"
-                                                        Padding="{TemplateBinding Padding}">
-                                                    <ContentPresenter />
-                                                </Border>
-                                            </Grid>
-                                            <ControlTemplate.Triggers>
-                                                <Trigger Property="IsMouseOver" Value="True">
-                                                    <Setter TargetName="Root" Property="Background" Value="{DynamicResource NavHoverBrush}" />
-                                                </Trigger>
-                                                <Trigger Property="IsSelected" Value="True">
-                                                    <Setter Property="Foreground" Value="{DynamicResource AccentBrush}" />
-                                                    <Setter Property="FontWeight" Value="SemiBold" />
-                                                    <Trigger.EnterActions>
-                                                        <BeginStoryboard>
-                                                            <Storyboard>
-                                                                <DoubleAnimation Storyboard.TargetName="Selection"
-                                                                                 Storyboard.TargetProperty="Opacity"
-                                                                                 To="1"
-                                                                                 Duration="0:0:0.18">
-                                                                    <DoubleAnimation.EasingFunction>
-                                                                        <CubicEase EasingMode="EaseOut" />
-                                                                    </DoubleAnimation.EasingFunction>
-                                                                </DoubleAnimation>
-                                                            </Storyboard>
-                                                        </BeginStoryboard>
-                                                    </Trigger.EnterActions>
-                                                    <Trigger.ExitActions>
-                                                        <BeginStoryboard>
-                                                            <Storyboard>
-                                                                <DoubleAnimation Storyboard.TargetName="Selection"
-                                                                                 Storyboard.TargetProperty="Opacity"
-                                                                                 To="0"
-                                                                                 Duration="0:0:0.14" />
-                                                            </Storyboard>
-                                                        </BeginStoryboard>
-                                                    </Trigger.ExitActions>
-                                                </Trigger>
-                                            </ControlTemplate.Triggers>
-                                        </ControlTemplate>
-                                    </Setter.Value>
-                                </Setter>
-                            </Style>
-                        </ListBox.ItemContainerStyle>
-
-                        <ListBoxItem Tag="library" AutomationProperties.Name="{loc:Loc Nav.Library}">
-                            <StackPanel Orientation="Horizontal">
-                                <ui:SymbolIcon Symbol="Library24" FontSize="16" Margin="0,0,10,0" />
-                                <TextBlock Text="{loc:Loc Nav.Library}" VerticalAlignment="Center" />
-                            </StackPanel>
-                        </ListBoxItem>
-                        <ListBoxItem Tag="smooth-motion" AutomationProperties.Name="{loc:Loc Nav.SmoothMotion}">
-                            <StackPanel Orientation="Horizontal">
-                                <ui:SymbolIcon Symbol="Play24" FontSize="16" Margin="0,0,10,0" />
-                                <TextBlock Text="{loc:Loc Nav.SmoothMotion}" VerticalAlignment="Center" />
-                            </StackPanel>
-                        </ListBoxItem>
-                        <ListBoxItem Tag="dlss5" AutomationProperties.Name="{loc:Loc Nav.Dlss5}">
-                            <StackPanel Orientation="Horizontal">
-                                <ui:SymbolIcon Symbol="Grid24" FontSize="16" Margin="0,0,10,0" />
-                                <TextBlock Text="{loc:Loc Nav.Dlss5}" VerticalAlignment="Center" />
-                            </StackPanel>
-                        </ListBoxItem>
-                        <ListBoxItem Tag="logs" AutomationProperties.Name="{loc:Loc Nav.Logs}">
-                            <StackPanel Orientation="Horizontal">
-                                <ui:SymbolIcon Symbol="Bug24" FontSize="16" Margin="0,0,10,0" />
-                                <TextBlock Text="{loc:Loc Nav.Logs}" VerticalAlignment="Center" />
-                            </StackPanel>
-                        </ListBoxItem>
-                        <ListBoxItem Tag="settings" AutomationProperties.Name="{loc:Loc Nav.Settings}">
-                            <StackPanel Orientation="Horizontal">
-                                <ui:SymbolIcon Symbol="Settings24" FontSize="16" Margin="0,0,10,0" />
-                                <TextBlock Text="{loc:Loc Nav.Settings}" VerticalAlignment="Center" />
-                            </StackPanel>
-                        </ListBoxItem>
-                        <ListBoxItem Tag="about" AutomationProperties.Name="{loc:Loc Nav.About}">
-                            <StackPanel Orientation="Horizontal">
-                                <ui:SymbolIcon Symbol="Info24" FontSize="16" Margin="0,0,10,0" />
-                                <TextBlock Text="{loc:Loc Nav.About}" VerticalAlignment="Center" />
-                            </StackPanel>
-                        </ListBoxItem>
-                    </ListBox>
-
-                    <StackPanel Grid.Row="2" Margin="8,16,8,4">
-                        <TextBlock Text="{loc:Loc Nav.Footer1}"
-                                   FontSize="12.5"
-                                   TextWrapping="Wrap"
-                                   Opacity="0.68" />
-                        <TextBlock Margin="0,4,0,0"
-                                   Text="{loc:Loc Nav.Footer2}"
-                                   FontSize="12.5"
-                                   TextWrapping="Wrap"
-                                   Opacity="0.75" />
-                    </StackPanel>
-                </Grid>
+            <wv2:WebView2 x:Name="Browser" />
+            <Border x:Name="Fallback"
+                    Background="#F6F8FB"
+                    Visibility="Collapsed">
+                <StackPanel HorizontalAlignment="Center"
+                            VerticalAlignment="Center"
+                            MaxWidth="560">
+                    <TextBlock Text="WebView2 初始化失败"
+                               FontSize="24"
+                               FontWeight="SemiBold"
+                               Foreground="#181C24"
+                               HorizontalAlignment="Center" />
+                    <TextBlock x:Name="FallbackText"
+                               Margin="0,10,0,0"
+                               Opacity="0.72"
+                               Foreground="#566070"
+                               TextWrapping="Wrap"
+                               TextAlignment="Center" />
+                </StackPanel>
             </Border>
-
-            <ContentControl x:Name="PageHost" Grid.Column="1" />
         </Grid>
     </Grid>
 </ui:FluentWindow>

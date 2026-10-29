@@ -2,9 +2,9 @@
 
 [![CI](https://github.com/XiaoQAQ10086/FrameGen-Manager-Next/actions/workflows/ci.yml/badge.svg)](https://github.com/XiaoQAQ10086/FrameGen-Manager-Next/actions/workflows/ci.yml)
 
-FrameGen Manager-Next 是 FrameGen Manager 的从零重写版：Windows 桌面端帧生成部署管理器，使用 **C# / .NET 10 LTS + WPF + Wpf.Ui**，单进程架构。
+FrameGen Manager-Next 是 FrameGen Manager 的从零重写版：Windows 桌面端帧生成部署管理器，使用 **C# / .NET 10 LTS + WPF 宿主 + WebView2（HTML/CSS/JS）**，单进程架构。
 
-> 当前状态：**帧生成页已切到 WebView2 试验版**。C# 核心不变，帧生成页由本地 HTML/CSS/JS 渲染；其余页面仍为 WPF，验收后可继续迁移。游戏库（Steam 封面）、GPU 状态与显卡名称伪装、日志诊断、统一部署引擎、FrameGen、Smooth Motion、DLSS5（含彻底卸载/旧版 RenoDX 清理）、设置页、中英文切换、浅色界面、CLI 已完成；剩余真实游戏对照和安装包（等便携版验收后做）。
+> 当前状态：**全部业务界面已迁移到 WebView2**。WPF 只保留窗口外壳；帧生成、Smooth Motion、DLSS5、日志、设置和关于页由本地 HTML/CSS/JS 渲染。帧生成（含 Steam 封面）、GPU 状态与显卡名称伪装、日志诊断、统一部署引擎、FrameGen、Smooth Motion、DLSS5（含彻底卸载/旧版 RenoDX 清理）、设置页、中英文切换、浅色界面、CLI 已完成；剩余真实游戏对照和安装包（等便携版验收后做）。
 
 ## 仓库
 
@@ -27,7 +27,7 @@ FrameGen Manager-Next 是 FrameGen Manager 的从零重写版：Windows 桌面�
 | 层 | 选型 |
 |---|---|
 | 运行时 | .NET 10 LTS（`net10.0-windows`） |
-| UI | WPF + [Wpf.Ui](https://github.com/lepoco/wpfui) + CommunityToolkit.Mvvm |
+| UI | WPF 宿主 + WebView2 + 本地 HTML/CSS/JS（Wpf.Ui 仅提供窗口外壳） |
 | 组合 | Microsoft.Extensions.Hosting / DI / Options |
 | 日志 | Serilog（滚动文件） |
 | 测试 | xUnit v3 + Microsoft.Testing.Platform + Shouldly |
@@ -125,7 +125,7 @@ src/
   FrameGenManagerNext.Domain/          纯领域模型、规则、错误码、资产包协议
   FrameGenManagerNext.Core/            用例服务 + 端口接口
   FrameGenManagerNext.Infrastructure/  Windows / 文件 / 网络 / NVAPI / ReShade 实现
-  FrameGenManagerNext.App/             WPF（View + ViewModel）
+  FrameGenManagerNext.App/             WPF 宿主 + WebView2 桥 + WebAssets
   FrameGenManagerNext.Cli/             无 UI 验收入口
   FrameGenManagerNext.Elevated/        显卡名称伪装提权助手（只接受白名单参数）
 tests/                          单元、基础设施、集成测试
