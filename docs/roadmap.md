@@ -12,10 +12,12 @@
 - [x] CI + 质量检查脚本
 - [x] 本地 git 初始化与初始提交
 - [x] Wpf.Ui / Velopack 兼容性结论写入 [ADR-0005](decisions/ADR-0005-phase0-compatibility.md)
+- [x] GitHub 仓库 `FrameGen-Manager-Next` 创建与首次 push
+- [x] GitHub Actions CI 通过
 
 验收：`pwsh ./build/verify.ps1` 全绿；空壳启动；CI 通过。
 
-待完成：GitHub 仓库 `FrameGen-Manager-Next` 创建与首次 push（需要本机 `gh auth login` 或手动建仓）。
+仓库：<https://github.com/XiaoQAQ10086/FrameGen-Manager-Next>
 
 ## Phase 1 · 领域与资产包
 

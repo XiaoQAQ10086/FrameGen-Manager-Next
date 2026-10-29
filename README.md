@@ -1,8 +1,15 @@
 # FrameGen Manager-Next
 
+[![CI](https://github.com/XiaoQAQ10086/FrameGen-Manager-Next/actions/workflows/ci.yml/badge.svg)](https://github.com/XiaoQAQ10086/FrameGen-Manager-Next/actions/workflows/ci.yml)
+
 FrameGen Manager-Next 是 FrameGen Manager 的从零重写版：Windows 桌面端帧生成部署管理器，使用 **C# / .NET 10 LTS + WPF + Wpf.Ui**，单进程架构。
 
-> 当前状态：**Phase 0（基础脚手架）本地部分已完成**。UI 空壳、DI、日志、测试与 CLI 已跑通；GitHub 仓库待创建，业务模块尚未迁移。
+> 当前状态：**Phase 0（基础脚手架）已完成**。UI 空壳、DI、日志、测试与 CLI 已跑通；GitHub 仓库与 CI 已启用，业务模块尚未迁移。
+
+## 仓库
+
+- 新仓库：<https://github.com/XiaoQAQ10086/FrameGen-Manager-Next>
+- 旧仓库：<https://github.com/XiaoQAQ10086/FrameGen-Manager>（只读保留，旧版更新源不受影响）
 
 ## 这个程序做什么
 
