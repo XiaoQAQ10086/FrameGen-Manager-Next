@@ -2,7 +2,7 @@
 
 FrameGen Next 是 FrameGen Manager 的从零重写版：Windows 桌面端帧生成部署管理器，使用 **C# / .NET 10 LTS + WPF + Wpf.Ui**，单进程架构。
 
-> 当前状态：**Phase 0（基础脚手架）**。UI 空壳、DI、日志、测试与 CLI 已跑通；业务模块尚未迁移。
+> 当前状态：**Phase 0（基础脚手架）本地部分已完成**。UI 空壳、DI、日志、测试与 CLI 已跑通；GitHub 仓库待创建，业务模块尚未迁移。
 
 ## 这个程序做什么
 
@@ -58,6 +58,8 @@ dotnet run --project src/FrameGenNext.App
 
 ```powershell
 pwsh ./build/verify.ps1 -Configuration Debug
+# 没有 PowerShell 7 时：
+powershell -NoProfile -ExecutionPolicy Bypass -File ./build/verify.ps1 -Configuration Debug
 ```
 
 ## 目录结构

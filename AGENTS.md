@@ -37,7 +37,8 @@ pwsh ./build/check-quality.ps1
   - `DOTNET_ROOT=%LOCALAPPDATA%\Microsoft\dotnet`
   - 把该目录加入 `PATH`
 - 测试使用 **xUnit v3 + Microsoft.Testing.Platform**。`global.json` 里的 `"test.runner"` 不能删；.NET 10 SDK 已不支持 MTP 项目的 VSTest 模式。
-- 交付前必须运行完整门禁：`pwsh ./build/verify.ps1`。
+- 交付前必须运行完整门禁：`pwsh ./build/verify.ps1`；没有 PowerShell 7 时用
+  `powershell -NoProfile -ExecutionPolicy Bypass -File ./build/verify.ps1`。
 
 ## 4. 架构与目录
 
