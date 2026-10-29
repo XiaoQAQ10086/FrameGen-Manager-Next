@@ -13,8 +13,8 @@ internal static class StringCatalog
             "浏览器进程异常退出。可以尝试重新加载界面；如果问题持续，请查看日志。",
             "The browser process exited unexpectedly. Try reloading the interface; if the problem continues, check the logs."),
         ["Fallback.Rtss"] = (
-            "检测到 RivaTuner Statistics Server (RTSS) 正在向 WebView2 注入 DLL，浏览器进程因此崩溃。请在 RTSS 中把 msedgewebview2.exe 加入排除列表（Application detection level = None），或更新 RTSS 后重试。",
-            "RivaTuner Statistics Server (RTSS) is injecting into WebView2 and crashing the browser process. Add msedgewebview2.exe as an exclusion in RTSS (Application detection level = None), or update RTSS, then retry."),
+            "检测到 RivaTuner Statistics Server (RTSS) 正在向 WebView2 注入 DLL，浏览器进程因此崩溃。程序已尝试添加 RTSS 排除配置；如果仍失败，请以管理员身份运行一次本程序，或在 RTSS 中把 msedgewebview2.exe 加入排除列表（Application detection level = None）。",
+            "RivaTuner Statistics Server (RTSS) is injecting into WebView2 and crashing the browser process. The app tried to add an RTSS exclusion; if it still fails, run the app once as administrator, or add msedgewebview2.exe as an exclusion in RTSS (Application detection level = None)."),
         ["Fallback.Detail"] = ("诊断信息：{0}", "Diagnostics: {0}"),
 
         ["Nav.Library"] = ("帧生成", "Frame generation"),

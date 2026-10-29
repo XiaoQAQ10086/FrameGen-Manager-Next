@@ -47,7 +47,15 @@ export default {
     };
     root.addEventListener('click', onClick);
 
+    const onShown = (event) => {
+      if (event.detail?.page === 'logs') load();
+    };
+    document.addEventListener('fgm:page-shown', onShown);
+
     await load();
-    return () => root.removeEventListener('click', onClick);
+    return () => {
+      document.removeEventListener('fgm:page-shown', onShown);
+      root.removeEventListener('click', onClick);
+    };
   },
 };

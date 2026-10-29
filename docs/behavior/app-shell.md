@@ -36,6 +36,6 @@
 
 RivaTuner Statistics Server（RTSS）/ MSI Afterburner 会把 `RTSSHooks64.dll` 注入 `msedgewebview2.exe`。部分 RTSS 版本在 Chromium 154 上会在浏览器进程内触发访问冲突（`0xC0000005`），WebView2 报 `BrowserProcessExited`。
 
-- 失败模块包含 `RTSS` / `RivaTuner`，或本机存在 RTSS 且进程正在运行时，回退面板显示 RTSS 专用说明。
-- 处理方式：在 RTSS 中把 `msedgewebview2.exe` 的 Application detection level 设为 None，或更新 RTSS。
-- 应用不修改 RTSS 配置，也不要求用户降低 WebView2 的安全设置。
+- 启动时若检测到 RTSS 安装目录，且 `msedgewebview2.exe.cfg` 排除配置不存在，应用会尝试写入 `[Hooking] EnableHooking=0`（`Profiles` 和 `ProfileTemplates` 各一份）；已有配置不覆盖。
+- 写入需要管理员权限。权限不足时保留 RTSS 专用回退说明，并提示用户在 RTSS 中手动排除 `msedgewebview2.exe`（Application detection level = None）。
+- 应用不降低 WebView2 的安全设置，也不修改 RTSS 的其它配置。

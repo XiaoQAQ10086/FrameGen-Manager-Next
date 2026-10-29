@@ -2,6 +2,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Windows;
 using FrameGenManagerNext.App.Localization;
+using FrameGenManagerNext.App.Platform;
 using FrameGenManagerNext.App.Web;
 using Microsoft.Extensions.Logging;
 using Microsoft.Web.WebView2.Wpf;
@@ -40,6 +41,16 @@ public partial class MainWindow : FluentWindow
 
     private async void OnLoaded(object sender, RoutedEventArgs e)
     {
+        var rtss = RtssExclusion.Ensure();
+        if (rtss.Changed)
+        {
+            _logger.LogInformation("RTSS WebView2 exclusion created: {Detail}", rtss.Detail);
+        }
+        else if (!rtss.Success)
+        {
+            _logger.LogWarning("Could not create RTSS WebView2 exclusion: {Detail}", rtss.Detail);
+        }
+
         UpdateLoadingSize();
         LoadingPopup.IsOpen = true;
         if (!await TryInitializeAsync(Browser, additionalBrowserArguments: null))

@@ -129,6 +129,7 @@ async function navigate(pageName, push = true) {
     ],
     { duration: 180, easing: 'cubic-bezier(.2,.9,.3,1)' },
   );
+  document.dispatchEvent(new CustomEvent('fgm:page-shown', { detail: { page: name } }));
 
   if (push) {
     const hash = state.current === 'framegen' ? '' : `#${state.current}`;
