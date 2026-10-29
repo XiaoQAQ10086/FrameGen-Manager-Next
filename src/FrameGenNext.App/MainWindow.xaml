@@ -1,0 +1,43 @@
+<ui:FluentWindow x:Class="FrameGenNext.App.MainWindow"
+                 xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                 xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                 xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+                 Title="FrameGen Next"
+                 Width="1100"
+                 Height="720"
+                 MinWidth="900"
+                 MinHeight="600"
+                 WindowStartupLocation="CenterScreen"
+                 ExtendsContentIntoTitleBar="True"
+                 WindowBackdropType="Mica"
+                 WindowCornerPreference="Round">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <ui:TitleBar Grid.Row="0" Title="FrameGen Next" />
+
+        <StackPanel Grid.Row="1"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center">
+            <TextBlock HorizontalAlignment="Center"
+                       FontSize="40"
+                       FontWeight="SemiBold"
+                       Text="{Binding ProductName}" />
+            <TextBlock Margin="0,8,0,0"
+                       HorizontalAlignment="Center"
+                       Opacity="0.65"
+                       Text="{Binding Version}" />
+            <TextBlock Margin="0,24,0,0"
+                       HorizontalAlignment="Center"
+                       Opacity="0.8"
+                       Text="{Binding Status}" />
+            <TextBlock Margin="0,6,0,0"
+                       HorizontalAlignment="Center"
+                       Opacity="0.55"
+                       Text="{Binding Tagline}" />
+        </StackPanel>
+    </Grid>
+</ui:FluentWindow>
