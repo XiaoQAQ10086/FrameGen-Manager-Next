@@ -15,6 +15,12 @@
 - 本地资源通过虚拟主机 `https://fgm.local` 映射到 `WebAssets/`，不允许加载远程页面。
 - 初始化日志记录配置目录、Runtime 版本和附加浏览器参数。
 
+## 页面状态缓存
+
+- `api.js` 缓存 `app.info`、`games.state`、`gpu.state`、`sm.state`、`dlss5.state` 120 秒；页面切换直接复用，不再重复探测游戏和驱动。
+- 扫描、部署、还原、开关 Smooth Motion、DLSS5 安装/卸载和语言保存会清空缓存。
+- 首次加载后后台预热 Smooth Motion 与 DLSS5 状态，切换页面基本无需等待。
+
 ## 浏览器进程故障
 
 - `ProcessFailed` 记录失败类型、原因、退出码、失败模块和进程描述。

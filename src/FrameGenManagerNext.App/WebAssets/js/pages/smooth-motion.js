@@ -1,24 +1,57 @@
-import { confirmDialog } from '../ui.js';
-import { apiLabel, componentKeys, routeKeys } from '../labels.js';
+import { confirmDialog, escapeHtml as esc } from '../ui.js';
+import { componentKeys, prettyPath, routeKeys } from '../labels.js';
+
+const gateKeys = {
+  Supported: 'Gpu.Gate.Supported',
+  DriverTooOld: 'Gpu.Gate.DriverTooOld',
+  GpuNotSupported: 'Gpu.Gate.GpuNotSupported',
+  GpuNotNeeded: 'Gpu.Gate.GpuNotNeeded',
+  Unknown: 'Gpu.Gate.Unknown',
+};
 
 export default {
   async mount(root, ctx) {
     const { api, t, ui } = ctx;
     let games = [];
+    let gpu = null;
     let busy = false;
 
     root.innerHTML = `
       <section class="page">
-        <header class="page-head">
-          <div><h1>${t('SmoothMotion.Title')}</h1><p>${t('SmoothMotion.Subtitle')}</p></div>
-          <div class="head-actions">
+        <header class="listhead">
+          <div class="lh-text">
+            <h1>${t('SmoothMotion.Title')}</h1>
+            <div class="sub" data-role="status">${t('SmoothMotion.Status.Checking')}</div>
+          </div>
+          <div class="lh-actions">
             <button class="btn" data-action="add" type="button">${t('Library.Add')}</button>
-            <button class="btn primary" data-action="refresh" type="button">${t('Common.RefreshState')}</button>
+            <button class="btn scan" data-action="scan" type="button">${t('Library.Scan')}</button>
           </div>
         </header>
-        <div class="statusline"><span data-role="status">${t('SmoothMotion.Status.Checking')}</span></div>
-        <div class="game-list" data-role="games"></div>
-        <div class="empty hidden" data-role="empty"><p>${t('SmoothMotion.Empty')}</p></div>
+        <main class="layout">
+          <aside class="side">
+            <section class="panel">
+              <div class="ctitle">${t('SmoothMotion.Applicability')}</div>
+              <div class="chips"><span class="chip dim" data-role="applicability">${t('Common.Checking')}</span></div>
+              <div class="kv2"><span>${t('Gpu.Name')}</span><b class="badge" data-role="gpu"></b></div>
+              <div class="kv2"><span>${t('Gpu.DriverVersion')}</span><b class="badge" data-role="driver"></b></div>
+              <div class="kv2"><span>${t('SmoothMotion.MinDriver')}</span><b class="badge" data-role="min-driver">616.64</b></div>
+              <p class="hint" data-role="note">${t('SmoothMotion.Status.Checking')}</p>
+              <button class="btn wide" data-action="refresh" type="button">${t('SmoothMotion.Recheck')}</button>
+            </section>
+            <section class="panel">
+              <div class="ctitle">${t('SmoothMotion.Notes')}</div>
+              <p class="hint">${t('SmoothMotion.Subtitle')}</p>
+            </section>
+          </aside>
+          <section class="content">
+            <div class="game-list" data-role="games">
+              <div class="gcard skeleton-card"><div class="sk-cover"></div><div class="sk-body"><i></i><i></i><i></i></div></div>
+              <div class="gcard skeleton-card"><div class="sk-cover"></div><div class="sk-body"><i></i><i></i><i></i></div></div>
+            </div>
+            <div class="empty hidden" data-role="empty"><p>${t('SmoothMotion.Empty')}</p></div>
+          </section>
+        </main>
       </section>`;
 
     const q = (selector) => root.querySelector(selector);
@@ -27,37 +60,52 @@ export default {
       q('[data-role="status"]').textContent = value;
     }
 
+    function renderGpu() {
+      if (!gpu) return;
+      const gate = gateKeys[gpu.gate] || 'Gpu.Gate.Unknown';
+      const supported = gpu.gate === 'Supported';
+      const applicability = q('[data-role="applicability"]');
+      applicability.textContent = supported ? t('SmoothMotion.CanDeploy') : t('SmoothMotion.NotApplicable');
+      applicability.className = `chip ${supported ? 'ok' : 'dim'}`;
+      q('[data-role="gpu"]').textContent = gpu.name || '—';
+      q('[data-role="driver"]').textContent = gpu.driver || t('Gpu.Status.UnknownDriver');
+      q('[data-role="min-driver"]').textContent = gpu.minDriver || '616.64';
+      q('[data-role="note"]').textContent = supported ? t('SmoothMotion.Ready') : t(gate);
+    }
+
     function render() {
-      q('[data-role="games"]').innerHTML = games.map((game, index) => `
-        <article class="game-card sm-card" style="animation-delay:${Math.min(index * 26, 160)}ms">
-          <div class="cover-fallback">${(game.name || '?')[0].toUpperCase()}</div>
-          <span></span>
-          <div class="game-main">
-            <div class="game-info">
-              <div class="game-name">${game.name}</div>
-              <div class="game-path" title="${game.targetDirectory}">${game.targetDirectory}</div>
-              <div class="chips">
-                <span class="chip">${t(routeKeys[game.route] || 'Gpu.Route.Unknown')}</span>
-                <span class="chip ${game.component === 'Installed' ? 'ok' : (game.component === 'Partial' || game.component === 'Conflict' ? 'warn' : '')}">${t(componentKeys[game.component] || 'State.NotDeployed')}</span>
-                <span class="chip">${game.enabled === true ? t('SmoothMotion.Driver.On') : game.enabled === false ? t('SmoothMotion.Driver.Off') : t('SmoothMotion.Driver.Unknown')}</span>
+      const list = q('[data-role="games"]');
+      list.innerHTML = games.map((game, index) => `
+        <article class="gcard" style="animation-delay:${Math.min(index * 35, 350)}ms">
+          <div class="gtop">
+            ${game.cover ? `<img class="thumb" src="${game.cover}" alt="">` : `<div class="thumb ph2">${esc(game.initial)}</div>`}
+            <div class="ginfo">
+              <div class="gname">${esc(game.name)}</div>
+              <div class="badges">
+                <span class="badge">${esc(t(routeKeys[game.route] || 'Gpu.Route.Unknown'))}</span>
+                <span class="badge ${game.component === 'Installed' ? 'ok' : (game.component === 'Partial' || game.component === 'Conflict' ? 'warn' : 'dim')}">${esc(t(componentKeys[game.component] || 'State.NotDeployed'))}</span>
+                <span class="badge ${game.enabled === true ? 'ok' : 'dim'}">${esc(game.enabled === true ? t('SmoothMotion.Driver.On') : game.enabled === false ? t('SmoothMotion.Driver.Off') : t('SmoothMotion.Driver.Unknown'))}</span>
               </div>
-              ${game.detail ? `<div class="component">${game.detail}</div>` : ''}
             </div>
-            <div class="actions">
-              <button class="btn small primary" data-action="enable" data-id="${game.id}" type="button" ${game.available === false || game.enabled === true ? 'disabled' : ''}>${t('SmoothMotion.Enable')}</button>
-              <button class="btn small" data-action="disable" data-id="${game.id}" type="button" ${game.available === false || game.enabled !== true ? 'disabled' : ''}>${t('SmoothMotion.Disable')}</button>
-              <button class="btn small ghost" data-action="restore" data-id="${game.id}" type="button">${t('Common.Restore')}</button>
-            </div>
+          </div>
+          <div class="gpath" title="${esc(prettyPath(game.targetDirectory))}">${esc(prettyPath(game.targetDirectory))}</div>
+          ${game.detail ? `<div class="hint">${esc(game.detail)}</div>` : ''}
+          <div class="gactions">
+            <button class="btn small primary" data-action="enable" data-id="${game.id}" type="button" ${game.available === false || game.enabled === true ? 'disabled' : ''}>${t('SmoothMotion.Enable')}</button>
+            <button class="btn small danger" data-action="disable" data-id="${game.id}" type="button" ${game.available === false || game.enabled !== true ? 'disabled' : ''}>${t('SmoothMotion.Disable')}</button>
+            <button class="btn small" data-action="restore" data-id="${game.id}" type="button">${t('Common.Restore')}</button>
           </div>
         </article>`).join('');
       q('[data-role="empty"]').classList.toggle('hidden', games.length > 0);
-      q('[data-role="games"]').classList.toggle('hidden', games.length === 0);
+      list.classList.toggle('hidden', games.length === 0);
     }
 
     async function load() {
       try {
         const state = await api.request('sm.state');
+        gpu = state.gpu;
         games = state.games;
+        renderGpu();
         render();
         status(t('SmoothMotion.Status.Checked').replace('{0}', games.length));
       } catch (error) {
@@ -72,6 +120,8 @@ export default {
       try {
         const state = await api.request(command, { id });
         games = state.games;
+        gpu = state.gpu || gpu;
+        renderGpu();
         render();
         ui.toast(t('Common.OperationDone'));
       } catch (error) {
@@ -85,10 +135,25 @@ export default {
       const button = event.target.closest('[data-action]');
       if (!button) return;
       const actionName = button.dataset.action;
-      if (actionName === 'refresh') return load();
+      if (actionName === 'refresh') {
+        api.invalidate();
+        return load();
+      }
       if (actionName === 'add') {
         await api.request('games.add').catch((error) => ui.toast(error.message, 'error'));
         return load();
+      }
+      if (actionName === 'scan') {
+        button.classList.add('loading');
+        try {
+          await api.request('games.scan');
+          await load();
+        } catch (error) {
+          ui.toast(error.message, 'error');
+        } finally {
+          button.classList.remove('loading');
+        }
+        return;
       }
       const game = games.find((item) => item.id === button.dataset.id);
       if (!game) return;

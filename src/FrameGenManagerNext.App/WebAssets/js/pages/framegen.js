@@ -1,4 +1,5 @@
 import { escapeHtml as esc, confirmDialog } from '../ui.js';
+import { prettyPath } from '../labels.js';
 
 const launcherKeys = {
   Steam: 'Common.Steam',
@@ -146,7 +147,7 @@ export default {
     const modalPath = q('[data-role="modal-path"]');
     const optionsRoot = q('[data-role="options"]');
     const dataPath = q('[data-role="data-path"]');
-    if (dataPath) dataPath.textContent = ctx.info?.dataRoot || '';
+    if (dataPath) dataPath.textContent = prettyPath(ctx.info?.bundledPacksDirectory || ctx.info?.packsDirectory || ctx.info?.dataRoot || '');
 
     function setBusy(value) {
       busy = value;
@@ -178,8 +179,8 @@ export default {
         <div class="kv2"><span>${esc(t('Gpu.Hags'))}</span><b class="badge ${hagsClass}">${esc(t(hagsKeys[g.hags] || 'Gpu.Hags.Unknown'))}</b></div>
         <button class="btn wide" data-action="open-hags" type="button">${esc(t('Gpu.GoSettings'))}</button>`;
       q('[data-role="spoof"]').innerHTML = `
-        <div class="kv2"><span>${esc(t('Gpu.Card'))}</span><b class="badge" title="${esc(s.current || '—')}">${esc(s.current || '—')}</b></div>
-        <div class="kv2"><span>${esc(t('Gpu.DriverNameLabel'))}</span><b class="badge" title="${esc(s.driver || '—')}">${esc(s.driver || '—')}</b></div>
+        <div class="kv2 stacked"><span>${esc(t('Gpu.Card'))}</span><b class="badge" title="${esc(s.current || '—')}">${esc(s.current || '—')}</b></div>
+        <div class="kv2 stacked"><span>${esc(t('Gpu.DriverNameLabel'))}</span><b class="badge" title="${esc(s.driver || '—')}">${esc(s.driver || '—')}</b></div>
         <p class="hint">${esc(t('Gpu.Spoof.Warning'))}</p>
         <div class="row">
           <select data-role="spoof-preset">${s.presets.map((preset) => `<option>${esc(preset)}</option>`).join('')}</select>
@@ -203,7 +204,7 @@ export default {
               </div>
             </div>
           </div>
-          <div class="gpath" title="${esc(game.targetDirectory)}">${esc(game.targetDirectory)}</div>
+          <div class="gpath" title="${esc(prettyPath(game.targetDirectory))}">${esc(prettyPath(game.targetDirectory))}</div>
           <div class="gactions">
             <button class="btn small primary" data-action="deploy" data-id="${esc(game.id)}" type="button">${esc(t('Common.Deploy'))}</button>
             <button class="btn small" data-action="restore" data-id="${esc(game.id)}" type="button">${esc(t('Common.Restore'))}</button>
@@ -227,7 +228,7 @@ export default {
             <div class="removed-initial">${esc(game.initial)}</div>
             <div class="removed-info">
               <div class="removed-name">${esc(game.name)}</div>
-              <div class="game-path" title="${esc(game.targetDirectory)}">${esc(game.targetDirectory)}</div>
+              <div class="game-path" title="${esc(prettyPath(game.targetDirectory))}">${esc(prettyPath(game.targetDirectory))}</div>
               <div class="chips">
                 <span class="chip">${esc(t(launcherKeys[game.launcher] || 'Common.Unknown'))}</span>
                 <span class="chip">${esc(apiKeys[game.api] || game.api || '未知')}</span>
@@ -251,7 +252,7 @@ export default {
     function openModal(game) {
       current = game;
       modalTitle.textContent = game.name;
-      modalPath.textContent = game.targetDirectory;
+      modalPath.textContent = prettyPath(game.targetDirectory);
       optionsRoot.innerHTML = optionFields();
       overlay.classList.remove('hidden');
       syncEngine();
@@ -398,7 +399,8 @@ export default {
         return;
       }
       if (action === 'open-data') {
-        await api.request('app.openData').catch((error) => ui.toast(error.message, 'error'));
+        await api.request('settings.openFolder', { which: 'bundledPacks' })
+          .catch((error) => ui.toast(error.message, 'error'));
         return;
       }
       if (action === 'spoof-apply') {

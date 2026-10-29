@@ -7,11 +7,15 @@ public sealed partial class AppWebBridge
 {
     private async Task<object?> BuildDlss5StateAsync()
     {
+        var settings = _settings.Load();
         var library = await _library.LoadAsync(CancellationToken.None);
         var games = new List<object>();
 
         foreach (var game in library.EnumerateVisibleGames())
         {
+            var cover = settings.ShowCovers ? await GetCoverDataUrlAsync(game) : null;
+            var initial = string.IsNullOrWhiteSpace(game.Name) ? "?" : game.Name[..1].ToUpperInvariant();
+
             if (string.IsNullOrWhiteSpace(game.RenderExePath))
             {
                 games.Add(new
@@ -19,6 +23,8 @@ public sealed partial class AppWebBridge
                     id = game.Id,
                     name = game.Name,
                     targetDirectory = game.TargetDirectory,
+                    initial,
+                    cover,
                     available = false,
                     state = "Unavailable",
                     api = game.GraphicsApi.ToString(),
@@ -40,6 +46,8 @@ public sealed partial class AppWebBridge
                     id = game.Id,
                     name = game.Name,
                     targetDirectory = game.TargetDirectory,
+                    initial,
+                    cover,
                     available = false,
                     state = inspection.Error!.Code.ToString(),
                     api = game.GraphicsApi.ToString(),
@@ -55,6 +63,8 @@ public sealed partial class AppWebBridge
                 id = game.Id,
                 name = game.Name,
                 targetDirectory = game.TargetDirectory,
+                initial,
+                cover,
                 available = true,
                 state = inspection.Value.FileState.ToString(),
                 api = inspection.Value.Api.ToString(),

@@ -38,6 +38,10 @@ export function apiLabel(api) {
   return api?.startsWith('Direct3D') ? api.replace('Direct3D', 'DX') : api || 'Unknown';
 }
 
+export function prettyPath(value) {
+  return String(value ?? '').replace(/^([a-z]):/, (_, drive) => `${drive.toUpperCase()}:`);
+}
+
 export function stateLabel(t, state) {
   return t(stateKeys[state] || 'State.NotDeployed');
 }

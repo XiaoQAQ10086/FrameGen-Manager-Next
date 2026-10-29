@@ -22,6 +22,7 @@ public sealed partial class AppWebBridge
             dataRoot = _paths.RootDirectory,
             logsDirectory = _paths.LogsDirectory,
             packsDirectory = _paths.PacksDirectory,
+            bundledPacksDirectory = Path.Combine(AppContext.BaseDirectory, "packs"),
             backupsDirectory = _paths.BackupsDirectory,
             configDirectory = _paths.ConfigDirectory,
             portable = _environment.IsPortable,
@@ -88,6 +89,7 @@ public sealed partial class AppWebBridge
         var path = which switch
         {
             "packs" => _paths.PacksDirectory,
+            "bundledPacks" => Path.Combine(AppContext.BaseDirectory, "packs"),
             "backups" => _paths.BackupsDirectory,
             "logs" => _paths.LogsDirectory,
             _ => _paths.ConfigDirectory,

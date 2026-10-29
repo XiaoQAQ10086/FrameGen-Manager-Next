@@ -7,11 +7,16 @@ public sealed partial class AppWebBridge
 {
     private async Task<object?> BuildSmoothMotionStateAsync()
     {
+        var settings = _settings.Load();
+        var gpu = await _gpu.GetAsync(CancellationToken.None);
         var library = await _library.LoadAsync(CancellationToken.None);
         var games = new List<object>();
 
         foreach (var game in library.EnumerateVisibleGames())
         {
+            var cover = settings.ShowCovers ? await GetCoverDataUrlAsync(game) : null;
+            var initial = string.IsNullOrWhiteSpace(game.Name) ? "?" : game.Name[..1].ToUpperInvariant();
+
             if (string.IsNullOrWhiteSpace(game.RenderExePath))
             {
                 games.Add(new
@@ -19,6 +24,8 @@ public sealed partial class AppWebBridge
                     id = game.Id,
                     name = game.Name,
                     targetDirectory = game.TargetDirectory,
+                    initial,
+                    cover,
                     available = false,
                     state = "Unavailable",
                     route = "Unknown",
@@ -43,6 +50,8 @@ public sealed partial class AppWebBridge
                     id = game.Id,
                     name = game.Name,
                     targetDirectory = game.TargetDirectory,
+                    initial,
+                    cover,
                     available = false,
                     state = inspection.Error!.Code.ToString(),
                     route = "Unknown",
@@ -59,6 +68,8 @@ public sealed partial class AppWebBridge
                 id = game.Id,
                 name = game.Name,
                 targetDirectory = game.TargetDirectory,
+                initial,
+                cover,
                 available = true,
                 state = "Ready",
                 route = inspection.Value.Route.ToString(),
@@ -69,7 +80,18 @@ public sealed partial class AppWebBridge
             });
         }
 
-        return new { games };
+        return new
+        {
+            gpu = new
+            {
+                name = gpu.Name,
+                driver = gpu.DriverVersion,
+                route = gpu.Route.ToString(),
+                gate = gpu.SmoothMotion.ToString(),
+                minDriver = "616.64",
+            },
+            games,
+        };
     }
 
     private async Task<object?> EnableSmoothMotionAsync(JsonElement payload)

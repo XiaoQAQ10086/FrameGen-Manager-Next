@@ -7,6 +7,7 @@ import dlss5 from './pages/dlss5.js';
 import logs from './pages/logs.js';
 import settings from './pages/settings.js';
 import about from './pages/about.js';
+import donate from './pages/donate.js';
 
 const pages = {
   framegen,
@@ -15,6 +16,7 @@ const pages = {
   logs,
   settings,
   about,
+  donate,
 };
 
 const state = {
@@ -63,8 +65,21 @@ async function loadInfo() {
   i18n.setStrings(info.strings, info.language);
   const version = document.getElementById('app-version');
   if (version) version.textContent = `v${info.version}`;
+  const language = document.getElementById('lang-select');
+  if (language) language.value = info.language === 'en' ? 'en' : 'zh';
   updateSidebar();
   return info;
+}
+
+async function changeLanguage(language) {
+  try {
+    const info = await api.request('app.saveSettings', { language });
+    state.info = info;
+    i18n.setStrings(info.strings, info.language);
+    await navigate(state.current, false);
+  } catch (error) {
+    ui.toast(error.message || error.code || '语言切换失败', 'error');
+  }
 }
 
 async function navigate(pageName, push = true) {
@@ -112,11 +127,20 @@ async function bootstrap() {
   });
   api.on('toast', (data) => ui.toast(data.message, data.level));
   setupNavigation();
+  document.getElementById('lang-select')?.addEventListener('change', (event) => {
+    changeLanguage(event.target.value);
+  });
 
   try {
     await loadInfo();
     const initial = location.hash.replace('#', '') || 'framegen';
     await navigate(pages[initial] ? initial : 'framegen', false);
+    // Warm the other pages once so switching back and forth does not trigger
+    // another full driver/game inspection.
+    setTimeout(() => {
+      api.request('sm.state').catch(() => {});
+      api.request('dlss5.state').catch(() => {});
+    }, 1200);
   } catch (error) {
     const view = document.getElementById('view');
     if (view) {
