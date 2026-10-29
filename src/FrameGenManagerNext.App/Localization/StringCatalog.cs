@@ -4,6 +4,17 @@ internal static class StringCatalog
 {
     internal static readonly Dictionary<string, (string Chinese, string English)> Entries = new(StringComparer.Ordinal)
     {
+        ["Fallback.Title"] = ("界面加载失败", "Interface failed to load"),
+        ["Fallback.Retry"] = ("重新加载界面", "Reload interface"),
+        ["Fallback.Reloading"] = ("正在重新加载界面…", "Reloading the interface…"),
+        ["Fallback.Generic"] = (
+            "浏览器进程异常退出。可以尝试重新加载界面；如果问题持续，请查看日志。",
+            "The browser process exited unexpectedly. Try reloading the interface; if the problem continues, check the logs."),
+        ["Fallback.Rtss"] = (
+            "检测到 RivaTuner Statistics Server (RTSS) 正在向 WebView2 注入 DLL，浏览器进程因此崩溃。请在 RTSS 中把 msedgewebview2.exe 加入排除列表（Application detection level = None），或更新 RTSS 后重试。",
+            "RivaTuner Statistics Server (RTSS) is injecting into WebView2 and crashing the browser process. Add msedgewebview2.exe as an exclusion in RTSS (Application detection level = None), or update RTSS, then retry."),
+        ["Fallback.Detail"] = ("诊断信息：{0}", "Diagnostics: {0}"),
+
         ["Nav.Library"] = ("帧生成", "Frame generation"),
         ["Nav.Gpu"] = ("GPU 状态", "GPU"),
         ["Nav.SmoothMotion"] = ("Smooth Motion", "Smooth Motion"),

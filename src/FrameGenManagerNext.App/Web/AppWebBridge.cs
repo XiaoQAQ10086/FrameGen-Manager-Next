@@ -1,4 +1,7 @@
 using System.IO;
+using System.Runtime.InteropServices;
+using System.Security.Cryptography;
+using System.Text;
 using System.Text.Json;
 using FrameGenManagerNext.Core.Features.App;
 using FrameGenManagerNext.Core.Features.Diagnostics;
@@ -36,10 +39,10 @@ public sealed partial class AppWebBridge : IDisposable
     private readonly SemaphoreSlim _operationGate = new(1, 1);
     private readonly ILogger<AppWebBridge> _logger;
 
-    private WebView2? _webView;
+    private CoreWebView2? _core;
     private CancellationTokenSource? _scanCancellation;
 
-    public event EventHandler<string>? Failed;
+    public event EventHandler<WebViewFailure>? Failed;
 
     public AppWebBridge(
         IGameLibraryService library,
@@ -74,50 +77,101 @@ public sealed partial class AppWebBridge : IDisposable
         _scanCancellation?.Cancel();
         _scanCancellation?.Dispose();
         _scanCancellation = null;
+        DetachCoreEvents();
         _operationGate.Dispose();
-        try
-        {
-            if (_webView?.CoreWebView2 is not null)
-            {
-                _webView.CoreWebView2.WebMessageReceived -= OnWebMessageReceived;
-            }
-        }
-        catch (InvalidOperationException)
-        {
-            // Browser process may already be gone during shutdown.
-        }
-
-        _webView = null;
     }
 
-    public async Task InitializeAsync(WebView2 webView)
+    public async Task InitializeAsync(WebView2 webView, string? additionalBrowserArguments = null)
     {
-        _webView = webView;
-        var userDataFolder = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-            "FrameGen-Manager-Next",
-            "webview2");
+        DetachCoreEvents();
+
+        var userDataFolder = ResolveUserDataFolder();
         Directory.CreateDirectory(userDataFolder);
+        _logger.LogInformation(
+            "Creating WebView2 environment. Profile={Profile}; Runtime={Runtime}; Arguments={Arguments}",
+            userDataFolder,
+            CoreWebView2Environment.GetAvailableBrowserVersionString(),
+            additionalBrowserArguments ?? "-");
+
+        var options = new CoreWebView2EnvironmentOptions(
+            additionalBrowserArguments: additionalBrowserArguments);
         var environment = await CoreWebView2Environment.CreateAsync(
             browserExecutableFolder: null,
             userDataFolder,
-            options: null);
+            options);
         await webView.EnsureCoreWebView2Async(environment);
 
+        var core = webView.CoreWebView2;
+        _core = core;
+
         var assets = Path.Combine(AppContext.BaseDirectory, "WebAssets");
-        webView.CoreWebView2.SetVirtualHostNameToFolderMapping(
+        core.SetVirtualHostNameToFolderMapping(
             "fgm.local",
             assets,
             CoreWebView2HostResourceAccessKind.Allow);
-        webView.CoreWebView2.Settings.AreDevToolsEnabled = true;
-        webView.CoreWebView2.Settings.IsStatusBarEnabled = false;
-        webView.CoreWebView2.WebMessageReceived += OnWebMessageReceived;
-        webView.CoreWebView2.ProcessFailed += (_, args) =>
-        {
-            _logger.LogError("WebView2 process failed: {Kind}", args.ProcessFailedKind);
-            Failed?.Invoke(this, args.ProcessFailedKind.ToString());
-        };
+        core.Settings.AreDevToolsEnabled = true;
+        core.Settings.IsStatusBarEnabled = false;
+        core.WebMessageReceived += OnWebMessageReceived;
+        core.ProcessFailed += OnProcessFailed;
         webView.Source = new Uri("https://fgm.local/index.html");
+    }
+
+    private static string ResolveUserDataFolder()
+    {
+        // A separate profile per installation keeps dev, portable copies and different
+        // update folders from fighting over the same WebView2 lock files.
+        var location = AppContext.BaseDirectory.TrimEnd(
+            Path.DirectorySeparatorChar,
+            Path.AltDirectorySeparatorChar);
+        var hash = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(location)))
+            .ToLowerInvariant()[..12];
+
+        return Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+            "FrameGen-Manager-Next",
+            "webview2",
+            hash);
+    }
+
+    private void OnProcessFailed(object? sender, CoreWebView2ProcessFailedEventArgs args)
+    {
+        var failure = new WebViewFailure(
+            args.ProcessFailedKind,
+            args.Reason,
+            args.ExitCode,
+            args.ProcessDescription,
+            args.FailureSourceModulePath);
+
+        _logger.LogError(
+            "WebView2 process failed: kind={Kind}; reason={Reason}; exit={ExitCode}; " +
+            "module={Module}; process={Process}",
+            failure.Kind,
+            failure.Reason,
+            failure.ExitCode,
+            failure.FailureSourceModulePath ?? "-",
+            failure.ProcessDescription ?? "-");
+
+        Failed?.Invoke(this, failure);
+    }
+
+    private void DetachCoreEvents()
+    {
+        var core = _core;
+        _core = null;
+        if (core is null)
+        {
+            return;
+        }
+
+        try
+        {
+            core.WebMessageReceived -= OnWebMessageReceived;
+            core.ProcessFailed -= OnProcessFailed;
+        }
+        catch (Exception exception) when (exception is InvalidOperationException or COMException)
+        {
+            // The browser process may already be gone.
+        }
     }
 
     private void OnWebMessageReceived(object? sender, CoreWebView2WebMessageReceivedEventArgs e)
@@ -224,12 +278,23 @@ public sealed partial class AppWebBridge : IDisposable
 
     private void Send(object payload)
     {
-        if (_webView?.CoreWebView2 is null)
+        var core = _core;
+        if (core is null)
         {
             return;
         }
 
-        _webView.CoreWebView2.PostWebMessageAsJson(JsonSerializer.Serialize(payload, JsonOptions));
+        try
+        {
+            core.PostWebMessageAsJson(JsonSerializer.Serialize(payload, JsonOptions));
+        }
+        catch (Exception exception) when (
+            exception is InvalidOperationException or COMException or ObjectDisposedException)
+        {
+            // Commands can finish after the browser process has exited. Dropping the
+            // response is harmless; MainWindow will recreate the browser.
+            _logger.LogDebug("Dropped WebView2 message because the browser is unavailable");
+        }
     }
 
     private void ReportProgress(string phase, string subject, int current, int total)

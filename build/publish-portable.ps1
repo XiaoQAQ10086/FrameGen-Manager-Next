@@ -46,7 +46,11 @@ $destination = Join-Path $OutputRoot $folderName
 
 New-Item -ItemType Directory -Path $OutputRoot -Force | Out-Null
 if (Test-Path -LiteralPath $destination) {
-    Remove-Item -LiteralPath $destination -Recurse -Force
+    # `data` holds the library, settings, logs and deployment backups. Republishing
+    # the same version must not erase them.
+    Get-ChildItem -LiteralPath $destination -Force |
+        Where-Object { $_.Name -ne 'data' } |
+        Remove-Item -Recurse -Force
 }
 
 New-Item -ItemType Directory -Path $destination -Force | Out-Null

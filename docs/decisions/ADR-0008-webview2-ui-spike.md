@@ -17,7 +17,8 @@ WPF/Wpf.Ui 页面在功能上已经可用，但视觉和动效达不到旧版 HT
   - `ready`、`scan`、`refresh`、`addGame`、`cancelScan`
   - `deploy`、`restore`、`remove`、`openFolder`、`openHags`
 - 前端只接收结构化状态和进度，不直接访问文件系统。
-- WebView2 用户数据放在 `%LOCALAPPDATA%\FrameGen-Manager-Next\webview2`（避免便携目录中的空格导致浏览器进程异常）。
+- WebView2 用户数据放在 `%LOCALAPPDATA%\FrameGen-Manager-Next\webview2\<安装路径哈希>`：既避开便携目录中的空格，也避免开发版、便携版和不同更新目录共用同一份浏览器锁文件。
+- 单实例运行（`Local\FrameGenManagerNext.App` 互斥体），防止两个宿主同时占用同一 WebView2 配置。
 - WPF 旧页面、ViewModel 和主题服务已删除；需要回退时从 git 历史恢复。
 
 ## 依赖
@@ -32,3 +33,9 @@ WPF/Wpf.Ui 页面在功能上已经可用，但视觉和动效达不到旧版 HT
 - 未验证：部署/还原/SM/DLSS5 的真实游戏写操作仍待验收。
 - 风险：WebView2 Runtime 缺失时显示回退提示；多一套前端资源需要维护；离线安装包需确认 Runtime 可用。
 - 前端结构：`WebAssets/js/api.js`、`i18n.js`、`ui.js`、`app.js`、`pages/*.js`；C# 桥按功能拆分 `AppWebBridge.*.cs`。
+
+## 浏览器进程故障处理
+
+`CoreWebView2.ProcessFailed` 会记录 `Kind`、`Reason`、`ExitCode`、`FailureSourceModulePath` 和 `ProcessDescription`。宿主最多自动重建三次 WebView2（第二次起改用软件渲染），成功后在原位置恢复界面；三次都失败才显示回退面板和“重新加载界面”按钮。浏览器进程已经退出时，桥接层丢弃迟到的响应，不把异常抛回命令处理器。
+
+已确认的外部冲突：RivaTuner Statistics Server（RTSS）/ MSI Afterburner 的 `RTSSHooks64.dll` 注入 `msedgewebview2.exe` 后在浏览器进程内触发访问冲突（`0xC0000005`），表现为 `BrowserProcessExited`。RTSS 自带 `chrome.exe`、`msedge.exe` 的 `EnableHooking=0` 排除模板，但缺少 `msedgewebview2.exe`。在 RTSS 中把 `msedgewebview2.exe` 的 Application detection level 设为 None，或更新 RTSS，可以消除该冲突；应用检测到 RTSS 时会显示对应提示。
