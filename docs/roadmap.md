@@ -8,12 +8,14 @@
 - [x] WPF + Wpf.Ui 空壳、DI、Serilog、数据目录
 - [x] CLI `--version` / `--paths`
 - [x] xUnit v3 + MTP 测试跑通
-- [ ] `dotnet format` 门禁
-- [ ] CI + 质量检查脚本
-- [ ] 本地 git 初始化与新仓库 `FrameGen-Next`
-- [ ] Wpf.Ui / Velopack 兼容性结论写入 ADR
+- [x] `dotnet format` 门禁
+- [x] CI + 质量检查脚本
+- [x] 本地 git 初始化与初始提交
+- [x] Wpf.Ui / Velopack 兼容性结论写入 [ADR-0005](decisions/ADR-0005-phase0-compatibility.md)
 
 验收：`pwsh ./build/verify.ps1` 全绿；空壳启动；CI 通过。
+
+待完成：GitHub 仓库 `FrameGen-Next` 创建与首次 push（需要本机 `gh auth login` 或手动建仓）。
 
 ## Phase 1 · 领域与资产包
 
