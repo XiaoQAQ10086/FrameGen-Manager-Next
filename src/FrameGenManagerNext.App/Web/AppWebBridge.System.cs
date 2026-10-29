@@ -27,6 +27,7 @@ public sealed partial class AppWebBridge
             configDirectory = _paths.ConfigDirectory,
             portable = _environment.IsPortable,
             repository = "https://github.com/XiaoQAQ10086/FrameGen-Manager-Next",
+            netdiskUrl = "https://pan.quark.cn/s/adea7ed4f2b2",
             language = settings.Language == AppLanguage.English ? "en" : "zh",
             settings = new
             {
@@ -65,6 +66,18 @@ public sealed partial class AppWebBridge
     {
         OpenFolder(_paths.RootDirectory);
         return new { opened = true };
+    }
+
+    private static object? RestartComputer()
+    {
+        Process.Start(new ProcessStartInfo
+        {
+            FileName = "shutdown.exe",
+            Arguments = "/r /t 0",
+            UseShellExecute = false,
+            CreateNoWindow = true,
+        });
+        return new { restarting = true };
     }
 
     private static object? OpenRepository()

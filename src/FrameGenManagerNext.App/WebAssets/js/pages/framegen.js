@@ -169,6 +169,33 @@ export default {
       node.classList.toggle('hidden', !message);
     }
 
+    function promptRestart() {
+      return new Promise((resolve) => {
+        const dialog = ui.modal(`
+          <header class="modal-head"><div><h2>${esc(t('Gpu.Spoof.RestartTitle'))}</h2></div></header>
+          <p class="hint">${esc(t('Gpu.Spoof.RestartMessage'))}</p>
+          <footer class="modal-foot">
+            <span></span>
+            <div class="foot-actions">
+              <button class="btn" data-later type="button">${esc(t('Gpu.Spoof.RestartLater'))}</button>
+              <button class="btn success" data-restart type="button">${esc(t('Gpu.Spoof.RestartNow'))}</button>
+            </div>
+          </footer>`);
+        dialog.root.querySelector('[data-later]').addEventListener('click', () => {
+          dialog.close();
+          resolve(false);
+        });
+        dialog.root.querySelector('[data-restart]').addEventListener('click', () => {
+          dialog.close();
+          resolve(true);
+        });
+        const overlay = dialog.root.closest('.overlay');
+        overlay?.addEventListener('click', (event) => {
+          if (event.target === overlay) resolve(false);
+        });
+      });
+    }
+
     function renderGpu() {
       const g = gpu.gpu;
       const s = gpu.spoof;
@@ -429,6 +456,10 @@ export default {
           gpu = await api.request('gpu.spoof.apply', { preset });
           renderGpu();
           ui.toast(t('Gpu.Spoof.Done'));
+          if (await promptRestart()) {
+            await api.request('app.restartComputer')
+              .catch((error) => ui.toast(error.message, 'error'));
+          }
         } catch (error) {
           ui.toast(error.message, 'error');
         }

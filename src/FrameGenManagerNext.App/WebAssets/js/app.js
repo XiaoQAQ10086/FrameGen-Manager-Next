@@ -7,6 +7,7 @@ import dlss5 from './pages/dlss5.js';
 import logs from './pages/logs.js';
 import about from './pages/about.js';
 import donate from './pages/donate.js';
+import { checkForUpdates } from './update.js';
 
 const pages = {
   framegen,
@@ -160,6 +161,7 @@ async function bootstrap() {
     await loadInfo();
     const initial = location.hash.replace('#', '') || 'framegen';
     await navigate(pages[initial] ? initial : 'framegen', false);
+    setTimeout(() => { checkForUpdates(context, { silent: true }); }, 1500);
   } catch (error) {
     const view = document.getElementById('view');
     if (view) {
@@ -169,5 +171,6 @@ async function bootstrap() {
   }
 }
 
+document.addEventListener('contextmenu', (event) => event.preventDefault());
 window.addEventListener('resize', updateIndicator);
 bootstrap();

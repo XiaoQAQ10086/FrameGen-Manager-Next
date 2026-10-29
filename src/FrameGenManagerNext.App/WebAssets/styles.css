@@ -18,7 +18,8 @@
   --ease: cubic-bezier(.2, .9, .3, 1);
 }
 
-* { box-sizing: border-box; }
+* { box-sizing: border-box; -webkit-user-select: none; user-select: none; }
+input, textarea, select { -webkit-user-select: text; user-select: text; }
 html, body { margin: 0; height: 100%; }
 body {
   font: 14px/1.5 "Microsoft YaHei UI", "Microsoft YaHei", "Segoe UI", sans-serif;
@@ -176,6 +177,20 @@ button, select { font: inherit; }
 .deploy-meta { margin-top: 12px; }
 .deploy-meta .kv2 { margin: 7px 0; }
 .dlss-modal { width: min(620px, 92vw); }
+.about-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.update-modal { width: min(640px, 92vw); }
+.update-versions { display: flex; gap: 12px; margin-top: 16px; }
+.update-versions > div { flex: 1 1 0; display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 11px 13px; border-radius: 12px; background: rgba(96, 107, 125, .08); border: 1px solid var(--line); }
+.update-versions span { color: var(--muted); font-size: 12px; }
+.update-versions b { color: var(--ink); font-size: 15px; }
+.update-versions b.update-new { color: #157a33; }
+.update-notes-title { margin: 18px 0 8px; font-size: 13px; }
+.update-notes { margin: 0; max-height: 220px; overflow: auto; padding: 12px 14px; border-radius: 12px; background: rgba(24, 39, 75, .05); color: var(--ink); font: 12.5px/1.65 "Microsoft YaHei UI", "Segoe UI", sans-serif; white-space: pre-wrap; overflow-wrap: anywhere; }
+.update-progress { margin-top: 16px; }
+.update-bar { height: 8px; border-radius: 999px; background: rgba(96, 107, 125, .14); overflow: hidden; }
+.update-bar i { display: block; width: 0; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #48d66a, #157a33); transition: width .18s var(--ease); }
+.update-meta { display: flex; justify-content: space-between; margin-top: 7px; color: var(--muted); font-size: 12px; }
+.update-foot { margin-top: 18px; }
 .dlss-detail { display: grid; gap: 12px; margin-top: 14px; }
 .deploy-picker { display: grid; gap: 10px; }
 .deploy-picker label { display: grid; gap: 5px; color: var(--muted); font-size: 12px; }
