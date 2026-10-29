@@ -23,7 +23,7 @@ public sealed record AppSettings(
     public static AppSettings Default { get; } = new(
         SchemaVersion: 1,
         Language: AppLanguage.ChineseSimplified,
-        Theme: AppTheme.Dark,
+        Theme: AppTheme.Light,
         AutoScanOnStartup: false,
         ShowCovers: true);
 }

@@ -19,7 +19,7 @@
         </Style>
         <Style TargetType="TextBlock" x:Key="Label">
             <Setter Property="Opacity" Value="0.6" />
-            <Setter Property="FontSize" Value="12" />
+            <Setter Property="FontSize" Value="13" />
         </Style>
         <Style TargetType="TextBlock" x:Key="Value">
             <Setter Property="FontSize" Value="16" />
@@ -32,7 +32,7 @@
         <StackPanel Margin="18" MaxWidth="760" HorizontalAlignment="Left">
             <TextBlock Text="{loc:Loc About.Title}" FontSize="30" FontWeight="SemiBold" />
             <TextBlock Margin="0,4,0,0"
-                       Opacity="0.6"
+                       Opacity="0.75"
                        Text="{loc:Loc About.Subtitle}" />
 
             <Border Style="{StaticResource Card}" Margin="0,16,0,12">
@@ -59,7 +59,7 @@
                 </StackPanel>
             </Border>
 
-            <TextBlock Margin="0,8,0,0" Opacity="0.5" Text="{Binding RepositoryUrl}" />
+            <TextBlock Margin="0,8,0,0" Opacity="0.68" Text="{Binding RepositoryUrl}" />
         </StackPanel>
     </ScrollViewer>
 </UserControl>

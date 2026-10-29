@@ -1,4 +1,5 @@
 using System.Windows.Controls;
+using System.Windows.Media;
 using System.Windows.Media.Animation;
 using FrameGenManagerNext.App.ViewModels;
 using FrameGenManagerNext.App.Views;
@@ -10,12 +11,14 @@ namespace FrameGenManagerNext.App;
 public partial class MainWindow : FluentWindow
 {
     private readonly IServiceProvider _services;
+    private readonly TranslateTransform _pageTransform = new();
 
     public MainWindow(IServiceProvider services, MainWindowViewModel viewModel)
     {
         _services = services;
         InitializeComponent();
         DataContext = viewModel;
+        PageHost.RenderTransform = _pageTransform;
         NavList.SelectedIndex = 0;
     }
 
@@ -39,7 +42,13 @@ public partial class MainWindow : FluentWindow
 
         PageHost.BeginAnimation(
             OpacityProperty,
-            new DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(160))
+            new DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(220))
+            {
+                EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut },
+            });
+        _pageTransform.BeginAnimation(
+            TranslateTransform.YProperty,
+            new DoubleAnimation(10, 0, TimeSpan.FromMilliseconds(240))
             {
                 EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut },
             });

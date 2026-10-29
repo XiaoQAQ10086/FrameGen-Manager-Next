@@ -85,7 +85,7 @@ public sealed class SettingsService : ISettingsService
         {
             SchemaVersion = 1,
             Language = Enum.IsDefined(settings.Language) ? settings.Language : AppLanguage.ChineseSimplified,
-            Theme = Enum.IsDefined(settings.Theme) ? settings.Theme : AppTheme.System,
+            Theme = AppTheme.Light,
         };
     }
 

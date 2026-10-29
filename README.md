@@ -4,7 +4,7 @@
 
 FrameGen Manager-Next 是 FrameGen Manager 的从零重写版：Windows 桌面端帧生成部署管理器，使用 **C# / .NET 10 LTS + WPF + Wpf.Ui**，单进程架构。
 
-> 当前状态：**Phase 5 功能完成，等待真实游戏验收**。游戏库（Steam 封面）、GPU 状态与显卡名称伪装、日志诊断、统一部署引擎、FrameGen、Smooth Motion、DLSS5（含彻底卸载/旧版 RenoDX 清理）、设置页、中英文切换、浅色/深色主题、CLI 已完成；剩余真实游戏对照和安装包（等便携版验收后做）。
+> 当前状态：**Phase 5 功能完成，等待真实游戏验收**。游戏库（Steam 封面）、GPU 状态与显卡名称伪装、日志诊断、统一部署引擎、FrameGen、Smooth Motion、DLSS5（含彻底卸载/旧版 RenoDX 清理）、设置页、中英文切换、浅色界面、CLI 已完成；剩余真实游戏对照和安装包（等便携版验收后做）。
 
 ## 仓库
 
@@ -17,7 +17,7 @@ FrameGen Manager-Next 是 FrameGen Manager 的从零重写版：Windows 桌面�
 - 把帧生成代理 DLL、运行时和配置部署到游戏渲染目录，并支持安全还原。
 - 管理 Smooth Motion、DLSS5 / ReShade 等可选组件，支持彻底卸载和旧版 RenoDX 清理。
 - “帧生成”页左侧显示 GPU、驱动、HAGS 和显卡名称伪装，右侧是游戏列表；点“部署”后才弹出该游戏的代理/优化/帧数等参数。
-- 设置页：主题、启动自动扫描、封面开关、数据目录入口、HAGS 系统设置快捷入口。
+- 设置页：启动自动扫描、封面开关、数据目录入口、HAGS 系统设置快捷入口。
 - 导出日志与诊断包。
 
 它不是帧生成渲染器：真正的帧生成由游戏、NVIDIA 运行时或 ReShade 执行。

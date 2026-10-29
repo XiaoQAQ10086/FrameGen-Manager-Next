@@ -1,4 +1,3 @@
-using System.Collections.ObjectModel;
 using System.Diagnostics;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -30,8 +29,6 @@ public sealed partial class SettingsViewModel : ObservableObject
 
     public IReadOnlyList<string> LanguageChoices { get; } = ["简体中文", "English"];
 
-    public ObservableCollection<string> ThemeChoices { get; } = [];
-
     public string DataRoot => _environment.DataRoot;
 
     public string PacksDirectory => _environment.PacksDirectory;
@@ -46,9 +43,6 @@ public sealed partial class SettingsViewModel : ObservableObject
 
     [ObservableProperty]
     private string _selectedLanguage = "简体中文";
-
-    [ObservableProperty]
-    private string _selectedTheme = string.Empty;
 
     [ObservableProperty]
     private bool _autoScanOnStartup;
@@ -72,13 +66,6 @@ public sealed partial class SettingsViewModel : ObservableObject
         _initialized = true;
         var settings = _settings.Load();
         SelectedLanguage = settings.Language == AppLanguage.English ? "English" : "简体中文";
-        RebuildThemeChoices();
-        SelectedTheme = settings.Theme switch
-        {
-            AppTheme.Dark => L.T("Settings.Theme.Dark"),
-            AppTheme.Light => L.T("Settings.Theme.Light"),
-            _ => L.T("Settings.Theme.System"),
-        };
         AutoScanOnStartup = settings.AutoScanOnStartup;
         ShowCovers = settings.ShowCovers;
         return Task.CompletedTask;
@@ -104,11 +91,7 @@ public sealed partial class SettingsViewModel : ObservableObject
             var updated = current with
             {
                 Language = language,
-                Theme = SelectedTheme == L.T("Settings.Theme.Dark")
-                    ? AppTheme.Dark
-                    : SelectedTheme == L.T("Settings.Theme.Light")
-                        ? AppTheme.Light
-                        : AppTheme.System,
+                Theme = AppTheme.Light,
                 AutoScanOnStartup = AutoScanOnStartup,
                 ShowCovers = ShowCovers,
             };
@@ -121,14 +104,7 @@ public sealed partial class SettingsViewModel : ObservableObject
             }
 
             LocalizationService.Current.SetLanguage(result.Value.Language);
-            RebuildThemeChoices();
-            SelectedTheme = result.Value.Theme switch
-            {
-                AppTheme.Dark => L.T("Settings.Theme.Dark"),
-                AppTheme.Light => L.T("Settings.Theme.Light"),
-                _ => L.T("Settings.Theme.System"),
-            };
-            ThemeService.Apply(result.Value.Theme);
+            ThemeService.Apply(AppTheme.Light);
             OnPropertyChanged(nameof(ModeDisplay));
             StatusText = L.T("Settings.Status.Saved");
         }
@@ -186,14 +162,6 @@ public sealed partial class SettingsViewModel : ObservableObject
         {
             _logger.LogWarning(exception, "Could not open HAGS settings");
         }
-    }
-
-    private void RebuildThemeChoices()
-    {
-        ThemeChoices.Clear();
-        ThemeChoices.Add(L.T("Settings.Theme.System"));
-        ThemeChoices.Add(L.T("Settings.Theme.Dark"));
-        ThemeChoices.Add(L.T("Settings.Theme.Light"));
     }
 
     private void OpenFolder(string path)

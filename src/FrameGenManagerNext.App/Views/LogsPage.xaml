@@ -19,7 +19,7 @@
             <StackPanel DockPanel.Dock="Left">
                 <TextBlock Text="{loc:Loc Logs.Title}" FontSize="30" FontWeight="SemiBold" />
                 <TextBlock Margin="0,4,0,0"
-                           Opacity="0.6"
+                           Opacity="0.75"
                            Text="{loc:Loc Logs.Subtitle}" />
             </StackPanel>
             <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
@@ -31,7 +31,7 @@
 
         <TextBlock Grid.Row="1"
                    Margin="0,16,0,10"
-                   Opacity="0.8"
+                   Opacity="0.9"
                    Text="{Binding StatusText}"
                    TextWrapping="Wrap" />
 
@@ -43,7 +43,7 @@
                  VerticalScrollBarVisibility="Auto"
                  HorizontalScrollBarVisibility="Auto"
                  FontFamily="Consolas"
-                 FontSize="12"
+                 FontSize="14"
                  Padding="12"
                  Background="{DynamicResource CardBackgroundBrush}"
                  Foreground="{DynamicResource TextPrimaryBrush}"

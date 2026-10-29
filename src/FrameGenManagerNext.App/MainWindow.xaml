@@ -10,7 +10,8 @@
                  MinWidth="980"
                  MinHeight="640"
                  WindowStartupLocation="CenterScreen"
-                 FontFamily="Segoe UI Variable Display, Segoe UI"
+                 FontFamily="Microsoft YaHei UI, Segoe UI Variable Text, Segoe UI"
+                 FontSize="14"
                  UseLayoutRounding="True"
                  SnapsToDevicePixels="True"
                  ExtendsContentIntoTitleBar="True"
@@ -50,8 +51,8 @@
                                    FontWeight="SemiBold"
                                    TextWrapping="Wrap" />
                         <TextBlock Margin="0,4,0,0"
-                                   Opacity="0.55"
-                                   FontSize="12"
+                                   Opacity="0.72"
+                                   FontSize="14"
                                    Text="{Binding Version}" />
                     </StackPanel>
 
@@ -68,20 +69,52 @@
                                 <Setter Property="Template">
                                     <Setter.Value>
                                         <ControlTemplate TargetType="ListBoxItem">
-                                            <Border x:Name="Root"
-                                                    Background="Transparent"
-                                                    CornerRadius="6"
-                                                    Margin="0,2,0,2"
-                                                    Padding="{TemplateBinding Padding}">
-                                                <ContentPresenter />
-                                            </Border>
+                                            <Grid>
+                                                <Border x:Name="Selection"
+                                                        Background="{DynamicResource AccentMutedBrush}"
+                                                        CornerRadius="9"
+                                                        Margin="0,2,0,2"
+                                                        Opacity="0"
+                                                        IsHitTestVisible="False" />
+                                                <Border x:Name="Root"
+                                                        Background="Transparent"
+                                                        CornerRadius="9"
+                                                        Margin="0,2,0,2"
+                                                        Padding="{TemplateBinding Padding}">
+                                                    <ContentPresenter />
+                                                </Border>
+                                            </Grid>
                                             <ControlTemplate.Triggers>
                                                 <Trigger Property="IsMouseOver" Value="True">
                                                     <Setter TargetName="Root" Property="Background" Value="{DynamicResource NavHoverBrush}" />
                                                 </Trigger>
                                                 <Trigger Property="IsSelected" Value="True">
-                                                    <Setter TargetName="Root" Property="Background" Value="{DynamicResource AccentMutedBrush}" />
-                                                    <Setter Property="Foreground" Value="White" />
+                                                    <Setter Property="Foreground" Value="{DynamicResource AccentBrush}" />
+                                                    <Setter Property="FontWeight" Value="SemiBold" />
+                                                    <Trigger.EnterActions>
+                                                        <BeginStoryboard>
+                                                            <Storyboard>
+                                                                <DoubleAnimation Storyboard.TargetName="Selection"
+                                                                                 Storyboard.TargetProperty="Opacity"
+                                                                                 To="1"
+                                                                                 Duration="0:0:0.18">
+                                                                    <DoubleAnimation.EasingFunction>
+                                                                        <CubicEase EasingMode="EaseOut" />
+                                                                    </DoubleAnimation.EasingFunction>
+                                                                </DoubleAnimation>
+                                                            </Storyboard>
+                                                        </BeginStoryboard>
+                                                    </Trigger.EnterActions>
+                                                    <Trigger.ExitActions>
+                                                        <BeginStoryboard>
+                                                            <Storyboard>
+                                                                <DoubleAnimation Storyboard.TargetName="Selection"
+                                                                                 Storyboard.TargetProperty="Opacity"
+                                                                                 To="0"
+                                                                                 Duration="0:0:0.14" />
+                                                            </Storyboard>
+                                                        </BeginStoryboard>
+                                                    </Trigger.ExitActions>
                                                 </Trigger>
                                             </ControlTemplate.Triggers>
                                         </ControlTemplate>
@@ -130,14 +163,14 @@
 
                     <StackPanel Grid.Row="2" Margin="8,16,8,4">
                         <TextBlock Text="{loc:Loc Nav.Footer1}"
-                                   FontSize="10.5"
+                                   FontSize="12.5"
                                    TextWrapping="Wrap"
-                                   Opacity="0.5" />
+                                   Opacity="0.68" />
                         <TextBlock Margin="0,4,0,0"
                                    Text="{loc:Loc Nav.Footer2}"
-                                   FontSize="10.5"
+                                   FontSize="12.5"
                                    TextWrapping="Wrap"
-                                   Opacity="0.35" />
+                                   Opacity="0.75" />
                     </StackPanel>
                 </Grid>
             </Border>

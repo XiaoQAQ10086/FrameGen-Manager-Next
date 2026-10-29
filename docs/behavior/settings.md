@@ -15,7 +15,7 @@
 | 字段 | 默认 |
 |---|---|
 | language | `chineseSimplified` |
-| theme | `dark` |
+| theme | `light`（固定浅色，暂不适配深色） |
 | autoScanOnStartup | `false` |
 | showCovers | `true` |
 
@@ -23,8 +23,8 @@
 
 | 编号 | 条件 | 行为 |
 |---|---|---|
-| SET-001 | 启动时读取主题 | `system` 解析系统明暗；`dark` / `light` 直接应用 |
-| SET-002 | 保存设置 | 立即写盘并应用主题；页面显示“设置已保存” |
+| SET-001 | 启动主题 | 固定浅色；不读取系统深色模式 |
+| SET-002 | 保存设置 | 立即写盘并应用浅色主题；页面显示“设置已保存” |
 | SET-003 | 自动扫描开启且游戏库为空 | 启动加载缓存后执行一次扫描 |
 | SET-004 | 封面关闭 | 游戏库不解析/下载封面，表格封面列为空 |
 | SET-005 | HAGS 快捷入口 | 打开 `ms-settings:display-advancedgraphics-default`（Win11）或 `ms-settings:display-advancedgraphics`（Win10）；不写注册表 |

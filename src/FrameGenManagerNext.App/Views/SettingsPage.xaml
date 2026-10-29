@@ -19,7 +19,7 @@
         </Style>
         <Style TargetType="TextBlock" x:Key="Label">
             <Setter Property="Opacity" Value="0.6" />
-            <Setter Property="FontSize" Value="12" />
+            <Setter Property="FontSize" Value="13" />
         </Style>
         <Style TargetType="TextBlock" x:Key="Value">
             <Setter Property="FontSize" Value="15" />
@@ -34,7 +34,7 @@
                 <StackPanel DockPanel.Dock="Left">
                     <TextBlock Text="{loc:Loc Settings.Title}" FontSize="30" FontWeight="SemiBold" />
                     <TextBlock Margin="0,4,0,0"
-                               Opacity="0.6"
+                               Opacity="0.75"
                                Text="{loc:Loc Settings.Subtitle}" />
                 </StackPanel>
                 <ui:Button DockPanel.Dock="Right"
@@ -43,7 +43,7 @@
                            VerticalAlignment="Center" />
             </DockPanel>
 
-            <TextBlock Margin="0,16,0,0" Text="{Binding StatusText}" Opacity="0.8" />
+            <TextBlock Margin="0,16,0,0" Text="{Binding StatusText}" Opacity="0.9" />
 
             <Border Style="{StaticResource Card}" Margin="0,16,0,12">
                 <StackPanel>
@@ -54,20 +54,9 @@
                               ItemsSource="{Binding LanguageChoices}"
                               SelectedItem="{Binding SelectedLanguage}" />
                     <TextBlock Margin="0,6,0,0"
-                               Opacity="0.55"
-                               FontSize="12"
+                               Opacity="0.72"
+                               FontSize="14"
                                Text="{loc:Loc Settings.LanguageHint}" />
-
-                    <TextBlock Margin="0,16,0,0" Style="{StaticResource Label}" Text="{loc:Loc Settings.Theme}" />
-                    <ComboBox Margin="0,6,0,0"
-                              Width="220"
-                              HorizontalAlignment="Left"
-                              ItemsSource="{Binding ThemeChoices}"
-                              SelectedItem="{Binding SelectedTheme}" />
-                    <TextBlock Margin="0,6,0,0"
-                               Opacity="0.55"
-                               FontSize="12"
-                               Text="{loc:Loc Settings.ThemeHint}" />
 
                     <CheckBox Margin="0,16,0,0"
                               IsChecked="{Binding ShowCovers}"
@@ -83,8 +72,8 @@
                     <DockPanel LastChildFill="False">
                         <TextBlock Style="{StaticResource Label}" Text="{loc:Loc Settings.DataDirectory}" />
                         <TextBlock DockPanel.Dock="Right"
-                                   Opacity="0.55"
-                                   FontSize="12"
+                                   Opacity="0.72"
+                                   FontSize="14"
                                    Text="{Binding ModeDisplay}" />
                     </DockPanel>
                     <TextBlock Style="{StaticResource Value}" Text="{Binding DataRoot}" />
@@ -145,8 +134,8 @@
                 <StackPanel>
                     <TextBlock Style="{StaticResource Label}" Text="{loc:Loc Settings.SystemShortcuts}" />
                     <TextBlock Margin="0,6,0,0"
-                               Opacity="0.65"
-                               FontSize="12"
+                               Opacity="0.78"
+                               FontSize="14"
                                TextWrapping="Wrap"
                                Text="{loc:Loc Settings.HagsHint}" />
                     <ui:Button Margin="0,12,0,0"
