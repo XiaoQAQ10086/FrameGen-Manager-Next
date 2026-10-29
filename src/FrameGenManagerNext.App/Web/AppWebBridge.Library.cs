@@ -1,5 +1,10 @@
 using System.Diagnostics;
+using System.Drawing;
+using System.Drawing.Imaging;
 using System.IO;
+using System.Runtime.InteropServices;
+using System.Security.Cryptography;
+using System.Text;
 using FrameGenManagerNext.Core.Features.Framegen;
 using FrameGenManagerNext.Core.Features.Library;
 using FrameGenManagerNext.Domain.Deployment;
@@ -177,13 +182,13 @@ public sealed partial class AppWebBridge
             var path = await _covers.GetCoverPathAsync(game, CancellationToken.None);
             if (path is null || !File.Exists(path))
             {
-                return null;
+                return await GetExecutableIconDataUrlAsync(game.RenderExePath);
             }
 
             var info = new FileInfo(path);
             if (info.Length is <= 0 or > 3 * 1024 * 1024)
             {
-                return null;
+                return await GetExecutableIconDataUrlAsync(game.RenderExePath);
             }
 
             var bytes = await File.ReadAllBytesAsync(path, CancellationToken.None);
@@ -198,4 +203,50 @@ public sealed partial class AppWebBridge
             return null;
         }
     }
+    private async Task<string?> GetExecutableIconDataUrlAsync(string? exePath)
+    {
+        if (string.IsNullOrWhiteSpace(exePath) || !File.Exists(exePath))
+        {
+            return null;
+        }
+
+        try
+        {
+            var cacheDirectory = Path.Combine(_paths.CacheDirectory, "covers", "icons");
+            Directory.CreateDirectory(cacheDirectory);
+            var key = Convert.ToHexString(SHA256.HashData(
+                Encoding.UTF8.GetBytes($"{exePath.ToLowerInvariant()}|{File.GetLastWriteTimeUtc(exePath).Ticks}")));
+            var cachePath = Path.Combine(cacheDirectory, $"{key}.png");
+
+            if (!File.Exists(cachePath))
+            {
+                await Task.Run(() =>
+                {
+                    using var icon = Icon.ExtractAssociatedIcon(exePath);
+                    if (icon is null)
+                    {
+                        return;
+                    }
+
+                    using var bitmap = icon.ToBitmap();
+                    bitmap.Save(cachePath, ImageFormat.Png);
+                });
+            }
+
+            if (!File.Exists(cachePath) || new FileInfo(cachePath).Length > 3 * 1024 * 1024)
+            {
+                return null;
+            }
+
+            var bytes = await File.ReadAllBytesAsync(cachePath, CancellationToken.None);
+            return $"data:image/png;base64,{Convert.ToBase64String(bytes)}";
+        }
+        catch (Exception exception) when (
+            exception is IOException or UnauthorizedAccessException or ArgumentException or ExternalException)
+        {
+            _logger.LogDebug(exception, "Could not extract executable icon for {Exe}", exePath);
+            return null;
+        }
+    }
+
 }

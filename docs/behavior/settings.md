@@ -41,7 +41,8 @@
 | COVER-004 | 本地无网格封面 | 依次尝试 `appcache\librarycache` 的竖版/header/hero |
 | COVER-005 | 本地仍无且 appid 全为数字 | 从 Steam CDN 三个主机依次下载 2x 竖版 → 竖版 → header |
 | COVER-006 | 下载内容 <1 KB、>8 MB 或不是 JPEG 魔数 | 丢弃，不写缓存 |
-| COVER-007 | 所有来源失败 | 返回 `null`，界面显示空封面；不影响游戏库扫描 |
+| COVER-007 | 所有封面来源失败 | 提取游戏 EXE 关联图标并缓存为 PNG，作为封面兜底 |
+| COVER-008 | 图标也提取失败 | 返回 `null`，界面显示首字母占位 |
 
 ## 已知限制
 

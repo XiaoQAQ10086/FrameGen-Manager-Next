@@ -71,7 +71,7 @@ export default {
           <div class="head-actions">
             <button class="btn" data-action="add" type="button">${esc(t('Library.Add'))}</button>
             <button class="btn" data-action="cancel" type="button" disabled>${esc(t('Common.Cancel'))}</button>
-            <button class="btn primary" data-action="scan" type="button">${esc(t('Library.Scan'))}</button>
+            <button class="btn scan" data-action="scan" type="button">${esc(t('Library.Scan'))}</button>
           </div>
         </header>
         <div class="notice hidden" data-role="notice"></div>
@@ -93,7 +93,7 @@ export default {
             <div class="game-list" data-role="games"></div>
             <div class="empty hidden" data-role="empty">
               <p>${esc(t('Library.Empty'))}</p>
-              <button class="btn primary" data-action="scan" type="button">${esc(t('Library.Scan'))}</button>
+              <button class="btn scan" data-action="scan" type="button">${esc(t('Library.Scan'))}</button>
             </div>
           </section>
         </main>

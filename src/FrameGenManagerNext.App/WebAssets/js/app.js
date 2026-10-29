@@ -43,6 +43,18 @@ function updateSidebar() {
   document.querySelectorAll('[data-i18n]').forEach((element) => {
     element.textContent = i18n.t(element.dataset.i18n);
   });
+  requestAnimationFrame(updateIndicator);
+}
+
+function updateIndicator() {
+  const nav = document.getElementById('nav');
+  const active = nav?.querySelector('.nav-item.active');
+  const indicator = nav?.querySelector('.nav-indicator');
+  if (!nav || !active || !indicator) return;
+  const navRect = nav.getBoundingClientRect();
+  const rect = active.getBoundingClientRect();
+  indicator.style.left = `${rect.left - navRect.left}px`;
+  indicator.style.width = `${rect.width}px`;
 }
 
 async function loadInfo() {
@@ -71,6 +83,13 @@ async function navigate(pageName, push = true) {
   } catch (error) {
     view.innerHTML = `<div class="panel"><h2>${ui.escapeHtml(i18n.t('Common.Unknown'))}</h2><p class="muted">${ui.escapeHtml(error.message || error)}</p></div>`;
   }
+  view.animate(
+    [
+      { opacity: 0, transform: 'translateY(8px)' },
+      { opacity: 1, transform: 'none' },
+    ],
+    { duration: 240, easing: 'cubic-bezier(.2,.9,.3,1)' },
+  );
 
   if (push) {
     const hash = state.current === 'framegen' ? '' : `#${state.current}`;
@@ -103,5 +122,5 @@ async function bootstrap() {
   }
 }
 
-window.addEventListener('resize', () => { /* reserved for responsive layout hooks */ });
+window.addEventListener('resize', updateIndicator);
 bootstrap();

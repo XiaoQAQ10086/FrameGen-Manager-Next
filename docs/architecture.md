@@ -120,7 +120,7 @@ planned → backingUp → writing → verifying → installed
 ## 8. UI
 
 - WPF 只保留 `FluentWindow` 外壳和 WebView2 宿主，业务界面全部在 `WebAssets/`。
-- 页面：帧生成 / Smooth Motion / DLSS5 / 日志 / 设置 / 关于；GPU 状态嵌在帧生成页左侧。
+- 顶部横向导航：帧生成 / Smooth Motion / DLSS5 / 日志 / 设置 / 关于；GPU 状态嵌在帧生成页左侧。
 - 前端结构：
   - `js/app.js`：启动、导航、语言和全局进度。
   - `js/api.js`：请求/响应与事件桥。
