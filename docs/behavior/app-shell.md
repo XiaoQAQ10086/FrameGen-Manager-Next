@@ -17,9 +17,10 @@
 
 ## 页面状态缓存
 
-- `api.js` 缓存 `app.info`、`games.state`、`gpu.state`、`sm.state`、`dlss5.state` 120 秒；页面切换直接复用，不再重复探测游戏和驱动。
-- 扫描、部署、还原、开关 Smooth Motion、DLSS5 安装/卸载和语言保存会清空缓存。
-- 首次加载后后台预热 Smooth Motion 与 DLSS5 状态，切换页面基本无需等待。
+- 页面只挂载一次：切换导航时隐藏旧页面、显示已挂载页面，不再销毁 DOM 或重新探测游戏/驱动。
+- `api.js` 仍缓存 `app.info`、`games.state`、`gpu.state`、`sm.state`、`dlss5.state` 120 秒；扫描、部署、还原、开关 Smooth Motion、DLSS5 安装/卸载和语言保存会清空缓存。
+- 语言切换会清空已挂载页面并重建，避免留下旧语言文案。
+- 封面不再以 base64 塞进状态 JSON：缓存目录通过 `fgm-covers.local` 虚拟主机提供图片 URL，减少桥接数据量和 GDI/图片内存。
 
 ## 浏览器进程故障
 

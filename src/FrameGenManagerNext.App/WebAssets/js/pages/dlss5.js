@@ -6,6 +6,7 @@ export default {
     const { api, t, ui } = ctx;
     let games = [];
     let busy = false;
+    let addingGame = false;
     let current = null;
 
     root.innerHTML = `
@@ -134,8 +135,15 @@ export default {
       if (button) {
         const name = button.dataset.action;
         if (name === 'add') {
-          await api.request('games.add').catch((error) => ui.toast(error.message, 'error'));
-          return load();
+          if (addingGame) return;
+          addingGame = true;
+          try {
+            await api.request('games.add').catch((error) => ui.toast(error.message, 'error'));
+            await load();
+          } finally {
+            setTimeout(() => { addingGame = false; }, 700);
+          }
+          return;
         }
         if (name === 'scan') {
           button.classList.add('loading');

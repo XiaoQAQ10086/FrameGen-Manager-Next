@@ -67,7 +67,7 @@ export default {
         try {
           await api.request('app.saveSettings', payload);
           await ctx.refreshInfo();
-          ctx.navigate('settings', false);
+          await ctx.reloadAll();
           ui.toast(t('Settings.Status.Saved'));
         } catch (error) {
           ui.toast(error.message, 'error');

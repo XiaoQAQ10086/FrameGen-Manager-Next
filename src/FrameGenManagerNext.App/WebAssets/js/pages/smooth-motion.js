@@ -15,6 +15,7 @@ export default {
     let games = [];
     let gpu = null;
     let busy = false;
+    let addingGame = false;
 
     root.innerHTML = `
       <section class="page">
@@ -140,8 +141,15 @@ export default {
         return load();
       }
       if (actionName === 'add') {
-        await api.request('games.add').catch((error) => ui.toast(error.message, 'error'));
-        return load();
+        if (addingGame) return;
+        addingGame = true;
+        try {
+          await api.request('games.add').catch((error) => ui.toast(error.message, 'error'));
+          await load();
+        } finally {
+          setTimeout(() => { addingGame = false; }, 700);
+        }
+        return;
       }
       if (actionName === 'scan') {
         button.classList.add('loading');

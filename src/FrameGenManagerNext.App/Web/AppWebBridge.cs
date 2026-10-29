@@ -79,6 +79,7 @@ public sealed partial class AppWebBridge : IDisposable
         _scanCancellation = null;
         DetachCoreEvents();
         _operationGate.Dispose();
+        _addGameGate.Dispose();
     }
 
     public async Task InitializeAsync(WebView2 webView, string? additionalBrowserArguments = null)
@@ -108,6 +109,11 @@ public sealed partial class AppWebBridge : IDisposable
         core.SetVirtualHostNameToFolderMapping(
             "fgm.local",
             assets,
+            CoreWebView2HostResourceAccessKind.Allow);
+        Directory.CreateDirectory(_paths.CacheDirectory);
+        core.SetVirtualHostNameToFolderMapping(
+            "fgm-covers.local",
+            _paths.CacheDirectory,
             CoreWebView2HostResourceAccessKind.Allow);
         core.Settings.AreDevToolsEnabled = true;
         core.Settings.IsStatusBarEnabled = false;

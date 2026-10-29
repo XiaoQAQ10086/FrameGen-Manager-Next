@@ -13,7 +13,7 @@ public sealed partial class AppWebBridge
 
         foreach (var game in library.EnumerateVisibleGames())
         {
-            var cover = settings.ShowCovers ? await GetCoverDataUrlAsync(game) : null;
+            var cover = settings.ShowCovers ? await GetCoverUrlAsync(game) : null;
             var initial = string.IsNullOrWhiteSpace(game.Name) ? "?" : game.Name[..1].ToUpperInvariant();
 
             if (string.IsNullOrWhiteSpace(game.RenderExePath))

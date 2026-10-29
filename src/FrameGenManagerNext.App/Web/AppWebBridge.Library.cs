@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Imaging;
@@ -16,6 +17,10 @@ namespace FrameGenManagerNext.App.Web;
 
 public sealed partial class AppWebBridge
 {
+    private readonly ConcurrentDictionary<string, string> _coverUrlCache =
+        new(StringComparer.OrdinalIgnoreCase);
+    private readonly SemaphoreSlim _addGameGate = new(1, 1);
+
     private async Task<object?> BuildGamesStateAsync(string? warning = null)
     {
         var settings = _settings.Load();
@@ -52,7 +57,7 @@ public sealed partial class AppWebBridge
                     renderExe = game.RenderExePath,
                     initial = string.IsNullOrWhiteSpace(game.Name) ? "?" : game.Name[..1].ToUpperInvariant(),
                     cover = settings.ShowCovers
-                        ? await GetCoverDataUrlAsync(game)
+                        ? await GetCoverUrlAsync(game)
                         : null,
                 };
             }
@@ -140,24 +145,36 @@ public sealed partial class AppWebBridge
 
     private async Task<object?> AddGameAsync()
     {
-        var dialog = new OpenFileDialog
-        {
-            Title = "选择游戏渲染 EXE",
-            Filter = "可执行文件 (*.exe)|*.exe",
-            CheckFileExists = true,
-            Multiselect = false,
-        };
-
-        if (dialog.ShowDialog() != true)
+        if (!await _addGameGate.WaitAsync(0))
         {
             return null;
         }
 
-        return await RunExclusiveAsync(async () =>
+        try
         {
-            await _library.AddManualAsync(dialog.FileName, CancellationToken.None);
-            return await BuildGamesStateAsync();
-        });
+            var dialog = new OpenFileDialog
+            {
+                Title = "选择游戏渲染 EXE",
+                Filter = "可执行文件 (*.exe)|*.exe",
+                CheckFileExists = true,
+                Multiselect = false,
+            };
+
+            if (dialog.ShowDialog() != true)
+            {
+                return null;
+            }
+
+            return await RunExclusiveAsync(async () =>
+            {
+                await _library.AddManualAsync(dialog.FileName, CancellationToken.None);
+                return await BuildGamesStateAsync();
+            });
+        }
+        finally
+        {
+            _addGameGate.Release();
+        }
     }
 
     private async Task<object?> RemoveGameAsync(System.Text.Json.JsonElement payload)
@@ -218,27 +235,35 @@ public sealed partial class AppWebBridge
         return library.EnumerateVisibleGames().FirstOrDefault(game => game.Id == id);
     }
 
-    private async Task<string?> GetCoverDataUrlAsync(GameEntry game)
+    private async Task<string?> GetCoverUrlAsync(GameEntry game)
     {
+        if (_coverUrlCache.TryGetValue(game.Id, out var cachedUrl))
+        {
+            return cachedUrl;
+        }
+
         try
         {
             var path = await _covers.GetCoverPathAsync(game, CancellationToken.None);
+            string? url;
             if (path is null || !File.Exists(path))
             {
-                return await GetExecutableIconDataUrlAsync(game.RenderExePath);
+                url = await GetExecutableIconUrlAsync(game.RenderExePath);
             }
-
-            var info = new FileInfo(path);
-            if (info.Length is <= 0 or > 3 * 1024 * 1024)
+            else
             {
-                return await GetExecutableIconDataUrlAsync(game.RenderExePath);
+                var info = new FileInfo(path);
+                url = info.Length is <= 0 or > 3 * 1024 * 1024
+                    ? await GetExecutableIconUrlAsync(game.RenderExePath)
+                    : CoverUrl(await EnsureCachedCoverAsync(path));
             }
 
-            var bytes = await File.ReadAllBytesAsync(path, CancellationToken.None);
-            var mime = Path.GetExtension(path).Equals(".png", StringComparison.OrdinalIgnoreCase)
-                ? "image/png"
-                : "image/jpeg";
-            return $"data:{mime};base64,{Convert.ToBase64String(bytes)}";
+            if (!string.IsNullOrWhiteSpace(url))
+            {
+                _coverUrlCache[game.Id] = url;
+            }
+
+            return url;
         }
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
         {
@@ -246,7 +271,8 @@ public sealed partial class AppWebBridge
             return null;
         }
     }
-    private async Task<string?> GetExecutableIconDataUrlAsync(string? exePath)
+
+    private async Task<string?> GetExecutableIconUrlAsync(string? exePath)
     {
         if (string.IsNullOrWhiteSpace(exePath) || !File.Exists(exePath))
         {
@@ -276,13 +302,9 @@ public sealed partial class AppWebBridge
                 });
             }
 
-            if (!File.Exists(cachePath) || new FileInfo(cachePath).Length > 3 * 1024 * 1024)
-            {
-                return null;
-            }
-
-            var bytes = await File.ReadAllBytesAsync(cachePath, CancellationToken.None);
-            return $"data:image/png;base64,{Convert.ToBase64String(bytes)}";
+            return File.Exists(cachePath) && new FileInfo(cachePath).Length <= 3 * 1024 * 1024
+                ? CoverUrl(cachePath)
+                : null;
         }
         catch (Exception exception) when (
             exception is IOException or UnauthorizedAccessException or ArgumentException or ExternalException)
@@ -290,6 +312,43 @@ public sealed partial class AppWebBridge
             _logger.LogDebug(exception, "Could not extract executable icon for {Exe}", exePath);
             return null;
         }
+    }
+
+    private async Task<string> EnsureCachedCoverAsync(string source)
+    {
+        var full = Path.GetFullPath(source);
+        var root = Path.GetFullPath(_paths.CacheDirectory);
+        if (full.StartsWith(root + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase))
+        {
+            return full;
+        }
+
+        var extension = Path.GetExtension(full).ToLowerInvariant();
+        if (extension is not (".png" or ".jpg" or ".jpeg"))
+        {
+            extension = ".jpg";
+        }
+
+        var key = Convert.ToHexString(SHA256.HashData(
+            Encoding.UTF8.GetBytes($"{full.ToLowerInvariant()}|{File.GetLastWriteTimeUtc(full).Ticks}")))
+            .ToLowerInvariant();
+        var directory = Path.Combine(root, "covers", "cache");
+        Directory.CreateDirectory(directory);
+        var destination = Path.Combine(directory, key + extension);
+        if (!File.Exists(destination))
+        {
+            await using var input = File.OpenRead(full);
+            await using var output = File.Create(destination);
+            await input.CopyToAsync(output);
+        }
+
+        return destination;
+    }
+
+    private string CoverUrl(string path)
+    {
+        var relative = Path.GetRelativePath(_paths.CacheDirectory, path).Replace('\\', '/');
+        return $"https://fgm-covers.local/{relative}";
     }
 
 }

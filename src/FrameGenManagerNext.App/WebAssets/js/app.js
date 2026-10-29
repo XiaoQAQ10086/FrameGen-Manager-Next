@@ -22,7 +22,7 @@ const pages = {
 const state = {
   info: null,
   current: 'framegen',
-  cleanup: null,
+  mounted: new Map(),
 };
 
 const context = {
@@ -33,6 +33,10 @@ const context = {
   get info() { return state.info; },
   refreshInfo: loadInfo,
   navigate,
+  reloadAll: async () => {
+    resetPages();
+    await navigate(state.current, false);
+  },
 };
 
 function updateSidebar() {
@@ -76,34 +80,60 @@ async function changeLanguage(language) {
     const info = await api.request('app.saveSettings', { language });
     state.info = info;
     i18n.setStrings(info.strings, info.language);
+    resetPages();
     await navigate(state.current, false);
   } catch (error) {
     ui.toast(error.message || error.code || '语言切换失败', 'error');
   }
 }
 
-async function navigate(pageName, push = true) {
-  const page = pages[pageName] ?? pages.framegen;
-  state.current = pages[pageName] ? pageName : 'framegen';
-  state.cleanup?.();
-  state.cleanup = null;
+function resetPages() {
+  for (const entry of state.mounted.values()) {
+    entry.cleanup?.();
+    entry.host.remove();
+  }
+  state.mounted.clear();
+}
 
-  const view = document.getElementById('view');
-  view.innerHTML = '';
-  view.scrollTop = 0;
+async function navigate(pageName, push = true) {
+  const name = pages[pageName] ? pageName : 'framegen';
+  state.current = name;
   updateSidebar();
 
-  try {
-    state.cleanup = await page.mount(view, context);
-  } catch (error) {
-    view.innerHTML = `<div class="panel"><h2>${ui.escapeHtml(i18n.t('Common.Unknown'))}</h2><p class="muted">${ui.escapeHtml(error.message || error)}</p></div>`;
+  const view = document.getElementById('view');
+  view.querySelector('.boot')?.remove();
+  let entry = state.mounted.get(name);
+
+  if (!entry) {
+    const host = document.createElement('div');
+    host.className = 'page-host hidden';
+    view.appendChild(host);
+    entry = { host, cleanup: null };
+    state.mounted.set(name, entry);
+    // Do not await: the page shell (and its skeleton) is written synchronously by
+    // mount, so the tab appears immediately and data fills in afterwards.
+    let mounting;
+    try {
+      mounting = pages[name].mount(host, context);
+    } catch (error) {
+      mounting = Promise.reject(error);
+    }
+    Promise.resolve(mounting)
+      .then((cleanup) => { entry.cleanup = cleanup; })
+      .catch((error) => {
+        host.innerHTML = `<div class="panel"><h2>${ui.escapeHtml(i18n.t('Common.Unknown'))}</h2><p class="muted">${ui.escapeHtml(error.message || error)}</p></div>`;
+      });
   }
-  view.animate(
+
+  for (const [key, item] of state.mounted) {
+    item.host.classList.toggle('hidden', key !== name);
+  }
+  entry.host.animate(
     [
       { opacity: 0, transform: 'translateY(8px)' },
       { opacity: 1, transform: 'none' },
     ],
-    { duration: 240, easing: 'cubic-bezier(.2,.9,.3,1)' },
+    { duration: 180, easing: 'cubic-bezier(.2,.9,.3,1)' },
   );
 
   if (push) {
@@ -135,12 +165,6 @@ async function bootstrap() {
     await loadInfo();
     const initial = location.hash.replace('#', '') || 'framegen';
     await navigate(pages[initial] ? initial : 'framegen', false);
-    // Warm the other pages once so switching back and forth does not trigger
-    // another full driver/game inspection.
-    setTimeout(() => {
-      api.request('sm.state').catch(() => {});
-      api.request('dlss5.state').catch(() => {});
-    }, 1200);
   } catch (error) {
     const view = document.getElementById('view');
     if (view) {

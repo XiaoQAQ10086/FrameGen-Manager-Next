@@ -52,6 +52,7 @@ export default {
     let gpu = null;
     let options = null;
     let busy = false;
+    let addingGame = false;
     let current = null;
 
     root.innerHTML = `
@@ -179,12 +180,12 @@ export default {
         <div class="kv2"><span>${esc(t('Gpu.Hags'))}</span><b class="badge ${hagsClass}">${esc(t(hagsKeys[g.hags] || 'Gpu.Hags.Unknown'))}</b></div>
         <button class="btn wide" data-action="open-hags" type="button">${esc(t('Gpu.GoSettings'))}</button>`;
       q('[data-role="spoof"]').innerHTML = `
-        <div class="kv2 stacked"><span>${esc(t('Gpu.Card'))}</span><b class="badge" title="${esc(s.current || '—')}">${esc(s.current || '—')}</b></div>
-        <div class="kv2 stacked"><span>${esc(t('Gpu.DriverNameLabel'))}</span><b class="badge" title="${esc(s.driver || '—')}">${esc(s.driver || '—')}</b></div>
+        <div class="kv2 spoof-name"><span>${esc(t('Gpu.Card'))}</span><b class="badge" title="${esc(s.current || '—')}">${esc(s.current || '—')}</b></div>
+        <div class="kv2 spoof-name"><span>${esc(t('Gpu.DriverNameLabel'))}</span><b class="badge" title="${esc(s.driver || '—')}">${esc(s.driver || '—')}</b></div>
         <p class="hint">${esc(t('Gpu.Spoof.Warning'))}</p>
-        <div class="row">
+        <div class="spoof-picker">
           <select data-role="spoof-preset">${s.presets.map((preset) => `<option>${esc(preset)}</option>`).join('')}</select>
-          <button class="btn primary small" data-action="spoof-apply" type="button">${esc(t('Gpu.ApplySpoof'))}</button>
+          <button class="btn primary wide" data-action="spoof-apply" type="button">${esc(t('Gpu.ApplySpoof'))}</button>
         </div>
         <button class="btn wide" data-action="spoof-driver" type="button" ${s.spoofed ? '' : 'disabled'}>${esc(t('Gpu.RestoreDriver'))}</button>`;
     }
@@ -375,7 +376,14 @@ export default {
 
       if (action === 'scan') return scan();
       if (action === 'add') {
-        return run(() => api.request('games.add'), null);
+        if (addingGame) return;
+        addingGame = true;
+        try {
+          await run(() => api.request('games.add'), null);
+        } finally {
+          setTimeout(() => { addingGame = false; }, 700);
+        }
+        return;
       }
       if (action === 'cancel') {
         await api.request('games.cancelScan').catch(() => {});
