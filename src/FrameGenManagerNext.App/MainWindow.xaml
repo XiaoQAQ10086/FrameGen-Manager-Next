@@ -92,7 +92,7 @@
                     </ListBox>
 
                     <StackPanel Grid.Row="2" Margin="8,16,8,4">
-                        <TextBlock Text="Phase 3 · 部署已接入"
+                        <TextBlock Text="Phase 4 · 部署 / SM / DLSS5"
                                    FontSize="11"
                                    Opacity="0.5" />
                         <TextBlock Margin="0,4,0,0"

@@ -32,7 +32,7 @@ FrameGen Manager-Next（便携版 / Portable）
   packs\framegen.sm86\、packs\smooth-motion.rtx30\、packs\smooth-motion.rtx20\、
   packs\dlss5.reshade-gitc\ 内含本版部署所需的资产，可直接使用：
     fgm-next.exe pack validate packs\framegen.sm86
-  DLSS5 目前通过 CLI 使用（dlss5 inspect/install/restore），页面在后续版本接入。
+  DLSS5 页面可逐游戏安装/还原；CLI 也支持 dlss5 inspect/install/restore。
 
 注意：
   - 这是测试用便携版，不是安装包。

@@ -66,6 +66,7 @@
 - 状态检查与还原；ReShade 模块/INI 保留并提示。
 - CLI：`dlss5 inspect|install|restore`。
 - 真机验证：VTube Studio 临时副本，ReShade 安装成功、114 个文件部署、还原无冲突。
+- DLSS5 页面：逐游戏安装/还原，带 GPU 路由闸门；便携版改为纯文件夹输出。
 
 ### Notes
 
