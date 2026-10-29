@@ -4,6 +4,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+             xmlns:loc="clr-namespace:FrameGenManagerNext.App.Localization"
              mc:Ignorable="d"
              d:DesignHeight="700"
              d:DesignWidth="1000">
@@ -29,31 +30,31 @@
 
     <ScrollViewer VerticalScrollBarVisibility="Auto">
         <StackPanel Margin="18" MaxWidth="760" HorizontalAlignment="Left">
-            <TextBlock Text="关于" FontSize="26" FontWeight="SemiBold" />
+            <TextBlock Text="{loc:Loc About.Title}" FontSize="26" FontWeight="SemiBold" />
             <TextBlock Margin="0,4,0,0"
                        Opacity="0.6"
-                       Text="FrameGen Manager 的从零重写版，Phase 2 只读扫描切片。" />
+                       Text="{loc:Loc About.Subtitle}" />
 
             <Border Style="{StaticResource Card}" Margin="0,16,0,12">
                 <StackPanel>
-                    <TextBlock Style="{StaticResource Label}" Text="产品" />
+                    <TextBlock Style="{StaticResource Label}" Text="{loc:Loc About.Product}" />
                     <TextBlock Style="{StaticResource Value}" Text="{Binding ProductName}" />
-                    <TextBlock Margin="0,10,0,0" Style="{StaticResource Label}" Text="版本" />
+                    <TextBlock Margin="0,10,0,0" Style="{StaticResource Label}" Text="{loc:Loc About.Version}" />
                     <TextBlock Style="{StaticResource Value}" Text="{Binding Version}" />
-                    <TextBlock Margin="0,10,0,0" Style="{StaticResource Label}" Text="运行时" />
+                    <TextBlock Margin="0,10,0,0" Style="{StaticResource Label}" Text="{loc:Loc About.Runtime}" />
                     <TextBlock Style="{StaticResource Value}" Text="{Binding RuntimeDisplay}" />
                 </StackPanel>
             </Border>
 
             <Border Style="{StaticResource Card}">
                 <StackPanel>
-                    <TextBlock Style="{StaticResource Label}" Text="数据目录" />
+                    <TextBlock Style="{StaticResource Label}" Text="{loc:Loc About.DataDirectory}" />
                     <TextBlock Style="{StaticResource Value}" Text="{Binding DataRoot}" />
-                    <TextBlock Margin="0,10,0,0" Style="{StaticResource Label}" Text="便携模式" />
+                    <TextBlock Margin="0,10,0,0" Style="{StaticResource Label}" Text="{loc:Loc About.Portable}" />
                     <TextBlock Style="{StaticResource Value}" Text="{Binding PortableDisplay}" />
                     <StackPanel Orientation="Horizontal" Margin="0,14,0,0">
-                        <ui:Button Content="打开数据目录" Command="{Binding OpenDataFolderCommand}" Margin="0,0,8,0" />
-                        <ui:Button Content="打开 GitHub 仓库" Command="{Binding OpenRepositoryCommand}" />
+                        <ui:Button Content="{loc:Loc About.OpenData}" Command="{Binding OpenDataFolderCommand}" Margin="0,0,8,0" />
+                        <ui:Button Content="{loc:Loc About.OpenGitHub}" Command="{Binding OpenRepositoryCommand}" />
                     </StackPanel>
                 </StackPanel>
             </Border>

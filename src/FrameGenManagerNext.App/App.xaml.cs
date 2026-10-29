@@ -1,6 +1,7 @@
 using System.Globalization;
 using System.IO;
 using System.Windows;
+using FrameGenManagerNext.App.Localization;
 using FrameGenManagerNext.App.Services;
 using FrameGenManagerNext.App.ViewModels;
 using FrameGenManagerNext.App.Views;
@@ -85,6 +86,7 @@ public partial class App : Application
         {
             _host.Start();
             var settings = _host.Services.GetRequiredService<ISettingsService>().Load();
+            LocalizationService.Current.SetLanguage(settings.Language);
             ThemeService.Apply(settings.Theme);
         }
         catch (Exception exception)

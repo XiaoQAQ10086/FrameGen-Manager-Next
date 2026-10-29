@@ -1,6 +1,7 @@
 using System.Windows;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using FrameGenManagerNext.App.Localization;
 using FrameGenManagerNext.Core.Features.Gpu;
 using FrameGenManagerNext.Domain.Gpu;
 using FrameGenManagerNext.Domain.Results;
@@ -10,10 +11,6 @@ namespace FrameGenManagerNext.App.ViewModels;
 
 public sealed partial class GpuViewModel : ObservableObject
 {
-    private const string SpoofWarning =
-        "改名后显卡名与硬件 ID 不一致，内核级反作弊可能判定异常；NVIDIA App/驱动更新可能识别错误。\n" +
-        "只修改注册表中的 DeviceDesc，需要管理员权限，重启后生效。";
-
     private readonly IGpuService _gpuService;
     private readonly IGpuSpoofService _spoofService;
     private readonly ILogger<GpuViewModel> _logger;
@@ -31,7 +28,7 @@ public sealed partial class GpuViewModel : ObservableObject
 
     public IReadOnlyList<string> SpoofPresets { get; } = GpuSpoofPresets.UiChoices;
 
-    public string SpoofWarningText { get; } = SpoofWarning;
+    public string SpoofWarningText { get; } = L.T("Gpu.Spoof.Warning");
 
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(ApplySpoofCommand))]
@@ -40,7 +37,7 @@ public sealed partial class GpuViewModel : ObservableObject
     private bool _isBusy;
 
     [ObservableProperty]
-    private string _statusText = "尚未读取 GPU 信息";
+    private string _statusText = L.T("Gpu.Status.NotLoaded");
 
     [ObservableProperty]
     private string _gpuName = "—";
@@ -73,7 +70,7 @@ public sealed partial class GpuViewModel : ObservableObject
     private string _spoofDriver = "—";
 
     [ObservableProperty]
-    private string _spoofStatus = "未检测";
+    private string _spoofStatus = L.T("Gpu.Spoof.NotChecked");
 
     [ObservableProperty]
     private string _selectedSpoofPreset = GpuSpoofPresets.UiChoices[0];
@@ -86,7 +83,7 @@ public sealed partial class GpuViewModel : ObservableObject
     [NotifyPropertyChangedFor(nameof(ElevationDisplay))]
     private bool _isElevated;
 
-    public string ElevationDisplay => IsElevated ? "已提升" : "普通用户";
+    public string ElevationDisplay => IsElevated ? L.T("Gpu.Elevation.Admin") : L.T("Gpu.Elevation.User");
 
     [ObservableProperty]
     private string _spoofMessage = string.Empty;
@@ -111,13 +108,13 @@ public sealed partial class GpuViewModel : ObservableObject
         }
 
         IsBusy = true;
-        StatusText = "正在读取 GPU 信息...";
+        StatusText = L.T("Gpu.Status.Reading");
 
         try
         {
             var gpu = await _gpuService.GetAsync(CancellationToken.None);
             GpuName = gpu.Name;
-            DriverVersion = string.IsNullOrWhiteSpace(gpu.DriverVersion) ? "未知" : gpu.DriverVersion;
+            DriverVersion = string.IsNullOrWhiteSpace(gpu.DriverVersion) ? L.T("Gpu.Status.UnknownDriver") : gpu.DriverVersion;
             RouteDisplay = RouteLabel(gpu.Route);
             FrameGenerationDisplay = GateLabel(gpu.FrameGeneration);
             SmoothMotionDisplay = GateLabel(gpu.SmoothMotion);
@@ -125,12 +122,12 @@ public sealed partial class GpuViewModel : ObservableObject
             Diagnostic = gpu.Diagnostic ?? string.Empty;
             HasDiagnostic = !string.IsNullOrWhiteSpace(Diagnostic);
             await RefreshSpoofStateAsync();
-            StatusText = "已刷新";
+            StatusText = L.T("Gpu.Status.Refreshed");
         }
         catch (Exception exception)
         {
             _logger.LogError(exception, "Could not read GPU information");
-            StatusText = "读取 GPU 信息失败";
+            StatusText = L.T("Gpu.Status.ReadFailed");
             Diagnostic = exception.Message;
             HasDiagnostic = true;
         }
@@ -148,14 +145,14 @@ public sealed partial class GpuViewModel : ObservableObject
             return;
         }
 
-        if (!Confirm($"把显卡名改为：\n{SelectedSpoofPreset}\n\n{SpoofWarning}\n\n继续？"))
+        if (!Confirm(L.F("Gpu.Spoof.ConfirmApply", SelectedSpoofPreset, SpoofWarningText)))
         {
             return;
         }
 
         await RunSpoofOperationAsync(
             () => _spoofService.ApplyAsync(SelectedSpoofPreset, CancellationToken.None),
-            "正在修改显卡名称（会弹出一次 UAC）...");
+            L.T("Gpu.Spoof.Applying"));
     }
 
     [RelayCommand(CanExecute = nameof(CanModify))]
@@ -166,14 +163,14 @@ public sealed partial class GpuViewModel : ObservableObject
             return;
         }
 
-        if (!Confirm("将显卡名写回驱动记录的名称，等于彻底去掉伪装。重启后生效。继续？"))
+        if (!Confirm(L.T("Gpu.Spoof.ConfirmDriver")))
         {
             return;
         }
 
         await RunSpoofOperationAsync(
             () => _spoofService.RestoreAsync(GpuSpoofRestoreTarget.DriverName, CancellationToken.None),
-            "正在还原显卡名称（会弹出一次 UAC）...");
+            L.T("Gpu.Spoof.RestoringDriver"));
     }
 
     [RelayCommand(CanExecute = nameof(CanRestoreOriginal))]
@@ -184,14 +181,14 @@ public sealed partial class GpuViewModel : ObservableObject
             return;
         }
 
-        if (!Confirm("将显卡名恢复为本工具第一次修改之前的值。重启后生效。继续？"))
+        if (!Confirm(L.T("Gpu.Spoof.ConfirmOriginal")))
         {
             return;
         }
 
         await RunSpoofOperationAsync(
             () => _spoofService.RestoreAsync(GpuSpoofRestoreTarget.OriginalValue, CancellationToken.None),
-            "正在恢复原始显卡名称（会弹出一次 UAC）...");
+            L.T("Gpu.Spoof.RestoringOriginal"));
     }
 
     private async Task RunSpoofOperationAsync(
@@ -208,19 +205,19 @@ public sealed partial class GpuViewModel : ObservableObject
             if (result.IsFailure)
             {
                 SpoofMessage = $"{result.Error!.Code}: {result.Error.Diagnostic}";
-                StatusText = "显卡名称操作失败";
+                StatusText = L.T("Gpu.Spoof.Failed");
                 return;
             }
 
             SpoofMessage = result.Value.Message;
             await RefreshSpoofStateAsync();
-            StatusText = "显卡名称操作完成";
+            StatusText = L.T("Gpu.Spoof.Done");
         }
         catch (Exception exception)
         {
             _logger.LogError(exception, "GPU spoof operation failed");
             SpoofMessage = exception.Message;
-            StatusText = "显卡名称操作失败";
+            StatusText = L.T("Gpu.Spoof.Failed");
         }
         finally
         {
@@ -238,14 +235,14 @@ public sealed partial class GpuViewModel : ObservableObject
         {
             SpoofCurrent = "—";
             SpoofDriver = "—";
-            SpoofStatus = state.Error ?? "未找到 NVIDIA 显示适配器";
+            SpoofStatus = state.Error ?? L.T("Common.NoAdapter");
             HasOriginalBackup = false;
             return;
         }
 
         SpoofCurrent = adapter.CurrentName;
         SpoofDriver = adapter.DriverName;
-        SpoofStatus = adapter.Spoofed ? "已伪装" : "未伪装";
+        SpoofStatus = adapter.Spoofed ? L.T("Gpu.Spoof.Spoofed") : L.T("Gpu.Spoof.NotSpoofed");
         HasOriginalBackup = adapter.HasOriginalBackup;
     }
 
@@ -253,7 +250,7 @@ public sealed partial class GpuViewModel : ObservableObject
     {
         return MessageBox.Show(
             message,
-            "显卡名称伪装",
+            L.T("Gpu.Spoof.DialogTitle"),
             MessageBoxButton.YesNo,
             MessageBoxImage.Warning) == MessageBoxResult.Yes;
     }
@@ -272,13 +269,13 @@ public sealed partial class GpuViewModel : ObservableObject
     {
         return route switch
         {
-            GpuRoute.Sm86 => "RTX 30 系 / RTX A 系（SM86）",
-            GpuRoute.Sm75 => "RTX 20 系 / Quadro RTX（SM75）",
-            GpuRoute.Gtx16 => "GTX 16 系（无 Tensor Core）",
-            GpuRoute.NoTensorCore => "Pascal / MX 等（无 Tensor Core）",
-            GpuRoute.NotNeeded => "RTX 40 / 50 系（原生帧生成）",
-            GpuRoute.Unsupported => "非 NVIDIA 显卡",
-            _ => "未能识别",
+            GpuRoute.Sm86 => L.T("Gpu.Route.Sm86"),
+            GpuRoute.Sm75 => L.T("Gpu.Route.Sm75"),
+            GpuRoute.Gtx16 => L.T("Gpu.Route.Gtx16"),
+            GpuRoute.NoTensorCore => L.T("Gpu.Route.NoTensorCore"),
+            GpuRoute.NotNeeded => L.T("Gpu.Route.NotNeeded"),
+            GpuRoute.Unsupported => L.T("Gpu.Route.Unsupported"),
+            _ => L.T("Gpu.Route.Unknown"),
         };
     }
 
@@ -286,11 +283,11 @@ public sealed partial class GpuViewModel : ObservableObject
     {
         return gate switch
         {
-            GpuFeatureGate.Supported => "支持",
-            GpuFeatureGate.DriverTooOld => "驱动过旧",
-            GpuFeatureGate.GpuNotSupported => "GPU 不支持",
-            GpuFeatureGate.GpuNotNeeded => "无需部署",
-            _ => "未知",
+            GpuFeatureGate.Supported => L.T("Gpu.Gate.Supported"),
+            GpuFeatureGate.DriverTooOld => L.T("Gpu.Gate.DriverTooOld"),
+            GpuFeatureGate.GpuNotSupported => L.T("Gpu.Gate.GpuNotSupported"),
+            GpuFeatureGate.GpuNotNeeded => L.T("Gpu.Gate.GpuNotNeeded"),
+            _ => L.T("Gpu.Gate.Unknown"),
         };
     }
 
@@ -298,9 +295,9 @@ public sealed partial class GpuViewModel : ObservableObject
     {
         return hags switch
         {
-            true => "已开启",
-            false => "已关闭",
-            _ => "未知",
+            true => L.T("Gpu.Hags.On"),
+            false => L.T("Gpu.Hags.Off"),
+            _ => L.T("Gpu.Gate.Unknown"),
         };
     }
 }

@@ -4,6 +4,7 @@ using System.IO;
 using System.Windows;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using FrameGenManagerNext.App.Localization;
 using FrameGenManagerNext.Core.Features.Framegen;
 using FrameGenManagerNext.Core.Features.Library;
 using FrameGenManagerNext.Core.Features.Settings;
@@ -51,7 +52,7 @@ public sealed partial class LibraryViewModel : ObservableObject, IDisposable
     private bool _isBusy;
 
     [ObservableProperty]
-    private string _statusText = "尚未加载游戏库";
+    private string _statusText = L.T("Library.Status.NotLoaded");
 
     [ObservableProperty]
     private double _progressValue;
@@ -77,20 +78,20 @@ public sealed partial class LibraryViewModel : ObservableObject, IDisposable
 
         _initialized = true;
         IsBusy = true;
-        StatusText = "正在读取游戏库缓存...";
+        StatusText = L.T("Library.Status.Loading");
 
         try
         {
             var library = await _library.LoadAsync(CancellationToken.None);
             Apply(library);
             StatusText = Games.Count == 0
-                ? "游戏库为空，点击“扫描游戏”开始"
-                : $"已加载 {Games.Count} 个游戏";
+                ? L.T("Library.Status.Empty")
+                : L.F("Library.Status.Loaded", Games.Count);
         }
         catch (Exception exception)
         {
             _logger.LogError(exception, "Could not load game library");
-            StatusText = "读取游戏库失败";
+            StatusText = L.T("Library.Status.LoadFailed");
             Warnings = exception.Message;
             HasWarnings = true;
         }
@@ -123,9 +124,9 @@ public sealed partial class LibraryViewModel : ObservableObject, IDisposable
         {
             StatusText = update.Phase switch
             {
-                "launchers" => $"正在扫描 {update.Subject}",
-                "games" => $"正在探测 {update.Subject}",
-                "done" => $"扫描完成：{update.Current} 个游戏",
+                "launchers" => L.F("Library.Status.ScanLaunchers", update.Subject),
+                "games" => L.F("Library.Status.ScanGames", update.Subject),
+                "done" => L.F("Library.Status.ScanDone", update.Current),
                 _ => StatusText,
             };
 
@@ -139,7 +140,7 @@ public sealed partial class LibraryViewModel : ObservableObject, IDisposable
             var result = await _library.ScanAsync(progress, _scanCancellation.Token);
             Apply(result.Library);
             ProgressValue = 100;
-            StatusText = $"扫描完成：{Games.Count} 个游戏";
+            StatusText = L.F("Library.Status.ScanDone", Games.Count);
 
             if (result.Warnings.Count > 0)
             {
@@ -149,13 +150,13 @@ public sealed partial class LibraryViewModel : ObservableObject, IDisposable
         }
         catch (OperationCanceledException)
         {
-            StatusText = "扫描已取消";
+            StatusText = L.T("Library.Status.ScanCancelled");
             ProgressValue = 0;
         }
         catch (Exception exception)
         {
             _logger.LogError(exception, "Game scan failed");
-            StatusText = "扫描失败";
+            StatusText = L.T("Library.Status.ScanFailed");
             Warnings = exception.Message;
             HasWarnings = true;
             ProgressValue = 0;
@@ -173,8 +174,8 @@ public sealed partial class LibraryViewModel : ObservableObject, IDisposable
     {
         var dialog = new OpenFileDialog
         {
-            Title = "选择游戏渲染 EXE",
-            Filter = "可执行文件 (*.exe)|*.exe",
+            Title = L.T("Library.Dialog.AddTitle"),
+            Filter = L.T("Library.Dialog.ExeFilter"),
             CheckFileExists = true,
             Multiselect = false,
         };
@@ -185,18 +186,18 @@ public sealed partial class LibraryViewModel : ObservableObject, IDisposable
         }
 
         IsBusy = true;
-        StatusText = "正在添加游戏...";
+        StatusText = L.T("Library.Status.Adding");
 
         try
         {
             var library = await _library.AddManualAsync(dialog.FileName, CancellationToken.None);
             Apply(library);
-            StatusText = $"已添加：{Games.Count} 个游戏";
+            StatusText = L.F("Library.Status.Added", Games.Count);
         }
         catch (Exception exception)
         {
             _logger.LogError(exception, "Could not add manual game");
-            StatusText = "添加游戏失败";
+            StatusText = L.T("Library.Status.AddFailed");
             Warnings = exception.Message;
             HasWarnings = true;
         }
@@ -215,8 +216,8 @@ public sealed partial class LibraryViewModel : ObservableObject, IDisposable
         }
 
         var choice = MessageBox.Show(
-            $"将把帧生成组件部署到：\n{game.TargetDirectory}\n\n请确认游戏已经关闭。继续？",
-            "部署帧生成",
+            L.F("Library.Confirm.Deploy", game.TargetDirectory),
+            L.T("Library.Dialog.DeployTitle"),
             MessageBoxButton.YesNo,
             MessageBoxImage.Warning);
 
@@ -229,7 +230,7 @@ public sealed partial class LibraryViewModel : ObservableObject, IDisposable
         ProgressValue = 0;
         Warnings = string.Empty;
         HasWarnings = false;
-        StatusText = "正在部署帧生成...";
+        StatusText = L.T("Library.Status.Deploying");
 
         var progress = new Progress<DeploymentProgress>(update =>
         {
@@ -249,8 +250,8 @@ public sealed partial class LibraryViewModel : ObservableObject, IDisposable
 
             if (result.IsFailure)
             {
-                game.DeploymentStateDisplay = "部署失败";
-                StatusText = $"部署失败：{result.Error!.Code}";
+                game.DeploymentStateDisplay = L.T("State.DeployFailed");
+                StatusText = L.F("Library.Status.DeployFailedCode", result.Error!.Code);
                 Warnings = result.Error.Diagnostic ?? result.Error.Code.ToString();
                 HasWarnings = true;
                 return;
@@ -258,7 +259,7 @@ public sealed partial class LibraryViewModel : ObservableObject, IDisposable
 
             game.SetState(DeploymentState.Installed);
             ProgressValue = 100;
-            StatusText = $"部署完成：{game.Name}";
+            StatusText = L.F("Library.Status.DeployDone", game.Name);
 
             if (result.Value.Warnings.Count > 0)
             {
@@ -269,8 +270,8 @@ public sealed partial class LibraryViewModel : ObservableObject, IDisposable
         catch (Exception exception)
         {
             _logger.LogError(exception, "FrameGen deployment failed");
-            game.DeploymentStateDisplay = "部署失败";
-            StatusText = "部署失败";
+            game.DeploymentStateDisplay = L.T("State.DeployFailed");
+            StatusText = L.T("Library.Status.DeployFailed");
             Warnings = exception.Message;
             HasWarnings = true;
         }
@@ -289,8 +290,8 @@ public sealed partial class LibraryViewModel : ObservableObject, IDisposable
         }
 
         var choice = MessageBox.Show(
-            $"将还原：\n{game.TargetDirectory}\n\n被用户修改过的文件会保留并报告冲突。继续？",
-            "还原帧生成",
+            L.F("Library.Confirm.Restore", game.TargetDirectory),
+            L.T("Library.Dialog.RestoreTitle"),
             MessageBoxButton.YesNo,
             MessageBoxImage.Question);
 
@@ -303,7 +304,7 @@ public sealed partial class LibraryViewModel : ObservableObject, IDisposable
         ProgressValue = 0;
         Warnings = string.Empty;
         HasWarnings = false;
-        StatusText = "正在还原帧生成...";
+        StatusText = L.T("Library.Status.Restoring");
 
         var progress = new Progress<DeploymentProgress>(update =>
         {
@@ -322,7 +323,7 @@ public sealed partial class LibraryViewModel : ObservableObject, IDisposable
 
             if (result.IsFailure)
             {
-                StatusText = $"还原失败：{result.Error!.Code}";
+                StatusText = L.F("Library.Status.RestoreFailedCode", result.Error!.Code);
                 Warnings = result.Error.Diagnostic ?? result.Error.Code.ToString();
                 HasWarnings = true;
                 return;
@@ -330,10 +331,10 @@ public sealed partial class LibraryViewModel : ObservableObject, IDisposable
 
             game.SetState(DeploymentState.NotDeployed);
             ProgressValue = 100;
-            StatusText = $"还原完成：{game.Name}";
+            StatusText = L.F("Library.Status.RestoreDone", game.Name);
 
             var messages = new List<string>(result.Value.Warnings);
-            messages.AddRange(result.Value.Leftovers.Select(leftover => $"保留文件：{leftover}"));
+            messages.AddRange(result.Value.Leftovers.Select(leftover => L.F("Library.KeptFile", leftover)));
             if (messages.Count > 0)
             {
                 Warnings = string.Join(Environment.NewLine, messages);
@@ -343,7 +344,7 @@ public sealed partial class LibraryViewModel : ObservableObject, IDisposable
         catch (Exception exception)
         {
             _logger.LogError(exception, "FrameGen restore failed");
-            StatusText = "还原失败";
+            StatusText = L.T("Library.Status.RestoreFailed");
             Warnings = exception.Message;
             HasWarnings = true;
         }
@@ -362,8 +363,8 @@ public sealed partial class LibraryViewModel : ObservableObject, IDisposable
         }
 
         var choice = MessageBox.Show(
-            $"确定要从列表中移除“{game.Name}”吗？\n\n扫描到的游戏会被加入忽略列表；手动添加的游戏会被删除。",
-            "移除游戏",
+            L.F("Library.Confirm.Remove", game.Name),
+            L.T("Library.Dialog.RemoveTitle"),
             MessageBoxButton.YesNo,
             MessageBoxImage.Question);
 
@@ -373,18 +374,18 @@ public sealed partial class LibraryViewModel : ObservableObject, IDisposable
         }
 
         IsBusy = true;
-        StatusText = "正在移除...";
+        StatusText = L.T("Library.Status.Removing");
 
         try
         {
             var library = await _library.RemoveAsync(game.Id, CancellationToken.None);
             Apply(library);
-            StatusText = $"已移除：{Games.Count} 个游戏";
+            StatusText = L.F("Library.Status.Removed", Games.Count);
         }
         catch (Exception exception)
         {
             _logger.LogError(exception, "Could not remove game");
-            StatusText = "移除失败";
+            StatusText = L.T("Library.Status.RemoveFailed");
             Warnings = exception.Message;
             HasWarnings = true;
         }
@@ -411,7 +412,7 @@ public sealed partial class LibraryViewModel : ObservableObject, IDisposable
         var targetDirectory = game.TargetDirectory;
         if (!Directory.Exists(targetDirectory))
         {
-            StatusText = "目标目录不存在";
+            StatusText = L.T("Library.Status.TargetMissing");
             return;
         }
 
@@ -427,7 +428,7 @@ public sealed partial class LibraryViewModel : ObservableObject, IDisposable
         catch (Exception exception)
         {
             _logger.LogWarning(exception, "Could not open game folder");
-            StatusText = "无法打开目录";
+            StatusText = L.T("Library.Status.OpenFailed");
         }
     }
 
@@ -465,10 +466,10 @@ public sealed partial class LibraryViewModel : ObservableObject, IDisposable
     {
         return update.Phase switch
         {
-            "planning" => $"准备：{update.Subject}",
-            "writing" => $"写入：{update.Subject}",
-            "restoring" => $"还原：{update.Subject}",
-            "done" => "完成",
+            "planning" => L.F("Deployment.Phase.Planning", update.Subject),
+            "writing" => L.F("Deployment.Phase.Writing", update.Subject),
+            "restoring" => L.F("Deployment.Phase.Restoring", update.Subject),
+            "done" => L.T("Deployment.Phase.Done"),
             _ => update.Subject,
         };
     }

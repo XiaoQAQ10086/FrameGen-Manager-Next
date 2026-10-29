@@ -2,6 +2,7 @@ using System.Diagnostics;
 using System.Runtime.InteropServices;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using FrameGenManagerNext.App.Localization;
 using FrameGenManagerNext.Core.Features.App;
 using FrameGenManagerNext.Domain;
 
@@ -22,7 +23,7 @@ public sealed partial class AboutViewModel : ObservableObject
 
     public string DataRoot => _environment.DataRoot;
 
-    public string PortableDisplay => _environment.IsPortable ? "是（数据写在程序目录）" : "否（使用本机用户数据目录）";
+    public string PortableDisplay => L.T(_environment.IsPortable ? "About.PortableYes" : "About.PortableNo");
 
     public string RuntimeDisplay { get; } = RuntimeInformation.FrameworkDescription;
 

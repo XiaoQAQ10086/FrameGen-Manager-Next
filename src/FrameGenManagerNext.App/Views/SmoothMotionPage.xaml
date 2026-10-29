@@ -4,6 +4,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+             xmlns:loc="clr-namespace:FrameGenManagerNext.App.Localization"
              mc:Ignorable="d"
              d:DesignHeight="700"
              d:DesignWidth="1000">
@@ -26,13 +27,13 @@
 
         <DockPanel Grid.Row="0" LastChildFill="False">
             <StackPanel DockPanel.Dock="Left">
-                <TextBlock Text="Smooth Motion" FontSize="26" FontWeight="SemiBold" />
+                <TextBlock Text="{loc:Loc SmoothMotion.Title}" FontSize="26" FontWeight="SemiBold" />
                 <TextBlock Margin="0,4,0,0"
                            Opacity="0.6"
-                           Text="开启/关闭 NVIDIA 驱动级 Smooth Motion，并部署对应解锁组件。" />
+                           Text="{loc:Loc SmoothMotion.Subtitle}" />
             </StackPanel>
             <ui:Button DockPanel.Dock="Right"
-                       Content="刷新状态"
+                       Content="{loc:Loc Common.RefreshState}"
                        Command="{Binding RefreshStatesCommand}"
                        VerticalAlignment="Center" />
         </DockPanel>
@@ -78,28 +79,28 @@
                     </Style>
                 </DataGrid.CellStyle>
                 <DataGrid.Columns>
-                    <DataGridTextColumn Header="游戏" Binding="{Binding GameName}" Width="1.2*" ElementStyle="{StaticResource TrimmedCell}" />
-                    <DataGridTextColumn Header="GPU 路由" Binding="{Binding RouteDisplay}" Width="110" ElementStyle="{StaticResource TrimmedCell}" />
-                    <DataGridTextColumn Header="组件" Binding="{Binding ComponentDisplay}" Width="108" ElementStyle="{StaticResource TrimmedCell}" />
-                    <DataGridTextColumn Header="驱动设置" Binding="{Binding DriverDisplay}" Width="110" ElementStyle="{StaticResource TrimmedCell}" />
-                    <DataGridTextColumn Header="状态" Binding="{Binding StatusDisplay}" Width="90" ElementStyle="{StaticResource TrimmedCell}" />
-                    <DataGridTemplateColumn Header="操作" Width="190">
+                    <DataGridTextColumn Header="{loc:Loc Common.Game}" Binding="{Binding GameName}" Width="1.2*" ElementStyle="{StaticResource TrimmedCell}" />
+                    <DataGridTextColumn Header="{loc:Loc SmoothMotion.GpuRoute}" Binding="{Binding RouteDisplay}" Width="110" ElementStyle="{StaticResource TrimmedCell}" />
+                    <DataGridTextColumn Header="{loc:Loc SmoothMotion.Component}" Binding="{Binding ComponentDisplay}" Width="108" ElementStyle="{StaticResource TrimmedCell}" />
+                    <DataGridTextColumn Header="{loc:Loc SmoothMotion.DriverSetting}" Binding="{Binding DriverDisplay}" Width="110" ElementStyle="{StaticResource TrimmedCell}" />
+                    <DataGridTextColumn Header="{loc:Loc Common.Status}" Binding="{Binding StatusDisplay}" Width="90" ElementStyle="{StaticResource TrimmedCell}" />
+                    <DataGridTemplateColumn Header="{loc:Loc Common.Operations}" Width="190">
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
                                 <WrapPanel>
-                                    <ui:Button Content="开启"
+                                    <ui:Button Content="{loc:Loc SmoothMotion.Enable}"
                                                Margin="0,0,4,0"
                                                Padding="5,1"
                                                FontSize="11"
                                                Command="{Binding DataContext.EnableCommand, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}}"
                                                CommandParameter="{Binding}" />
-                                    <ui:Button Content="关闭"
+                                    <ui:Button Content="{loc:Loc SmoothMotion.Disable}"
                                                Margin="0,0,4,0"
                                                Padding="5,1"
                                                FontSize="11"
                                                Command="{Binding DataContext.DisableCommand, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}}"
                                                CommandParameter="{Binding}" />
-                                    <ui:Button Content="还原"
+                                    <ui:Button Content="{loc:Loc Common.Restore}"
                                                Padding="5,1"
                                                FontSize="11"
                                                Command="{Binding DataContext.RestoreCommand, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}}"
@@ -114,7 +115,7 @@
             <TextBlock HorizontalAlignment="Center"
                        VerticalAlignment="Center"
                        Opacity="0.55"
-                       Text="游戏库为空。先在“游戏库”扫描游戏，再回来配置 Smooth Motion。"
+                       Text="{loc:Loc SmoothMotion.Empty}"
                        Visibility="{Binding IsEmpty, Converter={StaticResource BoolToVis}}" />
         </Grid>
     </Grid>

@@ -2,6 +2,7 @@
                  xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                  xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+                 xmlns:loc="clr-namespace:FrameGenManagerNext.App.Localization"
                  Title="FrameGen Manager-Next"
                  Width="1180"
                  Height="760"
@@ -83,21 +84,21 @@
                             </Style>
                         </ListBox.ItemContainerStyle>
 
-                        <ListBoxItem Content="游戏库" Tag="library" />
-                        <ListBoxItem Content="GPU 状态" Tag="gpu" />
-                        <ListBoxItem Content="Smooth Motion" Tag="smooth-motion" />
-                        <ListBoxItem Content="DLSS5 / ReShade" Tag="dlss5" />
-                        <ListBoxItem Content="日志与诊断" Tag="logs" />
-                        <ListBoxItem Content="设置" Tag="settings" />
-                        <ListBoxItem Content="关于" Tag="about" />
+                        <ListBoxItem Content="{loc:Loc Nav.Library}" Tag="library" />
+                        <ListBoxItem Content="{loc:Loc Nav.Gpu}" Tag="gpu" />
+                        <ListBoxItem Content="{loc:Loc Nav.SmoothMotion}" Tag="smooth-motion" />
+                        <ListBoxItem Content="{loc:Loc Nav.Dlss5}" Tag="dlss5" />
+                        <ListBoxItem Content="{loc:Loc Nav.Logs}" Tag="logs" />
+                        <ListBoxItem Content="{loc:Loc Nav.Settings}" Tag="settings" />
+                        <ListBoxItem Content="{loc:Loc Nav.About}" Tag="about" />
                     </ListBox>
 
                     <StackPanel Grid.Row="2" Margin="8,16,8,4">
-                        <TextBlock Text="Phase 5 · 设置 / 伪装 / 更新"
+                        <TextBlock Text="{loc:Loc Nav.Footer1}"
                                    FontSize="11"
                                    Opacity="0.5" />
                         <TextBlock Margin="0,4,0,0"
-                                   Text="部署前会备份原文件"
+                                   Text="{loc:Loc Nav.Footer2}"
                                    FontSize="11"
                                    Opacity="0.35" />
                     </StackPanel>

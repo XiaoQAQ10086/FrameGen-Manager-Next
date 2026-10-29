@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using FrameGenManagerNext.App.Localization;
 using FrameGenManagerNext.Core.Features.Diagnostics;
 using Microsoft.Extensions.Logging;
 
@@ -22,7 +23,7 @@ public sealed partial class LogsViewModel : ObservableObject
     private bool _isBusy;
 
     [ObservableProperty]
-    private string _statusText = "尚未读取日志";
+    private string _statusText = L.T("Logs.Status.NotLoaded");
 
     [ObservableProperty]
     private string _logText = string.Empty;
@@ -47,17 +48,17 @@ public sealed partial class LogsViewModel : ObservableObject
         }
 
         IsBusy = true;
-        StatusText = "正在读取日志...";
+        StatusText = L.T("Logs.Status.Reading");
 
         try
         {
             LogText = await _diagnostics.GetLogTailAsync(800, CancellationToken.None);
-            StatusText = string.IsNullOrWhiteSpace(LogText) ? "暂无日志" : "已刷新";
+            StatusText = string.IsNullOrWhiteSpace(LogText) ? L.T("Logs.Status.Empty") : L.T("Logs.Status.Refreshed");
         }
         catch (Exception exception)
         {
             _logger.LogError(exception, "Could not read logs");
-            StatusText = "读取日志失败";
+            StatusText = L.T("Logs.Status.ReadFailed");
             LogText = exception.Message;
         }
         finally
@@ -81,7 +82,7 @@ public sealed partial class LogsViewModel : ObservableObject
         catch (Exception exception)
         {
             _logger.LogWarning(exception, "Could not open logs folder");
-            StatusText = "无法打开日志目录";
+            StatusText = L.T("Logs.Status.OpenFailed");
         }
     }
 
@@ -94,17 +95,17 @@ public sealed partial class LogsViewModel : ObservableObject
         }
 
         IsBusy = true;
-        StatusText = "正在生成诊断包...";
+        StatusText = L.T("Logs.Status.Exporting");
 
         try
         {
             var path = await _diagnostics.ExportAsync(CancellationToken.None);
-            StatusText = $"诊断包已生成：{path}";
+            StatusText = L.F("Logs.Status.Exported", path);
         }
         catch (Exception exception)
         {
             _logger.LogError(exception, "Could not export diagnostics");
-            StatusText = "诊断包生成失败";
+            StatusText = L.T("Logs.Status.ExportFailed");
             LogText = exception.Message;
         }
         finally

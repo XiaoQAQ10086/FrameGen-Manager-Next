@@ -4,6 +4,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+             xmlns:loc="clr-namespace:FrameGenManagerNext.App.Localization"
              mc:Ignorable="d"
              d:DesignHeight="700"
              d:DesignWidth="1000">
@@ -16,15 +17,15 @@
 
         <DockPanel Grid.Row="0" LastChildFill="False">
             <StackPanel DockPanel.Dock="Left">
-                <TextBlock Text="日志与诊断" FontSize="26" FontWeight="SemiBold" />
+                <TextBlock Text="{loc:Loc Logs.Title}" FontSize="26" FontWeight="SemiBold" />
                 <TextBlock Margin="0,4,0,0"
                            Opacity="0.6"
-                           Text="读取当前日志尾部；诊断包包含日志、GPU 和游戏库摘要。" />
+                           Text="{loc:Loc Logs.Subtitle}" />
             </StackPanel>
             <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
-                <ui:Button Content="刷新" Command="{Binding RefreshCommand}" Margin="0,0,8,0" />
-                <ui:Button Content="打开日志目录" Command="{Binding OpenLogsFolderCommand}" Margin="0,0,8,0" />
-                <ui:Button Content="导出诊断包" Command="{Binding ExportCommand}" />
+                <ui:Button Content="{loc:Loc Common.Refresh}" Command="{Binding RefreshCommand}" Margin="0,0,8,0" />
+                <ui:Button Content="{loc:Loc Logs.OpenFolder}" Command="{Binding OpenLogsFolderCommand}" Margin="0,0,8,0" />
+                <ui:Button Content="{loc:Loc Logs.Export}" Command="{Binding ExportCommand}" />
             </StackPanel>
         </DockPanel>
 

@@ -4,6 +4,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+             xmlns:loc="clr-namespace:FrameGenManagerNext.App.Localization"
              mc:Ignorable="d"
              d:DesignHeight="700"
              d:DesignWidth="1000">
@@ -27,15 +28,15 @@
 
         <DockPanel Grid.Row="0" LastChildFill="False">
             <StackPanel DockPanel.Dock="Left">
-                <TextBlock Text="游戏库" FontSize="26" FontWeight="SemiBold" />
+                <TextBlock Text="{loc:Loc Library.Title}" FontSize="26" FontWeight="SemiBold" />
                 <TextBlock Margin="0,4,0,0"
                            Opacity="0.6"
-                           Text="扫描只读；部署会写入游戏目录并备份原文件，还原可恢复。" />
+                           Text="{loc:Loc Library.Subtitle}" />
             </StackPanel>
             <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
-                <ui:Button Content="扫描游戏" Command="{Binding ScanCommand}" Margin="0,0,8,0" />
-                <ui:Button Content="添加游戏" Command="{Binding AddGameCommand}" Margin="0,0,8,0" />
-                <ui:Button Content="取消" Command="{Binding CancelCommand}" IsEnabled="{Binding IsBusy}" />
+                <ui:Button Content="{loc:Loc Library.Scan}" Command="{Binding ScanCommand}" Margin="0,0,8,0" />
+                <ui:Button Content="{loc:Loc Library.Add}" Command="{Binding AddGameCommand}" Margin="0,0,8,0" />
+                <ui:Button Content="{loc:Loc Common.Cancel}" Command="{Binding CancelCommand}" IsEnabled="{Binding IsBusy}" />
             </StackPanel>
         </DockPanel>
 
@@ -49,49 +50,49 @@
 
         <WrapPanel Grid.Row="2" Margin="0,12,0,0">
             <StackPanel Margin="0,0,12,0">
-                <TextBlock Text="代理" FontSize="11" Opacity="0.55" />
+                <TextBlock Text="{loc:Loc Library.Proxy}" FontSize="11" Opacity="0.55" />
                 <ComboBox Width="116" Height="28" Margin="0,4,0,0"
                           ItemsSource="{Binding Options.ProxySlots}"
                           SelectedItem="{Binding Options.ProxySlot, Mode=TwoWay}" />
             </StackPanel>
             <StackPanel Margin="0,0,12,0">
-                <TextBlock Text="优化" FontSize="11" Opacity="0.55" />
+                <TextBlock Text="{loc:Loc Library.Optimized}" FontSize="11" Opacity="0.55" />
                 <ComboBox Width="64" Height="28" Margin="0,4,0,0"
                           ItemsSource="{Binding Options.OptimizedLevels}"
                           SelectedItem="{Binding Options.Optimized, Mode=TwoWay}" />
             </StackPanel>
             <StackPanel Margin="0,0,12,0">
-                <TextBlock Text="帧数" FontSize="11" Opacity="0.55" />
+                <TextBlock Text="{loc:Loc Library.Frames}" FontSize="11" Opacity="0.55" />
                 <ComboBox Width="64" Height="28" Margin="0,4,0,0"
                           ItemsSource="{Binding Options.FrameMultipliers}"
                           SelectedItem="{Binding Options.Frames, Mode=TwoWay}" />
             </StackPanel>
             <StackPanel Margin="0,0,12,0">
-                <TextBlock Text="Preset" FontSize="11" Opacity="0.55" />
+                <TextBlock Text="{loc:Loc Library.Preset}" FontSize="11" Opacity="0.55" />
                 <ComboBox Width="64" Height="28" Margin="0,4,0,0"
                           ItemsSource="{Binding Options.Presets}"
                           SelectedItem="{Binding Options.Preset, Mode=TwoWay}" />
             </StackPanel>
             <StackPanel Margin="0,0,12,0">
-                <TextBlock Text="引擎" FontSize="11" Opacity="0.55" />
+                <TextBlock Text="{loc:Loc Library.Engine}" FontSize="11" Opacity="0.55" />
                 <ComboBox Width="76" Height="28" Margin="0,4,0,0"
                           ItemsSource="{Binding Options.Engines}"
                           SelectedItem="{Binding Options.Engine, Mode=TwoWay}" />
             </StackPanel>
             <StackPanel Margin="0,0,12,0">
-                <TextBlock Text="超分" FontSize="11" Opacity="0.55" />
+                <TextBlock Text="{loc:Loc Library.SuperResolution}" FontSize="11" Opacity="0.55" />
                 <ComboBox Width="96" Height="28" Margin="0,4,0,0"
                           ItemsSource="{Binding Options.SuperResolutionModes}"
                           SelectedItem="{Binding Options.SuperResolutionMode, Mode=TwoWay}" />
             </StackPanel>
             <StackPanel Margin="0,0,12,0">
-                <TextBlock Text="XeSS Flow" FontSize="11" Opacity="0.55" />
+                <TextBlock Text="{loc:Loc Library.XeSsFlow}" FontSize="11" Opacity="0.55" />
                 <ComboBox Width="86" Height="28" Margin="0,4,0,0"
                           ItemsSource="{Binding Options.XeSsFlowResolutions}"
                           SelectedItem="{Binding Options.XeSsFlow, Mode=TwoWay}" />
             </StackPanel>
             <StackPanel>
-                <TextBlock Text="HUD-less" FontSize="11" Opacity="0.55" />
+                <TextBlock Text="{loc:Loc Library.XeSsHudless}" FontSize="11" Opacity="0.55" />
                 <ComboBox Width="72" Height="28" Margin="0,4,0,0"
                           ItemsSource="{Binding Options.XeSsHudlessValues}"
                           SelectedItem="{Binding Options.XeSsHudless, Mode=TwoWay}" />
@@ -153,35 +154,35 @@
                             </DataTemplate>
                         </DataGridTemplateColumn.CellTemplate>
                     </DataGridTemplateColumn>
-                    <DataGridTextColumn Header="名称" Binding="{Binding Name}" Width="1.1*" ElementStyle="{StaticResource TrimmedCell}" />
-                    <DataGridTextColumn Header="平台" Binding="{Binding LauncherDisplay}" Width="66" ElementStyle="{StaticResource TrimmedCell}" />
-                    <DataGridTextColumn Header="API" Binding="{Binding ApiDisplay}" Width="52" ElementStyle="{StaticResource TrimmedCell}" />
-                    <DataGridTextColumn Header="部署状态" Binding="{Binding DeploymentStateDisplay}" Width="92" ElementStyle="{StaticResource TrimmedCell}" />
-                    <DataGridTextColumn Header="目标目录" Binding="{Binding TargetDirectory}" Width="1.35*" ElementStyle="{StaticResource TrimmedCell}" />
-                    <DataGridTextColumn Header="渲染 EXE" Binding="{Binding RenderExeDisplay}" Width="1.35*" ElementStyle="{StaticResource TrimmedCell}" />
-                    <DataGridTemplateColumn Header="操作" Width="188">
+                    <DataGridTextColumn Header="{loc:Loc Library.Name}" Binding="{Binding Name}" Width="1.1*" ElementStyle="{StaticResource TrimmedCell}" />
+                    <DataGridTextColumn Header="{loc:Loc Library.Platform}" Binding="{Binding LauncherDisplay}" Width="66" ElementStyle="{StaticResource TrimmedCell}" />
+                    <DataGridTextColumn Header="{loc:Loc Common.Api}" Binding="{Binding ApiDisplay}" Width="52" ElementStyle="{StaticResource TrimmedCell}" />
+                    <DataGridTextColumn Header="{loc:Loc Library.DeploymentState}" Binding="{Binding DeploymentStateDisplay}" Width="112" ElementStyle="{StaticResource TrimmedCell}" />
+                    <DataGridTextColumn Header="{loc:Loc Library.TargetDirectory}" Binding="{Binding TargetDirectory}" Width="1.35*" ElementStyle="{StaticResource TrimmedCell}" />
+                    <DataGridTextColumn Header="{loc:Loc Library.RenderExe}" Binding="{Binding RenderExeDisplay}" Width="1.35*" ElementStyle="{StaticResource TrimmedCell}" />
+                    <DataGridTemplateColumn Header="{loc:Loc Common.Operations}" Width="232">
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
                                 <WrapPanel Orientation="Horizontal">
-                                    <ui:Button Content="部署"
+                                    <ui:Button Content="{loc:Loc Common.Deploy}"
                                                Margin="0,0,4,0"
                                                Padding="4,1"
                                                FontSize="11"
                                                Command="{Binding DataContext.DeployGameCommand, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}}"
                                                CommandParameter="{Binding}" />
-                                    <ui:Button Content="还原"
+                                    <ui:Button Content="{loc:Loc Common.Restore}"
                                                Margin="0,0,4,0"
                                                Padding="4,1"
                                                FontSize="11"
                                                Command="{Binding DataContext.RestoreGameCommand, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}}"
                                                CommandParameter="{Binding}" />
-                                    <ui:Button Content="打开"
+                                    <ui:Button Content="{loc:Loc Common.Open}"
                                                Margin="0,0,4,0"
                                                Padding="4,1"
                                                FontSize="11"
                                                Command="{Binding DataContext.OpenFolderCommand, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}}"
                                                CommandParameter="{Binding}" />
-                                    <ui:Button Content="移除"
+                                    <ui:Button Content="{loc:Loc Common.Remove}"
                                                Padding="4,1"
                                                FontSize="11"
                                                Command="{Binding DataContext.RemoveGameCommand, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}}"
@@ -196,7 +197,7 @@
             <TextBlock HorizontalAlignment="Center"
                        VerticalAlignment="Center"
                        Opacity="0.55"
-                       Text="还没有游戏。点击右上角“扫描游戏”，或手动添加一个 EXE。"
+                       Text="{loc:Loc Library.Empty}"
                        Visibility="{Binding IsEmpty, Converter={StaticResource BoolToVis}}" />
         </Grid>
     </Grid>

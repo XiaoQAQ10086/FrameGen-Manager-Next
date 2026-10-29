@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using System.Windows;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using FrameGenManagerNext.App.Localization;
 using FrameGenManagerNext.Core.Features.Library;
 using FrameGenManagerNext.Core.Features.SmoothMotion;
 using FrameGenManagerNext.Domain.Deployment;
@@ -36,7 +37,7 @@ public sealed partial class SmoothMotionViewModel : ObservableObject
     private bool _isBusy;
 
     [ObservableProperty]
-    private string _statusText = "尚未检查 Smooth Motion 状态";
+    private string _statusText = L.T("SmoothMotion.Status.NotLoaded");
 
     [ObservableProperty]
     private string _warnings = string.Empty;
@@ -59,7 +60,7 @@ public sealed partial class SmoothMotionViewModel : ObservableObject
 
         _initialized = true;
         IsBusy = true;
-        StatusText = "正在检查 Smooth Motion 状态...";
+        StatusText = L.T("SmoothMotion.Status.Checking");
 
         try
         {
@@ -74,12 +75,12 @@ public sealed partial class SmoothMotionViewModel : ObservableObject
             IsEmpty = !HasGames;
             IsBusy = false;
             await RefreshStatesCoreAsync();
-            StatusText = $"已检查 {Games.Count} 个游戏";
+            StatusText = L.F("SmoothMotion.Status.Checked", Games.Count);
         }
         catch (Exception exception)
         {
             _logger.LogError(exception, "Could not load Smooth Motion page");
-            StatusText = "检查 Smooth Motion 状态失败";
+            StatusText = L.T("SmoothMotion.Status.CheckFailed");
             Warnings = exception.Message;
             HasWarnings = true;
         }
@@ -97,21 +98,21 @@ public sealed partial class SmoothMotionViewModel : ObservableObject
             return;
         }
 
-        if (!Confirm($"将为“{game.GameName}”开启 Smooth Motion，并把解锁组件部署到：\n{game.TargetDirectory}\n\n请确认游戏已关闭。继续？"))
+        if (!Confirm(L.F("SmoothMotion.Confirm.Enable", game.GameName, game.TargetDirectory)))
         {
             return;
         }
 
         await RunOperationAsync(
             game,
-            "正在开启 Smooth Motion...",
+            L.T("SmoothMotion.Status.Enabling"),
             ct => _smoothMotion.EnableAsync(
                 game.GameName,
                 game.TargetDirectory,
                 game.ExePath!,
                 CreateProgress(),
                 ct),
-            "开启 Smooth Motion 完成");
+            L.T("SmoothMotion.Status.Enabled"));
     }
 
     [RelayCommand(CanExecute = nameof(CanModify))]
@@ -122,14 +123,14 @@ public sealed partial class SmoothMotionViewModel : ObservableObject
             return;
         }
 
-        if (!Confirm($"将为“{game.GameName}”关闭 Smooth Motion。\n组件文件会保留，可稍后“还原”删除。继续？"))
+        if (!Confirm(L.F("SmoothMotion.Confirm.Disable", game.GameName)))
         {
             return;
         }
 
         await RunOperationAsync(
             game,
-            "正在关闭 Smooth Motion...",
+            L.T("SmoothMotion.Status.Disabling"),
             async ct =>
             {
                 var result = await _smoothMotion.DisableAsync(
@@ -141,7 +142,7 @@ public sealed partial class SmoothMotionViewModel : ObservableObject
                     ? Result<object>.Ok(result.Value)
                     : Result<object>.Fail(result.Error!);
             },
-            "关闭 Smooth Motion 完成");
+            L.T("SmoothMotion.Status.Disabled"));
     }
 
     [RelayCommand(CanExecute = nameof(CanModify))]
@@ -152,21 +153,21 @@ public sealed partial class SmoothMotionViewModel : ObservableObject
             return;
         }
 
-        if (!Confirm($"将还原“{game.GameName}”的 Smooth Motion 设置和组件文件。\n用户修改过的文件会保留并报告冲突。继续？"))
+        if (!Confirm(L.F("SmoothMotion.Confirm.Restore", game.GameName)))
         {
             return;
         }
 
         await RunOperationAsync(
             game,
-            "正在还原 Smooth Motion...",
+            L.T("SmoothMotion.Status.Restoring"),
             ct => _smoothMotion.RestoreAsync(
                 game.GameName,
                 game.TargetDirectory,
                 game.ExePath!,
                 CreateProgress(),
                 ct),
-            "还原 Smooth Motion 完成");
+            L.T("SmoothMotion.Status.Restored"));
     }
 
     [RelayCommand]
@@ -194,7 +195,7 @@ public sealed partial class SmoothMotionViewModel : ObservableObject
         {
             if (!game.HasExecutable)
             {
-                game.SetUnavailable("未识别渲染 EXE");
+                game.SetUnavailable(L.T("Library.UnidentifiedExe"));
                 continue;
             }
 
@@ -231,7 +232,7 @@ public sealed partial class SmoothMotionViewModel : ObservableObject
             var result = await operation(CancellationToken.None);
             if (result.IsFailure)
             {
-                StatusText = $"操作失败：{result.Error!.Code}";
+                StatusText = L.F("SmoothMotion.Status.OperationFailed", result.Error!.Code);
                 Warnings = result.Error.Diagnostic ?? result.Error.Code.ToString();
                 HasWarnings = true;
                 return;
@@ -252,7 +253,7 @@ public sealed partial class SmoothMotionViewModel : ObservableObject
         catch (Exception exception)
         {
             _logger.LogError(exception, "Smooth Motion operation failed for {Game}", game.GameName);
-            StatusText = "操作失败";
+            StatusText = L.T("SmoothMotion.Status.Failed");
             Warnings = exception.Message;
             HasWarnings = true;
         }
@@ -268,10 +269,10 @@ public sealed partial class SmoothMotionViewModel : ObservableObject
         {
             StatusText = update.Phase switch
             {
-                "planning" => $"准备：{update.Subject}",
-                "writing" => $"写入：{update.Subject}",
-                "restoring" => $"还原：{update.Subject}",
-                "done" => "完成",
+                "planning" => L.F("Deployment.Phase.Planning", update.Subject),
+                "writing" => L.F("Deployment.Phase.Writing", update.Subject),
+                "restoring" => L.F("Deployment.Phase.Restoring", update.Subject),
+                "done" => L.T("Deployment.Phase.Done"),
                 _ => update.Subject,
             };
         });

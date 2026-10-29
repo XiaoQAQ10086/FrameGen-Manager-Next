@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using System.Windows;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using FrameGenManagerNext.App.Localization;
 using FrameGenManagerNext.Core.Features.Dlss5;
 using FrameGenManagerNext.Core.Features.Gpu;
 using FrameGenManagerNext.Core.Features.Library;
@@ -42,7 +43,7 @@ public sealed partial class Dlss5ViewModel : ObservableObject
     private bool _isBusy;
 
     [ObservableProperty]
-    private string _statusText = "尚未检查 DLSS5 状态";
+    private string _statusText = L.T("Dlss5.Status.NotChecked");
 
     [ObservableProperty]
     private string _warnings = string.Empty;
@@ -65,7 +66,7 @@ public sealed partial class Dlss5ViewModel : ObservableObject
 
         _initialized = true;
         IsBusy = true;
-        StatusText = "正在检查 DLSS5 状态...";
+        StatusText = L.T("Dlss5.Status.Checking");
 
         try
         {
@@ -84,13 +85,13 @@ public sealed partial class Dlss5ViewModel : ObservableObject
             IsBusy = false;
             await RefreshStatesCoreAsync();
             StatusText = _gpuSupported
-                ? $"已检查 {Games.Count} 个游戏"
-                : "当前 GPU 不支持 DLSS5（仅 RTX 20/30）";
+                ? L.F("Dlss5.Status.Checked", Games.Count)
+                : L.T("Dlss5.Status.GpuUnsupported");
         }
         catch (Exception exception)
         {
             _logger.LogError(exception, "Could not load DLSS5 page");
-            StatusText = "检查 DLSS5 状态失败";
+            StatusText = L.T("Dlss5.Status.CheckFailed");
             Warnings = exception.Message;
             HasWarnings = true;
         }
@@ -108,20 +109,20 @@ public sealed partial class Dlss5ViewModel : ObservableObject
             return;
         }
 
-        if (!Confirm($"将为“{game.GameName}”安装 DLSS5 / ReShade，并写入：\n{game.TargetDirectory}\n\n请确认游戏已关闭。继续？"))
+        if (!Confirm(L.F("Dlss5.Confirm.Install", game.GameName, game.TargetDirectory)))
         {
             return;
         }
 
         await RunOperationAsync(
             game,
-            "正在安装 DLSS5...",
+            L.T("Dlss5.Status.Installing"),
             ct => _dlss5.InstallAsync(
                 game.TargetDirectory,
                 game.ExePath!,
                 CreateProgress(),
                 ct),
-            "DLSS5 安装完成");
+            L.T("Dlss5.Status.Installed"));
     }
 
     [RelayCommand(CanExecute = nameof(CanModify))]
@@ -132,19 +133,19 @@ public sealed partial class Dlss5ViewModel : ObservableObject
             return;
         }
 
-        if (!Confirm($"将还原“{game.GameName}”的 DLSS5 文件。\nReShade 模块/INI/日志会保留。继续？"))
+        if (!Confirm(L.F("Dlss5.Confirm.Restore", game.GameName)))
         {
             return;
         }
 
         await RunOperationAsync(
             game,
-            "正在还原 DLSS5...",
+            L.T("Dlss5.Status.Restoring"),
             ct => _dlss5.RestoreAsync(
                 game.TargetDirectory,
                 CreateProgress(),
                 ct),
-            "DLSS5 还原完成");
+            L.T("Dlss5.Status.Restored"));
     }
 
     [RelayCommand(CanExecute = nameof(CanModify))]
@@ -155,15 +156,13 @@ public sealed partial class Dlss5ViewModel : ObservableObject
             return;
         }
 
-        if (!Confirm(
-                $"将彻底卸载“{game.GameName}”目录中的 ReShade、DLSS5 插件和旧版 RenoDX 残留。\n\n" +
-                "文件会被永久删除（不进回收站），且不可恢复。请确认游戏已关闭。\n\n继续？"))
+        if (!Confirm(L.F("Dlss5.Confirm.Uninstall", game.GameName)))
         {
             return;
         }
 
         IsBusy = true;
-        StatusText = "正在彻底卸载 ReShade / DLSS5...";
+        StatusText = L.T("Dlss5.Status.Uninstalling");
         Warnings = string.Empty;
         HasWarnings = false;
 
@@ -177,15 +176,15 @@ public sealed partial class Dlss5ViewModel : ObservableObject
 
             if (result.IsFailure)
             {
-                StatusText = $"卸载失败：{result.Error!.Code}";
+                StatusText = L.F("Dlss5.Status.UninstallFailed", result.Error!.Code);
                 Warnings = result.Error.Diagnostic ?? result.Error.Code.ToString();
                 HasWarnings = true;
                 return;
             }
 
             StatusText = result.Value.IsClean
-                ? "已彻底卸载 ReShade / DLSS5"
-                : "卸载完成，但仍有文件被占用";
+                ? L.T("Dlss5.Status.UninstallDone")
+                : L.T("Dlss5.Status.UninstallPartial");
             if (!result.Value.IsClean)
             {
                 Warnings = string.Join("、", result.Value.Remaining);
@@ -197,7 +196,7 @@ public sealed partial class Dlss5ViewModel : ObservableObject
         catch (Exception exception)
         {
             _logger.LogError(exception, "DLSS5 uninstall failed for {Game}", game.GameName);
-            StatusText = "卸载失败";
+            StatusText = L.T("Dlss5.Status.UninstallFailedShort");
             Warnings = exception.Message;
             HasWarnings = true;
         }
@@ -232,7 +231,7 @@ public sealed partial class Dlss5ViewModel : ObservableObject
         {
             if (!game.HasExecutable)
             {
-                game.SetUnavailable("未识别渲染 EXE");
+                game.SetUnavailable(L.T("Library.UnidentifiedExe"));
                 continue;
             }
 
@@ -244,7 +243,7 @@ public sealed partial class Dlss5ViewModel : ObservableObject
     {
         if (!game.HasExecutable)
         {
-            game.SetUnavailable("未识别渲染 EXE");
+            game.SetUnavailable(L.T("Library.UnidentifiedExe"));
             return;
         }
 
@@ -279,7 +278,7 @@ public sealed partial class Dlss5ViewModel : ObservableObject
             var result = await operation(CancellationToken.None);
             if (result.IsFailure)
             {
-                StatusText = $"操作失败：{result.Error!.Code}";
+                StatusText = L.F("Dlss5.Status.OperationFailed", result.Error!.Code);
                 Warnings = result.Error.Diagnostic ?? result.Error.Code.ToString();
                 HasWarnings = true;
                 return;
@@ -301,7 +300,7 @@ public sealed partial class Dlss5ViewModel : ObservableObject
         catch (Exception exception)
         {
             _logger.LogError(exception, "DLSS5 operation failed for {Game}", game.GameName);
-            StatusText = "操作失败";
+            StatusText = L.T("Dlss5.Status.Failed");
             Warnings = exception.Message;
             HasWarnings = true;
         }
@@ -317,10 +316,10 @@ public sealed partial class Dlss5ViewModel : ObservableObject
         {
             StatusText = update.Phase switch
             {
-                "planning" => $"准备：{update.Subject}",
-                "writing" => $"写入：{update.Subject}",
-                "restoring" => $"还原：{update.Subject}",
-                "done" => "完成",
+                "planning" => L.F("Deployment.Phase.Planning", update.Subject),
+                "writing" => L.F("Deployment.Phase.Writing", update.Subject),
+                "restoring" => L.F("Deployment.Phase.Restoring", update.Subject),
+                "done" => L.T("Deployment.Phase.Done"),
                 _ => update.Subject,
             };
         });
@@ -330,7 +329,7 @@ public sealed partial class Dlss5ViewModel : ObservableObject
     {
         return MessageBox.Show(
             message,
-            "DLSS5",
+            L.T("Dlss5.UninstallConfirmTitle"),
             MessageBoxButton.YesNo,
             MessageBoxImage.Warning) == MessageBoxResult.Yes;
     }

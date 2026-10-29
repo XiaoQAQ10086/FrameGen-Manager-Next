@@ -1,4 +1,5 @@
 using CommunityToolkit.Mvvm.ComponentModel;
+using FrameGenManagerNext.App.Localization;
 using FrameGenManagerNext.Core.Features.Dlss5;
 using FrameGenManagerNext.Domain.Deployment;
 using FrameGenManagerNext.Domain.Library;
@@ -20,7 +21,7 @@ public sealed partial class Dlss5EntryViewModel : ObservableObject
 
     public string? ExePath { get; }
 
-    public string ExeDisplay => ExePath ?? "未识别渲染 EXE";
+    public string ExeDisplay => ExePath ?? L.T("Library.UnidentifiedExe");
 
     public bool HasExecutable => !string.IsNullOrWhiteSpace(ExePath);
 
@@ -28,13 +29,13 @@ public sealed partial class Dlss5EntryViewModel : ObservableObject
     private string _apiDisplay = "—";
 
     [ObservableProperty]
-    private string _fileDisplay = "检查中";
+    private string _fileDisplay = L.T("Common.Checking");
 
     [ObservableProperty]
     private string _reShadeDisplay = "—";
 
     [ObservableProperty]
-    private string _statusDisplay = "检查中";
+    private string _statusDisplay = L.T("Common.Checking");
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(CanInstall))]
@@ -62,13 +63,13 @@ public sealed partial class Dlss5EntryViewModel : ObservableObject
         ReShadePresent = inspection.ReShadePresent;
 
         ReShadeDisplay = inspection.LegacyRenoDxPresent
-            ? "旧版 RenoDX"
+            ? L.T("Dlss5.Legacy")
             : inspection.ReShadePresent
-                ? inspection.ReShadeModule ?? "已安装"
-                : "未安装";
+                ? inspection.ReShadeModule ?? L.T("Common.Installed")
+                : L.T("Common.NotInstalled");
 
         StatusDisplay = inspection.LegacyRenoDxPresent
-            ? "需先彻底卸载"
+            ? L.T("Dlss5.RequiresUninstall")
             : FileLabel(inspection.FileState);
     }
 
@@ -93,7 +94,7 @@ public sealed partial class Dlss5EntryViewModel : ObservableObject
             GraphicsApi.Direct3D9 => "DX9",
             GraphicsApi.Vulkan => "Vulkan",
             GraphicsApi.OpenGl => "OpenGL",
-            _ => "未知",
+            _ => L.T("Common.Unknown"),
         };
     }
 
@@ -101,12 +102,12 @@ public sealed partial class Dlss5EntryViewModel : ObservableObject
     {
         return state switch
         {
-            DeploymentState.Installed => "已安装",
-            DeploymentState.Outdated => "需更新",
-            DeploymentState.Partial => "不完整",
-            DeploymentState.Conflict => "文件冲突",
-            DeploymentState.InstalledWithoutManifest => "已存在",
-            _ => "未安装",
+            DeploymentState.Installed => L.T("Common.Installed"),
+            DeploymentState.Outdated => L.T("State.Outdated"),
+            DeploymentState.Partial => L.T("State.Partial"),
+            DeploymentState.Conflict => L.T("State.Conflict"),
+            DeploymentState.InstalledWithoutManifest => L.T("State.Exists"),
+            _ => L.T("Common.NotInstalled"),
         };
     }
 }

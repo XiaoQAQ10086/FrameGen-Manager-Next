@@ -1,4 +1,5 @@
 using CommunityToolkit.Mvvm.ComponentModel;
+using FrameGenManagerNext.App.Localization;
 using FrameGenManagerNext.Core.Features.SmoothMotion;
 using FrameGenManagerNext.Domain.Deployment;
 using FrameGenManagerNext.Domain.Gpu;
@@ -24,19 +25,19 @@ public sealed partial class SmoothMotionEntryViewModel : ObservableObject
 
     public GpuRoute Route { get; private set; }
 
-    public string ExeDisplay => ExePath ?? "未识别渲染 EXE";
+    public string ExeDisplay => ExePath ?? L.T("Library.UnidentifiedExe");
 
     [ObservableProperty]
     private string _routeDisplay = "—";
 
     [ObservableProperty]
-    private string _componentDisplay = "检查中";
+    private string _componentDisplay = L.T("Common.Checking");
 
     [ObservableProperty]
-    private string _driverDisplay = "检查中";
+    private string _driverDisplay = L.T("Common.Checking");
 
     [ObservableProperty]
-    private string _statusDisplay = "检查中";
+    private string _statusDisplay = L.T("Common.Checking");
 
     public bool HasExecutable => !string.IsNullOrWhiteSpace(ExePath);
 
@@ -47,11 +48,11 @@ public sealed partial class SmoothMotionEntryViewModel : ObservableObject
         ComponentDisplay = DeploymentLabel(inspection.FileState);
         DriverDisplay = inspection.Setting.Enabled switch
         {
-            true => "驱动开启",
-            false => "驱动关闭",
-            _ => "驱动未知/未设置",
+            true => L.T("SmoothMotion.Driver.On"),
+            false => L.T("SmoothMotion.Driver.Off"),
+            _ => L.T("SmoothMotion.Driver.Unknown"),
         };
-        StatusDisplay = inspection.Setting.Enabled == true ? "已开启" : "未开启";
+        StatusDisplay = inspection.Setting.Enabled == true ? L.T("Common.Enabled") : L.T("Common.Disabled");
     }
 
     public void SetUnavailable(string message)
@@ -69,10 +70,10 @@ public sealed partial class SmoothMotionEntryViewModel : ObservableObject
             GpuRoute.Sm86 => "RTX 30 (SM86)",
             GpuRoute.Sm75 => "RTX 20 (SM75)",
             GpuRoute.Gtx16 => "GTX 16",
-            GpuRoute.NoTensorCore => "无 Tensor Core",
+            GpuRoute.NoTensorCore => L.T("SmoothMotion.Route.NoTensorCore"),
             GpuRoute.NotNeeded => "RTX 40/50",
-            GpuRoute.Unsupported => "非 NVIDIA",
-            _ => "未知",
+            GpuRoute.Unsupported => L.T("SmoothMotion.Route.Unsupported"),
+            _ => L.T("Common.Unknown"),
         };
     }
 
@@ -80,12 +81,12 @@ public sealed partial class SmoothMotionEntryViewModel : ObservableObject
     {
         return state switch
         {
-            DeploymentState.Installed => "组件已部署",
-            DeploymentState.Outdated => "组件需更新",
-            DeploymentState.Partial => "组件不完整",
-            DeploymentState.Conflict => "文件冲突",
-            DeploymentState.InstalledWithoutManifest => "组件已存在",
-            _ => "未部署",
+            DeploymentState.Installed => L.T("SmoothMotion.Component.Deployed"),
+            DeploymentState.Outdated => L.T("SmoothMotion.Component.Outdated"),
+            DeploymentState.Partial => L.T("SmoothMotion.Component.Partial"),
+            DeploymentState.Conflict => L.T("SmoothMotion.Component.Conflict"),
+            DeploymentState.InstalledWithoutManifest => L.T("SmoothMotion.Component.Present"),
+            _ => L.T("State.NotDeployed"),
         };
     }
 }

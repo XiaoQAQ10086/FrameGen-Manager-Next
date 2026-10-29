@@ -1,6 +1,8 @@
+using System.Collections.ObjectModel;
 using System.Diagnostics;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using FrameGenManagerNext.App.Localization;
 using FrameGenManagerNext.App.Services;
 using FrameGenManagerNext.Core.Features.App;
 using FrameGenManagerNext.Core.Features.Settings;
@@ -26,7 +28,9 @@ public sealed partial class SettingsViewModel : ObservableObject
         _logger = logger;
     }
 
-    public IReadOnlyList<string> ThemeChoices { get; } = ["跟随系统", "深色", "浅色"];
+    public IReadOnlyList<string> LanguageChoices { get; } = ["简体中文", "English"];
+
+    public ObservableCollection<string> ThemeChoices { get; } = [];
 
     public string DataRoot => _environment.DataRoot;
 
@@ -38,10 +42,13 @@ public sealed partial class SettingsViewModel : ObservableObject
 
     public string LogsDirectory => _environment.LogsDirectory;
 
-    public string ModeDisplay => _environment.IsPortable ? "便携版" : "安装版";
+    public string ModeDisplay => L.T(_environment.IsPortable ? "Settings.Mode.Portable" : "Settings.Mode.Installed");
 
     [ObservableProperty]
-    private string _selectedTheme = "跟随系统";
+    private string _selectedLanguage = "简体中文";
+
+    [ObservableProperty]
+    private string _selectedTheme = string.Empty;
 
     [ObservableProperty]
     private bool _autoScanOnStartup;
@@ -53,7 +60,7 @@ public sealed partial class SettingsViewModel : ObservableObject
     private bool _isBusy;
 
     [ObservableProperty]
-    private string _statusText = "设置保存在数据目录的 config\\app.json";
+    private string _statusText = L.T("Settings.Status.Initial");
 
     public Task LoadAsync()
     {
@@ -64,11 +71,13 @@ public sealed partial class SettingsViewModel : ObservableObject
 
         _initialized = true;
         var settings = _settings.Load();
+        SelectedLanguage = settings.Language == AppLanguage.English ? "English" : "简体中文";
+        RebuildThemeChoices();
         SelectedTheme = settings.Theme switch
         {
-            AppTheme.Dark => "深色",
-            AppTheme.Light => "浅色",
-            _ => "跟随系统",
+            AppTheme.Dark => L.T("Settings.Theme.Dark"),
+            AppTheme.Light => L.T("Settings.Theme.Light"),
+            _ => L.T("Settings.Theme.System"),
         };
         AutoScanOnStartup = settings.AutoScanOnStartup;
         ShowCovers = settings.ShowCovers;
@@ -84,19 +93,22 @@ public sealed partial class SettingsViewModel : ObservableObject
         }
 
         IsBusy = true;
-        StatusText = "正在保存设置...";
+        StatusText = L.T("Settings.Status.Saving");
 
         try
         {
             var current = _settings.Load();
+            var language = SelectedLanguage == "English"
+                ? AppLanguage.English
+                : AppLanguage.ChineseSimplified;
             var updated = current with
             {
-                Theme = SelectedTheme switch
-                {
-                    "深色" => AppTheme.Dark,
-                    "浅色" => AppTheme.Light,
-                    _ => AppTheme.System,
-                },
+                Language = language,
+                Theme = SelectedTheme == L.T("Settings.Theme.Dark")
+                    ? AppTheme.Dark
+                    : SelectedTheme == L.T("Settings.Theme.Light")
+                        ? AppTheme.Light
+                        : AppTheme.System,
                 AutoScanOnStartup = AutoScanOnStartup,
                 ShowCovers = ShowCovers,
             };
@@ -104,17 +116,26 @@ public sealed partial class SettingsViewModel : ObservableObject
             var result = await _settings.SaveAsync(updated, CancellationToken.None);
             if (result.IsFailure)
             {
-                StatusText = $"保存失败：{result.Error!.Code}";
+                StatusText = L.F("Settings.Status.SaveFailedCode", result.Error!.Code);
                 return;
             }
 
+            LocalizationService.Current.SetLanguage(result.Value.Language);
+            RebuildThemeChoices();
+            SelectedTheme = result.Value.Theme switch
+            {
+                AppTheme.Dark => L.T("Settings.Theme.Dark"),
+                AppTheme.Light => L.T("Settings.Theme.Light"),
+                _ => L.T("Settings.Theme.System"),
+            };
             ThemeService.Apply(result.Value.Theme);
-            StatusText = "设置已保存";
+            OnPropertyChanged(nameof(ModeDisplay));
+            StatusText = L.T("Settings.Status.Saved");
         }
         catch (Exception exception)
         {
             _logger.LogError(exception, "Could not save settings");
-            StatusText = "保存设置失败";
+            StatusText = L.T("Settings.Status.SaveFailed");
         }
         finally
         {
@@ -165,6 +186,14 @@ public sealed partial class SettingsViewModel : ObservableObject
         {
             _logger.LogWarning(exception, "Could not open HAGS settings");
         }
+    }
+
+    private void RebuildThemeChoices()
+    {
+        ThemeChoices.Clear();
+        ThemeChoices.Add(L.T("Settings.Theme.System"));
+        ThemeChoices.Add(L.T("Settings.Theme.Dark"));
+        ThemeChoices.Add(L.T("Settings.Theme.Light"));
     }
 
     private void OpenFolder(string path)

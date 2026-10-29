@@ -1,4 +1,5 @@
 using System.IO;
+using FrameGenManagerNext.App.Localization;
 using Microsoft.Extensions.Logging;
 
 namespace FrameGenManagerNext.App.ViewModels;
@@ -31,7 +32,7 @@ public sealed partial class LibraryViewModel
             catch (Exception exception)
             {
                 _logger.LogWarning(exception, "Could not inspect deployment state for {Game}", game.Name);
-                game.DeploymentStateDisplay = "检查失败";
+                game.DeploymentStateDisplay = L.T("State.CheckFailed");
             }
             finally
             {

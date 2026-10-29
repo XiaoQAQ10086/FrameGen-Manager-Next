@@ -4,6 +4,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+             xmlns:loc="clr-namespace:FrameGenManagerNext.App.Localization"
              mc:Ignorable="d"
              d:DesignHeight="700"
              d:DesignWidth="1000">
@@ -26,13 +27,13 @@
 
         <DockPanel Grid.Row="0" LastChildFill="False">
             <StackPanel DockPanel.Dock="Left">
-                <TextBlock Text="DLSS5 / ReShade" FontSize="26" FontWeight="SemiBold" />
+                <TextBlock Text="{loc:Loc Dlss5.Title}" FontSize="26" FontWeight="SemiBold" />
                 <TextBlock Margin="0,4,0,0"
                            Opacity="0.6"
-                           Text="安装 ReShade + GITC Uplift 模型/插件/着色器；仅支持 RTX 20/30。" />
+                           Text="{loc:Loc Dlss5.Subtitle}" />
             </StackPanel>
             <ui:Button DockPanel.Dock="Right"
-                       Content="刷新状态"
+                       Content="{loc:Loc Common.RefreshState}"
                        Command="{Binding RefreshStatesCommand}"
                        VerticalAlignment="Center" />
         </DockPanel>
@@ -78,33 +79,33 @@
                     </Style>
                 </DataGrid.CellStyle>
                 <DataGrid.Columns>
-                    <DataGridTextColumn Header="游戏" Binding="{Binding GameName}" Width="1.4*" ElementStyle="{StaticResource TrimmedCell}" />
-                    <DataGridTextColumn Header="API" Binding="{Binding ApiDisplay}" Width="80" ElementStyle="{StaticResource TrimmedCell}" />
-                    <DataGridTextColumn Header="文件" Binding="{Binding FileDisplay}" Width="100" ElementStyle="{StaticResource TrimmedCell}" />
-                    <DataGridTextColumn Header="ReShade" Binding="{Binding ReShadeDisplay}" Width="130" ElementStyle="{StaticResource TrimmedCell}" />
-                    <DataGridTextColumn Header="状态" Binding="{Binding StatusDisplay}" Width="120" ElementStyle="{StaticResource TrimmedCell}" />
-                    <DataGridTemplateColumn Header="操作" Width="210">
+                    <DataGridTextColumn Header="{loc:Loc Common.Game}" Binding="{Binding GameName}" Width="1.4*" ElementStyle="{StaticResource TrimmedCell}" />
+                    <DataGridTextColumn Header="{loc:Loc Common.Api}" Binding="{Binding ApiDisplay}" Width="80" ElementStyle="{StaticResource TrimmedCell}" />
+                    <DataGridTextColumn Header="{loc:Loc Dlss5.File}" Binding="{Binding FileDisplay}" Width="100" ElementStyle="{StaticResource TrimmedCell}" />
+                    <DataGridTextColumn Header="{loc:Loc Dlss5.ReShade}" Binding="{Binding ReShadeDisplay}" Width="130" ElementStyle="{StaticResource TrimmedCell}" />
+                    <DataGridTextColumn Header="{loc:Loc Common.Status}" Binding="{Binding StatusDisplay}" Width="120" ElementStyle="{StaticResource TrimmedCell}" />
+                    <DataGridTemplateColumn Header="{loc:Loc Common.Operations}" Width="210">
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
                                 <WrapPanel>
-                                    <ui:Button Content="安装"
+                                    <ui:Button Content="{loc:Loc Common.Install}"
                                                Margin="0,0,4,0"
                                                Padding="5,1"
                                                FontSize="11"
                                                IsEnabled="{Binding CanInstall}"
                                                Command="{Binding DataContext.InstallCommand, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}}"
                                                CommandParameter="{Binding}" />
-                                    <ui:Button Content="还原"
+                                    <ui:Button Content="{loc:Loc Common.Restore}"
                                                Margin="0,0,4,0"
                                                Padding="5,1"
                                                FontSize="11"
                                                Command="{Binding DataContext.RestoreCommand, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}}"
                                                CommandParameter="{Binding}" />
-                                    <ui:Button Content="卸载"
+                                    <ui:Button Content="{loc:Loc Common.Uninstall}"
                                                Padding="5,1"
                                                FontSize="11"
                                                IsEnabled="{Binding CanUninstall}"
-                                               ToolTip="永久删除 ReShade、DLSS5 组件和旧版 RenoDX 残留"
+                                               ToolTip="{loc:Loc Dlss5.UninstallHint}"
                                                Command="{Binding DataContext.UninstallCommand, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}}"
                                                CommandParameter="{Binding}" />
                                 </WrapPanel>
@@ -117,7 +118,7 @@
             <TextBlock HorizontalAlignment="Center"
                        VerticalAlignment="Center"
                        Opacity="0.55"
-                       Text="游戏库为空。先在“游戏库”扫描游戏，再回来安装 DLSS5。"
+                       Text="{loc:Loc Dlss5.Empty}"
                        Visibility="{Binding IsEmpty, Converter={StaticResource BoolToVis}}" />
         </Grid>
     </Grid>

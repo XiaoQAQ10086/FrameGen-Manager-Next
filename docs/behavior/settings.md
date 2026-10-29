@@ -29,6 +29,7 @@
 | SET-004 | 封面关闭 | 游戏库不解析/下载封面，表格封面列为空 |
 | SET-005 | HAGS 快捷入口 | 打开 `ms-settings:display-advancedgraphics-default`（Win11）或 `ms-settings:display-advancedgraphics`（Win10）；不写注册表 |
 | SET-006 | 窗口背景 | 使用 `WindowBackdropType=None`；Mica 在本机启动时会导致内容不绘制 |
+| SET-007 | 切换语言 | 立即更新已绑定文案；已生成的动态状态在下次刷新/操作后更新 |
 
 ## Steam 封面
 
@@ -45,4 +46,4 @@
 ## 已知限制
 
 - 只有 Steam 游戏有封面；Epic/WeGame/散装仍为空。
-- 语言字段已持久化，但界面中英文切换尚未完成。
+- 语言切换不会重建已经显示的游戏状态文本，需要刷新或重新进入页面。

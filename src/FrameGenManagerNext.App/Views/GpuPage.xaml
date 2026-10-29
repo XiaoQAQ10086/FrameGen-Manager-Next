@@ -4,6 +4,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+             xmlns:loc="clr-namespace:FrameGenManagerNext.App.Localization"
              mc:Ignorable="d"
              d:DesignHeight="700"
              d:DesignWidth="1000">
@@ -31,13 +32,13 @@
         <StackPanel Margin="18">
             <DockPanel LastChildFill="False">
                 <StackPanel DockPanel.Dock="Left">
-                    <TextBlock Text="GPU 状态" FontSize="26" FontWeight="SemiBold" />
+                    <TextBlock Text="{loc:Loc Gpu.Title}" FontSize="26" FontWeight="SemiBold" />
                     <TextBlock Margin="0,4,0,0"
                                Opacity="0.6"
-                               Text="读取 nvidia-smi、驱动版本和 HAGS；显卡名称伪装需手动确认并提权。" />
+                               Text="{loc:Loc Gpu.Subtitle}" />
                 </StackPanel>
                 <ui:Button DockPanel.Dock="Right"
-                           Content="刷新"
+                           Content="{loc:Loc Common.Refresh}"
                            Command="{Binding RefreshCommand}"
                            VerticalAlignment="Center" />
             </DockPanel>
@@ -46,7 +47,7 @@
 
             <Border Style="{StaticResource Card}" Margin="0,16,0,12">
                 <StackPanel>
-                    <TextBlock Style="{StaticResource Label}" Text="显卡" />
+                    <TextBlock Style="{StaticResource Label}" Text="{loc:Loc Gpu.Card}" />
                     <TextBlock Style="{StaticResource Value}" Text="{Binding GpuName}" TextWrapping="Wrap" />
                     <Grid Margin="0,12,0,0">
                         <Grid.ColumnDefinitions>
@@ -54,11 +55,11 @@
                             <ColumnDefinition Width="*" />
                         </Grid.ColumnDefinitions>
                         <StackPanel Grid.Column="0">
-                            <TextBlock Style="{StaticResource Label}" Text="驱动版本" />
+                            <TextBlock Style="{StaticResource Label}" Text="{loc:Loc Gpu.DriverVersion}" />
                             <TextBlock Style="{StaticResource Value}" Text="{Binding DriverVersion}" />
                         </StackPanel>
                         <StackPanel Grid.Column="1">
-                            <TextBlock Style="{StaticResource Label}" Text="GPU 路由" />
+                            <TextBlock Style="{StaticResource Label}" Text="{loc:Loc Gpu.Route}" />
                             <TextBlock Style="{StaticResource Value}" Text="{Binding RouteDisplay}" TextWrapping="Wrap" />
                         </StackPanel>
                     </Grid>
@@ -74,30 +75,30 @@
 
                 <Border Grid.Column="0" Style="{StaticResource Card}">
                     <StackPanel>
-                        <TextBlock Style="{StaticResource Label}" Text="帧生成" />
+                        <TextBlock Style="{StaticResource Label}" Text="{loc:Loc Gpu.FrameGeneration}" />
                         <TextBlock Style="{StaticResource Value}" Text="{Binding FrameGenerationDisplay}" />
                         <TextBlock Margin="0,8,0,0"
                                    Opacity="0.55"
                                    TextWrapping="Wrap"
-                                   Text="需要 NVIDIA R580 或更新驱动。" />
+                                   Text="{loc:Loc Gpu.FrameGenerationHint}" />
                     </StackPanel>
                 </Border>
 
                 <Border Grid.Column="2" Style="{StaticResource Card}">
                     <StackPanel>
-                        <TextBlock Style="{StaticResource Label}" Text="Smooth Motion" />
+                        <TextBlock Style="{StaticResource Label}" Text="{loc:Loc Gpu.SmoothMotion}" />
                         <TextBlock Style="{StaticResource Value}" Text="{Binding SmoothMotionDisplay}" />
                         <TextBlock Margin="0,8,0,0"
                                    Opacity="0.55"
                                    TextWrapping="Wrap"
-                                   Text="需要 616.64 或更新驱动；仅 RTX 20/30。" />
+                                   Text="{loc:Loc Gpu.SmoothMotionHint}" />
                     </StackPanel>
                 </Border>
             </Grid>
 
             <Border Style="{StaticResource Card}">
                 <StackPanel>
-                    <TextBlock Style="{StaticResource Label}" Text="硬件加速 GPU 计划（HAGS）" />
+                    <TextBlock Style="{StaticResource Label}" Text="{loc:Loc Gpu.Hags}" />
                     <TextBlock Style="{StaticResource Value}" Text="{Binding HagsDisplay}" />
                 </StackPanel>
             </Border>
@@ -106,7 +107,7 @@
                 <StackPanel>
                     <DockPanel LastChildFill="False">
                         <StackPanel DockPanel.Dock="Left">
-                            <TextBlock Style="{StaticResource Label}" Text="显卡名称伪装（高级 · 可选）" />
+                            <TextBlock Style="{StaticResource Label}" Text="{loc:Loc Gpu.SpoofTitle}" />
                             <TextBlock Style="{StaticResource Value}" Text="{Binding SpoofCurrent}" TextWrapping="Wrap" />
                         </StackPanel>
                         <TextBlock DockPanel.Dock="Right"
@@ -131,7 +132,7 @@
                                   SelectedItem="{Binding SelectedSpoofPreset}" />
                         <ui:Button Grid.Column="1"
                                    Margin="8,0,0,0"
-                                   Content="应用伪装"
+                                   Content="{loc:Loc Gpu.ApplySpoof}"
                                    Command="{Binding ApplySpoofCommand}" />
                     </Grid>
 
@@ -139,17 +140,17 @@
                                Opacity="0.55"
                                FontSize="12"
                                TextWrapping="Wrap">
-                        <Run Text="驱动记录名称：" />
+                        <Run Text="{loc:Loc Gpu.DriverNameLabel}" />
                         <Run Text="{Binding SpoofDriver, Mode=OneWay}" />
-                        <Run Text="　管理员权限：" />
+                        <Run Text="{loc:Loc Gpu.AdminLabel}" />
                         <Run Text="{Binding ElevationDisplay, Mode=OneWay}" />
                     </TextBlock>
 
                     <WrapPanel Margin="0,12,0,0">
                         <ui:Button Margin="0,0,8,0"
-                                   Content="还原为驱动名称"
+                                   Content="{loc:Loc Gpu.RestoreDriver}"
                                    Command="{Binding RestoreDriverCommand}" />
-                        <ui:Button Content="恢复修改前的值"
+                        <ui:Button Content="{loc:Loc Gpu.RestoreOriginal}"
                                    IsEnabled="{Binding HasOriginalBackup}"
                                    Command="{Binding RestoreOriginalCommand}" />
                     </WrapPanel>
@@ -164,7 +165,7 @@
             <Border Style="{StaticResource Card}"
                     Visibility="{Binding HasDiagnostic, Converter={StaticResource BoolToVis}}">
                 <StackPanel>
-                    <TextBlock Style="{StaticResource Label}" Text="检测说明" />
+                    <TextBlock Style="{StaticResource Label}" Text="{loc:Loc Gpu.Diagnostic}" />
                     <TextBlock Margin="0,6,0,0"
                                TextWrapping="Wrap"
                                Text="{Binding Diagnostic}" />

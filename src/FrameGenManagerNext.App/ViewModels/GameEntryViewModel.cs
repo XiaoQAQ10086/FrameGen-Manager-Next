@@ -1,4 +1,5 @@
 using CommunityToolkit.Mvvm.ComponentModel;
+using FrameGenManagerNext.App.Localization;
 using FrameGenManagerNext.Domain.Deployment;
 using FrameGenManagerNext.Domain.Library;
 
@@ -16,7 +17,7 @@ public sealed partial class GameEntryViewModel : ObservableObject
         LauncherDisplay = LauncherLabel(entry.Launcher);
         ApiDisplay = ApiLabel(entry.GraphicsApi);
         TargetDirectory = entry.TargetDirectory;
-        RenderExeDisplay = entry.RenderExePath ?? "未识别";
+        RenderExeDisplay = entry.RenderExePath ?? L.T("Library.RenderExeMissing");
         IsManual = entry.IsManual;
     }
 
@@ -40,7 +41,7 @@ public sealed partial class GameEntryViewModel : ObservableObject
     }
 
     [ObservableProperty]
-    private string _deploymentStateDisplay = "检查中";
+    private string _deploymentStateDisplay = L.T("Common.Checking");
 
     [ObservableProperty]
     private DeploymentState _deploymentStateValue;
@@ -67,12 +68,12 @@ public sealed partial class GameEntryViewModel : ObservableObject
     {
         return state switch
         {
-            DeploymentState.Installed => "已部署",
-            DeploymentState.Outdated => "需更新",
-            DeploymentState.Partial => "不完整",
-            DeploymentState.Conflict => "文件冲突",
-            DeploymentState.InstalledWithoutManifest => "已安装（无记录）",
-            _ => "未部署",
+            DeploymentState.Installed => L.T("State.Deployed"),
+            DeploymentState.Outdated => L.T("State.Outdated"),
+            DeploymentState.Partial => L.T("State.Partial"),
+            DeploymentState.Conflict => L.T("State.Conflict"),
+            DeploymentState.InstalledWithoutManifest => L.T("State.InstalledWithoutManifest"),
+            _ => L.T("State.NotDeployed"),
         };
     }
 
@@ -83,9 +84,9 @@ public sealed partial class GameEntryViewModel : ObservableObject
             LauncherKind.Steam => "Steam",
             LauncherKind.Epic => "Epic",
             LauncherKind.WeGame => "WeGame",
-            LauncherKind.Loose => "散装",
-            LauncherKind.Manual => "手动",
-            _ => "未知",
+            LauncherKind.Loose => L.T("Common.Loose"),
+            LauncherKind.Manual => L.T("Common.Manual"),
+            _ => L.T("Common.Unknown"),
         };
     }
 
@@ -99,7 +100,7 @@ public sealed partial class GameEntryViewModel : ObservableObject
             GraphicsApi.Direct3D9 => "DX9",
             GraphicsApi.Vulkan => "Vulkan",
             GraphicsApi.OpenGl => "OpenGL",
-            _ => "未知",
+            _ => L.T("Common.Unknown"),
         };
     }
 }
