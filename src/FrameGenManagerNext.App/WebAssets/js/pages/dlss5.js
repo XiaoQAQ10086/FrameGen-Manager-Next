@@ -107,6 +107,7 @@ export default {
       const currentApi = game.api && game.api !== 'Unknown'
         ? game.api.replace('Direct3D', 'DX').toUpperCase()
         : 'auto';
+      const manualTarget = '__manual__';
       detailBody.innerHTML = `
         <div class="badges">
           <span class="badge">${esc(apiLabel(game.api))}</span>
@@ -116,6 +117,7 @@ export default {
         <div class="deploy-picker">
           <label>${t('Dlss5.Target')}<select data-role="detail-target">
             ${targets.map((target) => `<option value="${esc(target.path)}">${esc(target.name)}</option>`).join('')}
+            <option value="${manualTarget}">${t('Deploy.ManualTarget')}</option>
           </select></label>
           <label>${t('Dlss5.GraphicsApiLabel')}<select data-role="detail-api">
             ${apiOptions.map(([value, label]) => `<option value="${value}">${label}</option>`).join('')}
@@ -130,9 +132,44 @@ export default {
       if (apiSelect) {
         apiSelect.value = apiOptions.some(([value]) => value === currentApi) ? currentApi : 'auto';
       }
+
+      const pickTarget = async () => {
+        const previous = targets.find((target) => target.path === game.renderExe)?.path
+          || targets[0]?.path
+          || manualTarget;
+        const picked = await api.request('games.pickExecutable', { id: game.id })
+          .catch((error) => {
+            ui.toast(error.message || error.code || '选择 EXE 失败', 'error');
+            return null;
+          });
+        if (!picked?.path) {
+          targetSelect.value = previous;
+          return;
+        }
+
+        let option = targetSelect.querySelector('option[data-picked="1"]');
+        if (!option) {
+          option = document.createElement('option');
+          option.dataset.picked = '1';
+          targetSelect.appendChild(option);
+        }
+        option.value = picked.path;
+        option.textContent = picked.name;
+        targetSelect.value = picked.path;
+      };
+      targetSelect?.addEventListener('change', () => {
+        if (targetSelect.value === manualTarget) {
+          void pickTarget();
+        }
+      });
+
       const installButton = q('[data-action="modal-install"]');
-      installButton.disabled = game.available === false || game.legacy || targets.length === 0;
+      installButton.disabled = game.available === false || game.legacy;
       installButton.textContent = t(game.state === 'Outdated' ? 'Common.Update' : 'Common.Install');
+
+      const uninstallButton = q('[data-action="modal-uninstall"]');
+      uninstallButton.disabled = !deployed(game) && !game.legacy && !game.leftovers;
+
       detail.classList.remove('hidden');
     }
 
@@ -231,6 +268,10 @@ export default {
           const game = current;
           if (name === 'modal-install') {
             const target = detailBody.querySelector('[data-role="detail-target"]')?.value;
+            if (!target || target === '__manual__') {
+              ui.toast(t('Deploy.TargetRequired'), 'error');
+              return;
+            }
             const api = detailBody.querySelector('[data-role="detail-api"]')?.value || 'auto';
             if (!(await confirmDialog(t('Dlss5.Title'), t('Dlss5.Confirm.Install').replace('{0}', game.name).replace('{1}', prettyPath(target || game.targetDirectory)), t('Common.Install')))) return;
             closeDetail();

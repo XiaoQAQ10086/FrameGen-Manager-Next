@@ -123,11 +123,32 @@ public sealed class SmoothMotionDeploymentService : ISmoothMotionDeploymentServi
         CancellationToken cancellationToken)
     {
         var setting = await _nvapi.SetAsync(game, targetDirectory, exePath, enabled: false, cancellationToken);
-        return setting.Ok
-            ? Result<SmoothMotionChangeResult>.Ok(setting)
-            : Result<SmoothMotionChangeResult>.Fail(new AppError(
+        if (!setting.Ok)
+        {
+            return Result<SmoothMotionChangeResult>.Fail(new AppError(
                 ErrorCode.NvApiCallFailed,
                 setting.Message));
+        }
+
+        // Closing Smooth Motion means the component should leave the game folder too;
+        // otherwise the proxy DLL keeps loading even though the driver switch is off.
+        // The original driver value stays in the sm-profiles record, so a later
+        // Restore still puts the profile back the way it was.
+        var files = await _engine.RestoreAsync(
+            FamilyId,
+            targetDirectory,
+            progress: null,
+            cancellationToken);
+        if (files.IsFailure && files.Error!.Code != ErrorCode.ManifestMissing)
+        {
+            return Result<SmoothMotionChangeResult>.Fail(AppError.Create(
+                files.Error.Code,
+                ("game", game),
+                ("target", targetDirectory),
+                ("reason", files.Error.Diagnostic ?? "component files could not be removed")));
+        }
+
+        return Result<SmoothMotionChangeResult>.Ok(setting);
     }
 
     public async Task<Result<SmoothMotionRestoreReport>> RestoreAsync(

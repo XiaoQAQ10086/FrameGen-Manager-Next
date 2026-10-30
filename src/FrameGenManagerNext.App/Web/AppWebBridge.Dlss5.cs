@@ -95,18 +95,21 @@ public sealed partial class AppWebBridge
             throw new BridgeException(Domain.Errors.ErrorCode.FileNotFound, "render executable not found");
         }
 
-        var targetExe = ReadTargetExe(payload, game);
+        var target = ResolveDeploymentTarget(game, payload);
+        var installExe = target.ExePath ?? game.RenderExePath!;
         var knownApi = ReadGraphicsApi(payload);
 
         return await RunExclusiveAsync(async () =>
         {
+            await PersistTargetAsync(game, target.ExePath);
+
             var progress = new Progress<DeploymentProgress>(update =>
             {
                 ReportProgress(update.Phase, update.Subject, update.Current, update.Total);
             });
             var result = await _dlss5.InstallAsync(
-                game.TargetDirectory,
-                targetExe,
+                target.Directory,
+                installExe,
                 progress,
                 CancellationToken.None,
                 knownApi);
@@ -194,25 +197,6 @@ public sealed partial class AppWebBridge
         {
             return [];
         }
-    }
-
-    private static string ReadTargetExe(JsonElement payload, GameEntry game)
-    {
-        var requested = payload.TryGetProperty("target", out var value) ? value.GetString() : null;
-        if (string.IsNullOrWhiteSpace(requested))
-        {
-            return game.RenderExePath!;
-        }
-
-        var path = Path.GetFullPath(requested);
-        var directory = Path.GetDirectoryName(path);
-        if (!File.Exists(path) ||
-            !string.Equals(directory, Path.GetFullPath(game.TargetDirectory), StringComparison.OrdinalIgnoreCase))
-        {
-            throw new BridgeException(Domain.Errors.ErrorCode.InvalidPath, "target executable is outside the game folder");
-        }
-
-        return path;
     }
 
     private static GraphicsApi? ReadGraphicsApi(JsonElement payload)
