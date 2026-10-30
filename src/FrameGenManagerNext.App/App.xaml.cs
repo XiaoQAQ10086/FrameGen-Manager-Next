@@ -5,6 +5,7 @@ using System.Windows.Interop;
 using System.Windows.Media;
 using FrameGenManagerNext.App.Localization;
 using FrameGenManagerNext.App.Web;
+using FrameGenManagerNext.Core.Features.App;
 using FrameGenManagerNext.Core.Features.Settings;
 using FrameGenManagerNext.Infrastructure.Composition;
 using FrameGenManagerNext.Infrastructure.Paths;
@@ -75,6 +76,7 @@ public partial class App : Application
             _host.Start();
             var settings = _host.Services.GetRequiredService<ISettingsService>().Load();
             LocalizationService.Current.SetLanguage(settings.Language);
+            _host.Services.GetRequiredService<IEfficiencyModeService>().TryEnable();
         }
         catch (Exception exception)
         {

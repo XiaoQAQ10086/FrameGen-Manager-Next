@@ -16,6 +16,7 @@ using FrameGenManagerNext.Infrastructure.Gpu;
 using FrameGenManagerNext.Infrastructure.Library;
 using FrameGenManagerNext.Infrastructure.Packs;
 using FrameGenManagerNext.Infrastructure.Paths;
+using FrameGenManagerNext.Infrastructure.Platform;
 using FrameGenManagerNext.Infrastructure.Processes;
 using FrameGenManagerNext.Infrastructure.Settings;
 using FrameGenManagerNext.Infrastructure.SmoothMotion;
@@ -34,6 +35,7 @@ public static class ServiceCollectionExtensions
 
         services.AddSingleton(paths);
         services.AddSingleton<IAppEnvironment, AppEnvironment>();
+        services.AddSingleton<IEfficiencyModeService, EfficiencyModeService>();
         services.AddSingleton<ISettingsService, SettingsService>();
         services.AddSingleton<IGameLibraryStore, GameLibraryStore>();
         services.AddSingleton<IGameScanner, SteamGameScanner>();
