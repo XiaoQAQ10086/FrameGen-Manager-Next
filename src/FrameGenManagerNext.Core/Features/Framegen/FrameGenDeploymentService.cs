@@ -37,10 +37,84 @@ public sealed class FrameGenDeploymentService : IFrameGenDeploymentService
         FrameGenOptions options,
         CancellationToken cancellationToken)
     {
-        var plan = await BuildPlanAsync(targetDirectory, options, verifySources: false, cancellationToken);
+        // Inspection must judge the deployment that is actually on disk. Using the
+        // dialog defaults would report every non-default deployment as Outdated and
+        // would hide a real asset update among false positives.
+        var effective = await ReadDeployedOptionsAsync(targetDirectory, options, cancellationToken);
+        var plan = await BuildPlanAsync(targetDirectory, effective, verifySources: false, cancellationToken);
         return plan.IsFailure
             ? Result<DeploymentInspection>.Fail(plan.Error!)
             : await _engine.InspectAsync(plan.Value, cancellationToken);
+    }
+
+    private async Task<FrameGenOptions> ReadDeployedOptionsAsync(
+        string targetDirectory,
+        FrameGenOptions fallback,
+        CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(targetDirectory))
+        {
+            return fallback;
+        }
+
+        string target;
+        try
+        {
+            target = Path.GetFullPath(targetDirectory);
+        }
+        catch (Exception exception) when (
+            exception is ArgumentException or NotSupportedException or PathTooLongException)
+        {
+            return fallback;
+        }
+
+        var stored = await _engine.LoadOptionsAsync(FamilyId, target, cancellationToken);
+        if (stored is null)
+        {
+            return fallback;
+        }
+
+        var parsed = new FrameGenOptions(
+            ReadString(stored, "proxySlot", fallback.ProxySlot),
+            ReadInt32(stored, "optimized", fallback.Optimized),
+            ReadInt32(stored, "maxGeneratedFrames", fallback.MaxGeneratedFrames),
+            ReadString(stored, "preset", fallback.Preset),
+            ReadString(stored, "engine", fallback.Engine),
+            ReadString(stored, "superResolutionMode", fallback.SuperResolutionMode),
+            ReadString(stored, "xessFlowResolution", fallback.XeSsFlowResolution),
+            ReadString(stored, "xessHudless", fallback.XeSsHudless));
+
+        try
+        {
+            FrameGenIniBuilder.Validate(parsed);
+            return parsed;
+        }
+        catch (ArgumentException exception)
+        {
+            _logger.LogWarning(exception, "Stored FrameGen options for {Target} are invalid", target);
+            return fallback;
+        }
+    }
+
+    private static string ReadString(
+        IReadOnlyDictionary<string, string> values,
+        string key,
+        string fallback)
+    {
+        return values.TryGetValue(key, out var value) && !string.IsNullOrWhiteSpace(value)
+            ? value
+            : fallback;
+    }
+
+    private static int ReadInt32(
+        IReadOnlyDictionary<string, string> values,
+        string key,
+        int fallback)
+    {
+        return values.TryGetValue(key, out var value) &&
+               int.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out var parsed)
+            ? parsed
+            : fallback;
     }
 
     public async Task<Result<DeploymentReport>> DeployAsync(

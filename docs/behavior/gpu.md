@@ -10,6 +10,14 @@
 - HAGS：`HKLM\SYSTEM\CurrentControlSet\Control\GraphicsDrivers` 的 `HwSchMode` DWORD：`2` 开启、`1` 关闭、缺失或其他值未知。
 - 不写注册表、不修改驱动配置。
 
+## 检测时机
+
+- 每个进程只执行一次 `nvidia-smi` 探测；结果由 `GpuService` 缓存，帧生成页、Smooth Motion 页和诊断包共享。
+- `AppWebBridge` 构造时开始预热探测，与 WebView2 初始化并行，页面请求通常直接命中缓存。
+- 调用方取消只取消自己的等待，不会取消共享探测；探测失败不缓存，下次请求会重试。
+- GPU 卡片独立于游戏列表渲染，不再等待 `games.state` 完成。
+- 检测结果在本次启动内视为稳定；HAGS 或驱动变更需要重启程序后刷新。
+
 ## GPU 路由
 
 按顺序匹配（名称大写）：

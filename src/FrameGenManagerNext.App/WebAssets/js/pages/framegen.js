@@ -44,6 +44,8 @@ const hagsKeys = {
   unknown: 'Gpu.Hags.Unknown',
 };
 
+let autoScanStarted = false;
+
 export default {
   async mount(root, ctx) {
     const { api, t, ui } = ctx;
@@ -71,6 +73,7 @@ export default {
           </div>
         </header>
         <div class="notice hidden" data-role="notice"></div>
+        <div class="notice info hidden" data-role="asset-hint"></div>
         <main class="layout">
           <aside class="side">
             <section class="panel" data-role="gpu">
@@ -260,7 +263,7 @@ export default {
           </div>
           <div class="gpath" title="${esc(prettyPath(game.targetDirectory))}">${esc(prettyPath(game.targetDirectory))}</div>
           <div class="gactions">
-            <button class="btn small success" data-action="deploy" data-id="${esc(game.id)}" type="button">${esc(t('Common.Deploy'))}</button>
+            <button class="btn small success" data-action="deploy" data-id="${esc(game.id)}" type="button">${esc(t(game.state === 'Outdated' ? 'Common.Update' : 'Common.Deploy'))}</button>
             <button class="btn small" data-action="open" data-id="${esc(game.id)}" type="button">${esc(t('Library.OpenFolder'))}</button>
             ${deployed ? `<button class="btn small danger" data-action="restore" data-id="${esc(game.id)}" type="button">${esc(t('Common.Restore'))}</button>` : ''}
             <span class="spacer"></span>
@@ -270,6 +273,12 @@ export default {
       }).join('');
       q('[data-role="empty"]').classList.toggle('hidden', games.length > 0);
       list.classList.toggle('hidden', games.length === 0);
+      const outdated = games.filter((game) => game.state === 'Outdated').length;
+      const assetHint = q('[data-role="asset-hint"]');
+      assetHint.textContent = outdated > 0
+        ? t('Library.AssetUpdateHint').replace('{0}', outdated)
+        : '';
+      assetHint.classList.toggle('hidden', outdated === 0);
       updateRemovedCount();
     }
 
@@ -331,6 +340,7 @@ export default {
       const targetSelect = deployMeta.querySelector('[data-role="modal-target"]');
       if (targetSelect && game.renderExe) targetSelect.value = game.renderExe;
       optionsRoot.innerHTML = optionFields();
+      applyOptionValues(game.options);
       overlay.classList.remove('hidden');
       syncEngine();
     }
@@ -354,6 +364,19 @@ export default {
         <label>${esc(t('Library.SuperResolution'))}${select('superResolutionMode', options.superResolutionModes, 'Off')}</label>
         <label class="xess">${esc(t('Library.XeSsFlow'))}${select('xeSsFlow', options.xeSsFlowResolutions, 'Middle')}</label>
         <label class="xess">${esc(t('Library.XeSsHudless'))}${select('xeSsHudlessValues', options.xeSsHudlessValues, 'Auto')}</label>`;
+    }
+
+    function applyOptionValues(values) {
+      if (!values) return;
+      Object.entries(values).forEach(([key, value]) => {
+        if (value === null || value === undefined || value === '') return;
+        const control = optionsRoot.querySelector(`[data-option="${key}"]`);
+        if (!control) return;
+        const text = String(value);
+        if (Array.from(control.options).some((option) => option.value === text)) {
+          control.value = text;
+        }
+      });
     }
 
     function syncEngine() {
@@ -409,11 +432,17 @@ export default {
 
     async function load() {
       applySnapshot();
-      // Let the game list paint as soon as its data arrives; GPU probing may take
-      // longer because it queries the driver.
+      // The GPU card has its own request and paints as soon as it resolves, so a
+      // large or slow library scan never holds it back.
       const gpuPromise = api.request('gpu.state').catch((error) => {
         ui.toast(error.message || error.code || 'GPU 状态读取失败', 'error');
         return null;
+      });
+      gpuPromise.then((gpuState) => {
+        if (!gpuState || !root.isConnected) return;
+        gpu = gpuState;
+        renderGpu();
+        checkGpuSupport();
       });
 
       try {
@@ -426,14 +455,6 @@ export default {
         status(t('Library.Status.Loaded').replace('{0}', games.length));
         notice(gamesState.warning);
         saveSnapshot();
-
-        const gpuState = await gpuPromise;
-        if (gpuState) {
-          gpu = gpuState;
-          renderGpu();
-          checkGpuSupport();
-          saveSnapshot();
-        }
       } catch (error) {
         games = [];
         removed = [];
@@ -624,6 +645,10 @@ export default {
     });
 
     await load();
+    if (!autoScanStarted && ctx.startupAutoScan) {
+      autoScanStarted = true;
+      void scan();
+    }
     return () => {
       closeModal();
       closeRemoved();

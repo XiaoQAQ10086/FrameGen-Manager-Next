@@ -21,6 +21,28 @@ public sealed partial class AppWebBridge
         new(StringComparer.OrdinalIgnoreCase);
     private readonly SemaphoreSlim _addGameGate = new(1, 1);
 
+    private static object? MapFrameGenOptions(IReadOnlyDictionary<string, string>? values)
+    {
+        if (values is null || values.Count == 0)
+        {
+            return null;
+        }
+
+        return new
+        {
+            proxySlot = Read("proxySlot"),
+            optimized = Read("optimized"),
+            frames = Read("maxGeneratedFrames"),
+            preset = Read("preset"),
+            engine = Read("engine"),
+            superResolutionMode = Read("superResolutionMode"),
+            xeSsFlow = Read("xessFlowResolution"),
+            xeSsHudless = Read("xessHudless"),
+        };
+
+        string? Read(string key) => values.TryGetValue(key, out var value) ? value : null;
+    }
+
     private async Task<object?> BuildGamesStateAsync(string? warning = null)
     {
         var settings = _settings.Load();
@@ -53,6 +75,9 @@ public sealed partial class AppWebBridge
                     launcher = game.Launcher.ToString(),
                     api = game.GraphicsApi.ToString(),
                     state = state.ToString(),
+                    options = inspection.IsSuccess
+                        ? MapFrameGenOptions(inspection.Value.Options)
+                        : null,
                     targetDirectory = game.TargetDirectory,
                     renderExe = game.RenderExePath,
                     targets = EnumerateExeTargets(game.TargetDirectory),

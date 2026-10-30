@@ -18,7 +18,38 @@ export default {
             <button class="btn small" data-action="open-repo" type="button">${t('About.OpenGitHub')}</button>
           </div>
         </div>
+        <div class="panel form-panel">
+          <div class="ctitle">${t('About.Startup')}</div>
+          <div class="form-row">
+            <div><h3>${t('About.AutoScan')}</h3><p>${t('About.AutoScanHint')}</p></div>
+            <label class="switch">
+              <input type="checkbox" data-role="auto-scan" aria-label="${t('About.AutoScan')}"
+                ${info.settings?.autoScanOnStartup ? 'checked' : ''}>
+              <span></span>
+            </label>
+          </div>
+        </div>
       </section>`;
+
+    const autoScan = root.querySelector('[data-role="auto-scan"]');
+    const onToggle = async () => {
+      const desired = autoScan.checked;
+      autoScan.disabled = true;
+      try {
+        await api.request('app.saveSettings', {
+          language: info.language === 'en' ? 'en' : 'zh',
+          autoScanOnStartup: desired,
+        });
+        await ctx.refreshInfo();
+        ui.toast(t('Settings.Status.Saved'));
+      } catch (error) {
+        autoScan.checked = !desired;
+        ui.toast(error.message || error.code || t('Settings.Status.SaveFailed'), 'error');
+      } finally {
+        autoScan.disabled = false;
+      }
+    };
+    autoScan.addEventListener('change', onToggle);
 
     const onClick = async (event) => {
       const button = event.target.closest('[data-action]');
@@ -34,6 +65,9 @@ export default {
       }
     };
     root.addEventListener('click', onClick);
-    return () => root.removeEventListener('click', onClick);
+    return () => {
+      root.removeEventListener('click', onClick);
+      autoScan.removeEventListener('change', onToggle);
+    };
   },
 };

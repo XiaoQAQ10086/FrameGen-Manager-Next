@@ -72,7 +72,8 @@ public sealed partial class DeploymentEngine : IDeploymentEngine
                 state,
                 manifest?.PackVersion,
                 HasManifest: manifest is not null,
-                details));
+                details,
+                Options: null));
         }
 
         var detailsList = new List<string>();
@@ -153,7 +154,32 @@ public sealed partial class DeploymentEngine : IDeploymentEngine
             finalState,
             manifest.PackVersion,
             HasManifest: true,
-            detailsList.Take(20).ToList()));
+            detailsList.Take(20).ToList(),
+            manifest.Options));
+    }
+
+    public async Task<IReadOnlyDictionary<string, string>?> LoadOptionsAsync(
+        string familyId,
+        string targetDirectory,
+        CancellationToken cancellationToken)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(familyId);
+
+        var target = ValidateTarget(targetDirectory);
+        if (target.IsFailure)
+        {
+            return null;
+        }
+
+        var manifest = await _backups.LoadManifestAsync(familyId, target.Value, cancellationToken);
+        if (manifest is null ||
+            manifest.State is DeploymentManifestState.Restored or DeploymentManifestState.RolledBack ||
+            manifest.Options.Count == 0)
+        {
+            return null;
+        }
+
+        return manifest.Options;
     }
 
     public async Task<Result<DeploymentReport>> DeployAsync(

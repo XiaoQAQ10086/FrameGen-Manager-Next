@@ -1,4 +1,5 @@
 using FrameGenManagerNext.Core.Features.Packs;
+using FrameGenManagerNext.Domain;
 using FrameGenManagerNext.Domain.Packs;
 using FrameGenManagerNext.Domain.Safety;
 using FrameGenManagerNext.Infrastructure.Paths;
@@ -22,6 +23,9 @@ public sealed class PackRepository : IPackRepository
     public Task<PackLocation?> FindAsync(string packId, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
+
+        PackLocation? fallback = null;
+        PackLocation? best = null;
 
         foreach (var root in EnumerateRoots())
         {
@@ -49,13 +53,35 @@ public sealed class PackRepository : IPackRepository
                 continue;
             }
 
-            return Task.FromResult<PackLocation?>(new PackLocation(
-                loaded.Value,
-                manifestPath,
-                payloadDirectory));
+            var location = new PackLocation(loaded.Value, manifestPath, payloadDirectory);
+            fallback ??= location;
+
+            // Root order used to decide which pack won, so a stale downloaded pack
+            // could shadow a newer bundled one. Pick the highest compatible version.
+            if (!AssetPackValidator.ValidateSchema(loaded.Value, AppInfo.Version).IsValid)
+            {
+                continue;
+            }
+
+            if (best is null ||
+                CompareVersions(loaded.Value.Version, best.Pack.Version) > 0)
+            {
+                best = location;
+            }
         }
 
-        return Task.FromResult<PackLocation?>(null);
+        return Task.FromResult(best ?? fallback);
+    }
+
+    private static int CompareVersions(string left, string right)
+    {
+        return ParseVersion(left).CompareTo(ParseVersion(right));
+    }
+
+    private static Version ParseVersion(string value)
+    {
+        var core = value.Split('-', '+')[0];
+        return Version.TryParse(core, out var version) ? version : new Version(0, 0, 0);
     }
 
     private IEnumerable<string> EnumerateRoots()

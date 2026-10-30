@@ -20,10 +20,12 @@
 
 manifest 状态：`Installing → Installed / RolledBack / Partial`，还原后 `Restored`。`Restored`/`RolledBack` 在检查时视为未部署。
 
+检查时优先使用 manifest 里记录的部署选项（代理槽、优化等级、帧数、Preset、引擎、超分、XeSS），只有没有有效 manifest 时才使用默认值。否则用户改过的选项会被误报成 `Outdated`。
+
 ## 部署流程
 
 1. 校验目标：绝对路径、目录存在、不是盘符根/Windows/Program Files 等受保护目录。
-2. 通过 `FGM_PACKS_DIR`、`<exe>/packs`、数据目录 `packs` 或仓库 `packs`/`assets/packs` 定位 pack。
+2. 通过 `FGM_PACKS_DIR`、`<exe>/packs`、数据目录 `packs` 或仓库 `packs`/`assets/packs` 定位 pack；同名 pack 取版本最高且满足 `minAppVersion` 的一份。
 3. 校验 pack schema 和源文件大小/哈希。
 4. 选择代理槽（默认 `version.dll`），加入所有非代理文件，生成 INI。
 5. 获取跨进程文件锁（`state/locks/<family>-<targetHash>.lock`）。

@@ -130,7 +130,9 @@ export default {
       if (apiSelect) {
         apiSelect.value = apiOptions.some(([value]) => value === currentApi) ? currentApi : 'auto';
       }
-      q('[data-action="modal-install"]').disabled = game.available === false || game.legacy || targets.length === 0;
+      const installButton = q('[data-action="modal-install"]');
+      installButton.disabled = game.available === false || game.legacy || targets.length === 0;
+      installButton.textContent = t(game.state === 'Outdated' ? 'Common.Update' : 'Common.Install');
       detail.classList.remove('hidden');
     }
 

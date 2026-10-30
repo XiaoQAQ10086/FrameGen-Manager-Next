@@ -9,6 +9,11 @@ public interface IDeploymentEngine
         DeploymentPlan plan,
         CancellationToken cancellationToken);
 
+    Task<IReadOnlyDictionary<string, string>?> LoadOptionsAsync(
+        string familyId,
+        string targetDirectory,
+        CancellationToken cancellationToken);
+
     Task<Result<DeploymentReport>> DeployAsync(
         DeploymentPlan plan,
         IProgress<DeploymentProgress>? progress,

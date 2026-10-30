@@ -95,9 +95,14 @@ export default {
           <div class="gpath" title="${esc(prettyPath(game.targetDirectory))}">${esc(prettyPath(game.targetDirectory))}</div>
           ${game.detail ? `<div class="hint">${esc(game.detail)}</div>` : ''}
           <div class="gactions">
+            ${game.component === 'Outdated'
+              ? `<button class="btn small success" data-action="enable" data-id="${game.id}" type="button" ${game.available === false ? 'disabled' : ''}>${t('Common.Update')}</button>`
+              : game.enabled !== true
+                ? `<button class="btn small success" data-action="enable" data-id="${game.id}" type="button" ${game.available === false ? 'disabled' : ''}>${t('SmoothMotion.Enable')}</button>`
+                : ''}
             ${game.enabled === true
               ? `<button class="btn small danger" data-action="disable" data-id="${game.id}" type="button">${t('SmoothMotion.Disable')}</button>`
-              : `<button class="btn small success" data-action="enable" data-id="${game.id}" type="button" ${game.available === false ? 'disabled' : ''}>${t('SmoothMotion.Enable')}</button>`}
+              : ''}
             <button class="btn small" data-action="restore" data-id="${game.id}" type="button">${t('Common.Restore')}</button>
           </div>
         </article>`).join('');

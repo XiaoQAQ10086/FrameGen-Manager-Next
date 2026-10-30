@@ -32,6 +32,7 @@
 | 路径安全 | `util.rs::safe_join`、sidecar `checked_dir` | `Domain/Safety` | [已实现](path-safety.md) |
 | 错误码 | `err.rs` 的关键词规则 | `Domain/Errors` | 已实现（枚举 + 上下文） |
 | 资产包 schema/payload | 旧版 `deploy.rs` / `sm.rs` / `dlss5.rs` 的文件表 | `Domain/Packs`、`Infrastructure/Packs` | [已实现](asset-pack.md) |
+| 内置资产升级 | 旧版升级时自动清理部署 | `Infrastructure/Deployment` + `Infrastructure/Packs` | [已实现](pack-upgrades.md) |
 
 ## 模板
 

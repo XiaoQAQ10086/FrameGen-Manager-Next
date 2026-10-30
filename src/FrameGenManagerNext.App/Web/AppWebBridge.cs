@@ -70,6 +70,21 @@ public sealed partial class AppWebBridge : IDisposable
         _environment = environment;
         _paths = paths;
         _logger = logger;
+        _ = PrewarmGpuAsync();
+    }
+
+    private async Task PrewarmGpuAsync()
+    {
+        try
+        {
+            // Start the single per-process GPU probe while WebView2 is still
+            // initializing so the first page paint does not wait for it.
+            await _gpu.GetAsync(CancellationToken.None).ConfigureAwait(false);
+        }
+        catch (Exception exception)
+        {
+            _logger.LogDebug(exception, "GPU prewarm failed");
+        }
     }
 
     public void Dispose()

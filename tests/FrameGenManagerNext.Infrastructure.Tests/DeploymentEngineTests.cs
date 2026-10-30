@@ -172,6 +172,83 @@ public sealed class DeploymentEngineTests : IDisposable
         inspected.Value.HasManifest.ShouldBeFalse();
     }
 
+    [Fact]
+    public async Task UpgradingPackKeepsOriginalBackupsAndRemovesStaleFiles()
+    {
+        _directory.WriteFile("game/runtime.dll", "original runtime");
+        _directory.WriteFile("game/config.ini", "original=1");
+
+        var version1 = BuildPlan(
+            "1.0.0",
+            SourcePlan("runtime.dll", _directory.WriteFile("source/v1/runtime.dll", "v1 runtime"), "runtime"),
+            ContentPlan("config.ini", "v1=1"),
+            SourcePlan("stale.dll", _directory.WriteFile("source/v1/stale.dll", "v1 stale"), "runtime"));
+
+        var deployed = await _engine.DeployAsync(
+            version1,
+            progress: null,
+            TestContext.Current.CancellationToken);
+        deployed.IsSuccess.ShouldBeTrue(deployed.Error?.ToString());
+
+        var version2 = BuildPlan(
+            "2.0.0",
+            SourcePlan("runtime.dll", _directory.WriteFile("source/v2/runtime.dll", "v2 runtime"), "runtime"),
+            ContentPlan("config.ini", "v2=1"),
+            SourcePlan("added.dll", _directory.WriteFile("source/v2/added.dll", "v2 added"), "runtime"));
+
+        var inspected = await _engine.InspectAsync(version2, TestContext.Current.CancellationToken);
+        inspected.IsSuccess.ShouldBeTrue(inspected.Error?.ToString());
+        inspected.Value.State.ShouldBe(DeploymentState.Outdated);
+        inspected.Value.PackVersion.ShouldBe("1.0.0");
+
+        var upgraded = await _engine.DeployAsync(
+            version2,
+            progress: null,
+            TestContext.Current.CancellationToken);
+        upgraded.IsSuccess.ShouldBeTrue(upgraded.Error?.ToString());
+        upgraded.Value.State.ShouldBe(DeploymentState.Installed);
+        File.ReadAllText(Path.Combine(_target, "runtime.dll")).ShouldBe("v2 runtime");
+        File.ReadAllText(Path.Combine(_target, "config.ini")).ShouldBe("v2=1");
+        File.ReadAllText(Path.Combine(_target, "added.dll")).ShouldBe("v2 added");
+        File.Exists(Path.Combine(_target, "stale.dll")).ShouldBeFalse();
+
+        var restored = await _engine.RestoreAsync(
+            Family,
+            _target,
+            progress: null,
+            TestContext.Current.CancellationToken);
+        restored.IsSuccess.ShouldBeTrue(restored.Error?.ToString());
+        restored.Value.Conflicts.ShouldBe(0);
+        File.ReadAllText(Path.Combine(_target, "runtime.dll")).ShouldBe("original runtime");
+        File.ReadAllText(Path.Combine(_target, "config.ini")).ShouldBe("original=1");
+        File.Exists(Path.Combine(_target, "added.dll")).ShouldBeFalse();
+    }
+
+    [Fact]
+    public async Task InspectionAndOptionLookupReturnDeployedOptions()
+    {
+        var plan = BuildPlan(
+            "1.0.0",
+            new Dictionary<string, string> { ["preset"] = "B", ["optimized"] = "2" },
+            ContentPlan("config.ini", "preset=B"));
+
+        var deployed = await _engine.DeployAsync(
+            plan,
+            progress: null,
+            TestContext.Current.CancellationToken);
+        deployed.IsSuccess.ShouldBeTrue(deployed.Error?.ToString());
+
+        var inspected = await _engine.InspectAsync(plan, TestContext.Current.CancellationToken);
+        inspected.IsSuccess.ShouldBeTrue(inspected.Error?.ToString());
+        inspected.Value.Options.ShouldNotBeNull()["preset"].ShouldBe("B");
+
+        var stored = await _engine.LoadOptionsAsync(
+            Family,
+            _target,
+            TestContext.Current.CancellationToken);
+        stored.ShouldNotBeNull()["optimized"].ShouldBe("2");
+    }
+
     public void Dispose()
     {
         _directory.Dispose();
@@ -180,24 +257,41 @@ public sealed class DeploymentEngineTests : IDisposable
     private DeploymentPlan BuildPlan()
     {
         var source = _directory.WriteFile("source/runtime.dll", "new runtime");
-        var content = Encoding.UTF8.GetBytes("new=1");
+        return BuildPlan(
+            "1.0.0",
+            SourcePlan("runtime.dll", source, "runtime"),
+            ContentPlan("config.ini", "new=1"));
+    }
 
+    private DeploymentPlan BuildPlan(string version, params DeploymentFilePlan[] files)
+    {
+        return BuildPlan(version, new Dictionary<string, string>(), files);
+    }
+
+    private DeploymentPlan BuildPlan(
+        string version,
+        IReadOnlyDictionary<string, string> options,
+        params DeploymentFilePlan[] files)
+    {
         return new DeploymentPlan(
             Family,
             "test.pack",
-            "1.0.0",
+            version,
             _target,
-            [
-                SourcePlan("runtime.dll", source, "runtime"),
-                new DeploymentFilePlan(
-                    "config.ini",
-                    SourcePath: null,
-                    content,
-                    Sha256(content),
-                    content.LongLength,
-                    "ini"),
-            ],
-            new Dictionary<string, string>());
+            files,
+            options);
+    }
+
+    private static DeploymentFilePlan ContentPlan(string relativePath, string text)
+    {
+        var content = Encoding.UTF8.GetBytes(text);
+        return new DeploymentFilePlan(
+            relativePath,
+            SourcePath: null,
+            content,
+            Sha256(content),
+            content.LongLength,
+            "ini");
     }
 
     private static DeploymentFilePlan SourcePlan(string relativePath, string sourcePath, string role)

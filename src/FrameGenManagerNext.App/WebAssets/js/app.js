@@ -31,6 +31,7 @@ const context = {
   ui,
   t: i18n.t,
   get info() { return state.info; },
+  startupAutoScan: false,
   refreshInfo: loadInfo,
   navigate,
 };
@@ -162,6 +163,7 @@ async function bootstrap() {
 
   try {
     await loadInfo();
+    context.startupAutoScan = state.info?.settings?.autoScanOnStartup === true;
     const initial = location.hash.replace('#', '') || 'framegen';
     await navigate(pages[initial] ? initial : 'framegen', false);
     setTimeout(() => { checkForUpdates(context, { silent: true }); }, 1500);

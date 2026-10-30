@@ -25,7 +25,7 @@
 |---|---|---|
 | SET-001 | 启动主题 | 固定浅色；不读取系统深色模式 |
 | SET-002 | 保存设置 | 立即写盘并应用浅色主题；页面显示“设置已保存” |
-| SET-003 | 自动扫描开启且游戏库为空 | 启动加载缓存后执行一次扫描 |
+| SET-003 | 自动扫描开启 | 启动加载缓存后执行一次完整扫描；默认关闭 |
 | SET-004 | 封面关闭 | 游戏库不解析/下载封面，表格封面列为空 |
 | SET-005 | HAGS 快捷入口 | 打开 `ms-settings:display-advancedgraphics-default`（Win11）或 `ms-settings:display-advancedgraphics`（Win10）；不写注册表 |
 | SET-006 | 窗口背景 | 使用 `WindowBackdropType=None`；Mica 在本机启动时会导致内容不绘制 |
