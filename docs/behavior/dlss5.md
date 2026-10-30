@@ -29,6 +29,7 @@
    ReShade_Setup_6.8.0_Addon.exe --headless --api <api> "<game-exe>"
    ```
    - 超时 240 秒；`CreateNoWindow`；捕获 stdout/stderr。
+   - ReShade Setup 在写模块前会联网下载兼容性信息，这一步可能持续 1–2 分钟；期间界面显示不确定进度条和“运行 ReShade 安装器”提示，不要中途关闭软件。
    - 非 0 退出或超时 → 回滚已部署文件，返回 `InstallerFailed`。
 4. 如果生成 `ReShade.ini`，写入：
    - `EffectSearchPaths=.\reshade-shaders\Shaders\**`

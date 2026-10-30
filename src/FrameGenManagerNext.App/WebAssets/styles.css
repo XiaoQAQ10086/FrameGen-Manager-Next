@@ -307,6 +307,12 @@ button, select { font: inherit; }
 .asset-status { margin: 14px 0 10px; color: var(--muted); font-size: 12.5px; }
 .asset-progress { height: 6px; border-radius: 999px; overflow: hidden; background: rgba(96, 107, 125, 0.14); }
 .asset-progress i { display: block; width: 0; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #48a7ff, var(--accent)); transition: width .18s var(--ease); }
+.install-progress { display: grid; gap: 8px; margin-top: 16px; }
+.install-progress .bar { height: 6px; border-radius: 999px; overflow: hidden; background: rgba(96, 107, 125, 0.14); }
+.install-progress .bar i { display: block; width: 0; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #48a7ff, var(--accent)); transition: width .18s var(--ease); }
+.install-progress.indeterminate .bar i { width: 40% !important; animation: installSlide 1.15s ease-in-out infinite; }
+.install-progress p { margin: 0; }
+@keyframes installSlide { from { transform: translateX(-110%); } to { transform: translateX(280%); } }
 .asset-failed-title { margin: 16px 0 8px; font-size: 13.5px; }
 .asset-failures { display: grid; gap: 8px; max-height: 40vh; overflow: auto; }
 .asset-failure { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px; align-items: center; padding: 10px 12px; border: 1px solid var(--line); border-radius: 12px; background: rgba(255, 255, 255, 0.7); }

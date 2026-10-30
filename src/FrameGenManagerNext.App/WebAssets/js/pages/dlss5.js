@@ -127,7 +127,11 @@ export default {
             ${apiOptions.map(([value, label]) => `<option value="${value}">${esc(apiLabelText(value, label))}</option>`).join('')}
           </select></label>
         </div>
-        <p class="hint">${esc(t('Dlss5.Subtitle'))}</p>`;
+        <p class="hint">${esc(t('Dlss5.Subtitle'))}</p>
+        <div class="install-progress hidden" data-role="install-progress">
+          <div class="bar"><i data-role="install-bar"></i></div>
+          <p class="hint" data-role="install-status"></p>
+        </div>`;
       const targetSelect = detailBody.querySelector('[data-role="detail-target"]');
       const apiSelect = detailBody.querySelector('[data-role="detail-api"]');
       if (targetSelect && game.renderExe) {
@@ -169,8 +173,11 @@ export default {
 
       const installButton = q('[data-action="modal-install"]');
       const repairState = game.state === 'Outdated' || game.state === 'Partial' || game.state === 'Conflict';
-      installButton.disabled = game.available === false || game.legacy || (deployed(game) && !repairState);
-      installButton.textContent = t(repairState ? 'Common.Update' : 'Common.Install');
+      const installed = deployed(game) && !repairState;
+      installButton.disabled = game.available === false || game.legacy || installed;
+      installButton.textContent = t(installed
+        ? 'State.Deployed'
+        : repairState ? 'Common.Update' : 'Common.Install');
 
       const uninstallButton = q('[data-action="modal-uninstall"]');
       uninstallButton.disabled = !deployed(game) && !game.legacy && !game.leftovers;
@@ -197,18 +204,64 @@ export default {
       }
     }
 
-    async function action(command, id, extra = {}) {
+    async function runDetailAction(command, game, extra = {}) {
       if (busy) return;
       busy = true;
+
+      const box = detailBody.querySelector('[data-role="install-progress"]');
+      const bar = detailBody.querySelector('[data-role="install-bar"]');
+      const status = detailBody.querySelector('[data-role="install-status"]');
+      const installButton = q('[data-action="modal-install"]');
+      const uninstallButton = q('[data-action="modal-uninstall"]');
+      const previousInstall = installButton.textContent;
+      const previousUninstallDisabled = uninstallButton.disabled;
+
+      box?.classList.remove('hidden', 'indeterminate');
+      if (bar) bar.style.width = '0%';
+      if (status) status.textContent = t('Progress.planning');
+      installButton.disabled = true;
+      uninstallButton.disabled = true;
+      installButton.textContent = t('Progress.planning');
+
+      const unsubscribe = api.on('progress', (data) => {
+        if (!box || !bar || !status) return;
+        if (data.phase === 'installer') {
+          box.classList.add('indeterminate');
+          bar.style.width = '100%';
+          status.textContent = t('Progress.installer');
+          installButton.textContent = t('Progress.installer');
+          return;
+        }
+
+        box.classList.remove('indeterminate');
+        const percent = data.total > 0 ? Math.min(100, (data.current * 100) / data.total) : 0;
+        bar.style.width = `${percent}%`;
+        const label = t(`Progress.${data.phase}`);
+        status.textContent = data.total > 0
+          ? `${label} ${data.current}/${data.total}`
+          : label;
+        if (data.phase !== 'done' && data.phase !== 'failed') {
+          installButton.textContent = label;
+        }
+      });
+
       try {
-        const state = await api.request(command, { id, ...extra });
+        const state = await api.request(command, { id: game.id, ...extra });
         games = state.games;
         removed = state.removed || removed;
         render();
         removedController.render();
+        closeDetail();
+        ui.toast(t('Common.OperationDone'));
       } catch (error) {
-        ui.toast(error.message, 'error');
+        if (box) box.classList.remove('indeterminate');
+        if (status) status.textContent = error.message || error.code || t('Progress.failed');
+        installButton.textContent = previousInstall;
+        installButton.disabled = false;
+        uninstallButton.disabled = previousUninstallDisabled;
+        ui.toast(error.message || error.code || t('Progress.failed'), 'error');
       } finally {
+        unsubscribe();
         busy = false;
       }
     }
@@ -285,12 +338,10 @@ export default {
             }
             const api = detailBody.querySelector('[data-role="detail-api"]')?.value || 'DX12';
             if (!(await confirmDialog(t('Dlss5.Title'), t('Dlss5.Confirm.Install').replace('{0}', game.name).replace('{1}', prettyPath(target || game.targetDirectory)), t('Common.Install')))) return;
-            closeDetail();
-            return action('dlss5.install', game.id, { target, api });
+            return runDetailAction('dlss5.install', game, { target, api });
           }
           if (!(await confirmDialog(t('Dlss5.Title'), t('Dlss5.Confirm.Uninstall').replace('{0}', game.name), t('Common.Uninstall')))) return;
-          closeDetail();
-          return action('dlss5.uninstall', game.id);
+          return runDetailAction('dlss5.uninstall', game);
         }
       }
 

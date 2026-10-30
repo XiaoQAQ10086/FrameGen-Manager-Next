@@ -152,6 +152,11 @@ public sealed partial class Dlss5DeploymentService : IDlss5DeploymentService
             installer.Value.InstallerPath,
             arguments);
 
+        // The ReShade setup downloads compatibility information before writing the
+        // module, so this phase can take a minute or two on a slow connection. Report
+        // an indeterminate phase so the UI does not look frozen.
+        progress?.Report(new DeploymentProgress("installer", "ReShade", 0, 0));
+
         var process = await _processRunner.RunAsync(
             installer.Value.InstallerPath,
             arguments,
@@ -167,6 +172,8 @@ public sealed partial class Dlss5DeploymentService : IDlss5DeploymentService
                 process.TimedOut,
                 process.StandardOutput,
                 process.StandardError);
+
+            progress?.Report(new DeploymentProgress("failed", "ReShade", 0, 0));
 
             await _engine.RestoreAsync(FamilyId, plan.Value.TargetDirectory, progress: null, CancellationToken.None);
             return Result<Dlss5Report>.Fail(AppError.Create(

@@ -35,6 +35,8 @@ internal static class StringCatalog
         ["Progress.restoring"] = ("还原", "Restoring"),
         ["Progress.launchers"] = ("扫描启动器", "Scanning launchers"),
         ["Progress.games"] = ("探测游戏", "Probing games"),
+        ["Progress.installer"] = ("运行 ReShade 安装器（首次会下载兼容性信息，约 1–2 分钟）", "Running the ReShade installer (first run downloads compatibility data; about 1–2 minutes)"),
+        ["Progress.failed"] = ("失败", "Failed"),
         ["Progress.done"] = ("完成", "Done"),
         ["Common.RefreshState"] = ("刷新状态", "Refresh status"),
         ["Common.Cancel"] = ("取消", "Cancel"),
