@@ -249,7 +249,18 @@ export default {
     function renderGames() {
       const list = q('[data-role="games"]');
       list.innerHTML = games.map((game, index) => {
-        const deployed = ['Installed', 'Outdated', 'Partial', 'Conflict', 'InstalledWithoutManifest'].includes(game.state);
+        const restorable = ['Installed', 'Partial', 'Conflict'].includes(game.state);
+        const primaryAction = restorable ? 'restore' : 'deploy';
+        const primaryLabel = restorable
+          ? t('Common.Restore')
+          : game.state === 'Outdated'
+            ? t('Common.Update')
+            : t('Common.Deploy');
+        const stateText = game.state === 'Installed'
+          ? (game.packVersion
+              ? t('State.DeployedVersion').replace('{0}', game.packVersion)
+              : t('State.Deployed'))
+          : t(stateKeys[game.state] || 'State.NotDeployed');
         return `
         <article class="gcard${index < 12 ? '' : ' static'}" style="animation-delay:${Math.min(index * 35, 350)}ms">
           <div class="gtop">
@@ -259,15 +270,14 @@ export default {
               <div class="badges">
                 <span class="badge">${esc(t(launcherKeys[game.launcher] || 'Common.Unknown'))}</span>
                 <span class="badge">${esc(apiKeys[game.api] || game.api || '未知')}</span>
-                <span class="badge ${game.state === 'Installed' ? 'ok' : (game.state === 'Partial' || game.state === 'Conflict' ? 'warn' : 'dim')}">${esc(t(stateKeys[game.state] || 'State.NotDeployed'))}</span>
+                <span class="badge ${game.state === 'Installed' ? 'ok' : (game.state === 'Partial' || game.state === 'Conflict' ? 'warn' : 'dim')}">${esc(stateText)}</span>
               </div>
             </div>
           </div>
           <div class="gpath" title="${esc(prettyPath(game.targetDirectory))}">${esc(prettyPath(game.targetDirectory))}</div>
           <div class="gactions">
-            <button class="btn small success" data-action="deploy" data-id="${esc(game.id)}" type="button">${esc(t(game.state === 'Outdated' ? 'Common.Update' : 'Common.Deploy'))}</button>
+            <button class="btn small ${restorable ? 'danger' : 'success'}" data-action="${primaryAction}" data-id="${esc(game.id)}" type="button">${esc(primaryLabel)}</button>
             <button class="btn small" data-action="open" data-id="${esc(game.id)}" type="button">${esc(t('Library.OpenFolder'))}</button>
-            ${deployed ? `<button class="btn small danger" data-action="restore" data-id="${esc(game.id)}" type="button">${esc(t('Common.Restore'))}</button>` : ''}
             <span class="spacer"></span>
             <button class="btn small danger icon-only" data-action="remove" data-id="${esc(game.id)}" type="button" title="${esc(t('Common.Remove'))}" aria-label="${esc(t('Common.Remove'))}">🗑</button>
           </div>
@@ -344,7 +354,10 @@ export default {
         <div class="kv2 inline">
           <span>${esc(t('Dlss5.GraphicsApiLabel'))}</span>
           <b class="api-value">${esc(apiKeys[game.api] || game.api || t('Common.Unknown'))}</b>
-        </div>`;
+        </div>
+        ${game.state === 'InstalledWithoutManifest'
+          ? `<p class="asset-warning">${esc(t('Deploy.LegacyFilesWarning'))}</p>`
+          : ''}`;
       const targetSelect = deployMeta.querySelector('[data-role="modal-target"]');
       const targetHint = deployMeta.querySelector('[data-role="target-hint"]');
       const restoreButton = deployModal.querySelector('[data-action="modal-restore"]');

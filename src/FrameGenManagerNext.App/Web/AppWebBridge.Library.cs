@@ -88,6 +88,9 @@ public sealed partial class AppWebBridge
                     launcher = game.Launcher.ToString(),
                     api = game.GraphicsApi.ToString(),
                     state = state.ToString(),
+                    packVersion = inspection.IsSuccess
+                        ? inspection.Value.PackVersion
+                        : null,
                     options = inspection.IsSuccess
                         ? MapFrameGenOptions(inspection.Value.Options)
                         : null,

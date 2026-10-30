@@ -47,6 +47,14 @@
 - 失败：保留 manifest 和备份，列出原因；用户关闭游戏/杀毒软件后可重试，或手动清理。
 - 用户修改过的文件不会被强删；会作为失败列出。
 
+## 旧版（FrameGen-Manager / DLSSG-Manager）部署
+
+当前版本**不读取**旧版的 `%APPDATA%\FrameGen-Manager\backups\<key>\manifest.json`（以及 legacy `DLSSG-Manager`）。因此：
+
+- 旧部署文件与当前 pack 哈希有匹配时，显示 `InstalledWithoutManifest`（“已部署（无记录）”），只能重新部署，不能还原旧部署。
+- 旧资产版本不同、文件哈希都不匹配时，显示 `NotDeployed`，但目录里其实有文件；此时直接部署会把旧部署文件当作“原件”备份，而不是恢复旧版真正备份的原件。
+- 旧版 manifest 的字段（`game_dir`、`proxy_name`、`files[].deployed_sha256/original_sha256/backup_name/existed_before`）是可解析的，后续应增加一次性导入：把旧 manifest 和扁平 `.bak` 转成新的部署记录并校验原始哈希，再允许还原。导入前不能静默覆盖旧部署。
+
 ## 与其他流程的关系
 
 - 全局资产更新存在时，单游戏仍可按现有流程手动更新；点“一键清除”前会重新检测，已经手动更新的游戏不会被清除。
