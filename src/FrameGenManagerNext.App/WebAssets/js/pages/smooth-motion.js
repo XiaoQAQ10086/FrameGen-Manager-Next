@@ -144,6 +144,8 @@ export default {
         renderGpu();
         render();
         removedController.render();
+        api.invalidate();
+        ui.libraryChanged('smooth-motion');
         ui.toast(t('Common.OperationDone'));
       } catch (error) {
         ui.toast(error.message, 'error');

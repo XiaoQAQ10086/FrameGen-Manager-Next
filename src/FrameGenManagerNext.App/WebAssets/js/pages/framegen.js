@@ -706,10 +706,13 @@ export default {
       }
       if (action === 'restore') {
         const game = games.find((item) => item.id === id);
-        return run(
+        await run(
           () => api.request('framegen.restore', { id }),
           t('Library.Status.RestoreDone').replace('{0}', game?.name || id),
         );
+        api.invalidate();
+        ui.libraryChanged('framegen');
+        return;
       }
       if (action === 'clean') {
         const game = games.find((item) => item.id === id);
@@ -720,10 +723,13 @@ export default {
           t('Common.Clean'),
         );
         if (!confirmed) return;
-        return run(
+        await run(
           () => api.request('framegen.clean', { id }),
           t('Library.Status.CleanDone').replace('{0}', game.name),
         );
+        api.invalidate();
+        ui.libraryChanged('framegen');
+        return;
       }
       if (action === 'open') {
         await api.request('games.openFolder', { id }).catch((error) => ui.toast(error.message, 'error'));
@@ -758,6 +764,8 @@ export default {
           () => api.request('framegen.deploy', { id: game.id, target, options }),
           t('Library.Status.DeployDone').replace('{0}', game.name),
         );
+        api.invalidate();
+        ui.libraryChanged('framegen');
         return;
       }
       if (action === 'modal-restore') {
@@ -773,6 +781,8 @@ export default {
           () => api.request('framegen.restore', { id: game.id, target }),
           t('Library.Status.RestoreDone').replace('{0}', game.name),
         );
+        api.invalidate();
+        ui.libraryChanged('framegen');
       }
     };
     root.addEventListener('click', onRootClick);
