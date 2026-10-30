@@ -105,14 +105,21 @@ public sealed partial class Dlss5DeploymentService
         PruneEmptyDirectories(target, removed);
 
         var remaining = DescribeRemaining(ScanTarget(target));
-        var discard = await _engine.DiscardBackupAsync(FamilyId, target, cancellationToken);
-        if (discard.IsSuccess)
+        if (remaining.Count == 0)
         {
-            notes.Add("Deployment manifest and backups were removed.");
+            var discard = await _engine.DiscardBackupAsync(FamilyId, target, cancellationToken);
+            if (discard.IsSuccess)
+            {
+                notes.Add("Deployment manifest and backups were removed.");
+            }
+            else
+            {
+                notes.Add($"Could not remove deployment metadata: {discard.Error!.Code}");
+            }
         }
         else
         {
-            notes.Add($"Could not remove deployment metadata: {discard.Error!.Code}");
+            notes.Add("Some files remain; deployment metadata was kept so the cleanup can be retried.");
         }
 
         progress?.Report(new DeploymentProgress("done", string.Empty, 1, 1));
