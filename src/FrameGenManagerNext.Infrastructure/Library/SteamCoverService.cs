@@ -9,6 +9,8 @@ public sealed class SteamCoverService : IGameCoverService
 {
     private static readonly string[] CoverSuffixes =
     [
+        "_library_600x900_2x.jpg",
+        "_library_600x900_2x.png",
         "_library_600x900.jpg",
         "_library_600x900.png",
         "_header.jpg",
@@ -50,10 +52,11 @@ public sealed class SteamCoverService : IGameCoverService
         }
 
         var appId = game.AppId.Trim();
-        var cached = Path.Combine(_paths.CacheDirectory, "covers", appId + ".jpg");
-        if (IsUsableImage(cached))
+        var coverDirectory = Path.Combine(_paths.CacheDirectory, "covers");
+        var highResolution = Path.Combine(coverDirectory, appId + "_2x.jpg");
+        if (IsUsableImage(highResolution))
         {
-            return cached;
+            return highResolution;
         }
 
         var steamRoot = FindSteamRoot(game.InstallDirectory);
@@ -71,8 +74,19 @@ public sealed class SteamCoverService : IGameCoverService
             return null;
         }
 
-        var downloaded = await DownloadCoverAsync(appId, cached, cancellationToken);
-        return downloaded ?? (steamRoot is null ? null : FindLocalCover(steamRoot, appId));
+        var downloaded = await DownloadCoverAsync(appId, highResolution, cancellationToken);
+        if (downloaded is not null)
+        {
+            return downloaded;
+        }
+
+        var cached = Path.Combine(coverDirectory, appId + ".jpg");
+        if (IsUsableImage(cached))
+        {
+            return cached;
+        }
+
+        return steamRoot is null ? null : FindLocalCover(steamRoot, appId);
     }
 
     private async Task<string?> DownloadCoverAsync(

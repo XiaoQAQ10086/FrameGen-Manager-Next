@@ -55,6 +55,7 @@ public sealed partial class AppWebBridge
                     state = state.ToString(),
                     targetDirectory = game.TargetDirectory,
                     renderExe = game.RenderExePath,
+                    targets = EnumerateExeTargets(game.TargetDirectory),
                     initial = string.IsNullOrWhiteSpace(game.Name) ? "?" : game.Name[..1].ToUpperInvariant(),
                     cover = settings.ShowCovers
                         ? await GetCoverUrlAsync(game)
@@ -70,7 +71,7 @@ public sealed partial class AppWebBridge
         var games = entries.Select(entry => entry!).ToList();
         var installed = states.Count(state => state == DeploymentState.Installed);
 
-        var removed = BuildRemovedGames(library);
+        var removed = await BuildRemovedGamesAsync(library);
 
         return new
         {
@@ -224,11 +225,13 @@ public sealed partial class AppWebBridge
         return library.EnumerateVisibleGames().FirstOrDefault(game => game.Id == id);
     }
 
-    private static List<object> BuildRemovedGames(GameLibrary library)
+    private async Task<List<object>> BuildRemovedGamesAsync(GameLibrary library)
     {
-        return library.EnumerateRemovedGames()
-            .OrderBy(game => game.Name, StringComparer.CurrentCultureIgnoreCase)
-            .Select(game => (object)new
+        var removed = new List<object>();
+        foreach (var game in library.EnumerateRemovedGames()
+                     .OrderBy(item => item.Name, StringComparer.CurrentCultureIgnoreCase))
+        {
+            removed.Add(new
             {
                 id = game.Id,
                 name = game.Name,
@@ -236,8 +239,11 @@ public sealed partial class AppWebBridge
                 api = game.GraphicsApi.ToString(),
                 targetDirectory = game.TargetDirectory,
                 initial = string.IsNullOrWhiteSpace(game.Name) ? "?" : game.Name[..1].ToUpperInvariant(),
-            })
-            .ToList();
+                cover = await GetCoverUrlAsync(game),
+            });
+        }
+
+        return removed;
     }
 
     private async Task<string?> GetCoverUrlAsync(GameEntry game)
@@ -258,7 +264,7 @@ public sealed partial class AppWebBridge
             else
             {
                 var info = new FileInfo(path);
-                url = info.Length is <= 0 or > 3 * 1024 * 1024
+                url = info.Length is <= 0 or > 3 * 1024 * 1024 || !IsCoverLargeEnough(path)
                     ? await GetExecutableIconUrlAsync(game.RenderExePath)
                     : CoverUrl(await EnsureCachedCoverAsync(path));
             }
@@ -348,6 +354,19 @@ public sealed partial class AppWebBridge
         }
 
         return destination;
+    }
+
+    private static bool IsCoverLargeEnough(string path)
+    {
+        try
+        {
+            using var image = Image.FromFile(path);
+            return image.Width >= 500;
+        }
+        catch (Exception exception) when (exception is ArgumentException or ExternalException or IOException)
+        {
+            return false;
+        }
     }
 
     private string CoverUrl(string path)

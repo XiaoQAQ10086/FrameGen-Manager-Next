@@ -111,7 +111,10 @@ export default {
       <div class="overlay hidden" data-role="overlay">
         <section class="modal" role="dialog" aria-modal="true">
           <header class="modal-head">
-            <div><h2 data-role="modal-title"></h2><p class="muted" data-role="modal-path"></p></div>
+            <div class="modal-game-head">
+              <div class="modal-cover" data-role="modal-cover"></div>
+              <div><h2 data-role="modal-title"></h2><p class="muted" data-role="modal-path"></p></div>
+            </div>
             <button class="icon-btn" data-close type="button">✕</button>
           </header>
           <div class="deploy-meta" data-role="deploy-meta"></div>
@@ -142,11 +145,13 @@ export default {
 
     const q = (selector) => root.querySelector(selector);
     const overlay = q('[data-role="overlay"]');
+    const deployModal = overlay.querySelector('.modal');
     const removedOverlay = q('[data-role="removed-overlay"]');
     const removedList = q('[data-role="removed-list"]');
     const removedCount = q('[data-role="removed-count"]');
     const modalTitle = q('[data-role="modal-title"]');
     const modalPath = q('[data-role="modal-path"]');
+    const modalCover = q('[data-role="modal-cover"]');
     const deployMeta = q('[data-role="deploy-meta"]');
     const optionsRoot = q('[data-role="options"]');
     const dataPath = q('[data-role="data-path"]');
@@ -259,7 +264,9 @@ export default {
       removedList.innerHTML = removed.length > 0
         ? removed.map((game) => `
           <div class="removed-row">
-            <div class="removed-initial">${esc(game.initial)}</div>
+            ${game.cover
+              ? `<img class="removed-cover" src="${game.cover}" alt="" loading="lazy" decoding="async">`
+              : `<div class="removed-initial">${esc(game.initial)}</div>`}
             <div class="removed-info">
               <div class="removed-name">${esc(game.name)}</div>
               <div class="game-path" title="${esc(prettyPath(game.targetDirectory))}">${esc(prettyPath(game.targetDirectory))}</div>
@@ -287,9 +294,25 @@ export default {
       current = game;
       modalTitle.textContent = game.name;
       modalPath.textContent = prettyPath(game.targetDirectory);
+      modalCover.innerHTML = game.cover
+        ? `<img src="${game.cover}" alt="" loading="lazy" decoding="async">`
+        : `<span>${esc(game.initial)}</span>`;
+      const targets = game.targets?.length
+        ? game.targets
+        : (game.renderExe ? [{ path: game.renderExe, name: game.renderExe.split('\\').pop() }] : []);
       deployMeta.innerHTML = `
-        <div class="kv2"><span>${esc(t('Dlss5.Target'))}</span><b class="badge" title="${esc(prettyPath(game.renderExe || game.targetDirectory))}">${esc(game.renderExe ? game.renderExe.split('\\').pop() : t('Library.RenderExeMissing'))}</b></div>
-        <div class="kv2"><span>${esc(t('Dlss5.GraphicsApiLabel'))}</span><b class="badge">${esc(apiKeys[game.api] || game.api || t('Common.Unknown'))}</b></div>`;
+        <label class="deploy-target-label">
+          <span>${esc(t('Dlss5.Target'))}</span>
+          <select data-role="modal-target">
+            ${targets.map((target) => `<option value="${esc(target.path)}">${esc(target.name)}</option>`).join('')}
+          </select>
+        </label>
+        <div class="kv2 inline">
+          <span>${esc(t('Dlss5.GraphicsApiLabel'))}</span>
+          <b class="badge">${esc(apiKeys[game.api] || game.api || t('Common.Unknown'))}</b>
+        </div>`;
+      const targetSelect = deployMeta.querySelector('[data-role="modal-target"]');
+      if (targetSelect && game.renderExe) targetSelect.value = game.renderExe;
       optionsRoot.innerHTML = optionFields();
       overlay.classList.remove('hidden');
       syncEngine();
@@ -335,7 +358,44 @@ export default {
       };
     }
 
+    const snapshotKey = 'fgm.framegen.snapshot';
+
+    function readSnapshot() {
+      try {
+        return JSON.parse(localStorage.getItem(snapshotKey) || 'null');
+      } catch {
+        return null;
+      }
+    }
+
+    function saveSnapshot() {
+      try {
+        localStorage.setItem(snapshotKey, JSON.stringify({ games, removed, options, gpu }));
+      } catch {
+        // A full quota should never break the page.
+      }
+    }
+
+    function applySnapshot() {
+      const snapshot = readSnapshot();
+      if (!snapshot) return false;
+      if (!games.length && Array.isArray(snapshot.games)) {
+        games = snapshot.games;
+        removed = snapshot.removed || [];
+        options = snapshot.options || null;
+        renderGames();
+        renderRemoved();
+        status(t('Library.Status.Loaded').replace('{0}', games.length));
+      }
+      if (!gpu && snapshot.gpu) {
+        gpu = snapshot.gpu;
+        renderGpu();
+      }
+      return games.length > 0;
+    }
+
     async function load() {
+      applySnapshot();
       // Let the game list paint as soon as its data arrives; GPU probing may take
       // longer because it queries the driver.
       const gpuPromise = api.request('gpu.state').catch((error) => {
@@ -352,11 +412,13 @@ export default {
         renderRemoved();
         status(t('Library.Status.Loaded').replace('{0}', games.length));
         notice(gamesState.warning);
+        saveSnapshot();
 
         const gpuState = await gpuPromise;
         if (gpuState) {
           gpu = gpuState;
           renderGpu();
+          saveSnapshot();
         }
       } catch (error) {
         games = [];
@@ -378,6 +440,7 @@ export default {
           options = next.options || options;
           renderGames();
           renderRemoved();
+          saveSnapshot();
           status(t('Library.Status.Loaded').replace('{0}', games.length));
         }
         if (next?.options) options = next.options;
@@ -498,8 +561,13 @@ export default {
       if (action === 'modal-deploy') {
         if (!current) return;
         const game = current;
+        const target = deployMeta.querySelector('[data-role="modal-target"]')?.value;
+        const options = readOptions();
         closeModal();
-        await run(() => api.request('framegen.deploy', { id: game.id, options: readOptions() }), t('Library.Status.DeployDone').replace('{0}', game.name));
+        await run(
+          () => api.request('framegen.deploy', { id: game.id, target, options }),
+          t('Library.Status.DeployDone').replace('{0}', game.name),
+        );
         return;
       }
       if (action === 'modal-restore') {
@@ -521,6 +589,15 @@ export default {
       if (event.target.matches('[data-option="engine"]')) syncEngine();
     };
     optionsRoot.addEventListener('change', onOptionsChange);
+
+    let scrollTimer = null;
+    const onModalScroll = () => {
+      deployModal.classList.add('scrolling');
+      clearTimeout(scrollTimer);
+      scrollTimer = setTimeout(() => deployModal.classList.remove('scrolling'), 650);
+    };
+    deployModal.addEventListener('scroll', onModalScroll, { passive: true });
+
     overlay.querySelectorAll('[data-close]').forEach((button) => button.addEventListener('click', closeModal));
     overlay.addEventListener('click', (event) => {
       if (event.target === overlay) closeModal();
@@ -536,6 +613,8 @@ export default {
     return () => {
       closeModal();
       closeRemoved();
+      clearTimeout(scrollTimer);
+      deployModal.removeEventListener('scroll', onModalScroll);
       document.removeEventListener('fgm:library-changed', onLibraryChanged);
       root.removeEventListener('click', onRootClick);
       optionsRoot.removeEventListener('change', onOptionsChange);

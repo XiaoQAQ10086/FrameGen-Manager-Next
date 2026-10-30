@@ -268,6 +268,8 @@ button, select { font: inherit; }
   width: min(660px, 92vw);
   max-height: 86vh;
   overflow: auto;
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
   border-radius: 20px;
   padding: 22px;
   background: rgba(255, 255, 255, 0.96);
@@ -275,7 +277,18 @@ button, select { font: inherit; }
   box-shadow: var(--shadow-strong);
   animation: scaleIn .22s var(--ease) both;
 }
+.modal::-webkit-scrollbar { width: 8px; }
+.modal::-webkit-scrollbar-track { background: transparent; }
+.modal::-webkit-scrollbar-thumb { background: transparent; border-radius: 999px; transition: background .22s var(--ease); }
+.modal.scrolling::-webkit-scrollbar-thumb { background: rgba(96, 107, 125, 0.32); }
+.modal.scrolling { scrollbar-color: rgba(96, 107, 125, 0.32) transparent; }
 .modal-head { display: flex; justify-content: space-between; gap: 14px; }
+.modal-game-head { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.modal-cover { width: 44px; height: 58px; flex: 0 0 auto; border-radius: 9px; overflow: hidden; display: grid; place-items: center; color: #4e6f9d; font-size: 17px; font-weight: 700; background: rgba(0, 122, 255, .1); }
+.modal-cover img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.deploy-target-label { display: grid; gap: 6px; margin-top: 14px; color: var(--muted); font-size: 12px; }
+.kv2.inline { justify-content: flex-start; gap: 8px; margin-top: 8px; }
+.kv2.inline > b { text-align: left; }
 .modal-head h2 { margin: 0; font-size: 23px; }
 .modal-head p { margin: 4px 0 0; font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .icon-btn { width: 34px; height: 34px; border-radius: 10px; border: 1px solid var(--line); background: #fff; cursor: pointer; color: var(--muted); }
@@ -304,7 +317,9 @@ select:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(0, 122, 2
 .removed-modal { width: min(620px, 92vw); }
 .removed-list { display: grid; gap: 8px; margin-top: 16px; max-height: 60vh; overflow: auto; }
 .removed-row { display: grid; grid-template-columns: 40px minmax(0, 1fr) auto; gap: 11px; align-items: center; padding: 10px 12px; border: 1px solid var(--line); border-radius: 12px; background: rgba(255, 255, 255, .68); }
-.removed-initial { width: 36px; height: 44px; border-radius: 8px; display: grid; place-items: center; font-size: 16px; font-weight: 650; color: #4e6f9d; background: rgba(0, 122, 255, .1); }
+.removed-initial, .removed-cover { width: 36px; height: 44px; border-radius: 8px; }
+.removed-initial { display: grid; place-items: center; font-size: 16px; font-weight: 650; color: #4e6f9d; background: rgba(0, 122, 255, .1); }
+.removed-cover { object-fit: cover; display: block; background: rgba(0, 122, 255, .1); }
 .removed-info { min-width: 0; }
 .removed-name { font-size: 14px; font-weight: 650; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .removed-info .game-path { margin-top: 1px; }

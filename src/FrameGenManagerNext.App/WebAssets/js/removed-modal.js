@@ -29,7 +29,9 @@ export function createRemovedController(root, ctx, getRemoved, reload) {
     list.innerHTML = removed.length > 0
       ? removed.map((game) => `
         <div class="removed-row">
-          <div class="removed-initial">${esc(game.initial)}</div>
+          ${game.cover
+            ? `<img class="removed-cover" src="${game.cover}" alt="" loading="lazy" decoding="async">`
+            : `<div class="removed-initial">${esc(game.initial)}</div>`}
           <div class="removed-info">
             <div class="removed-name">${esc(game.name)}</div>
             <div class="game-path" title="${esc(prettyPath(game.targetDirectory))}">${esc(prettyPath(game.targetDirectory))}</div>

@@ -91,7 +91,7 @@ public sealed partial class AppWebBridge
                 minDriver = "616.64",
             },
             games,
-            removed = BuildRemovedGames(library),
+            removed = await BuildRemovedGamesAsync(library),
         };
     }
 

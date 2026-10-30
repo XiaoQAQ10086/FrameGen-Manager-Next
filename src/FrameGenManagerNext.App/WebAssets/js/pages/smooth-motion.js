@@ -1,5 +1,5 @@
 import { confirmDialog, escapeHtml as esc } from '../ui.js';
-import { componentKeys, prettyPath, routeKeys } from '../labels.js';
+import { componentKeys, prettyPath } from '../labels.js';
 import { createRemovedController, removedMarkup } from '../removed-modal.js';
 
 const gateKeys = {
@@ -87,7 +87,6 @@ export default {
             <div class="ginfo">
               <div class="gname">${esc(game.name)}</div>
               <div class="badges">
-                <span class="badge">${esc(t(routeKeys[game.route] || 'Gpu.Route.Unknown'))}</span>
                 <span class="badge ${game.component === 'Installed' ? 'ok' : (game.component === 'Partial' || game.component === 'Conflict' ? 'warn' : 'dim')}">${esc(t(componentKeys[game.component] || 'State.NotDeployed'))}</span>
                 <span class="badge ${game.enabled === true ? 'ok' : 'dim'}">${esc(game.enabled === true ? t('SmoothMotion.Driver.On') : game.enabled === false ? t('SmoothMotion.Driver.Off') : t('SmoothMotion.Driver.Unknown'))}</span>
               </div>
