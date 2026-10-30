@@ -578,7 +578,10 @@ select:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(0, 122, 2
 .btn.scan:hover { filter: brightness(1.06); box-shadow: 0 8px 22px rgba(21, 122, 51, 0.3); }
 
 /* settings/about forms */
-.form-panel { display: grid; gap: 16px; max-width: 760px; }
+.form-panel { display: grid; gap: 14px; max-width: 760px; }
+.form-panel > .ctitle { margin-bottom: 0; }
+.form-panel > .hint { margin: 0; }
+.form-panel:last-child { margin-bottom: 0; }
 .form-row { display: flex; align-items: center; justify-content: space-between; gap: 18px; }
 .form-row > div:first-child { min-width: 0; }
 .form-row h3 { margin: 0 0 3px; font-size: 14px; }
