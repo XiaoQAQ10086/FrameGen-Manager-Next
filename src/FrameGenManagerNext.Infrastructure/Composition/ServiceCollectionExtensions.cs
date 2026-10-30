@@ -5,6 +5,7 @@ using FrameGenManagerNext.Core.Features.Dlss5;
 using FrameGenManagerNext.Core.Features.Framegen;
 using FrameGenManagerNext.Core.Features.Gpu;
 using FrameGenManagerNext.Core.Features.Library;
+using FrameGenManagerNext.Core.Features.Maintenance;
 using FrameGenManagerNext.Core.Features.Packs;
 using FrameGenManagerNext.Core.Features.Settings;
 using FrameGenManagerNext.Core.Features.SmoothMotion;
@@ -61,6 +62,7 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IProcessRunner, ProcessRunner>();
         services.AddSingleton<IReShadeConfigService, ReShadeConfigService>();
         services.AddSingleton<IDlss5DeploymentService, Dlss5DeploymentService>();
+        services.AddSingleton<IAssetMaintenanceService, AssetMaintenanceService>();
 
         return services;
     }

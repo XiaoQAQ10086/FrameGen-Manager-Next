@@ -92,6 +92,46 @@ if (args.Length >= 2 &&
     return await LogsCommand.RunAsync(services, lineCount, CancellationToken.None);
 }
 
+if (args.Length >= 2 &&
+    args[0].Equals("assets", StringComparison.OrdinalIgnoreCase))
+{
+    var action = args[1].ToLowerInvariant();
+    if (action is not ("check" or "clear"))
+    {
+        Console.Error.WriteLine("Usage: fgm-next assets <check|clear> [--json] [--yes]");
+        return 2;
+    }
+
+    var json = false;
+    var confirmed = false;
+    foreach (var option in args.Skip(2))
+    {
+        if (option.Equals("--json", StringComparison.OrdinalIgnoreCase))
+        {
+            json = true;
+            continue;
+        }
+
+        if (option.Equals("--yes", StringComparison.OrdinalIgnoreCase))
+        {
+            confirmed = true;
+            continue;
+        }
+
+        Console.Error.WriteLine($"Unknown option: {option}");
+        return 2;
+    }
+
+    if (action == "clear" && !confirmed)
+    {
+        Console.Error.WriteLine("Refusing to clear deployments without --yes.");
+        return 2;
+    }
+
+    using var services = CliServices.Create();
+    return await AssetsCommand.RunAsync(services, action, json, CancellationToken.None);
+}
+
 if (args.Length >= 4 &&
     args[0].Equals("sm", StringComparison.OrdinalIgnoreCase))
 {
@@ -253,6 +293,7 @@ Console.WriteLine("  fgm-next gpu");
 Console.WriteLine("  fgm-next library list [--json]");
 Console.WriteLine("  fgm-next library scan [--json]");
 Console.WriteLine("  fgm-next logs tail [--lines N]");
+Console.WriteLine("  fgm-next assets <check|clear> [--json] [--yes]");
 Console.WriteLine("  fgm-next sm <inspect|enable|disable|restore> <target-dir> <game-exe>");
 Console.WriteLine("  fgm-next dlss5 <inspect|install|restore> <target-dir> <game-exe>");
 Console.WriteLine("  fgm-next deploy <inspect|framegen|restore> <target-dir>");

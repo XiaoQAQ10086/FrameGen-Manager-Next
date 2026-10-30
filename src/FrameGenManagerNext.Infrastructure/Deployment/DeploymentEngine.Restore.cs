@@ -126,7 +126,11 @@ public sealed partial class DeploymentEngine
 
         RemoveEmptyParents(manifest, target.Value);
         var leftovers = CollectLeftovers(manifest, target.Value);
-        var restoredManifest = CreateManifest(manifest, target.Value, DeploymentManifestState.Restored);
+        var clean = conflicts == 0 && warnings.Count == 0 && leftovers.Count == 0;
+        var finalState = clean
+            ? DeploymentManifestState.Restored
+            : DeploymentManifestState.Partial;
+        var restoredManifest = CreateManifest(manifest, target.Value, finalState);
         await _backups.SaveManifestAsync(restoredManifest, cancellationToken);
         progress?.Report(new DeploymentProgress("done", string.Empty, manifest.Files.Count, manifest.Files.Count));
 

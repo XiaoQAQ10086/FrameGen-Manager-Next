@@ -88,6 +88,13 @@ public sealed class DeploymentEngineTests : IDisposable
         restored.IsSuccess.ShouldBeTrue(restored.Error?.ToString());
         restored.Value.Conflicts.ShouldBe(1);
         File.ReadAllText(Path.Combine(_target, "runtime.dll")).ShouldBe("user changed this");
+
+        var manifest = await _engine.LoadManifestAsync(
+            Family,
+            _target,
+            TestContext.Current.CancellationToken);
+        manifest.ShouldNotBeNull();
+        manifest.State.ShouldBe(DeploymentManifestState.Partial);
     }
 
     [Fact]

@@ -14,6 +14,11 @@ public interface IDeploymentEngine
         string targetDirectory,
         CancellationToken cancellationToken);
 
+    Task<DeploymentManifest?> LoadManifestAsync(
+        string familyId,
+        string targetDirectory,
+        CancellationToken cancellationToken);
+
     Task<Result<DeploymentReport>> DeployAsync(
         DeploymentPlan plan,
         IProgress<DeploymentProgress>? progress,

@@ -182,6 +182,19 @@ public sealed partial class DeploymentEngine : IDeploymentEngine
         return manifest.Options;
     }
 
+    public Task<DeploymentManifest?> LoadManifestAsync(
+        string familyId,
+        string targetDirectory,
+        CancellationToken cancellationToken)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(familyId);
+
+        var target = ValidateTarget(targetDirectory);
+        return target.IsFailure
+            ? Task.FromResult<DeploymentManifest?>(null)
+            : _backups.LoadManifestAsync(familyId, target.Value, cancellationToken);
+    }
+
     public async Task<Result<DeploymentReport>> DeployAsync(
         DeploymentPlan plan,
         IProgress<DeploymentProgress>? progress,

@@ -8,6 +8,7 @@ import logs from './pages/logs.js';
 import about from './pages/about.js';
 import donate from './pages/donate.js';
 import { checkForUpdates } from './update.js';
+import { checkAssetUpdates, refreshAssetBanner } from './asset-maintenance.js';
 import { enhanceSelects, observeSelects } from './custom-select.js';
 
 const pages = {
@@ -94,6 +95,7 @@ async function changeLanguage(language) {
     i18n.setStrings(info.strings, info.language);
     resetPages();
     await navigate(state.current, false);
+    refreshAssetBanner(context);
   } catch (error) {
     ui.toast(error.message || error.code || '语言切换失败', 'error');
   }
@@ -185,6 +187,7 @@ async function bootstrap() {
     const initial = location.hash.replace('#', '') || 'framegen';
     await navigate(pages[initial] ? initial : 'framegen', false);
     setTimeout(() => { checkForUpdates(context, { silent: true }); }, 1500);
+    setTimeout(() => { checkAssetUpdates(context, { silent: true }); }, 2600);
   } catch (error) {
     const view = document.getElementById('view');
     if (view) {

@@ -9,6 +9,7 @@ using FrameGenManagerNext.Core.Features.Dlss5;
 using FrameGenManagerNext.Core.Features.Framegen;
 using FrameGenManagerNext.Core.Features.Gpu;
 using FrameGenManagerNext.Core.Features.Library;
+using FrameGenManagerNext.Core.Features.Maintenance;
 using FrameGenManagerNext.Core.Features.Settings;
 using FrameGenManagerNext.Core.Features.SmoothMotion;
 using FrameGenManagerNext.Infrastructure.Paths;
@@ -29,6 +30,7 @@ public sealed partial class AppWebBridge : IDisposable
     private readonly IFrameGenDeploymentService _frameGen;
     private readonly ISmoothMotionDeploymentService _smoothMotion;
     private readonly IDlss5DeploymentService _dlss5;
+    private readonly IAssetMaintenanceService _maintenance;
     private readonly IGpuService _gpu;
     private readonly IGpuSpoofService _spoof;
     private readonly IGameCoverService _covers;
@@ -41,6 +43,8 @@ public sealed partial class AppWebBridge : IDisposable
 
     private CoreWebView2? _core;
     private CancellationTokenSource? _scanCancellation;
+    private CancellationTokenSource? _assetClearCancellation;
+    private AssetUpdateReport? _lastAssetReport;
 
     public event EventHandler<WebViewFailure>? Failed;
 
@@ -49,6 +53,7 @@ public sealed partial class AppWebBridge : IDisposable
         IFrameGenDeploymentService frameGen,
         ISmoothMotionDeploymentService smoothMotion,
         IDlss5DeploymentService dlss5,
+        IAssetMaintenanceService maintenance,
         IGpuService gpu,
         IGpuSpoofService spoof,
         IGameCoverService covers,
@@ -62,6 +67,7 @@ public sealed partial class AppWebBridge : IDisposable
         _frameGen = frameGen;
         _smoothMotion = smoothMotion;
         _dlss5 = dlss5;
+        _maintenance = maintenance;
         _gpu = gpu;
         _spoof = spoof;
         _covers = covers;
@@ -92,6 +98,9 @@ public sealed partial class AppWebBridge : IDisposable
         _scanCancellation?.Cancel();
         _scanCancellation?.Dispose();
         _scanCancellation = null;
+        _assetClearCancellation?.Cancel();
+        _assetClearCancellation?.Dispose();
+        _assetClearCancellation = null;
         DetachCoreEvents();
         _operationGate.Dispose();
         _addGameGate.Dispose();
@@ -253,6 +262,9 @@ public sealed partial class AppWebBridge : IDisposable
             "games.restore" => await RestoreGameAsync(payload),
             "games.openFolder" => await OpenGameFolderAsync(payload),
             "games.pickExecutable" => await PickGameExecutableAsync(payload),
+            "assets.check" => await CheckAssetUpdatesAsync(),
+            "assets.clear" => await ClearAssetUpdatesAsync(),
+            "assets.cancel" => CancelAssetClear(),
             "framegen.deploy" => await DeployFrameGenAsync(payload),
             "framegen.restore" => await RestoreFrameGenAsync(payload),
             "sm.state" => await BuildSmoothMotionStateAsync(),
