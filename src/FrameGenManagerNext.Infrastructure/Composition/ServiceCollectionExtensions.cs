@@ -60,6 +60,7 @@ public static class ServiceCollectionExtensions
 
         services.AddSingleton<IGraphicsApiProbe, GraphicsApiProbeService>();
         services.AddSingleton<IProcessRunner, ProcessRunner>();
+        services.AddSingleton<IReShadeOfflineInstaller, ReShadeOfflineInstaller>();
         services.AddSingleton<IReShadeConfigService, ReShadeConfigService>();
         services.AddSingleton<IDlss5DeploymentService, Dlss5DeploymentService>();
         services.AddSingleton<IAssetMaintenanceService, AssetMaintenanceService>();

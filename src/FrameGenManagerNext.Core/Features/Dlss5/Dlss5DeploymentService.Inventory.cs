@@ -116,20 +116,6 @@ public sealed partial class Dlss5DeploymentService
         }
     }
 
-    private static string? ApiFromModule(string module)
-    {
-        return module.ToLowerInvariant() switch
-        {
-            "d3d9.dll" => "d3d9",
-            "d3d10.dll" => "d3d10",
-            "d3d11.dll" => "d3d11",
-            "d3d12.dll" => "d3d12",
-            "dxgi.dll" => "d3d12",
-            "opengl32.dll" => "opengl",
-            _ => null,
-        };
-    }
-
     private static List<string> DescribeRemaining(TargetInventory inventory)
     {
         var remaining = new List<string>();

@@ -2,7 +2,6 @@ using FrameGenManagerNext.Domain.Deployment;
 using FrameGenManagerNext.Domain.Errors;
 using FrameGenManagerNext.Domain.Results;
 using FrameGenManagerNext.Domain.Safety;
-using Microsoft.Extensions.Logging;
 
 namespace FrameGenManagerNext.Core.Features.Dlss5;
 
@@ -41,6 +40,10 @@ public sealed partial class Dlss5DeploymentService
         IProgress<DeploymentProgress>? progress,
         CancellationToken cancellationToken)
     {
+        // The exe path is kept in the contract for callers, but cleanup no longer
+        // runs the official uninstaller and therefore does not need it.
+        _ = exePath;
+
         if (string.IsNullOrWhiteSpace(targetDirectory))
         {
             return Result<Dlss5UninstallReport>.Fail(new AppError(ErrorCode.InvalidPath, "target directory is empty"));
@@ -86,13 +89,9 @@ public sealed partial class Dlss5DeploymentService
             }
         }
 
-        if (inventory.ReShadeModule is not null && !string.IsNullOrWhiteSpace(exePath) && File.Exists(exePath))
+        if (inventory.ReShadeModule is not null)
         {
-            await RunOfficialUninstallerAsync(target, exePath, inventory.ReShadeModule, notes, progress, cancellationToken);
-        }
-        else if (inventory.ReShadeModule is not null)
-        {
-            notes.Add("The game executable was not available, so ReShade was removed by file deletion.");
+            notes.Add("ReShade module and INI files are removed by direct deletion (no setup or network call).");
         }
 
         progress?.Report(new DeploymentProgress("uninstalling", "ReShade files", 0, 1));
@@ -144,73 +143,6 @@ public sealed partial class Dlss5DeploymentService
             removed,
             remaining,
             message));
-    }
-
-    private async Task RunOfficialUninstallerAsync(
-        string target,
-        string exePath,
-        string module,
-        List<string> notes,
-        IProgress<DeploymentProgress>? progress,
-        CancellationToken cancellationToken)
-    {
-        var api = ApiFromModule(module);
-        if (api is null)
-        {
-            return;
-        }
-
-        var location = await _packs.FindAsync(PackId, cancellationToken);
-        if (location is null)
-        {
-            notes.Add("The DLSS5 pack is not available; falling back to direct deletion.");
-            return;
-        }
-
-        var installer = ResolveInstaller(location);
-        if (installer.IsFailure)
-        {
-            notes.Add("The ReShade installer could not be verified; falling back to direct deletion.");
-            return;
-        }
-
-        var arguments = installer.Value.ArgumentsTemplate.Replace(
-            "{api}",
-            api,
-            StringComparison.OrdinalIgnoreCase);
-        arguments = $"{arguments} --state uninstall \"{exePath}\"";
-
-        progress?.Report(new DeploymentProgress("uninstalling", "ReShade uninstaller", 0, 1));
-        ProcessResult process;
-        try
-        {
-            process = await _processRunner.RunAsync(
-                installer.Value.InstallerPath,
-                arguments,
-                target,
-                TimeSpan.FromSeconds(240),
-                cancellationToken);
-        }
-        catch (Exception exception) when (exception is IOException or System.ComponentModel.Win32Exception)
-        {
-            _logger.LogWarning(exception, "Could not start the ReShade uninstaller");
-            notes.Add("The ReShade uninstaller could not be started; falling back to direct deletion.");
-            return;
-        }
-
-        if (process.TimedOut || process.ExitCode != 0)
-        {
-            _logger.LogWarning(
-                "ReShade uninstaller failed. exit={Exit} timedOut={TimedOut} stdout={StdOut} stderr={StdErr}",
-                process.ExitCode,
-                process.TimedOut,
-                process.StandardOutput,
-                process.StandardError);
-            notes.Add("The ReShade uninstaller reported an error; remaining files were deleted directly.");
-            return;
-        }
-
-        notes.Add("The official ReShade uninstaller removed the ReShade module and its INI files.");
     }
 
     private static void DeleteCoreFiles(

@@ -24,18 +24,15 @@
    - `GITC-Uplift/nvngx_dlssnr.dll`（534 MB 模型）
    - `reshade-shaders/Shaders/...`、`reshade-shaders/Textures/...`
    - `Uplift.fx`、`UpliftMask.fx`
-3. 运行 ReShade 安装器：
-   ```
-   ReShade_Setup_6.8.0_Addon.exe --headless --api <api> "<game-exe>"
-   ```
-   - 超时 240 秒；`CreateNoWindow`；捕获 stdout/stderr。
-   - ReShade Setup 在写模块前会联网下载兼容性信息，这一步可能持续 1–2 分钟；期间界面显示不确定进度条和“运行 ReShade 安装器”提示，不要中途关闭软件。
-   - 非 0 退出或超时 → 回滚已部署文件，返回 `InstallerFailed`。
-4. 如果生成 `ReShade.ini`，写入：
-   - `EffectSearchPaths=.\reshade-shaders\Shaders\**`
-   - `TextureSearchPaths=.\reshade-shaders\Textures\**`
-5. 返回安装器输出和部署报告。
-6. 界面在已部署（`Installed`）时锁定安装按钮；只有 `Outdated`/`Partial`/`Conflict` 允许重新安装或修复。详情页提供“打开文件夹”。
+3. 离线安装 ReShade（不联网、不运行 setup）：
+   - 在 `ReShade_Setup_6.8.0_Addon.exe` 里按 512 字节步进查找内嵌 ZIP，取出 `ReShade64.dll`（32 位游戏取 `ReShade32.dll`）。
+   - 按 API 写成代理文件名：`d3d9/d3d10/d3d11/d3d12/opengl32.dll`；目标位置已有非 ReShade 文件时拒绝覆盖并回滚（`Conflict`）。
+   - 目标没有 `ReShade.ini` 时写入默认搜索路径；随后由配置服务合并 `.\reshade-shaders\Shaders\**` / `Textures\**`。
+   - Vulkan 需要全局层，无法离线落地，返回 `InstallerFailed`。
+   - 标准 ReShade shader/纹理和 GITC 指定的 fx 都在 pack 的 114 个文件里，随部署一起写入。
+4. 失败时回滚已部署文件。
+5. 界面在已部署（`Installed`）时锁定安装按钮；只有 `Outdated`/`Partial`/`Conflict` 允许重新安装或修复。详情页提供“打开文件夹”。
+6. 安装/卸载期间详情页显示实时进度条：文件写入按数量推进，ReShade 模块阶段显示不确定进度。
 
 ## 状态检查
 
@@ -55,11 +52,7 @@
 界面只有在检测到已部署（含旧版 RenoDX/残留）时才允许点“卸载”；未部署时按钮锁定。
 
 1. 先调用部署引擎还原并清理 manifest/备份：只删除仍匹配部署哈希的文件，用户改过的文件保留。
-2. 如果识别到 ReShade 模块、游戏 EXE 和已校验的安装器，运行官方卸载器：
-   ```
-   ReShade_Setup_6.8.0_Addon.exe --headless --api <api> --state uninstall "<game-exe>"
-   ```
-   失败或超时则回退到直接删除。
+2. 不运行 ReShade 官方卸载器（它会联网），直接删除文件。
 3. 删除 ReShade 模块、`ReShade.ini`、`ReShade.log`、`ReShadePreset.ini`。
 4. 删除 GITC 组件（`gitc-uplift.addon32/64`、`gitc-uplift-helper64.exe`、`GITC-Uplift/`）与已知 shader。
 5. 清理旧版 RenoDX：`renodx-dlss5*.addon*`、旧布局根目录 `nvngx_dlssnr.dll`。

@@ -22,7 +22,7 @@ public sealed partial class Dlss5DeploymentService : IDlss5DeploymentService
     private readonly IPackRepository _packs;
     private readonly IDeploymentEngine _engine;
     private readonly IGraphicsApiProbe _apiProbe;
-    private readonly IProcessRunner _processRunner;
+    private readonly IReShadeOfflineInstaller _reShadeInstaller;
     private readonly IReShadeConfigService _reShadeConfig;
     private readonly ILogger<Dlss5DeploymentService> _logger;
 
@@ -30,14 +30,14 @@ public sealed partial class Dlss5DeploymentService : IDlss5DeploymentService
         IPackRepository packs,
         IDeploymentEngine engine,
         IGraphicsApiProbe apiProbe,
-        IProcessRunner processRunner,
+        IReShadeOfflineInstaller reShadeInstaller,
         IReShadeConfigService reShadeConfig,
         ILogger<Dlss5DeploymentService> logger)
     {
         _packs = packs;
         _engine = engine;
         _apiProbe = apiProbe;
-        _processRunner = processRunner;
+        _reShadeInstaller = reShadeInstaller;
         _reShadeConfig = reShadeConfig;
         _logger = logger;
     }
@@ -141,47 +141,31 @@ public sealed partial class Dlss5DeploymentService : IDlss5DeploymentService
             return Result<Dlss5Report>.Fail(deployment.Error!);
         }
 
-        var arguments = installer.Value.ArgumentsTemplate.Replace(
-            "{api}",
-            ApiArgument(api.Value),
-            StringComparison.OrdinalIgnoreCase);
-        arguments = $"{arguments} \"{exePath}\"";
-
         _logger.LogInformation(
-            "Running ReShade installer {Installer} with arguments {Arguments}",
-            installer.Value.InstallerPath,
-            arguments);
+            "Installing ReShade module offline from {Installer}",
+            installer.Value.InstallerPath);
 
-        // The ReShade setup downloads compatibility information before writing the
-        // module, so this phase can take a minute or two on a slow connection. Report
-        // an indeterminate phase so the UI does not look frozen.
-        progress?.Report(new DeploymentProgress("installer", "ReShade", 0, 0));
-
-        var process = await _processRunner.RunAsync(
+        // The ReShade setup normally contacts the network to download compatibility
+        // data. Extracting the module from the bundled setup avoids that wait entirely.
+        var reShade = await _reShadeInstaller.InstallAsync(
             installer.Value.InstallerPath,
-            arguments,
             plan.Value.TargetDirectory,
-            TimeSpan.FromSeconds(240),
+            exePath,
+            api.Value,
+            progress,
             cancellationToken);
 
-        if (process.TimedOut || process.ExitCode != 0)
+        if (reShade.IsFailure)
         {
             _logger.LogWarning(
-                "ReShade installer failed. exit={Exit} timedOut={TimedOut} stdout={StdOut} stderr={StdErr}",
-                process.ExitCode,
-                process.TimedOut,
-                process.StandardOutput,
-                process.StandardError);
+                "Offline ReShade install failed: {Code} {Reason}",
+                reShade.Error!.Code,
+                reShade.Error.Diagnostic);
 
             progress?.Report(new DeploymentProgress("failed", "ReShade", 0, 0));
 
             await _engine.RestoreAsync(FamilyId, plan.Value.TargetDirectory, progress: null, CancellationToken.None);
-            return Result<Dlss5Report>.Fail(AppError.Create(
-                ErrorCode.InstallerFailed,
-                ("exitCode", process.ExitCode.ToString(System.Globalization.CultureInfo.InvariantCulture)),
-                ("timedOut", process.TimedOut.ToString()),
-                ("stdout", Trim(process.StandardOutput)),
-                ("stderr", Trim(process.StandardError))));
+            return Result<Dlss5Report>.Fail(reShade.Error);
         }
 
         var warnings = new List<string>(deployment.Value.Warnings);
@@ -202,7 +186,7 @@ public sealed partial class Dlss5DeploymentService : IDlss5DeploymentService
                 deployment.Value.FilesBackedUp,
                 warnings),
             api.Value,
-            Trim(process.StandardOutput)));
+            $"ReShade module '{reShade.Value}' was installed from the bundled setup (offline)."));
     }
 
     public async Task<Result<Dlss5RestoreReport>> RestoreAsync(
@@ -350,27 +334,6 @@ public sealed partial class Dlss5DeploymentService : IDlss5DeploymentService
             : DefaultInstallerArguments;
 
         return Result<InstallerInfo>.Ok(new InstallerInfo(path.Value, template));
-    }
-
-    private static string ApiArgument(GraphicsApi api)
-    {
-        return api switch
-        {
-            GraphicsApi.Direct3D9 => "d3d9",
-            GraphicsApi.Direct3D10 => "d3d10",
-            GraphicsApi.Direct3D11 => "d3d11",
-            GraphicsApi.Direct3D12 => "d3d12",
-            GraphicsApi.Vulkan => "vulkan",
-            GraphicsApi.OpenGl => "opengl",
-            _ => throw new ArgumentOutOfRangeException(nameof(api)),
-        };
-    }
-
-    private static string Trim(string value)
-    {
-        const int maxLength = 2_000;
-        var trimmed = value.Trim();
-        return trimmed.Length <= maxLength ? trimmed : trimmed[..maxLength];
     }
 
     private sealed record InstallerInfo(string InstallerPath, string ArgumentsTemplate);
