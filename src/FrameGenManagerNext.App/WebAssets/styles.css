@@ -287,8 +287,9 @@ button, select { font: inherit; }
 .modal-cover { width: 44px; height: 58px; flex: 0 0 auto; border-radius: 9px; overflow: hidden; display: grid; place-items: center; color: #4e6f9d; font-size: 17px; font-weight: 700; background: rgba(0, 122, 255, .1); }
 .modal-cover img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .deploy-target-label { display: grid; gap: 6px; margin-top: 14px; color: var(--muted); font-size: 12px; }
-.kv2.inline { justify-content: flex-start; gap: 8px; margin-top: 8px; }
+.kv2.inline { justify-content: flex-start; gap: 16px; margin-top: 8px; }
 .kv2.inline > b { text-align: left; }
+.kv2.inline .api-value { color: var(--ink); font-weight: 600; }
 .modal-head h2 { margin: 0; font-size: 23px; }
 .modal-head p { margin: 4px 0 0; font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .icon-btn { width: 34px; height: 34px; border-radius: 10px; border: 1px solid var(--line); background: #fff; cursor: pointer; color: var(--muted); }
@@ -400,6 +401,81 @@ select:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(0, 122, 2
 .nav-item.active { color: var(--accent); font-weight: 650; }
 .nav-icon { width: 16px; text-align: center; opacity: .9; font-size: 14px; }
 .lang-select { flex: 0 0 auto; width: auto; min-width: 92px; padding: 7px 28px 7px 10px; border-radius: 9px; font-size: 12.5px; background-position: right 9px center; }
+.select-wrap { position: relative; width: 100%; min-width: 0; }
+.select-wrap > select { position: absolute; inset: 0; width: 100%; opacity: 0; pointer-events: none; }
+.select-wrap-lang { width: auto; min-width: 92px; flex: 0 0 auto; }
+.select-trigger {
+  width: 100%;
+  min-height: 34px;
+  border: 1px solid rgba(20, 35, 60, 0.18);
+  border-radius: 10px;
+  background: linear-gradient(180deg, #fff, #f4f7fb);
+  color: var(--ink);
+  padding: 7px 30px 7px 11px;
+  text-align: left;
+  font-size: 12.5px;
+  cursor: pointer;
+  box-shadow: 0 1px 3px rgba(16, 24, 40, .06);
+  transition: border-color .18s var(--ease), box-shadow .18s var(--ease), background .18s var(--ease);
+  position: relative;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.select-trigger::after {
+  content: "";
+  position: absolute;
+  right: 11px;
+  top: 50%;
+  width: 7px;
+  height: 7px;
+  border-right: 1.6px solid #606b7d;
+  border-bottom: 1.6px solid #606b7d;
+  transform: translateY(-65%) rotate(45deg);
+  transition: transform .2s var(--ease);
+}
+.select-wrap.open .select-trigger::after { transform: translateY(-25%) rotate(225deg); }
+.select-trigger:hover { border-color: rgba(0, 122, 255, .42); background: #fff; }
+.select-trigger:focus-visible { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(0, 122, 255, .15); }
+.select-trigger:disabled { opacity: .55; cursor: not-allowed; }
+.select-wrap-lang .select-trigger { min-height: 31px; padding: 6px 27px 6px 10px; border-radius: 9px; font-size: 12px; }
+.select-menu {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(100% + 6px);
+  z-index: 60;
+  max-height: 260px;
+  overflow: auto;
+  padding: 5px;
+  border: 1px solid rgba(20, 35, 60, .12);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, .98);
+  box-shadow: 0 16px 36px rgba(18, 30, 52, .18);
+  opacity: 0;
+  transform: translateY(-5px) scale(.985);
+  transform-origin: top;
+  pointer-events: none;
+  transition: opacity .16s var(--ease), transform .16s var(--ease);
+}
+.select-menu.open { opacity: 1; transform: none; pointer-events: auto; }
+.select-option {
+  display: block;
+  width: 100%;
+  padding: 8px 10px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--ink);
+  text-align: left;
+  font-size: 12.5px;
+  cursor: pointer;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.select-option:hover, .select-option.selected { background: var(--accent-soft); color: var(--accent); }
+.row .select-wrap { flex: 1 1 auto; min-width: 0; }
 .workspace { min-height: 0; flex: 1; display: flex; flex-direction: column; }
 .global-progress { height: 3px; flex: 0 0 auto; z-index: 15; pointer-events: none; }
 .global-progress i { display: block; width: 0; height: 100%; background: linear-gradient(90deg, #48a7ff, var(--accent)); transition: width .2s var(--ease); }

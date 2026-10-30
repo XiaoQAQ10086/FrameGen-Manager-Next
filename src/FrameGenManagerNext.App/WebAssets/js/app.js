@@ -8,6 +8,7 @@ import logs from './pages/logs.js';
 import about from './pages/about.js';
 import donate from './pages/donate.js';
 import { checkForUpdates } from './update.js';
+import { enhanceSelects, observeSelects } from './custom-select.js';
 
 const pages = {
   framegen,
@@ -152,6 +153,8 @@ async function bootstrap() {
     ui.progress(i18n.t(`Progress.${data.phase}`), data.subject, data.current, data.total);
   });
   api.on('toast', (data) => ui.toast(data.message, data.level));
+  enhanceSelects();
+  observeSelects();
   setupNavigation();
   document.getElementById('lang-select')?.addEventListener('change', (event) => {
     changeLanguage(event.target.value);

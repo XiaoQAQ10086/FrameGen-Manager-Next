@@ -54,6 +54,7 @@ export default {
     let busy = false;
     let addingGame = false;
     let current = null;
+    let unsupportedGpuShown = sessionStorage.getItem('fgm.gpuUnsupportedShown') === '1';
 
     root.innerHTML = `
       <section class="page">
@@ -201,6 +202,22 @@ export default {
       });
     }
 
+    function checkGpuSupport() {
+      if (unsupportedGpuShown || !gpu?.gpu?.route) return;
+      const route = gpu.gpu.route;
+      if (route === 'Sm86' || route === 'Sm75' || route === 'Unknown') return;
+      unsupportedGpuShown = true;
+      sessionStorage.setItem('fgm.gpuUnsupportedShown', '1');
+      const dialog = ui.modal(`
+        <header class="modal-head"><div><h2>${esc(t('Gpu.UnsupportedTitle'))}</h2></div></header>
+        <p class="hint">${esc(t('Gpu.UnsupportedMessage'))}</p>
+        <footer class="modal-foot">
+          <span></span>
+          <button class="btn" data-gpu-ok type="button">${esc(t('Common.GotIt'))}</button>
+        </footer>`);
+      dialog.root.querySelector('[data-gpu-ok]').addEventListener('click', () => dialog.close());
+    }
+
     function renderGpu() {
       const g = gpu.gpu;
       const s = gpu.spoof;
@@ -309,7 +326,7 @@ export default {
         </label>
         <div class="kv2 inline">
           <span>${esc(t('Dlss5.GraphicsApiLabel'))}</span>
-          <b class="badge">${esc(apiKeys[game.api] || game.api || t('Common.Unknown'))}</b>
+          <b class="api-value">${esc(apiKeys[game.api] || game.api || t('Common.Unknown'))}</b>
         </div>`;
       const targetSelect = deployMeta.querySelector('[data-role="modal-target"]');
       if (targetSelect && game.renderExe) targetSelect.value = game.renderExe;
@@ -370,7 +387,7 @@ export default {
 
     function saveSnapshot() {
       try {
-        localStorage.setItem(snapshotKey, JSON.stringify({ games, removed, options, gpu }));
+        localStorage.setItem(snapshotKey, JSON.stringify({ games, removed, options }));
       } catch {
         // A full quota should never break the page.
       }
@@ -386,10 +403,6 @@ export default {
         renderGames();
         renderRemoved();
         status(t('Library.Status.Loaded').replace('{0}', games.length));
-      }
-      if (!gpu && snapshot.gpu) {
-        gpu = snapshot.gpu;
-        renderGpu();
       }
       return games.length > 0;
     }
@@ -418,6 +431,7 @@ export default {
         if (gpuState) {
           gpu = gpuState;
           renderGpu();
+          checkGpuSupport();
           saveSnapshot();
         }
       } catch (error) {
