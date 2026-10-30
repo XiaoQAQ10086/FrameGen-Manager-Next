@@ -88,6 +88,17 @@ public sealed class SmoothMotionDeploymentService : ISmoothMotionDeploymentServi
             return Result<SmoothMotionReport>.Fail(route.Error!);
         }
 
+        if (HasAntiCheat(targetDirectory))
+        {
+            // BattlEye/EAC block the injected proxy and the game crashes with a
+            // misleading error (PUBG reports d3d9.dll). Refuse instead of leaving
+            // an unusable DLL in the game folder.
+            return Result<SmoothMotionReport>.Fail(AppError.Create(
+                ErrorCode.Conflict,
+                ("target", targetDirectory),
+                ("reason", "the game ships a kernel anti-cheat; the Smooth Motion proxy would be blocked and the game may crash")));
+        }
+
         var plan = await BuildPlanAsync(route.Value.Route, route.Value.PackId, targetDirectory, cancellationToken);
         if (plan.IsFailure)
         {
@@ -306,5 +317,30 @@ public sealed class SmoothMotionDeploymentService : ISmoothMotionDeploymentServi
                 ["route"] = route.ToString(),
                 ["pack"] = packId,
             }));
+    }
+
+    private static bool HasAntiCheat(string targetDirectory)
+    {
+        try
+        {
+            if (!Directory.Exists(targetDirectory))
+            {
+                return false;
+            }
+
+            if (Directory.Exists(Path.Combine(targetDirectory, "BattlEye")) ||
+                Directory.Exists(Path.Combine(targetDirectory, "EasyAntiCheat")) ||
+                Directory.Exists(Path.Combine(targetDirectory, "EasyAntiCheat_EOS")))
+            {
+                return true;
+            }
+
+            return Directory.EnumerateFiles(targetDirectory, "BE*.dll", SearchOption.TopDirectoryOnly).Any() ||
+                   Directory.EnumerateFiles(targetDirectory, "EasyAntiCheat*.dll", SearchOption.TopDirectoryOnly).Any();
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
+        {
+            return false;
+        }
     }
 }
