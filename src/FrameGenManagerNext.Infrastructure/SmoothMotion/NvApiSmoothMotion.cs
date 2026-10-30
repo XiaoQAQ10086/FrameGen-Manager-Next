@@ -53,34 +53,25 @@ public sealed class NvApiSmoothMotion : INvApiSmoothMotion
         using var session = opened.Value;
         try
         {
-            var profiles = session.FindProfilesForExe(exePath);
-            if (profiles.Count == 0)
+            // Read-only state uses the fast lookup; enumerating the whole driver
+            // database for every game on the page would be needlessly slow.
+            var profile = session.FindProfileForExe(exePath);
+            if (profile is null || session.IsBaseProfile(profile.Value))
             {
                 return new SmoothMotionSettingState(null, string.Empty, false, "No driver profile is associated with this executable.");
             }
 
-            var readable = profiles
-                .Where(profile => !session.IsBaseProfile(profile))
-                .Select(profile => (Profile: profile, Name: session.GetProfileName(profile)))
-                .Where(entry => !string.IsNullOrWhiteSpace(entry.Name))
-                .ToList();
-            if (readable.Count == 0)
+            var name = session.GetProfileName(profile.Value);
+            if (string.IsNullOrWhiteSpace(name))
             {
-                return new SmoothMotionSettingState(null, string.Empty, false, "Only the base driver profile is associated with this executable.");
+                return new SmoothMotionSettingState(null, string.Empty, false, "The driver profile name could not be read.");
             }
 
-            var primary = readable[0];
-            var values = readable
-                .Select(entry => session.ReadSetting(entry.Profile, NvApiNative.SmoothMotionSettingId))
-                .ToList();
-            var enabled = values.Any(value => value == 1)
-                ? true
-                : values.All(value => value is null)
-                    ? (bool?)null
-                    : false;
-            var ours = readable.All(entry => entry.Name.StartsWith(NvApiNative.ProfilePrefix, StringComparison.Ordinal));
+            var value = session.ReadSetting(profile.Value, NvApiNative.SmoothMotionSettingId);
+            var enabled = value is null ? (bool?)null : value.Value != 0;
+            var ours = name.StartsWith(NvApiNative.ProfilePrefix, StringComparison.Ordinal);
 
-            return new SmoothMotionSettingState(enabled, primary.Name, ours, null);
+            return new SmoothMotionSettingState(enabled, name, ours, null);
         }
         catch (Exception exception) when (exception is NvApiException or InvalidOperationException)
         {
