@@ -159,7 +159,59 @@ public sealed class SmoothMotionDeploymentService : ISmoothMotionDeploymentServi
                 ("reason", files.Error.Diagnostic ?? "component files could not be removed")));
         }
 
+        if (files.IsFailure && files.Error!.Code == ErrorCode.ManifestMissing)
+        {
+            // The component may have been placed by the old tool, which has no manifest
+            // in our data directory. Remove files that still match either SM pack.
+            await CleanUnrecordedComponentsAsync(targetDirectory, cancellationToken);
+        }
+
         return Result<SmoothMotionChangeResult>.Ok(setting);
+    }
+
+    private async Task CleanUnrecordedComponentsAsync(
+        string targetDirectory,
+        CancellationToken cancellationToken)
+    {
+        var candidates = new List<CleanupCandidate>();
+        foreach (var packId in new[] { Rtx30PackId, Rtx20PackId })
+        {
+            var location = await _packs.FindAsync(packId, cancellationToken);
+            if (location is null)
+            {
+                continue;
+            }
+
+            foreach (var file in location.Pack.Files)
+            {
+                if (!string.IsNullOrWhiteSpace(file.Sha256))
+                {
+                    candidates.Add(new CleanupCandidate(file.Target, file.Sha256));
+                }
+            }
+        }
+
+        if (candidates.Count == 0)
+        {
+            return;
+        }
+
+        var cleaned = await _engine.CleanAsync(
+            FamilyId,
+            targetDirectory,
+            candidates,
+            ownedDirectories: [],
+            iniRelativePath: null,
+            progress: null,
+            cancellationToken);
+        if (cleaned.IsFailure &&
+            cleaned.Error!.Code is not (ErrorCode.NothingToUninstall or ErrorCode.Conflict))
+        {
+            _logger.LogWarning(
+                "Could not clean unrecorded Smooth Motion components: {Code} {Reason}",
+                cleaned.Error.Code,
+                cleaned.Error.Diagnostic);
+        }
     }
 
     public async Task<Result<SmoothMotionRestoreReport>> RestoreAsync(

@@ -59,13 +59,15 @@ manifest 状态：`Installing → Installed / RolledBack / Partial`，还原后 
 目标目录有我们的文件但没有 manifest（旧工具装的、或记录已丢）时，检查结果为 `InstalledWithoutManifest`。这类部署不能“还原”（没有原件备份），只能清理：
 
 1. 候选文件来自 pack 的完整文件表（所有代理槽 + 运行库），每项带 pack 记录的 SHA-256。
-2. 只有当前文件哈希仍等于 pack 哈希才删除；被用户替换过的文件保留并计入 `Conflicts`。
-3. 至少删掉一个文件后，才删 INI（INI 按用户选项生成，哈希永远对不上 pack 模板）。
-4. 再按还原流程第 4 条清扫 `ownedDirectories`。
-5. 一个可匹配文件都没有 → `NothingToUninstall`，不写任何内容。
-6. 若该目录存在部署记录（manifest），拒绝清理并返回 `Conflict`，避免丢掉可还原的备份。
+2. 如果旧版工具留下的 manifest（`%APPDATA%\FrameGen-Manager\backups\*\manifest.json`，更早的 `%DLSSG-Manager%`）记录的 `game_dir` 与目标一致，只读解析其中的 `deployed_sha256`，把这些旧哈希也加入候选。这样旧资产版本部署的文件也能被确认并删除；旧备份本身不导入、不改动。
+3. 同一路径允许多个候选哈希，文件匹配其中任意一个就删除。
+4. 只有当前文件哈希仍等于某个候选哈希才删除；被用户替换过的文件保留并计入 `Conflicts`。
+5. 至少删掉一个文件后，才删 INI（INI 按用户选项生成，哈希永远对不上 pack 模板）。
+6. 再按还原流程第 4 条清扫 `ownedDirectories`。
+7. 一个可匹配文件都没有 → `NothingToUninstall`，不写任何内容。
+8. 若该目录存在我们自己的部署记录（manifest），拒绝清理并返回 `Conflict`，避免丢掉可还原的备份。
 
-UI 上这类游戏显示黄色“已部署（无记录）”徽章，部署按钮锁定，主按钮为【清理】。
+UI 上这类游戏显示黄色徽章：当前 pack 能匹配时是“已部署（无记录）”，来自旧工具 manifest 时是“已部署（旧版工具）”；部署按钮锁定，主按钮为【清理】。
 
 ## 路径安全
 

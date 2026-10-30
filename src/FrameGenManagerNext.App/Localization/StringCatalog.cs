@@ -80,6 +80,7 @@ internal static class StringCatalog
         ["State.NotDeployed"] = ("未部署", "Not deployed"),
         ["State.Deployed"] = ("已部署", "Deployed"),
         ["State.InstalledWithoutManifest"] = ("已部署（无记录）", "Deployed (no record)"),
+        ["State.LegacyDeployed"] = ("已部署（旧版工具）", "Deployed (old tool)"),
         ["State.Exists"] = ("已存在", "Present"),
         ["State.CheckFailed"] = ("检查失败", "Check failed"),
         ["State.DeployFailed"] = ("部署失败", "Deployment failed"),

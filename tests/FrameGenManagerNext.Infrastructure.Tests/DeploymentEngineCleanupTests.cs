@@ -171,6 +171,31 @@ public sealed class DeploymentEngineCleanupTests : IDisposable
     }
 
     [Fact]
+    public async Task CleanAcceptsAnyRecordedHashForTheSamePath()
+    {
+        var oldContent = Encoding.UTF8.GetBytes("old proxy");
+        var newContent = Encoding.UTF8.GetBytes("new proxy");
+        _directory.WriteFile("game/version.dll", "old proxy");
+
+        var cleaned = await _engine.CleanAsync(
+            Family,
+            _target,
+            [
+                new CleanupCandidate("version.dll", Sha256(newContent)),
+                new CleanupCandidate("version.dll", Sha256(oldContent)),
+            ],
+            [],
+            iniRelativePath: null,
+            progress: null,
+            TestContext.Current.CancellationToken);
+
+        cleaned.IsSuccess.ShouldBeTrue(cleaned.Error?.ToString());
+        cleaned.Value.RemovedFiles.ShouldBe(1);
+        cleaned.Value.Conflicts.ShouldBe(0);
+        File.Exists(Path.Combine(_target, "version.dll")).ShouldBeFalse();
+    }
+
+    [Fact]
     public async Task CleanWithoutAnyMatchingFileFails()
     {
         _directory.WriteFile("game/version.dll", "user replaced proxy");

@@ -20,15 +20,18 @@ public sealed partial class FrameGenDeploymentService : IFrameGenDeploymentServi
 
     private readonly IPackRepository _packs;
     private readonly IDeploymentEngine _engine;
+    private readonly ILegacyDeploymentReader _legacy;
     private readonly ILogger<FrameGenDeploymentService> _logger;
 
     public FrameGenDeploymentService(
         IPackRepository packs,
         IDeploymentEngine engine,
+        ILegacyDeploymentReader legacy,
         ILogger<FrameGenDeploymentService> logger)
     {
         _packs = packs;
         _engine = engine;
+        _legacy = legacy;
         _logger = logger;
     }
 
@@ -42,9 +45,69 @@ public sealed partial class FrameGenDeploymentService : IFrameGenDeploymentServi
         // would hide a real asset update among false positives.
         var effective = await ReadDeployedOptionsAsync(targetDirectory, options, cancellationToken);
         var plan = await BuildPlanAsync(targetDirectory, effective, verifySources: false, cancellationToken);
-        return plan.IsFailure
-            ? Result<DeploymentInspection>.Fail(plan.Error!)
-            : await _engine.InspectAsync(plan.Value, cancellationToken);
+        if (plan.IsFailure)
+        {
+            return Result<DeploymentInspection>.Fail(plan.Error!);
+        }
+
+        var inspection = await _engine.InspectAsync(plan.Value, cancellationToken);
+        if (inspection.IsFailure)
+        {
+            return inspection;
+        }
+
+        var legacy = await _legacy.FindAsync(targetDirectory, cancellationToken);
+        if (legacy is null)
+        {
+            return inspection;
+        }
+
+        if (inspection.Value.State is DeploymentState.NotDeployed or DeploymentState.InstalledWithoutManifest)
+        {
+            var matches = await CountLegacyMatchesAsync(targetDirectory, legacy, cancellationToken);
+            if (matches == 0)
+            {
+                return inspection;
+            }
+
+            return Result<DeploymentInspection>.Ok(new DeploymentInspection(
+                DeploymentState.InstalledWithoutManifest,
+                inspection.Value.PackVersion,
+                HasManifest: false,
+                Details: [
+                    .. inspection.Value.Details,
+                    $"Old FrameGen Manager deployment detected ({matches} file(s) match its manifest). Cleaning removes those files only; original backups are not imported.",
+                ],
+                Options: null,
+                FromLegacyTool: true));
+        }
+
+        return inspection;
+    }
+
+    private static async Task<int> CountLegacyMatchesAsync(
+        string targetDirectory,
+        LegacyDeploymentInfo legacy,
+        CancellationToken cancellationToken)
+    {
+        var matches = 0;
+        foreach (var file in legacy.Files)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            var path = SafePath.CombineUnderRoot(targetDirectory, file.RelativePath);
+            if (path.IsFailure || !File.Exists(path.Value))
+            {
+                continue;
+            }
+
+            var hash = await HashFileAsync(path.Value, cancellationToken);
+            if (string.Equals(hash, file.DeployedSha256, StringComparison.OrdinalIgnoreCase))
+            {
+                matches++;
+            }
+        }
+
+        return matches;
     }
 
     private async Task<FrameGenOptions> ReadDeployedOptionsAsync(

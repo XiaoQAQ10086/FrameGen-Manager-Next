@@ -91,6 +91,7 @@ public sealed partial class AppWebBridge
                     packVersion = inspection.IsSuccess
                         ? inspection.Value.PackVersion
                         : null,
+                    legacyTool = inspection.IsSuccess && inspection.Value.FromLegacyTool,
                     options = inspection.IsSuccess
                         ? MapFrameGenOptions(inspection.Value.Options)
                         : null,

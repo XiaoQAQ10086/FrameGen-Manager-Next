@@ -5,4 +5,5 @@ public sealed record DeploymentInspection(
     string? PackVersion,
     bool HasManifest,
     IReadOnlyList<string> Details,
-    IReadOnlyDictionary<string, string>? Options = null);
+    IReadOnlyDictionary<string, string>? Options = null,
+    bool FromLegacyTool = false);

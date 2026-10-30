@@ -263,7 +263,9 @@ export default {
           ? (game.packVersion
               ? t('State.DeployedVersion').replace('{0}', game.packVersion)
               : t('State.Deployed'))
-          : t(stateKeys[game.state] || 'State.NotDeployed');
+          : game.legacyTool
+            ? t('State.LegacyDeployed')
+            : t(stateKeys[game.state] || 'State.NotDeployed');
         return `
         <article class="gcard${index < 12 ? '' : ' static'}" style="animation-delay:${Math.min(index * 35, 350)}ms">
           <div class="gtop">

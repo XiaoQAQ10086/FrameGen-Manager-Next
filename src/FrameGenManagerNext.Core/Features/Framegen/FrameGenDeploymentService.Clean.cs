@@ -52,6 +52,23 @@ public sealed partial class FrameGenDeploymentService
             candidates.Add(new CleanupCandidate(file.Target, file.Sha256));
         }
 
+        // The old tool may have deployed a different asset version; its manifest
+        // carries the hashes actually written, so cleaning can still prove ownership.
+        var legacy = await _legacy.FindAsync(targetDirectory, cancellationToken);
+        if (legacy is not null)
+        {
+            var known = new HashSet<string>(
+                candidates.Select(candidate => $"{candidate.RelativePath}|{candidate.Sha256}"),
+                StringComparer.OrdinalIgnoreCase);
+            foreach (var file in legacy.Files)
+            {
+                if (known.Add($"{file.RelativePath}|{file.DeployedSha256}"))
+                {
+                    candidates.Add(new CleanupCandidate(file.RelativePath, file.DeployedSha256));
+                }
+            }
+        }
+
         _logger.LogInformation(
             "Cleaning unrecorded FrameGen deployment in {Target} with {Count} candidate(s)",
             targetDirectory,

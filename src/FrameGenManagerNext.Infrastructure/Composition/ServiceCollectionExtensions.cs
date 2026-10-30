@@ -13,6 +13,7 @@ using FrameGenManagerNext.Infrastructure.Deployment;
 using FrameGenManagerNext.Infrastructure.Diagnostics;
 using FrameGenManagerNext.Infrastructure.Dlss5;
 using FrameGenManagerNext.Infrastructure.Gpu;
+using FrameGenManagerNext.Infrastructure.Legacy;
 using FrameGenManagerNext.Infrastructure.Library;
 using FrameGenManagerNext.Infrastructure.Packs;
 using FrameGenManagerNext.Infrastructure.Paths;
@@ -36,6 +37,7 @@ public static class ServiceCollectionExtensions
         services.AddSingleton(paths);
         services.AddSingleton<IAppEnvironment, AppEnvironment>();
         services.AddSingleton<IEfficiencyModeService, EfficiencyModeService>();
+        services.AddSingleton<ILegacyDeploymentReader, LegacyDeploymentReader>();
         services.AddSingleton<ISettingsService, SettingsService>();
         services.AddSingleton<IGameLibraryStore, GameLibraryStore>();
         services.AddSingleton<IGameScanner, SteamGameScanner>();

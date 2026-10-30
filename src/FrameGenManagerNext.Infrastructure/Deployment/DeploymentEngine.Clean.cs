@@ -58,13 +58,19 @@ public sealed partial class DeploymentEngine
         var conflictedPaths = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         var leftovers = new List<string>();
 
-        foreach (var candidate in candidates)
+        var groups = candidates
+            .GroupBy(candidate => candidate.RelativePath, StringComparer.OrdinalIgnoreCase)
+            .ToList();
+
+        for (var index = 0; index < groups.Count; index++)
         {
             cancellationToken.ThrowIfCancellationRequested();
-            var path = GetTargetPath(target.Value, candidate.RelativePath);
+            var group = groups[index];
+            var relative = group.Key;
+            var path = GetTargetPath(target.Value, relative);
             if (path.IsFailure)
             {
-                warnings.Add($"Invalid recorded path: {candidate.RelativePath}");
+                warnings.Add($"Invalid recorded path: {relative}");
                 continue;
             }
 
@@ -74,12 +80,14 @@ public sealed partial class DeploymentEngine
             }
 
             var hash = await HashFileAsync(path.Value, cancellationToken);
-            if (!string.Equals(hash, candidate.Sha256, StringComparison.OrdinalIgnoreCase))
+            var matches = group.Any(candidate =>
+                string.Equals(hash, candidate.Sha256, StringComparison.OrdinalIgnoreCase));
+            if (!matches)
             {
                 conflicts++;
                 conflictedPaths.Add(path.Value);
-                leftovers.Add(candidate.RelativePath);
-                warnings.Add($"Modified file left in place: {candidate.RelativePath}");
+                leftovers.Add(relative);
+                warnings.Add($"Modified file left in place: {relative}");
                 continue;
             }
 
@@ -90,15 +98,15 @@ public sealed partial class DeploymentEngine
             }
             catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
             {
-                leftovers.Add(candidate.RelativePath);
-                warnings.Add($"Could not delete '{candidate.RelativePath}': {exception.Message}");
+                leftovers.Add(relative);
+                warnings.Add($"Could not delete '{relative}': {exception.Message}");
             }
 
             progress?.Report(new DeploymentProgress(
                 "cleaning",
-                candidate.RelativePath,
-                removed,
-                candidates.Count));
+                relative,
+                index + 1,
+                groups.Count));
         }
 
         if (removed == 0)
