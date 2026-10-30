@@ -91,7 +91,7 @@ public sealed partial class GameLibraryService : IGameLibraryService, IDisposabl
         var completed = 0;
         // PE parsing and directory walks benefit from more than six workers on
         // modern CPUs; cap it so a 32-core machine does not thrash the disk.
-        using var gate = new SemaphoreSlim(Math.Clamp(Environment.ProcessorCount, 6, 12));
+        using var gate = new SemaphoreSlim(Math.Max(1, Environment.ProcessorCount));
 
         var tasks = unique.Select(async candidate =>
         {

@@ -66,7 +66,7 @@ public sealed partial class AppWebBridge
 
         // Inspecting every game and loading covers used to be sequential, which made
         // the library appear several seconds after the window opened.
-        using var gate = new SemaphoreSlim(6);
+        using var gate = new SemaphoreSlim(Math.Max(1, Environment.ProcessorCount));
         await Task.WhenAll(visible.Select(async (game, index) =>
         {
             await gate.WaitAsync();
