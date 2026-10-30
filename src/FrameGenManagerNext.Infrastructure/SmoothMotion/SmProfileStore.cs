@@ -12,7 +12,26 @@ public sealed record SmProfileRecord(
     bool Ours,
     bool Had,
     uint? HadValue,
-    string Directory);
+    string Directory)
+{
+    /// <summary>
+    /// Profiles written for this game. Older records only carry the single
+    /// <see cref="Profile"/> field; restore falls back to it.
+    /// </summary>
+    public List<SmProfileTarget> Targets { get; init; } = [];
+
+    public IReadOnlyList<SmProfileTarget> AllTargets()
+    {
+        if (Targets.Count > 0)
+        {
+            return Targets;
+        }
+
+        return string.IsNullOrWhiteSpace(Profile)
+            ? []
+            : [new SmProfileTarget(Profile, Ours, Had, HadValue)];
+    }
+}
 
 public sealed class SmProfileStore
 {

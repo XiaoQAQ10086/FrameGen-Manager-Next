@@ -4,7 +4,7 @@ using FrameGenManagerNext.Domain.Results;
 
 namespace FrameGenManagerNext.Infrastructure.NvApi;
 
-internal sealed class NvApiSession : IDisposable
+internal sealed partial class NvApiSession : IDisposable
 {
     private readonly IntPtr _library;
     private readonly IntPtr _session;

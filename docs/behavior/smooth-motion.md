@@ -31,12 +31,13 @@
 
 1. 校验路由/驱动/目标目录。
 2. 部署对应组件包（备份同名原文件，哈希校验）。
-3. 打开 NVAPI 会话：
-   - 优先使用 `DRS_FindApplicationByName` 找到该 EXE 已归属的 NVIDIA profile。
-   - 找不到才创建/复用 `FrameGen Manager - <game>`，并把 EXE 挂上去；挂不上则失败，不写设置。
+3. 打开 NVAPI 会话，找出**所有**绑定该 EXE 的 profile：
+   - 先用 `DRS_FindApplicationByName` 定位一个；
+   - 再枚举 `DRS_EnumProfiles` + `DRS_EnumApplications`，把同样列出该 EXE（完整路径、相对路径或裸文件名）的 profile 全部收集起来。NVIDIA 的配置库可能同时存在多个绑定同一 EXE 的 profile（实测 PUBG 的 `PUBG` 与 `PLAYERUNKNOWN'S BATTLEGROUNDS` 都列了 `TslGame.exe`），`DRS_FindApplicationByName` 每次返回哪一个并不稳定；只写一个会出现“工具显示成功、驱动配置里却没开”。
+   - 找不到任何 profile 才创建/复用 `FrameGen Manager - <game>`，并把 EXE 挂上去；挂不上则失败，不写设置。
    - 拒绝写基础/全局 profile。
-4. 第一次修改该游戏时，记录 profile 名、旧值是否存在、旧值内容到 `backups/sm-profiles/<targetHash>.json`。
-5. 写入 1，保存，**换新会话读回**；只有读回值等于 1 才算成功。
+4. 第一次修改该游戏（或绑定 profile 集合变化）时，把每个 profile 的名、旧值是否存在、旧值内容写入 `backups/sm-profiles/<targetHash>.json` 的 `targets` 列表。
+5. 对每个 profile 写入 1，统一保存，**换新会话逐个读回**；只有全部读回 1 才算成功。
 6. 如果 NVAPI 失败：回滚组件文件，返回 `NvApiCallFailed`。
 7. 找不到 `nvapi64.dll` → `NvApiUnavailable`。
 
@@ -47,10 +48,10 @@
 
 ## 还原
 
-1. 读取 `sm-profiles` 记录；没有记录则尝试按 EXE 找 profile，找不到就视为无需还原。
-2. 有旧值 → 写回旧值；没有旧值 → 删除该设置项（跟随全局）。
-3. 换新会话读回复核。
-4. 删除记录。
+1. 读取 `sm-profiles` 记录（`targets` 列表，旧记录只有单个 `profile`）；没有记录则尝试按 EXE 找 profile，找不到就视为无需还原。
+2. 对每个记录的 profile：有旧值 → 写回旧值；没有旧值 → 删除该设置项（跟随全局）。
+3. 换新会话逐个读回复核。
+4. 全部匹配才删除记录。
 5. 通过部署引擎还原本工具写入的组件文件；用户修改过的文件保留并报告冲突。
 6. 本工具自建的 profile 可能保留为空壳，不删除 NVIDIA 预置 profile。
 

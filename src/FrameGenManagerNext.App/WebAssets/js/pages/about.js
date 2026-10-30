@@ -29,6 +29,10 @@ export default {
             </label>
           </div>
         </div>
+        <div class="panel form-panel">
+          <div class="ctitle">${t('About.Feedback')}</div>
+          <p class="hint">${t('About.FeedbackBody')}</p>
+        </div>
       </section>`;
 
     const autoScan = root.querySelector('[data-role="auto-scan"]');

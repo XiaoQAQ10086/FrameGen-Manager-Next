@@ -102,9 +102,10 @@ export default {
           </div>
           <div class="gpath" title="${esc(prettyPath(game.targetDirectory))}">${esc(prettyPath(game.targetDirectory))}</div>
           ${game.detail ? `<div class="hint">${esc(game.detail)}</div>` : ''}
-          <div class="gactions end">
-            <button class="btn small" data-action="open" data-id="${game.id}" type="button">${t('Library.OpenFolder')}</button>
+          <div class="gactions">
             <button class="btn small ${toggleAction === 'enable' ? 'success' : 'danger'}" data-action="${toggleAction}" data-id="${game.id}" type="button" ${game.available === false ? 'disabled' : ''}>${toggleLabel}</button>
+            <button class="btn small" data-action="open" data-id="${game.id}" type="button">${t('Library.OpenFolder')}</button>
+            <span class="spacer"></span>
             <button class="btn small danger icon-only" data-action="remove" data-id="${game.id}" type="button" title="${esc(t('Common.Remove'))}" aria-label="${esc(t('Common.Remove'))}">🗑</button>
           </div>
         </article>`;

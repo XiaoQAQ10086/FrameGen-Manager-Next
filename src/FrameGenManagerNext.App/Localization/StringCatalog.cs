@@ -392,6 +392,8 @@ internal static class StringCatalog
         ["About.PortableYes"] = ("是（数据写在程序目录）", "Yes (data stored next to the executable)"),
         ["About.PortableNo"] = ("否（使用本机用户数据目录）", "No (uses the local user data folder)"),
         ["About.Startup"] = ("启动", "Startup"),
+        ["About.Feedback"] = ("反馈", "Feedback"),
+        ["About.FeedbackBody"] = ("如果您在使用过程中遇到了问题，或者有更好的反馈建议，欢迎加入腾讯 QQ 群聊反馈！QQ群：1125445047，QQ2群：181592939", "If you run into problems or have suggestions, join our Tencent QQ groups. QQ group: 1125445047, QQ group 2: 181592939"),
         ["About.AutoScan"] = ("每次启动软件时自动扫描一次游戏库", "Scan the game library once at every launch"),
         ["About.AutoScanHint"] = ("关闭时启动后不扫描，可随时点击“扫描”。", "When off, use the Scan button on the frame generation page."),
 

@@ -19,6 +19,8 @@ internal static class NvApiNative
     public const uint IdGetSetting = 0xEA99_498D;
     public const uint IdProfileInfo = 0x61CD_6FD6;
     public const uint IdDestroySession = 0xDAEF_F8B0;
+    public const uint IdEnumProfiles = 0xBC37_1EE0;
+    public const uint IdEnumApplications = 0x7FA2_173A;
 
     public const uint SmoothMotionSettingId = 0xB0D3_84C0;
 
@@ -26,6 +28,8 @@ internal static class NvApiNative
     public const int ProfileBufferSize = 4_116;
     public const int ApplicationBufferSize = 20_492;
     public const int SettingCurrentOffset = 8_220;
+    public const int ApplicationSlots = 32;
+    public const int ApplicationVersion = 4;
 
     public const string PlaceholderName = "PLACEHOLDER";
     public const string ProfilePrefix = "FrameGen Manager - ";
@@ -106,6 +110,20 @@ internal static class NvApiNative
         IntPtr session,
         IntPtr profile,
         IntPtr infoBuffer);
+
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    public delegate int EnumProfilesDelegate(
+        IntPtr session,
+        uint index,
+        out IntPtr profile);
+
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    public delegate int EnumApplicationsDelegate(
+        IntPtr session,
+        IntPtr profile,
+        uint startIndex,
+        ref uint count,
+        IntPtr applicationBuffer);
 
     public static IntPtr AllocateZeroed(int size)
     {

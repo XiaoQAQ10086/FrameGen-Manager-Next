@@ -53,23 +53,34 @@ public sealed class NvApiSmoothMotion : INvApiSmoothMotion
         using var session = opened.Value;
         try
         {
-            var profile = session.FindProfileForExe(exePath);
-            if (profile is null)
+            var profiles = session.FindProfilesForExe(exePath);
+            if (profiles.Count == 0)
             {
                 return new SmoothMotionSettingState(null, string.Empty, false, "No driver profile is associated with this executable.");
             }
 
-            if (session.IsBaseProfile(profile.Value))
+            var readable = profiles
+                .Where(profile => !session.IsBaseProfile(profile))
+                .Select(profile => (Profile: profile, Name: session.GetProfileName(profile)))
+                .Where(entry => !string.IsNullOrWhiteSpace(entry.Name))
+                .ToList();
+            if (readable.Count == 0)
             {
-                return new SmoothMotionSettingState(null, string.Empty, false, "Refusing to use the base profile.");
+                return new SmoothMotionSettingState(null, string.Empty, false, "Only the base driver profile is associated with this executable.");
             }
 
-            var name = session.GetProfileName(profile.Value);
-            var value = session.ReadSetting(profile.Value, NvApiNative.SmoothMotionSettingId);
-            var enabled = value is null ? (bool?)null : value.Value != 0;
-            var ours = name.StartsWith(NvApiNative.ProfilePrefix, StringComparison.Ordinal);
+            var primary = readable[0];
+            var values = readable
+                .Select(entry => session.ReadSetting(entry.Profile, NvApiNative.SmoothMotionSettingId))
+                .ToList();
+            var enabled = values.Any(value => value == 1)
+                ? true
+                : values.All(value => value is null)
+                    ? (bool?)null
+                    : false;
+            var ours = readable.All(entry => entry.Name.StartsWith(NvApiNative.ProfilePrefix, StringComparison.Ordinal));
 
-            return new SmoothMotionSettingState(enabled, name, ours, null);
+            return new SmoothMotionSettingState(enabled, primary.Name, ours, null);
         }
         catch (Exception exception) when (exception is NvApiException or InvalidOperationException)
         {
@@ -92,77 +103,136 @@ public sealed class NvApiSmoothMotion : INvApiSmoothMotion
         using var session = opened.Value;
         try
         {
-            var profile = session.FindProfileForExe(exePath);
-            var createdProfile = false;
-
-            if (profile is null)
+            var targets = ResolveTargets(session, game, exePath);
+            if (targets.Count == 0)
             {
-                var profileName = NvApiNative.ProfilePrefix + game;
-                profile = session.FindProfile(profileName) ?? session.CreateProfile(profileName);
-                createdProfile = true;
-
-                var createResult = session.CreateApplication(profile.Value, exePath);
-                if (createResult != 0)
-                {
-                    return Failure(
-                        $"The executable is not associated with a driver profile and could not be attached to a new one (status {createResult}).");
-                }
-            }
-
-            if (session.IsBaseProfile(profile.Value))
-            {
-                return Failure("Refusing to write to the base profile.");
-            }
-
-            var targetProfileName = session.GetProfileName(profile.Value);
-            if (string.IsNullOrWhiteSpace(targetProfileName))
-            {
-                return Failure("The driver profile name could not be read; aborting.");
+                return Failure("No usable driver profile could be found or created for this executable.");
             }
 
             var existing = _store.Load(targetDirectory);
-            if (existing is null || !string.Equals(existing.Profile, targetProfileName, StringComparison.Ordinal))
+            var recordedNames = existing?.AllTargets()
+                .Select(target => target.Profile)
+                .OrderBy(name => name, StringComparer.Ordinal)
+                .ToList() ?? [];
+            var currentNames = targets
+                .Select(target => target.Name)
+                .OrderBy(name => name, StringComparer.Ordinal)
+                .ToList();
+
+            if (existing is null || !recordedNames.SequenceEqual(currentNames, StringComparer.Ordinal))
             {
-                var oldValue = session.ReadSetting(profile.Value, NvApiNative.SmoothMotionSettingId);
+                var recorded = targets.Select(target =>
+                {
+                    var oldValue = session.ReadSetting(target.Profile, NvApiNative.SmoothMotionSettingId);
+                    return new SmProfileTarget(
+                        target.Name,
+                        target.Name.StartsWith(NvApiNative.ProfilePrefix, StringComparison.Ordinal),
+                        oldValue is not null,
+                        oldValue);
+                }).ToList();
+
                 _store.Save(new SmProfileRecord(
                     game,
                     exePath,
-                    targetProfileName,
-                    targetProfileName.StartsWith(NvApiNative.ProfilePrefix, StringComparison.Ordinal),
-                    oldValue is not null,
-                    oldValue,
-                    targetDirectory));
+                    targets[0].Name,
+                    recorded[0].Ours,
+                    recorded[0].Had,
+                    recorded[0].HadValue,
+                    targetDirectory)
+                {
+                    Targets = recorded,
+                });
             }
 
             var value = enabled ? 1u : 0u;
-            var setResult = session.SetDword(
-                profile.Value,
-                NvApiNative.SmoothMotionSettingId,
-                value);
+            foreach (var target in targets)
+            {
+                var setResult = session.SetDword(
+                    target.Profile,
+                    NvApiNative.SmoothMotionSettingId,
+                    value);
+                _logger.LogDebug(
+                    "Smooth Motion write profile={Profile} status={Status}",
+                    target.Name,
+                    setResult);
+            }
+
             session.Save();
 
-            var readBack = ReadBack(targetProfileName, exePath);
-            var ok = readBack == value;
+            var readBacks = targets
+                .Select(target => ReadBack(target.Name, exePath))
+                .ToList();
+            var ok = readBacks.All(readBack => readBack == value);
+            var profileList = string.Join(", ", targets.Select(target => $"'{target.Name}'"));
             var message = ok
-                ? $"Smooth Motion {(enabled ? "enabled" : "disabled")} in profile '{targetProfileName}'."
-                : $"Read-back mismatch: expected {value}, got {readBack?.ToString(CultureInfo.InvariantCulture) ?? "none"} (profile '{targetProfileName}').";
+                ? $"Smooth Motion {(enabled ? "enabled" : "disabled")} in {profileList}."
+                : $"Read-back mismatch: expected {value}, got {string.Join(", ", readBacks.Select(readBack => readBack?.ToString(CultureInfo.InvariantCulture) ?? "none"))} ({profileList}).";
 
             _logger.LogInformation(
-                "Smooth Motion set game={Game} enabled={Enabled} profile={Profile} status={Status} readBack={ReadBack} createdProfile={Created}",
+                "Smooth Motion set game={Game} enabled={Enabled} profiles={Profiles} readBack={ReadBack}",
                 game,
                 enabled,
-                targetProfileName,
-                setResult,
-                readBack,
-                createdProfile);
+                profileList,
+                string.Join(",", readBacks.Select(readBack => readBack?.ToString(CultureInfo.InvariantCulture) ?? "none")));
 
-            return new SmoothMotionChangeResult(ok, readBack, targetProfileName, message);
+            return new SmoothMotionChangeResult(ok, readBacks.FirstOrDefault(), targets[0].Name, message);
         }
         catch (Exception exception) when (exception is NvApiException or InvalidOperationException or IOException)
         {
             _logger.LogError(exception, "Could not set Smooth Motion for {Game}", game);
             return Failure(exception.Message);
         }
+    }
+
+    private static List<(IntPtr Profile, string Name)> ResolveTargets(
+        NvApiSession session,
+        string game,
+        string exePath)
+    {
+        var targets = new List<(IntPtr Profile, string Name)>();
+        var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        foreach (var profile in session.FindProfilesForExe(exePath))
+        {
+            if (session.IsBaseProfile(profile))
+            {
+                continue;
+            }
+
+            var name = session.GetProfileName(profile);
+            if (string.IsNullOrWhiteSpace(name) || !seen.Add(name))
+            {
+                continue;
+            }
+
+            targets.Add((profile, name));
+        }
+
+        if (targets.Count > 0)
+        {
+            return targets;
+        }
+
+        var profileName = NvApiNative.ProfilePrefix + game;
+        var handle = session.FindProfile(profileName);
+        if (handle is null || session.IsBaseProfile(handle.Value))
+        {
+            handle = session.CreateProfile(profileName);
+        }
+
+        if (session.IsBaseProfile(handle.Value))
+        {
+            return targets;
+        }
+
+        var created = session.GetProfileName(handle.Value);
+        if (string.IsNullOrWhiteSpace(created) || session.CreateApplication(handle.Value, exePath) != 0)
+        {
+            return targets;
+        }
+
+        targets.Add((handle.Value, created));
+        return targets;
     }
 
     private SmoothMotionChangeResult RestoreCore(
@@ -185,52 +255,76 @@ public sealed class NvApiSmoothMotion : INvApiSmoothMotion
         using var session = opened.Value;
         try
         {
-            var profile = session.FindProfile(record.Profile);
-            profile ??= session.FindProfileForExe(exePath);
-            if (profile is null)
+            var records = record.AllTargets();
+            if (records.Count == 0)
+            {
+                _store.Delete(targetDirectory);
+                return new SmoothMotionChangeResult(true, null, string.Empty, "No Smooth Motion record exists for this game.");
+            }
+
+            var resolved = new List<(IntPtr Profile, SmProfileTarget Record)>();
+            foreach (var target in records)
+            {
+                var handle = session.FindProfile(target.Profile);
+                if (handle is null || session.IsBaseProfile(handle.Value))
+                {
+                    var byExe = session.FindProfileForExe(exePath);
+                    if (byExe is null || session.IsBaseProfile(byExe.Value))
+                    {
+                        continue;
+                    }
+
+                    handle = byExe;
+                }
+
+                resolved.Add((handle.Value, target));
+            }
+
+            if (resolved.Count == 0)
             {
                 _store.Delete(targetDirectory);
                 return new SmoothMotionChangeResult(true, null, record.Profile, "The driver profile no longer exists.");
             }
 
-            if (session.IsBaseProfile(profile.Value))
+            foreach (var entry in resolved)
             {
-                return Failure("Refusing to write to the base profile.");
-            }
-
-            var want = record.Had ? record.HadValue : null;
-            if (want is not null)
-            {
-                session.SetDword(profile.Value, NvApiNative.SmoothMotionSettingId, want.Value);
-            }
-            else
-            {
-                session.DeleteSetting(profile.Value, NvApiNative.SmoothMotionSettingId);
+                var want = entry.Record.Had ? entry.Record.HadValue : null;
+                if (want is not null)
+                {
+                    session.SetDword(entry.Profile, NvApiNative.SmoothMotionSettingId, want.Value);
+                }
+                else
+                {
+                    session.DeleteSetting(entry.Profile, NvApiNative.SmoothMotionSettingId);
+                }
             }
 
             session.Save();
-            var readBack = ReadBack(record.Profile, exePath);
-            var ok = want is null ? readBack is null : readBack == want;
+            var readBacks = resolved
+                .Select(entry => ReadBack(entry.Record.Profile, exePath))
+                .ToList();
+            var ok = resolved
+                .Select((entry, index) => entry.Record.Had
+                    ? readBacks[index] == entry.Record.HadValue
+                    : readBacks[index] is null)
+                .All(match => match);
             if (ok)
             {
                 _store.Delete(targetDirectory);
             }
 
             var message = ok
-                ? want is null
-                    ? "Smooth Motion override removed; the profile follows the global setting."
-                    : $"Smooth Motion restored to the original value {want}."
-                : $"Restore read-back mismatch: expected {want?.ToString(CultureInfo.InvariantCulture) ?? "none"}, got {readBack?.ToString(CultureInfo.InvariantCulture) ?? "none"}.";
+                ? "Smooth Motion restored to the original value in all matching driver profiles."
+                : "Restore read-back mismatch in at least one driver profile.";
 
             _logger.LogInformation(
-                "Smooth Motion restore game={Game} profile={Profile} ok={Ok} expected={Expected} readBack={ReadBack}",
+                "Smooth Motion restore game={Game} profiles={Profiles} ok={Ok} readBack={ReadBack}",
                 game,
-                record.Profile,
+                string.Join(",", resolved.Select(entry => entry.Record.Profile)),
                 ok,
-                want,
-                readBack);
+                string.Join(",", readBacks.Select(readBack => readBack?.ToString(CultureInfo.InvariantCulture) ?? "none")));
 
-            return new SmoothMotionChangeResult(ok, readBack, record.Profile, message);
+            return new SmoothMotionChangeResult(ok, readBacks.FirstOrDefault(), resolved[0].Record.Profile, message);
         }
         catch (Exception exception) when (exception is NvApiException or InvalidOperationException or IOException)
         {
