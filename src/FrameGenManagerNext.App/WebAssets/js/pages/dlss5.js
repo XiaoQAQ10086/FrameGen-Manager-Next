@@ -42,6 +42,7 @@ export default {
           <footer class="modal-foot">
             <span class="muted small">${t('Deploy.CloseGameHint')}</span>
             <div class="foot-actions">
+              <button class="btn" data-action="detail-open" type="button">${t('Library.OpenFolder')}</button>
               <button class="btn danger" data-action="modal-uninstall" type="button">${t('Common.Uninstall')}</button>
               <button class="btn success" data-action="modal-install" type="button">${t('Common.Install')}</button>
             </div>
@@ -96,7 +97,6 @@ export default {
         ? game.targets
         : (game.renderExe ? [{ path: game.renderExe, name: game.renderExe.split('\\').pop() }] : []);
       const apiOptions = [
-        ['auto', t('Dlss5.ApiAuto')],
         ['DX12', 'DX12'],
         ['DX11', 'DX11'],
         ['DX10', 'DX10'],
@@ -106,7 +106,11 @@ export default {
       ];
       const currentApi = game.api && game.api !== 'Unknown'
         ? game.api.replace('Direct3D', 'DX').toUpperCase()
-        : 'auto';
+        : 'DX12';
+      const apiLabelText = (value, label) =>
+        value === currentApi && game.api !== 'Unknown'
+          ? `${label}${t('Dlss5.ApiAutoSuffix')}`
+          : label;
       const manualTarget = '__manual__';
       detailBody.innerHTML = `
         <div class="badges">
@@ -120,7 +124,7 @@ export default {
             <option value="${manualTarget}">${t('Deploy.ManualTarget')}</option>
           </select></label>
           <label>${t('Dlss5.GraphicsApiLabel')}<select data-role="detail-api">
-            ${apiOptions.map(([value, label]) => `<option value="${value}">${label}</option>`).join('')}
+            ${apiOptions.map(([value, label]) => `<option value="${value}">${esc(apiLabelText(value, label))}</option>`).join('')}
           </select></label>
         </div>
         <p class="hint">${esc(t('Dlss5.Subtitle'))}</p>`;
@@ -130,7 +134,7 @@ export default {
         targetSelect.value = game.renderExe;
       }
       if (apiSelect) {
-        apiSelect.value = apiOptions.some(([value]) => value === currentApi) ? currentApi : 'auto';
+        apiSelect.value = apiOptions.some(([value]) => value === currentApi) ? currentApi : 'DX12';
       }
 
       const pickTarget = async () => {
@@ -164,8 +168,9 @@ export default {
       });
 
       const installButton = q('[data-action="modal-install"]');
-      installButton.disabled = game.available === false || game.legacy;
-      installButton.textContent = t(game.state === 'Outdated' ? 'Common.Update' : 'Common.Install');
+      const repairState = game.state === 'Outdated' || game.state === 'Partial' || game.state === 'Conflict';
+      installButton.disabled = game.available === false || game.legacy || (deployed(game) && !repairState);
+      installButton.textContent = t(repairState ? 'Common.Update' : 'Common.Install');
 
       const uninstallButton = q('[data-action="modal-uninstall"]');
       uninstallButton.disabled = !deployed(game) && !game.legacy && !game.leftovers;
@@ -263,6 +268,12 @@ export default {
           }
           return;
         }
+        if (name === 'detail-open') {
+          if (!current) return;
+          await api.request('games.openFolder', { id: current.id })
+            .catch((error) => ui.toast(error.message, 'error'));
+          return;
+        }
         if (name === 'modal-install' || name === 'modal-uninstall') {
           if (!current) return;
           const game = current;
@@ -272,7 +283,7 @@ export default {
               ui.toast(t('Deploy.TargetRequired'), 'error');
               return;
             }
-            const api = detailBody.querySelector('[data-role="detail-api"]')?.value || 'auto';
+            const api = detailBody.querySelector('[data-role="detail-api"]')?.value || 'DX12';
             if (!(await confirmDialog(t('Dlss5.Title'), t('Dlss5.Confirm.Install').replace('{0}', game.name).replace('{1}', prettyPath(target || game.targetDirectory)), t('Common.Install')))) return;
             closeDetail();
             return action('dlss5.install', game.id, { target, api });

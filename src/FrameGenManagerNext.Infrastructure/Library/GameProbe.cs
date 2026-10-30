@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Security.Cryptography;
 using System.Text;
 using FrameGenManagerNext.Core.Features.Library;
@@ -235,6 +236,7 @@ public sealed class GameProbe : IGameProbe
         var directory = Path.GetDirectoryName(exePath) ?? string.Empty;
         var siblings = GraphicsApiSiblingFiles
             .Where(name => File.Exists(Path.Combine(directory, name)))
+            .Where(name => !IsInjectedProxy(Path.Combine(directory, name)))
             .ToList();
 
         var wrapperIsVulkan = WrapperImportsVulkan(directory);
@@ -249,7 +251,13 @@ public sealed class GameProbe : IGameProbe
             return api;
         }
 
-        foreach (var engineName in new[] { "unityplayer.dll", "engine2.dll", "engine.dll", "crysystem.dll" })
+        var unity = DetectUnityApi(directory, imports, wrapperIsVulkan);
+        if (unity != GraphicsApi.Unknown)
+        {
+            return unity;
+        }
+
+        foreach (var engineName in new[] { "engine2.dll", "engine.dll", "crysystem.dll" })
         {
             var enginePath = Path.Combine(directory, engineName);
             if (!File.Exists(enginePath))
@@ -271,6 +279,59 @@ public sealed class GameProbe : IGameProbe
         }
 
         return GraphicsApi.Unknown;
+    }
+
+    /// <summary>
+    /// UnityPlayer imports every backend, so import order cannot tell which one the
+    /// build actually uses. Unity's Windows default is D3D11; a D3D12 build ships
+    /// the agility SDK (D3D12Core.dll), and a Vulkan-only build ships vulkan-1.dll.
+    /// ReShade proxy DLLs are filtered out before this point, otherwise installing
+    /// ReShade would flip the detected API on the next scan.
+    /// </summary>
+    private static GraphicsApi DetectUnityApi(
+        string directory,
+        IReadOnlyCollection<string> imports,
+        bool wrapperIsVulkan)
+    {
+        var unityPlayer = Path.Combine(directory, "UnityPlayer.dll");
+        var isUnity = File.Exists(unityPlayer) ||
+                      imports.Any(name =>
+                          string.Equals(name, "UnityPlayer.dll", StringComparison.OrdinalIgnoreCase));
+        if (!isUnity)
+        {
+            return GraphicsApi.Unknown;
+        }
+
+        if (wrapperIsVulkan)
+        {
+            return GraphicsApi.Vulkan;
+        }
+
+        if (File.Exists(Path.Combine(directory, "D3D12Core.dll")))
+        {
+            return GraphicsApi.Direct3D12;
+        }
+
+        if (File.Exists(Path.Combine(directory, "vulkan-1.dll")) &&
+            !IsInjectedProxy(Path.Combine(directory, "vulkan-1.dll")))
+        {
+            return GraphicsApi.Vulkan;
+        }
+
+        return GraphicsApi.Direct3D11;
+    }
+
+    private static bool IsInjectedProxy(string path)
+    {
+        try
+        {
+            var info = FileVersionInfo.GetVersionInfo(path);
+            return info.ProductName?.Contains("ReShade", StringComparison.OrdinalIgnoreCase) == true;
+        }
+        catch (FileNotFoundException)
+        {
+            return false;
+        }
     }
 
     private static bool WrapperImportsVulkan(string directory)

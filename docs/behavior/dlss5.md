@@ -12,7 +12,12 @@
 
 ## 安装流程
 
-0. 部署目标来自界面的 EXE 选择：默认用扫描结果，也可以“手动选择游戏实际启动 EXE”。手动选择会同时更新该游戏的部署目标目录（与帧生成页一致），安装文件与 ReShade 都写到该 EXE 所在目录。
+目标与 API 的约定：
+
+- 部署目标来自界面的 EXE 选择：默认用扫描结果，也可以“手动选择游戏实际启动 EXE”。手动选择会同时更新该游戏的部署目标目录（与帧生成页一致），安装文件与 ReShade 都写到该 EXE 所在目录。
+- 图形 API 由扫描阶段自动判定，详情页把它作为默认选项并在后面标注“（自动）”；不再提供单独的“自动”行。用户改成其他 API 时按所选 API 安装。
+- Unity 游戏按 Unity 的 Windows 默认值判定为 D3D11；只有目录里带 `D3D12Core.dll`（D3D12 构建）或 `vulkan-1.dll`（Vulkan 构建）时才判为对应 API。ReShade 自己的代理 DLL（版本信息 ProductName=ReShade）不参与判定，否则装过 ReShade 后重新扫描会把 API 判错。
+
 1. 校验目标目录、pack schema、安装器 SHA-256。
 2. 通过统一部署引擎部署 pack 中的 114 个文件：
    - `gitc-uplift.addon64`、`gitc-uplift.addon32`、`gitc-uplift-helper64.exe`
@@ -29,6 +34,7 @@
    - `EffectSearchPaths=.\reshade-shaders\Shaders\**`
    - `TextureSearchPaths=.\reshade-shaders\Textures\**`
 5. 返回安装器输出和部署报告。
+6. 界面在已部署（`Installed`）时锁定安装按钮；只有 `Outdated`/`Partial`/`Conflict` 允许重新安装或修复。详情页提供“打开文件夹”。
 
 ## 状态检查
 

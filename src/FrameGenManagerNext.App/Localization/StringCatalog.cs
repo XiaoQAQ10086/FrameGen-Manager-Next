@@ -329,6 +329,7 @@ internal static class StringCatalog
         ["Dlss5.GraphicsApiLabel"] = ("图形 API", "Graphics API"),
         ["Dlss5.Target"] = ("部署目标", "Deployment target"),
         ["Dlss5.ApiAuto"] = ("自动（按游戏 EXE）", "Auto (from game EXE)"),
+        ["Dlss5.ApiAutoSuffix"] = ("（自动）", " (auto)"),
         ["Dlss5.Deployed"] = ("DLSS5 已部署", "DLSS5 deployed"),
         ["Dlss5.NotDeployed"] = ("DLSS5 未部署", "DLSS5 not deployed"),
         ["Dlss5.Legacy"] = ("旧版 RenoDX", "Legacy RenoDX"),
