@@ -134,6 +134,34 @@ public sealed partial class AppWebBridge
         });
     }
 
+    private async Task<object?> CleanFrameGenAsync(JsonElement payload)
+    {
+        var game = await FindGameAsync(IdOf(payload));
+        if (game is null)
+        {
+            throw new BridgeException(Domain.Errors.ErrorCode.FileNotFound, "game not found");
+        }
+
+        var target = ResolveDeploymentTarget(game, payload);
+        return await RunExclusiveAsync(async () =>
+        {
+            var progress = new Progress<DeploymentProgress>(update =>
+            {
+                ReportProgress(update.Phase, update.Subject, update.Current, update.Total);
+            });
+            var result = await _frameGen.CleanAsync(
+                target.Directory,
+                progress,
+                CancellationToken.None);
+            if (result.IsFailure)
+            {
+                throw new BridgeException(result.Error!.Code, result.Error.Diagnostic ?? "cleanup failed");
+            }
+
+            return await BuildGamesStateAsync();
+        });
+    }
+
     private async Task PersistTargetAsync(GameEntry game, string? exePath)
     {
         if (exePath is null ||

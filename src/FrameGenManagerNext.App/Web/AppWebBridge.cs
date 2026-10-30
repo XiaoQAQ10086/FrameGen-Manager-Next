@@ -267,6 +267,7 @@ public sealed partial class AppWebBridge : IDisposable
             "assets.cancel" => CancelAssetClear(),
             "framegen.deploy" => await DeployFrameGenAsync(payload),
             "framegen.restore" => await RestoreFrameGenAsync(payload),
+            "framegen.clean" => await CleanFrameGenAsync(payload),
             "sm.state" => await BuildSmoothMotionStateAsync(),
             "sm.enable" => await EnableSmoothMotionAsync(payload),
             "sm.disable" => await DisableSmoothMotionAsync(payload),

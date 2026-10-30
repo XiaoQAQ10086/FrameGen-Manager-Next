@@ -13,7 +13,7 @@ using Microsoft.Extensions.Logging;
 
 namespace FrameGenManagerNext.Core.Features.Framegen;
 
-public sealed class FrameGenDeploymentService : IFrameGenDeploymentService
+public sealed partial class FrameGenDeploymentService : IFrameGenDeploymentService
 {
     public const string FamilyId = "framegen";
     public const string PackId = "framegen.sm86";
@@ -129,12 +129,19 @@ public sealed class FrameGenDeploymentService : IFrameGenDeploymentService
             : await _engine.DeployAsync(plan.Value, progress, cancellationToken);
     }
 
-    public Task<Result<RestoreReport>> RestoreAsync(
+    public async Task<Result<RestoreReport>> RestoreAsync(
         string targetDirectory,
         IProgress<DeploymentProgress>? progress,
         CancellationToken cancellationToken)
     {
-        return _engine.RestoreAsync(FamilyId, targetDirectory, progress, cancellationToken);
+        var owned = await GetOwnedDirectoriesAsync(cancellationToken);
+        return await _engine.RestoreAsync(FamilyId, targetDirectory, progress, cancellationToken, owned);
+    }
+
+    private async Task<IReadOnlyList<string>> GetOwnedDirectoriesAsync(CancellationToken cancellationToken)
+    {
+        var location = await _packs.FindAsync(PackId, cancellationToken);
+        return location?.Pack.OwnedDirectories ?? [];
     }
 
     private async Task<Result<DeploymentPlan>> BuildPlanAsync(

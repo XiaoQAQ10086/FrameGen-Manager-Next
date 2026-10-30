@@ -11,7 +11,8 @@ public sealed partial class DeploymentEngine
         string familyId,
         string targetDirectory,
         IProgress<DeploymentProgress>? progress,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        IReadOnlyList<string>? ownedDirectories = null)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(familyId);
 
@@ -54,6 +55,15 @@ public sealed partial class DeploymentEngine
         var restored = 0;
         var removed = 0;
         var conflicts = 0;
+        var conflictedPaths = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        // Files that held original content before deployment belong to the game and must
+        // survive the owned-directory sweep once they have been restored.
+        var keepPaths = manifest.Files
+            .Where(record => record.ExistedBefore)
+            .Select(record => GetTargetPath(target.Value, record.RelativePath))
+            .Where(path => path.IsSuccess)
+            .Select(path => path.Value)
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
 
         foreach (var record in manifest.Files)
         {
@@ -76,6 +86,7 @@ public sealed partial class DeploymentEngine
                 if (!string.Equals(hash, record.Sha256, StringComparison.OrdinalIgnoreCase))
                 {
                     conflicts++;
+                    conflictedPaths.Add(path.Value);
                     warnings.Add($"Modified file left in place: {record.RelativePath}");
                     continue;
                 }
@@ -125,6 +136,9 @@ public sealed partial class DeploymentEngine
         }
 
         RemoveEmptyParents(manifest, target.Value);
+        var protectedPaths = new HashSet<string>(conflictedPaths, StringComparer.OrdinalIgnoreCase);
+        protectedPaths.UnionWith(keepPaths);
+        SweepOwnedDirectories(ownedDirectories, target.Value, protectedPaths, warnings);
         var leftovers = CollectLeftovers(manifest, target.Value);
         var clean = conflicts == 0 && warnings.Count == 0 && leftovers.Count == 0;
         var finalState = clean

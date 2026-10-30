@@ -36,6 +36,26 @@ internal static class DeployCommand
             return 0;
         }
 
+        if (action.Equals("clean", StringComparison.OrdinalIgnoreCase))
+        {
+            var clean = await service.CleanAsync(
+                targetDirectory,
+                CreateProgress(),
+                cancellationToken);
+
+            if (clean.IsFailure)
+            {
+                PrintError(clean.Error!);
+                return 1;
+            }
+
+            var cleanReport = clean.Value;
+            Console.WriteLine($"removed={cleanReport.RemovedFiles} conflicts={cleanReport.Conflicts}");
+            PrintWarnings(cleanReport.Warnings);
+            PrintList("leftovers", cleanReport.Leftovers);
+            return 0;
+        }
+
         if (action.Equals("inspect", StringComparison.OrdinalIgnoreCase))
         {
             var inspection = await service.InspectAsync(targetDirectory, options, cancellationToken);

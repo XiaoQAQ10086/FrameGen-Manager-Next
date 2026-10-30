@@ -94,10 +94,43 @@ public static class AssetPackValidator
         ValidateGpuRoutes(pack.GpuRoutes, errors);
 
         var targets = ValidateFiles(pack.Files, errors);
+        ValidateOwnedDirectories(pack.OwnedDirectories, targets, errors);
         ValidateIni(pack.Ini, targets, errors);
         ValidateSteps(pack.Steps, pack.Trust, errors);
 
         return new PackValidationResult(errors);
+    }
+
+    private static void ValidateOwnedDirectories(
+        List<string>? directories,
+        HashSet<string> fileTargets,
+        List<PackValidationError> errors)
+    {
+        if (directories is null || directories.Count == 0)
+        {
+            return;
+        }
+
+        var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        for (var index = 0; index < directories.Count; index++)
+        {
+            var path = $"ownedDirectories[{index}]";
+            var normalized = NormalizePath(directories[index], path, errors);
+            if (normalized is null)
+            {
+                continue;
+            }
+
+            if (!seen.Add(normalized))
+            {
+                Add(errors, "PACK-026", path, $"Duplicate owned directory '{normalized}'.");
+            }
+
+            if (fileTargets.Contains(normalized))
+            {
+                Add(errors, "PACK-027", path, $"Owned directory '{normalized}' conflicts with a file target.");
+            }
+        }
     }
 
     private static void ValidateVersionRequirement(

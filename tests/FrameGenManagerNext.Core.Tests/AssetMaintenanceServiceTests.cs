@@ -312,6 +312,19 @@ public sealed class AssetMaintenanceServiceTests
             string familyId,
             string targetDirectory,
             IProgress<DeploymentProgress>? progress,
+            CancellationToken cancellationToken,
+            IReadOnlyList<string>? ownedDirectories = null)
+        {
+            throw new NotSupportedException();
+        }
+
+        public Task<Result<RestoreReport>> CleanAsync(
+            string familyId,
+            string targetDirectory,
+            IReadOnlyList<CleanupCandidate> candidates,
+            IReadOnlyList<string> ownedDirectories,
+            string? iniRelativePath,
+            IProgress<DeploymentProgress>? progress,
             CancellationToken cancellationToken)
         {
             throw new NotSupportedException();
@@ -355,6 +368,14 @@ public sealed class AssetMaintenanceServiceTests
             CancellationToken cancellationToken)
         {
             return Task.FromResult(Restore);
+        }
+
+        public Task<Result<RestoreReport>> CleanAsync(
+            string targetDirectory,
+            IProgress<DeploymentProgress>? progress,
+            CancellationToken cancellationToken)
+        {
+            throw new NotSupportedException();
         }
     }
 

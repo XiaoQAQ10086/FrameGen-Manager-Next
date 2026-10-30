@@ -249,13 +249,16 @@ export default {
     function renderGames() {
       const list = q('[data-role="games"]');
       list.innerHTML = games.map((game, index) => {
+        const legacy = game.state === 'InstalledWithoutManifest';
         const restorable = ['Installed', 'Partial', 'Conflict'].includes(game.state);
-        const primaryAction = restorable ? 'restore' : 'deploy';
-        const primaryLabel = restorable
-          ? t('Common.Restore')
-          : game.state === 'Outdated'
-            ? t('Common.Update')
-            : t('Common.Deploy');
+        const primaryAction = legacy ? 'clean' : restorable ? 'restore' : 'deploy';
+        const primaryLabel = legacy
+          ? t('Common.Clean')
+          : restorable
+            ? t('Common.Restore')
+            : game.state === 'Outdated'
+              ? t('Common.Update')
+              : t('Common.Deploy');
         const stateText = game.state === 'Installed'
           ? (game.packVersion
               ? t('State.DeployedVersion').replace('{0}', game.packVersion)
@@ -270,13 +273,13 @@ export default {
               <div class="badges">
                 <span class="badge">${esc(t(launcherKeys[game.launcher] || 'Common.Unknown'))}</span>
                 <span class="badge">${esc(apiKeys[game.api] || game.api || '未知')}</span>
-                <span class="badge ${game.state === 'Installed' ? 'ok' : (game.state === 'Partial' || game.state === 'Conflict' ? 'warn' : 'dim')}">${esc(stateText)}</span>
+                <span class="badge ${game.state === 'Installed' ? 'ok' : (game.state === 'Partial' || game.state === 'Conflict' || legacy ? 'warn' : 'dim')}">${esc(stateText)}</span>
               </div>
             </div>
           </div>
           <div class="gpath" title="${esc(prettyPath(game.targetDirectory))}">${esc(prettyPath(game.targetDirectory))}</div>
           <div class="gactions">
-            <button class="btn small ${restorable ? 'danger' : 'success'}" data-action="${primaryAction}" data-id="${esc(game.id)}" type="button">${esc(primaryLabel)}</button>
+            <button class="btn small ${restorable || legacy ? 'danger' : 'success'}" data-action="${primaryAction}" data-id="${esc(game.id)}" type="button">${esc(primaryLabel)}</button>
             <button class="btn small" data-action="open" data-id="${esc(game.id)}" type="button">${esc(t('Library.OpenFolder'))}</button>
             <span class="spacer"></span>
             <button class="btn small danger icon-only" data-action="remove" data-id="${esc(game.id)}" type="button" title="${esc(t('Common.Remove'))}" aria-label="${esc(t('Common.Remove'))}">🗑</button>
@@ -694,7 +697,25 @@ export default {
         return;
       }
       if (action === 'restore') {
-        return run(() => api.request('framegen.restore', { id }), t('Library.Status.RestoreDone').replace('{0}', id));
+        const game = games.find((item) => item.id === id);
+        return run(
+          () => api.request('framegen.restore', { id }),
+          t('Library.Status.RestoreDone').replace('{0}', game?.name || id),
+        );
+      }
+      if (action === 'clean') {
+        const game = games.find((item) => item.id === id);
+        if (!game) return;
+        const confirmed = await confirmDialog(
+          t('Common.Clean'),
+          t('Library.Confirm.Clean').replace('{0}', prettyPath(game.targetDirectory)),
+          t('Common.Clean'),
+        );
+        if (!confirmed) return;
+        return run(
+          () => api.request('framegen.clean', { id }),
+          t('Library.Status.CleanDone').replace('{0}', game.name),
+        );
       }
       if (action === 'open') {
         await api.request('games.openFolder', { id }).catch((error) => ui.toast(error.message, 'error'));
@@ -709,6 +730,10 @@ export default {
       }
       if (action === 'modal-deploy') {
         if (!current) return;
+        if (current.state === 'InstalledWithoutManifest') {
+          ui.toast(t('Deploy.LegacyFilesWarning'), 'error');
+          return;
+        }
         const game = current;
         const target = deployMeta.querySelector('[data-role="modal-target"]')?.value;
         if (!target || target === manualTarget) {

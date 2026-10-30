@@ -174,9 +174,9 @@ if (args.Length >= 3 &&
     args[0].Equals("deploy", StringComparison.OrdinalIgnoreCase))
 {
     var action = args[1].ToLowerInvariant();
-    if (action is not ("inspect" or "framegen" or "restore"))
+    if (action is not ("inspect" or "framegen" or "restore" or "clean"))
     {
-        Console.Error.WriteLine("Usage: fgm-next deploy <inspect|framegen|restore> <target-dir> [--proxy version.dll]");
+        Console.Error.WriteLine("Usage: fgm-next deploy <inspect|framegen|restore|clean> <target-dir> [--proxy version.dll]");
         return 2;
     }
 

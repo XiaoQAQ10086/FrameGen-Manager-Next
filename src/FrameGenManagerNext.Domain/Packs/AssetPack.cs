@@ -16,6 +16,13 @@ public sealed class AssetPack
 
     public List<AssetPackFile> Files { get; init; } = [];
 
+    /// <summary>
+    /// Relative directories owned entirely by this deployment (for example the
+    /// FrameGen runtime folder). The plugin writes logs and caches there after
+    /// installation, so restore and cleanup remove them recursively.
+    /// </summary>
+    public List<string> OwnedDirectories { get; init; } = [];
+
     public AssetPackIni? Ini { get; init; }
 
     public List<AssetPackStep> Steps { get; init; } = [];

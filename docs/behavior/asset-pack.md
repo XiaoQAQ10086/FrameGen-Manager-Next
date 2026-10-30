@@ -32,6 +32,7 @@ pack-directory/
 | `gpuRoutes` | 至少一个；取值 `Any/Sm86/Sm75/Gtx16/Pascal/NotNeeded/Unsupported/Unknown`；不重复 | `PACK-006` / `PACK-023` |
 | `trust` | `bundled` 或 `verified` | JSON 解析错误 |
 | `files` | 至少一个 | `PACK-007` |
+| `ownedDirectories` | 可选；安全相对路径；不重复；不能与文件目标重名。这些目录完全属于部署，还原/清理时整目录删除（插件会在里面写日志和缓存） | `PACK-008` / `PACK-026` / `PACK-027` |
 
 ## 文件条目
 

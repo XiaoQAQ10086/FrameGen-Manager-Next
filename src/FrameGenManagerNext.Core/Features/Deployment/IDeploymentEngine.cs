@@ -28,6 +28,16 @@ public interface IDeploymentEngine
         string familyId,
         string targetDirectory,
         IProgress<DeploymentProgress>? progress,
+        CancellationToken cancellationToken,
+        IReadOnlyList<string>? ownedDirectories = null);
+
+    Task<Result<RestoreReport>> CleanAsync(
+        string familyId,
+        string targetDirectory,
+        IReadOnlyList<CleanupCandidate> candidates,
+        IReadOnlyList<string> ownedDirectories,
+        string? iniRelativePath,
+        IProgress<DeploymentProgress>? progress,
         CancellationToken cancellationToken);
 
     Task<Result> DiscardBackupAsync(

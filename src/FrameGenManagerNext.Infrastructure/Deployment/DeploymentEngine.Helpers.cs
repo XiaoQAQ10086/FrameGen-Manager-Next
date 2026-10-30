@@ -310,6 +310,44 @@ public sealed partial class DeploymentEngine
         };
     }
 
+    private static void SweepOwnedDirectories(
+        IReadOnlyList<string>? ownedDirectories,
+        string targetDirectory,
+        IReadOnlyCollection<string> protectedPaths,
+        List<string> warnings)
+    {
+        if (ownedDirectories is null || ownedDirectories.Count == 0)
+        {
+            return;
+        }
+
+        foreach (var directory in ownedDirectories)
+        {
+            var path = SafePath.CombineUnderRoot(targetDirectory, directory);
+            if (path.IsFailure || !Directory.Exists(path.Value))
+            {
+                continue;
+            }
+
+            var prefix = path.Value.TrimEnd('\\', '/') + Path.DirectorySeparatorChar;
+            if (protectedPaths.Any(protectedPath =>
+                    protectedPath.StartsWith(prefix, StringComparison.OrdinalIgnoreCase)))
+            {
+                warnings.Add($"Kept deployment folder '{directory}' because it contains files that are not ours.");
+                continue;
+            }
+
+            try
+            {
+                Directory.Delete(path.Value, recursive: true);
+            }
+            catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
+            {
+                warnings.Add($"Could not remove deployment folder '{directory}': {exception.Message}");
+            }
+        }
+    }
+
     private static void RemoveEmptyParents(DeploymentManifest manifest, string targetDirectory)
     {
         foreach (var record in manifest.Files)

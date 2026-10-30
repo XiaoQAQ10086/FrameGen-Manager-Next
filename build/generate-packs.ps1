@@ -188,6 +188,7 @@ function Write-PackManifest {
         [string]$DisplayName,
         [string[]]$GpuRoutes,
         [System.Collections.Generic.List[object]]$Files,
+        [string[]]$OwnedDirectories = @(),
         [object]$Ini,
         [object[]]$Steps,
         [string]$ManifestDir,
@@ -204,6 +205,10 @@ function Write-PackManifest {
         files = @($Files)
         steps = @($Steps)
         trust = 'bundled'
+    }
+
+    if ($null -ne $OwnedDirectories -and $OwnedDirectories.Count -gt 0) {
+        $pack['ownedDirectories'] = @($OwnedDirectories)
     }
 
     if ($null -ne $Ini) {
@@ -272,6 +277,7 @@ Write-PackManifest `
     -Version '0.4.1' `
     -DisplayName 'FrameGen SM86 (assets 0.4.1, runtime 310.9.16)' `
     -GpuRoutes @('Sm86', 'Sm75') `
+    -OwnedDirectories @('dlssg_sm86') `
     -Files $files `
     -Ini $ini `
     -Steps @([ordered]@{ type = 'copyFiles' }, [ordered]@{ type = 'writeIni' }) `

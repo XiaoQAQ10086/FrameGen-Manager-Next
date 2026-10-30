@@ -127,6 +127,9 @@
                   }
               ],
     "trust":  "bundled",
+    "ownedDirectories":  [
+                             "dlssg_sm86"
+                         ],
     "ini":  {
                 "target":  "dlssg_sm86.ini",
                 "template":  "dlssg_sm86.ini",

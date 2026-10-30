@@ -79,6 +79,22 @@ public sealed class AssetPackValidatorTests
     }
 
     [Fact]
+    public void OwnedDirectoryWithTraversalIsReported()
+    {
+        var result = AssetPackValidator.ValidateSchema(ValidPack(ownedDirectories: ["../outside"]));
+
+        HasCode(result, "PACK-008");
+    }
+
+    [Fact]
+    public void OwnedDirectoryThatIsAlsoAFileTargetIsReported()
+    {
+        var result = AssetPackValidator.ValidateSchema(ValidPack(ownedDirectories: ["version.dll"]));
+
+        HasCode(result, "PACK-027");
+    }
+
+    [Fact]
     public void UnsafeTargetIsReported()
     {
         var result = AssetPackValidator.ValidateSchema(
@@ -314,7 +330,8 @@ public sealed class AssetPackValidatorTests
         List<AssetPackFile>? files = null,
         AssetPackIni? ini = null,
         List<AssetPackStep>? steps = null,
-        AssetPackTrust trust = AssetPackTrust.Bundled)
+        AssetPackTrust trust = AssetPackTrust.Bundled,
+        List<string>? ownedDirectories = null)
     {
         return new AssetPack
         {
@@ -325,6 +342,7 @@ public sealed class AssetPackValidatorTests
             MinAppVersion = minAppVersion,
             GpuRoutes = gpuRoutes ?? ["Sm86"],
             Files = files ?? [ValidFile()],
+            OwnedDirectories = ownedDirectories ?? [],
             Ini = ini,
             Steps = steps ?? [],
             Trust = trust,
