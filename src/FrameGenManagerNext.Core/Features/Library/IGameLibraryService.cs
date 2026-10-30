@@ -15,4 +15,6 @@ public interface IGameLibraryService
     Task<GameLibrary> RemoveAsync(string gameId, CancellationToken cancellationToken);
 
     Task<GameLibrary> SetIgnoredAsync(string gameId, bool ignored, CancellationToken cancellationToken);
+
+    Task<GameLibrary> SetTargetAsync(string gameId, string exePath, CancellationToken cancellationToken);
 }

@@ -252,6 +252,7 @@ public sealed partial class AppWebBridge : IDisposable
             "games.remove" => await RemoveGameAsync(payload),
             "games.restore" => await RestoreGameAsync(payload),
             "games.openFolder" => await OpenGameFolderAsync(payload),
+            "games.pickExecutable" => await PickGameExecutableAsync(payload),
             "framegen.deploy" => await DeployFrameGenAsync(payload),
             "framegen.restore" => await RestoreFrameGenAsync(payload),
             "sm.state" => await BuildSmoothMotionStateAsync(),

@@ -316,6 +316,8 @@ export default {
       removedOverlay.classList.add('hidden');
     }
 
+    const manualTarget = '__manual__';
+
     function openModal(game) {
       current = game;
       modalTitle.textContent = game.name;
@@ -331,18 +333,70 @@ export default {
           <span>${esc(t('Dlss5.Target'))}</span>
           <select data-role="modal-target">
             ${targets.map((target) => `<option value="${esc(target.path)}">${esc(target.name)}</option>`).join('')}
+            <option value="${manualTarget}">${esc(t('Deploy.ManualTarget'))}</option>
           </select>
         </label>
+        <div class="target-hint" data-role="target-hint"></div>
         <div class="kv2 inline">
           <span>${esc(t('Dlss5.GraphicsApiLabel'))}</span>
           <b class="api-value">${esc(apiKeys[game.api] || game.api || t('Common.Unknown'))}</b>
         </div>`;
       const targetSelect = deployMeta.querySelector('[data-role="modal-target"]');
-      if (targetSelect && game.renderExe) targetSelect.value = game.renderExe;
+      const targetHint = deployMeta.querySelector('[data-role="target-hint"]');
+      const samePath = (left, right) => String(left).toLowerCase() === String(right).toLowerCase();
+
+      function paintTargetHint() {
+        targetHint.textContent = targetSelect.value && targetSelect.value !== manualTarget
+          ? t('Deploy.TargetHint').replace('{0}', targetSelect.value)
+          : '';
+      }
+
+      const initialTarget = targets.find((target) => samePath(target.path, game.renderExe))?.path
+        || targets[0]?.path
+        || manualTarget;
+      targetSelect.value = initialTarget;
+
+      const pickTarget = async () => {
+        const previous = targetSelect.value === manualTarget ? manualTarget : targetSelect.value;
+        const picked = await api.request('games.pickExecutable', { id: game.id })
+          .catch((error) => {
+            ui.toast(error.message || error.code || '选择 EXE 失败', 'error');
+            return null;
+          });
+        if (!picked?.path) {
+          targetSelect.value = previous;
+          paintTargetHint();
+          return;
+        }
+
+        let option = targetSelect.querySelector('option[data-picked="1"]');
+        if (!option) {
+          option = document.createElement('option');
+          option.dataset.picked = '1';
+          targetSelect.appendChild(option);
+        }
+        option.value = picked.path;
+        option.textContent = picked.name;
+        targetSelect.value = picked.path;
+        paintTargetHint();
+      };
+
+      targetSelect.addEventListener('change', () => {
+        if (targetSelect.value === manualTarget) {
+          void pickTarget();
+        } else {
+          paintTargetHint();
+        }
+      });
+
+      paintTargetHint();
       optionsRoot.innerHTML = optionFields();
       applyOptionValues(game.options);
       overlay.classList.remove('hidden');
       syncEngine();
+      if (initialTarget === manualTarget) {
+        void pickTarget();
+      }
     }
 
     function closeModal() {
@@ -613,6 +667,10 @@ export default {
         if (!current) return;
         const game = current;
         const target = deployMeta.querySelector('[data-role="modal-target"]')?.value;
+        if (!target || target === manualTarget) {
+          ui.toast(t('Deploy.TargetRequired'), 'error');
+          return;
+        }
         const options = readOptions();
         closeModal();
         await run(
@@ -624,8 +682,16 @@ export default {
       if (action === 'modal-restore') {
         if (!current) return;
         const game = current;
+        const target = deployMeta.querySelector('[data-role="modal-target"]')?.value;
+        if (!target || target === manualTarget) {
+          ui.toast(t('Deploy.TargetRequired'), 'error');
+          return;
+        }
         closeModal();
-        await run(() => api.request('framegen.restore', { id: game.id }), t('Library.Status.RestoreDone').replace('{0}', game.name));
+        await run(
+          () => api.request('framegen.restore', { id: game.id, target }),
+          t('Library.Status.RestoreDone').replace('{0}', game.name),
+        );
       }
     };
     root.addEventListener('click', onRootClick);

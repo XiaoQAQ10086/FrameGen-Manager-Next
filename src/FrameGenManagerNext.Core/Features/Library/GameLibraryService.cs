@@ -1,4 +1,5 @@
 using FrameGenManagerNext.Domain.Library;
+using FrameGenManagerNext.Domain.Safety;
 using Microsoft.Extensions.Logging;
 
 namespace FrameGenManagerNext.Core.Features.Library;
@@ -129,6 +130,7 @@ public sealed partial class GameLibraryService : IGameLibraryService, IDisposabl
             Scanned = scanned,
             Manual = existing.Manual,
             IgnoredIds = existing.IgnoredIds,
+            TargetOverrides = existing.TargetOverrides,
         };
 
         await SaveAsync(library, cancellationToken);
@@ -165,6 +167,7 @@ public sealed partial class GameLibraryService : IGameLibraryService, IDisposabl
                 Scanned = library.Scanned,
                 Manual = manual,
                 IgnoredIds = library.IgnoredIds.Where(id => !string.Equals(id, entry.Id, StringComparison.OrdinalIgnoreCase)).ToList(),
+                TargetOverrides = library.TargetOverrides,
             };
 
             await _store.SaveAsync(updated, cancellationToken);
@@ -204,6 +207,7 @@ public sealed partial class GameLibraryService : IGameLibraryService, IDisposabl
                 Scanned = library.Scanned,
                 Manual = library.Manual,
                 IgnoredIds = ignored,
+                TargetOverrides = library.TargetOverrides,
             };
 
             await _store.SaveAsync(updated, cancellationToken);
@@ -242,6 +246,69 @@ public sealed partial class GameLibraryService : IGameLibraryService, IDisposabl
                 Scanned = library.Scanned,
                 Manual = library.Manual,
                 IgnoredIds = ids.ToList(),
+                TargetOverrides = library.TargetOverrides,
+            };
+
+            await _store.SaveAsync(updated, cancellationToken);
+            return updated;
+        }
+        finally
+        {
+            _writeLock.Release();
+        }
+    }
+
+    public async Task<GameLibrary> SetTargetAsync(
+        string gameId,
+        string exePath,
+        CancellationToken cancellationToken)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(gameId);
+
+        if (string.IsNullOrWhiteSpace(exePath) || !File.Exists(exePath))
+        {
+            throw new ArgumentException("The selected target executable does not exist.", nameof(exePath));
+        }
+
+        var fullPath = Path.GetFullPath(exePath);
+        if (!string.Equals(Path.GetExtension(fullPath), ".exe", StringComparison.OrdinalIgnoreCase))
+        {
+            throw new ArgumentException("The selected target must be an .exe file.", nameof(exePath));
+        }
+
+        var directory = Path.GetDirectoryName(fullPath);
+        if (string.IsNullOrWhiteSpace(directory) || SafePath.IsProtectedSystemDirectory(directory))
+        {
+            throw new ArgumentException("The selected target directory is not allowed.", nameof(exePath));
+        }
+
+        await _writeLock.WaitAsync(cancellationToken);
+        try
+        {
+            var library = await _store.LoadAsync(cancellationToken);
+            var exists = library.Manual
+                .Concat(library.Scanned)
+                .Any(game => string.Equals(game.Id, gameId, StringComparison.OrdinalIgnoreCase));
+            if (!exists)
+            {
+                throw new ArgumentException("Game was not found in the library.", nameof(gameId));
+            }
+
+            var overrides = new Dictionary<string, string>(
+                library.TargetOverrides,
+                StringComparer.OrdinalIgnoreCase)
+            {
+                [gameId] = fullPath,
+            };
+
+            var updated = new GameLibrary
+            {
+                SchemaVersion = library.SchemaVersion,
+                LastScanUtc = library.LastScanUtc,
+                Scanned = library.Scanned,
+                Manual = library.Manual,
+                IgnoredIds = library.IgnoredIds,
+                TargetOverrides = overrides,
             };
 
             await _store.SaveAsync(updated, cancellationToken);

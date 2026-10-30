@@ -99,6 +99,8 @@ public sealed class GameLibraryStore : IGameLibraryStore
             Scanned = library.Scanned ?? [],
             Manual = library.Manual ?? [],
             IgnoredIds = library.IgnoredIds ?? [],
+            TargetOverrides = library.TargetOverrides ??
+                new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase),
         };
     }
 

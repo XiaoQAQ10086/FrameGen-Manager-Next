@@ -1,7 +1,9 @@
+using System.IO;
 using System.Text.Json;
 using FrameGenManagerNext.Core.Features.Framegen;
 using FrameGenManagerNext.Domain.Deployment;
 using FrameGenManagerNext.Domain.Gpu;
+using FrameGenManagerNext.Domain.Library;
 
 namespace FrameGenManagerNext.App.Web;
 
@@ -79,14 +81,17 @@ public sealed partial class AppWebBridge
         }
 
         var options = ReadFrameGenOptions(payload);
+        var target = ResolveDeploymentTarget(game, payload);
         return await RunExclusiveAsync(async () =>
         {
+            await PersistTargetAsync(game, target.ExePath);
+
             var progress = new Progress<DeploymentProgress>(update =>
             {
                 ReportProgress(update.Phase, update.Subject, update.Current, update.Total);
             });
             var result = await _frameGen.DeployAsync(
-                game.TargetDirectory,
+                target.Directory,
                 options,
                 progress,
                 CancellationToken.None);
@@ -107,14 +112,17 @@ public sealed partial class AppWebBridge
             throw new BridgeException(Domain.Errors.ErrorCode.FileNotFound, "game not found");
         }
 
+        var target = ResolveDeploymentTarget(game, payload);
         return await RunExclusiveAsync(async () =>
         {
+            await PersistTargetAsync(game, target.ExePath);
+
             var progress = new Progress<DeploymentProgress>(update =>
             {
                 ReportProgress(update.Phase, update.Subject, update.Current, update.Total);
             });
             var result = await _frameGen.RestoreAsync(
-                game.TargetDirectory,
+                target.Directory,
                 progress,
                 CancellationToken.None);
             if (result.IsFailure)
@@ -124,6 +132,77 @@ public sealed partial class AppWebBridge
 
             return await BuildGamesStateAsync();
         });
+    }
+
+    private async Task PersistTargetAsync(GameEntry game, string? exePath)
+    {
+        if (exePath is null ||
+            string.Equals(exePath, game.RenderExePath, StringComparison.OrdinalIgnoreCase))
+        {
+            return;
+        }
+
+        try
+        {
+            await _library.SetTargetAsync(game.Id, exePath, CancellationToken.None);
+        }
+        catch (ArgumentException exception)
+        {
+            throw new BridgeException(Domain.Errors.ErrorCode.InvalidPath, exception.Message);
+        }
+    }
+
+    private static (string Directory, string? ExePath) ResolveDeploymentTarget(
+        GameEntry game,
+        JsonElement payload)
+    {
+        var requested = payload.TryGetProperty("target", out var value)
+            ? value.GetString()
+            : null;
+        if (string.IsNullOrWhiteSpace(requested))
+        {
+            return (game.TargetDirectory, null);
+        }
+
+        if (requested == "__manual__")
+        {
+            throw new BridgeException(
+                Domain.Errors.ErrorCode.InvalidPath,
+                "select the game's actual launch EXE first");
+        }
+
+        string fullPath;
+        try
+        {
+            fullPath = Path.GetFullPath(requested);
+        }
+        catch (Exception exception) when (
+            exception is ArgumentException or NotSupportedException or PathTooLongException)
+        {
+            throw new BridgeException(Domain.Errors.ErrorCode.InvalidPath, exception.Message);
+        }
+
+        if (File.Exists(fullPath))
+        {
+            var directory = Path.GetDirectoryName(fullPath);
+            if (string.IsNullOrWhiteSpace(directory))
+            {
+                throw new BridgeException(
+                    Domain.Errors.ErrorCode.InvalidPath,
+                    "the selected target has no parent directory");
+            }
+
+            return (directory, fullPath);
+        }
+
+        if (Directory.Exists(fullPath))
+        {
+            return (fullPath, null);
+        }
+
+        throw new BridgeException(
+            Domain.Errors.ErrorCode.InvalidPath,
+            "the selected target does not exist");
     }
 
     private static FrameGenOptions ReadFrameGenOptions(JsonElement payload)

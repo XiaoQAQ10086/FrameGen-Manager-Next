@@ -57,6 +57,41 @@ public sealed class GameLibraryRemovalTests
         store.Library.EnumerateRemovedGames().ShouldBeEmpty();
     }
 
+    [Fact]
+    public async Task SettingTargetPersistsTheSelectedExecutable()
+    {
+        var directory = Path.Combine(Path.GetTempPath(), $"fgm-target-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(directory);
+        var exePath = Path.Combine(directory, "ActualGame.exe");
+        await File.WriteAllTextAsync(exePath, string.Empty, TestContext.Current.CancellationToken);
+
+        try
+        {
+            var scanned = Game("steam:1", @"C:\Games\Scanned", isManual: false);
+            var store = new MemoryStore(new GameLibrary { Scanned = [scanned] });
+            using var service = new GameLibraryService(
+                [],
+                new UnusedProbe(),
+                store,
+                NullLogger<GameLibraryService>.Instance);
+
+            await service.SetTargetAsync(
+                scanned.Id,
+                exePath,
+                TestContext.Current.CancellationToken);
+
+            store.Library.TargetOverrides[scanned.Id].ShouldBe(Path.GetFullPath(exePath));
+            var effective = store.Library.EnumerateVisibleGames().Single();
+            effective.TargetDirectory.ShouldBe(directory);
+            effective.RenderExePath.ShouldBe(Path.GetFullPath(exePath));
+            effective.Name.ShouldBe(scanned.Name);
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
     private static GameEntry Game(string id, string directory, bool isManual)
     {
         return new GameEntry(

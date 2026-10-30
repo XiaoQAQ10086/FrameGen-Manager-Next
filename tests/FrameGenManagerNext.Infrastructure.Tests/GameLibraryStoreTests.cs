@@ -42,6 +42,10 @@ public sealed class GameLibraryStoreTests : IDisposable
             Scanned = [scanned],
             Manual = [manual],
             IgnoredIds = ["steam:2"],
+            TargetOverrides = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+            {
+                ["steam:1"] = @"C:\Games\TestGame\Binaries\Win64\Actual.exe",
+            },
         };
 
         await store.SaveAsync(library, TestContext.Current.CancellationToken);
@@ -53,6 +57,8 @@ public sealed class GameLibraryStoreTests : IDisposable
         loaded.Manual.Count.ShouldBe(1);
         loaded.Manual[0].IsManual.ShouldBeTrue();
         loaded.IgnoredIds.ShouldContain("steam:2");
+        loaded.TargetOverrides["steam:1"].ShouldBe(
+            @"C:\Games\TestGame\Binaries\Win64\Actual.exe");
 
         var json = await File.ReadAllTextAsync(
             Path.Combine(paths.LibraryDirectory, "library.json"),

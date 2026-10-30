@@ -6,6 +6,7 @@ using System.IO;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Text;
+using FrameGenManagerNext.App.Localization;
 using FrameGenManagerNext.Core.Features.Framegen;
 using FrameGenManagerNext.Core.Features.Library;
 using FrameGenManagerNext.Domain.Deployment;
@@ -237,6 +238,51 @@ public sealed partial class AppWebBridge
             UseShellExecute = true,
         });
         return new { opened = true };
+    }
+
+    private async Task<object?> PickGameExecutableAsync(System.Text.Json.JsonElement payload)
+    {
+        var game = await FindGameAsync(IdOf(payload));
+        if (game is null)
+        {
+            throw new BridgeException(Domain.Errors.ErrorCode.FileNotFound, "game not found");
+        }
+
+        if (!await _addGameGate.WaitAsync(0))
+        {
+            return null;
+        }
+
+        try
+        {
+            var dialog = new OpenFileDialog
+            {
+                Title = L.T("Deploy.SelectExe"),
+                Filter = "EXE (*.exe)|*.exe",
+                CheckFileExists = true,
+                Multiselect = false,
+            };
+
+            if (Directory.Exists(game.TargetDirectory))
+            {
+                dialog.InitialDirectory = game.TargetDirectory;
+            }
+
+            if (dialog.ShowDialog() != true)
+            {
+                return null;
+            }
+
+            return new
+            {
+                path = dialog.FileName,
+                name = Path.GetFileName(dialog.FileName),
+            };
+        }
+        finally
+        {
+            _addGameGate.Release();
+        }
     }
 
     private async Task<GameEntry?> FindGameAsync(string? id)

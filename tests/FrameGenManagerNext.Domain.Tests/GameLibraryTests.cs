@@ -36,6 +36,26 @@ public sealed class GameLibraryTests
         library.EnumerateRemovedGames().ShouldBe([duplicate]);
     }
 
+    [Fact]
+    public void TargetOverrideChangesTheRenderExecutableAndDirectory()
+    {
+        var scanned = Game("steam:1", @"C:\Games\Scanned", isManual: false);
+        var library = new GameLibrary
+        {
+            Scanned = [scanned],
+            TargetOverrides = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+            {
+                ["steam:1"] = @"C:\Games\Scanned\Binaries\Win64\Actual.exe",
+            },
+        };
+
+        var effective = library.EnumerateVisibleGames().Single();
+
+        effective.RenderExePath.ShouldBe(@"C:\Games\Scanned\Binaries\Win64\Actual.exe");
+        effective.TargetDirectory.ShouldBe(@"C:\Games\Scanned\Binaries\Win64");
+        effective.Name.ShouldBe(scanned.Name);
+    }
+
     private static GameEntry Game(string id, string directory, bool isManual)
     {
         return new GameEntry(

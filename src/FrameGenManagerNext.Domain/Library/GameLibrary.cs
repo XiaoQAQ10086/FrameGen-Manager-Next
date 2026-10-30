@@ -12,6 +12,13 @@ public sealed class GameLibrary
 
     public List<string> IgnoredIds { get; init; } = [];
 
+    /// <summary>
+    /// User-corrected render executable per game id. A scan may pick the wrong
+    /// subfolder; this keeps the correction across rescans and restarts.
+    /// </summary>
+    public Dictionary<string, string> TargetOverrides { get; init; } =
+        new(StringComparer.OrdinalIgnoreCase);
+
     public IEnumerable<GameEntry> EnumerateVisibleGames()
     {
         var ignored = new HashSet<string>(IgnoredIds, StringComparer.OrdinalIgnoreCase);
@@ -24,9 +31,10 @@ public sealed class GameLibrary
                 continue;
             }
 
-            if (seenDirectories.Add(Path.GetFullPath(game.InstallDirectory)))
+            var effective = ApplyTargetOverride(game);
+            if (seenDirectories.Add(Path.GetFullPath(effective.InstallDirectory)))
             {
-                yield return game;
+                yield return effective;
             }
         }
     }
@@ -40,8 +48,22 @@ public sealed class GameLibrary
         {
             if (ignored.Contains(game.Id) && seenIds.Add(game.Id))
             {
-                yield return game;
+                yield return ApplyTargetOverride(game);
             }
         }
+    }
+
+    private GameEntry ApplyTargetOverride(GameEntry game)
+    {
+        if (!TargetOverrides.TryGetValue(game.Id, out var exePath) ||
+            string.IsNullOrWhiteSpace(exePath))
+        {
+            return game;
+        }
+
+        var directory = Path.GetDirectoryName(exePath);
+        return string.IsNullOrWhiteSpace(directory)
+            ? game
+            : game with { RenderExePath = exePath, TargetDirectory = directory };
     }
 }
