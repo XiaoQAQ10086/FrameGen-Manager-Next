@@ -138,6 +138,22 @@ public sealed class FrameGenIniBuilderTests
     }
 
     [Fact]
+    public void XeSsDoesNotWriteDlssOnlyKeys()
+    {
+        var options = new FrameGenOptions(
+            Engine: "XeSS",
+            Optimized: 3,
+            Preset: "C");
+
+        var text = FrameGenIniBuilder.Build(Pack, Template, options);
+        var document = IniDocument.Parse(text);
+
+        document.GetValue("FrameGeneration", "Engine").ShouldBe("XeSS");
+        document.GetValue("DLSSG", "Optimized").ShouldBe("1");
+        document.GetValue("DLSSG", "Preset").ShouldBe("A");
+    }
+
+    [Fact]
     public void InvalidOptionsAreRejected()
     {
         Should.Throw<ArgumentException>(() => FrameGenIniBuilder.Build(

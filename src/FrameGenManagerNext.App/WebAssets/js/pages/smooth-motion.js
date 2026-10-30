@@ -1,4 +1,4 @@
-import { escapeHtml as esc } from '../ui.js';
+import { confirmDialog, escapeHtml as esc } from '../ui.js';
 import { componentKeys, prettyPath } from '../labels.js';
 import { createRemovedController, removedMarkup } from '../removed-modal.js';
 
@@ -102,9 +102,10 @@ export default {
           </div>
           <div class="gpath" title="${esc(prettyPath(game.targetDirectory))}">${esc(prettyPath(game.targetDirectory))}</div>
           ${game.detail ? `<div class="hint">${esc(game.detail)}</div>` : ''}
-          <div class="gactions">
+          <div class="gactions end">
             <button class="btn small" data-action="open" data-id="${game.id}" type="button">${t('Library.OpenFolder')}</button>
             <button class="btn small ${toggleAction === 'enable' ? 'success' : 'danger'}" data-action="${toggleAction}" data-id="${game.id}" type="button" ${game.available === false ? 'disabled' : ''}>${toggleLabel}</button>
+            <button class="btn small danger icon-only" data-action="remove" data-id="${game.id}" type="button" title="${esc(t('Common.Remove'))}" aria-label="${esc(t('Common.Remove'))}">🗑</button>
           </div>
         </article>`;
       }).join('');
@@ -195,6 +196,20 @@ export default {
       }
       if (actionName === 'disable') {
         return action('sm.disable', game.id);
+      }
+      if (actionName === 'remove') {
+        if (!(await confirmDialog(
+          t('Library.Dialog.RemoveTitle'),
+          t('Library.Confirm.Remove').replace('{0}', game.name),
+          t('Common.Remove')))) return;
+
+        try {
+          await api.request('games.remove', { id: game.id });
+          await load();
+          ui.libraryChanged('smooth-motion');
+        } catch (error) {
+          ui.toast(error.message, 'error');
+        }
       }
     };
     root.addEventListener('click', onClick);

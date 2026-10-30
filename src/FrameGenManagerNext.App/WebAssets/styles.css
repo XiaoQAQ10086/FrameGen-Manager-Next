@@ -137,6 +137,7 @@ button, select { font: inherit; }
 .badges { display: flex; flex-wrap: wrap; gap: 6px; }
 .gpath { color: var(--muted); font-family: Consolas, "Courier New", monospace; font-size: 12px; line-height: 1.45; overflow-wrap: anywhere; }
 .gactions { display: flex; justify-content: flex-start; gap: 8px; flex-wrap: wrap; align-items: center; }
+.gactions.end { justify-content: flex-end; }
 .gactions .spacer { flex: 1 1 auto; }
 .skeleton-card { grid-template-columns: 52px minmax(0, 1fr); align-items: center; min-height: 72px; }
 .sk-cover { width: 52px; height: 70px; border-radius: 10px; background: rgba(96,107,125,.1); animation: shimmer 1.2s ease-in-out infinite; }
@@ -200,8 +201,10 @@ button, select { font: inherit; }
 .tile .meta { padding-right: 46px; }
 .tile.static { animation: none; }
 .skeleton-tile { background: rgba(96,107,125,.1); animation: shimmer 1.2s ease-in-out infinite; }
-.deploy-meta { display: grid; gap: 8px; margin-top: 0; }
+.deploy-meta { display: grid; gap: 10px; margin-top: 0; }
 .deploy-meta .kv2 { margin: 0; }
+.target-field { width: 100%; max-width: 400px; display: grid; gap: 5px; }
+.deploy-meta .kv2.inline { min-height: 34px; }
 .dlss-modal { width: min(580px, 92vw); }
 .about-actions { display: flex; gap: 8px; flex-wrap: wrap; }
 .update-modal { width: min(640px, 92vw); }
@@ -362,6 +365,8 @@ button, select { font: inherit; }
 .options { display: grid; grid-template-columns: max-content minmax(0, 1fr); align-items: center; column-gap: 14px; row-gap: 10px; margin-top: 14px; }
 .options label { grid-column: 1 / -1; display: grid; grid-template-columns: subgrid; align-items: center; column-gap: 14px; color: var(--muted); font-size: 12px; }
 .options .select-wrap { width: 100%; max-width: 300px; }
+.options label:has(select:disabled) { opacity: .55; }
+.option-note { margin: 10px 0 0; color: var(--muted); font-size: 11.5px; line-height: 1.5; }
 select {
   appearance: none;
   width: 100%;

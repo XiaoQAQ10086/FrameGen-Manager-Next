@@ -74,7 +74,7 @@ manifest 状态：`Installing → Installed / RolledBack / Partial`，还原后 
 | XeSS Flow | Coarse/Middle/Fine |
 | XeSS HUD-less | Auto/1/0 |
 
-INI 使用 pack 的 stock 值：与 stock 相同的缺失 key 不写入；模板里已有的不同值按选项覆盖；注释和未知行保留。
+INI 使用 pack 的 stock 值：与 stock 相同的缺失 key 不写入；模板里已有的不同值按选项覆盖；注释和未知行保留。`Optimized` 与 `Preset` 属于 `[DLSSG]`，只在 `Engine=DLSS` 时写入；选择 XeSS 时保留模板 stock 值，改用 `[XeSSFG]` 的 Flow/HUD-less。
 
 ## 部署目标
 

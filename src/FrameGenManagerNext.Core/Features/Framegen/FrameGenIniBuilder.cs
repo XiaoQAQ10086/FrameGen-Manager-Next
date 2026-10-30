@@ -61,9 +61,7 @@ public static class FrameGenIniBuilder
         var document = IniDocument.Parse(templateText);
         var settings = new List<IniSetting>
         {
-            new("DLSSG", "Optimized", options.Optimized.ToString(CultureInfo.InvariantCulture)),
             new("FrameGeneration", "MaxGeneratedFrames", frames.ToString(CultureInfo.InvariantCulture)),
-            new("DLSSG", "Preset", preset),
             new("SuperResolution", "Mode", srMode),
             new("FrameGeneration", "Engine", engine),
         };
@@ -72,6 +70,13 @@ public static class FrameGenIniBuilder
         {
             settings.Add(new IniSetting("XeSSFG", "FlowResolution", flow));
             settings.Add(new IniSetting("XeSSFG", "UseHudless", hudless));
+        }
+        else
+        {
+            // [DLSSG] keys are read only by the DLSS engine. Leaving them at stock
+            // avoids writing ineffective settings when the user selects XeSS.
+            settings.Add(new IniSetting("DLSSG", "Optimized", options.Optimized.ToString(CultureInfo.InvariantCulture)));
+            settings.Add(new IniSetting("DLSSG", "Preset", preset));
         }
 
         IniMerger.ApplyOverrides(document, settings, pack.Ini.StockValues);

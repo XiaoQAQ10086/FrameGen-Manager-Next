@@ -85,7 +85,12 @@ export function enhanceSelect(select) {
 
   const update = () => refresh(select, trigger, menu);
   const observer = new MutationObserver(update);
-  observer.observe(select, { childList: true, subtree: true });
+  observer.observe(select, {
+    childList: true,
+    subtree: true,
+    attributes: true,
+    attributeFilter: ['disabled'],
+  });
 
   trigger.addEventListener('click', (event) => {
     event.stopPropagation();

@@ -126,6 +126,7 @@ export default {
           <div class="deploy-meta" data-role="deploy-meta"></div>
           <p class="hint">${esc(t('Deploy.DialogHint'))}</p>
           <div class="options" data-role="options"></div>
+          <p class="option-note hidden" data-role="dlss-note">${esc(t('Deploy.DlssOnlyHint'))}</p>
           <footer class="modal-foot">
             <span class="muted small">${esc(t('Deploy.CloseGameHint'))}</span>
             <div class="foot-actions">
@@ -332,12 +333,14 @@ export default {
       deployMeta.innerHTML = `
         <label class="deploy-target-label">
           <span>${esc(t('Dlss5.Target'))}</span>
-          <select data-role="modal-target">
-            ${targets.map((target) => `<option value="${esc(target.path)}">${esc(target.name)}</option>`).join('')}
-            <option value="${manualTarget}">${esc(t('Deploy.ManualTarget'))}</option>
-          </select>
+          <div class="target-field">
+            <select data-role="modal-target">
+              ${targets.map((target) => `<option value="${esc(target.path)}">${esc(target.name)}</option>`).join('')}
+              <option value="${manualTarget}">${esc(t('Deploy.ManualTarget'))}</option>
+            </select>
+            <div class="target-hint" data-role="target-hint"></div>
+          </div>
         </label>
-        <div class="target-hint" data-role="target-hint"></div>
         <div class="kv2 inline">
           <span>${esc(t('Dlss5.GraphicsApiLabel'))}</span>
           <b class="api-value">${esc(apiKeys[game.api] || game.api || t('Common.Unknown'))}</b>
@@ -365,7 +368,7 @@ export default {
 
       function paintTargetHint() {
         targetHint.textContent = targetSelect.value && targetSelect.value !== manualTarget
-          ? t('Deploy.TargetHint').replace('{0}', targetSelect.value)
+          ? t('Deploy.TargetHint').replace('{0}', prettyPath(targetSelect.value))
           : '';
       }
 
@@ -462,6 +465,12 @@ export default {
       const engine = optionsRoot.querySelector('[data-option="engine"]')?.value;
       const xess = engine === 'XeSS';
       optionsRoot.querySelectorAll('.xess').forEach((label) => label.classList.toggle('hidden', !xess));
+
+      const optimized = optionsRoot.querySelector('[data-option="optimized"]');
+      const preset = optionsRoot.querySelector('[data-option="preset"]');
+      if (optimized) optimized.disabled = xess;
+      if (preset) preset.disabled = xess;
+      q('[data-role="dlss-note"]')?.classList.toggle('hidden', !xess);
 
       // XeSS serves 2X/3X/4X only; keep 6X out of the list instead of silently
       // deploying a different value than the one shown.
