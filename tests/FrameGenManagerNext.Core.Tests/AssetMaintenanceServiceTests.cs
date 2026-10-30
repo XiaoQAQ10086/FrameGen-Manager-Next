@@ -385,7 +385,8 @@ public sealed class AssetMaintenanceServiceTests
             string game,
             string targetDirectory,
             string exePath,
-            CancellationToken cancellationToken)
+            CancellationToken cancellationToken,
+            SmoothMotionSettingState? knownSetting = null)
         {
             throw new NotSupportedException();
         }

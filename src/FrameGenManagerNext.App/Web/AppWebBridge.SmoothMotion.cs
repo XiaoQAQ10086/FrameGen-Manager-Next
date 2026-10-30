@@ -1,5 +1,6 @@
 using System.Text.Json;
 using FrameGenManagerNext.Core.Features.Framegen;
+using FrameGenManagerNext.Core.Features.SmoothMotion;
 using FrameGenManagerNext.Domain.Deployment;
 
 namespace FrameGenManagerNext.App.Web;
@@ -12,6 +13,29 @@ public sealed partial class AppWebBridge
         var gpu = await _gpu.GetAsync(CancellationToken.None);
         var library = await _library.LoadAsync(CancellationToken.None);
         var games = new List<object>();
+
+        var exePaths = library.EnumerateVisibleGames()
+            .Select(game => game.RenderExePath)
+            .Where(path => !string.IsNullOrWhiteSpace(path))
+            .Select(path => path!)
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList();
+        var smStates = new Dictionary<string, SmoothMotionSettingState>(StringComparer.OrdinalIgnoreCase);
+        if (exePaths.Count > 0)
+        {
+            try
+            {
+                var batch = await _nvapiSmoothMotion.GetStatesAsync(exePaths, CancellationToken.None);
+                for (var index = 0; index < exePaths.Count && index < batch.Count; index++)
+                {
+                    smStates[exePaths[index]] = batch[index];
+                }
+            }
+            catch (Exception)
+            {
+                smStates.Clear();
+            }
+        }
 
         foreach (var game in library.EnumerateVisibleGames())
         {
@@ -42,7 +66,8 @@ public sealed partial class AppWebBridge
                 game.Name,
                 game.TargetDirectory,
                 game.RenderExePath,
-                CancellationToken.None);
+                CancellationToken.None,
+                smStates.TryGetValue(game.RenderExePath!, out var known) ? known : null);
 
             if (inspection.IsFailure)
             {

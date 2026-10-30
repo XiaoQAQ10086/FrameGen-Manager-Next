@@ -47,7 +47,8 @@ public sealed class SmoothMotionDeploymentService : ISmoothMotionDeploymentServi
         string game,
         string targetDirectory,
         string exePath,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        SmoothMotionSettingState? knownSetting = null)
     {
         var route = await ResolveRouteAsync(cancellationToken);
         if (route.IsFailure)
@@ -67,7 +68,7 @@ public sealed class SmoothMotionDeploymentService : ISmoothMotionDeploymentServi
             return Result<SmoothMotionInspection>.Fail(fileState.Error!);
         }
 
-        var setting = await _nvapi.GetStateAsync(exePath, cancellationToken);
+        var setting = knownSetting ?? await _nvapi.GetStateAsync(exePath, cancellationToken);
         return Result<SmoothMotionInspection>.Ok(new SmoothMotionInspection(
             fileState.Value.State,
             route.Value.Route,

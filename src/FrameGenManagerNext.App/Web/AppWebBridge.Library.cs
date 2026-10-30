@@ -71,6 +71,31 @@ public sealed partial class AppWebBridge
         // peak bounded even on many-core machines.
         using var coverGate = new SemaphoreSlim(4);
 
+        // One NVAPI/DRS session for the whole library. Opening a session per game
+        // makes the driver load its profile database repeatedly (~100 MB native).
+        var exePaths = visible
+            .Select(game => game.RenderExePath)
+            .Where(path => !string.IsNullOrWhiteSpace(path))
+            .Select(path => path!)
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList();
+        var smoothMotionStates = new Dictionary<string, bool>(StringComparer.OrdinalIgnoreCase);
+        if (exePaths.Count > 0)
+        {
+            try
+            {
+                var smSettings = await _nvapiSmoothMotion.GetStatesAsync(exePaths, CancellationToken.None);
+                for (var index = 0; index < exePaths.Count && index < smSettings.Count; index++)
+                {
+                    smoothMotionStates[exePaths[index]] = smSettings[index].Enabled == true;
+                }
+            }
+            catch (Exception)
+            {
+                smoothMotionStates.Clear();
+            }
+        }
+
         async Task<string?> LoadCoverAsync(GameEntry game)
         {
             await coverGate.WaitAsync();
@@ -98,21 +123,9 @@ public sealed partial class AppWebBridge
                     : DeploymentState.NotDeployed;
                 states[index] = state;
 
-                var smoothMotionOn = false;
-                if (!string.IsNullOrWhiteSpace(game.RenderExePath))
-                {
-                    try
-                    {
-                        var setting = await _nvapiSmoothMotion.GetStateAsync(
-                            game.RenderExePath,
-                            CancellationToken.None);
-                        smoothMotionOn = setting.Enabled == true;
-                    }
-                    catch (Exception)
-                    {
-                        smoothMotionOn = false;
-                    }
-                }
+                var smoothMotionOn = !string.IsNullOrWhiteSpace(game.RenderExePath) &&
+                                     smoothMotionStates.TryGetValue(game.RenderExePath, out var smEnabled) &&
+                                     smEnabled;
 
                 entries[index] = new
                 {

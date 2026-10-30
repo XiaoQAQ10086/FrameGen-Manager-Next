@@ -23,6 +23,36 @@ public sealed class NvApiSmoothMotion : INvApiSmoothMotion
         return Task.Run(() => GetStateCore(exePath), cancellationToken);
     }
 
+    public Task<IReadOnlyList<SmoothMotionSettingState>> GetStatesAsync(
+        IReadOnlyList<string> exePaths,
+        CancellationToken cancellationToken)
+    {
+        return Task.Run<IReadOnlyList<SmoothMotionSettingState>>(
+            () => GetStatesCore(exePaths),
+            cancellationToken);
+    }
+
+    private static List<SmoothMotionSettingState> GetStatesCore(
+        IReadOnlyList<string> exePaths)
+    {
+        var opened = NvApiSession.Open();
+        if (opened.IsFailure)
+        {
+            return exePaths
+                .Select(_ => new SmoothMotionSettingState(null, string.Empty, false, opened.Error?.Diagnostic))
+                .ToList();
+        }
+
+        using var session = opened.Value;
+        var states = new List<SmoothMotionSettingState>(exePaths.Count);
+        foreach (var exePath in exePaths)
+        {
+            states.Add(ReadState(session, exePath));
+        }
+
+        return states;
+    }
+
     public Task<SmoothMotionChangeResult> SetAsync(
         string game,
         string targetDirectory,
@@ -51,10 +81,13 @@ public sealed class NvApiSmoothMotion : INvApiSmoothMotion
         }
 
         using var session = opened.Value;
+        return ReadState(session, exePath);
+    }
+
+    private static SmoothMotionSettingState ReadState(NvApiSession session, string exePath)
+    {
         try
         {
-            // Read-only state uses the fast lookup; enumerating the whole driver
-            // database for every game on the page would be needlessly slow.
             var profile = session.FindProfileForExe(exePath);
             if (profile is null || session.IsBaseProfile(profile.Value))
             {
@@ -70,7 +103,6 @@ public sealed class NvApiSmoothMotion : INvApiSmoothMotion
             var value = session.ReadSetting(profile.Value, NvApiNative.SmoothMotionSettingId);
             var enabled = value is null ? (bool?)null : value.Value != 0;
             var ours = name.StartsWith(NvApiNative.ProfilePrefix, StringComparison.Ordinal);
-
             return new SmoothMotionSettingState(enabled, name, ours, null);
         }
         catch (Exception exception) when (exception is NvApiException or InvalidOperationException)

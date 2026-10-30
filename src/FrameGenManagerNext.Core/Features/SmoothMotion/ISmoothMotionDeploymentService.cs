@@ -8,7 +8,8 @@ public interface ISmoothMotionDeploymentService
         string game,
         string targetDirectory,
         string exePath,
-        CancellationToken cancellationToken);
+        CancellationToken cancellationToken,
+        SmoothMotionSettingState? knownSetting = null);
 
     Task<Result<SmoothMotionReport>> EnableAsync(
         string game,
