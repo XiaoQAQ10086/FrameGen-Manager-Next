@@ -67,7 +67,7 @@ manifest 状态：`Installing → Installed / RolledBack / Partial`，还原后 
 |---|---|
 | Proxy | 必须是 pack 中 `proxySlot=true` 的文件；只复制选中的一个 |
 | Optimized | 0–3 |
-| MaxGeneratedFrames | 3（4X）或 5（6X）；XeSS 时 >3 自动降为 3 |
+| MaxGeneratedFrames | `1`=2X、`2`=3X、`3`=4X、`5`=6X；`4`（5X）不是上游支持的模式。XeSS 只支持 1–3，>3 自动降为 3 |
 | Preset | A/B/C |
 | Engine | DLSS/XeSS |
 | SuperResolution | Off/M-INT8/L-INT8/M-FP16/L-FP16 |

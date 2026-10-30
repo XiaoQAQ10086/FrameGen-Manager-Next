@@ -173,6 +173,8 @@ public sealed class FrameGenDeploymentService : IFrameGenDeploymentService
             return Result<DeploymentPlan>.Fail(new AppError(ErrorCode.InvalidArgument, exception.Message));
         }
 
+        var effectiveOptions = NormalizeEngineLimits(options);
+
         var location = await _packs.FindAsync(PackId, cancellationToken);
         if (location is null)
         {
@@ -197,12 +199,12 @@ public sealed class FrameGenDeploymentService : IFrameGenDeploymentService
 
         var proxy = pack.Files.FirstOrDefault(file =>
             file.ProxySlot &&
-            string.Equals(file.Target, options.ProxySlot, StringComparison.OrdinalIgnoreCase));
+            string.Equals(file.Target, effectiveOptions.ProxySlot, StringComparison.OrdinalIgnoreCase));
         if (proxy is null)
         {
             return Result<DeploymentPlan>.Fail(AppError.Create(
                 ErrorCode.InvalidArgument,
-                ("proxy", options.ProxySlot),
+                ("proxy", effectiveOptions.ProxySlot),
                 ("reason", "proxy slot is not provided by the pack")));
         }
 
@@ -299,7 +301,7 @@ public sealed class FrameGenDeploymentService : IFrameGenDeploymentService
         string iniText;
         try
         {
-            iniText = FrameGenIniBuilder.Build(pack, templateText, options);
+            iniText = FrameGenIniBuilder.Build(pack, templateText, effectiveOptions);
         }
         catch (ArgumentException exception)
         {
@@ -318,14 +320,14 @@ public sealed class FrameGenDeploymentService : IFrameGenDeploymentService
 
         var optionValues = new Dictionary<string, string>(StringComparer.Ordinal)
         {
-            ["proxySlot"] = options.ProxySlot,
-            ["optimized"] = options.Optimized.ToString(CultureInfo.InvariantCulture),
-            ["maxGeneratedFrames"] = options.MaxGeneratedFrames.ToString(CultureInfo.InvariantCulture),
-            ["preset"] = options.Preset,
-            ["engine"] = options.Engine,
-            ["superResolutionMode"] = options.SuperResolutionMode,
-            ["xessFlowResolution"] = options.XeSsFlowResolution,
-            ["xessHudless"] = options.XeSsHudless,
+            ["proxySlot"] = effectiveOptions.ProxySlot,
+            ["optimized"] = effectiveOptions.Optimized.ToString(CultureInfo.InvariantCulture),
+            ["maxGeneratedFrames"] = effectiveOptions.MaxGeneratedFrames.ToString(CultureInfo.InvariantCulture),
+            ["preset"] = effectiveOptions.Preset,
+            ["engine"] = effectiveOptions.Engine,
+            ["superResolutionMode"] = effectiveOptions.SuperResolutionMode,
+            ["xessFlowResolution"] = effectiveOptions.XeSsFlowResolution,
+            ["xessHudless"] = effectiveOptions.XeSsHudless,
         };
 
         _logger.LogDebug("Built FrameGen deployment plan for {Target} with {Count} files", target, files.Count);
@@ -336,6 +338,16 @@ public sealed class FrameGenDeploymentService : IFrameGenDeploymentService
             target,
             files,
             optionValues));
+    }
+
+    private static FrameGenOptions NormalizeEngineLimits(FrameGenOptions options)
+    {
+        // XeSS only serves 2X/3X/4X (MaxGeneratedFrames 1-3). Clamp before the INI
+        // and manifest are written so state checks see the value actually deployed.
+        return string.Equals(options.Engine, "XeSS", StringComparison.OrdinalIgnoreCase) &&
+               options.MaxGeneratedFrames > 3
+            ? options with { MaxGeneratedFrames = 3 }
+            : options;
     }
 
     private static async Task<string> HashFileAsync(string path, CancellationToken cancellationToken)

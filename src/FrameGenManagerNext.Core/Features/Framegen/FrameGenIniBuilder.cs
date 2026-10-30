@@ -87,9 +87,11 @@ public static class FrameGenIniBuilder
             throw new ArgumentException("Optimized must be between 0 and 3.", nameof(options));
         }
 
-        if (options.MaxGeneratedFrames is not 3 and not 5)
+        if (options.MaxGeneratedFrames is not 1 and not 2 and not 3 and not 5)
         {
-            throw new ArgumentException("MaxGeneratedFrames must be 3 (4X) or 5 (6X).", nameof(options));
+            throw new ArgumentException(
+                "MaxGeneratedFrames must be 1 (2X), 2 (3X), 3 (4X) or 5 (6X).",
+                nameof(options));
         }
 
         if (!Presets.Contains(options.Preset))

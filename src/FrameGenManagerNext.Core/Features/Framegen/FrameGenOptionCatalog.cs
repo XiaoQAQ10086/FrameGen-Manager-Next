@@ -17,7 +17,7 @@ public static class FrameGenOptionCatalog
 
     public static IReadOnlyList<int> OptimizedLevels { get; } = [0, 1, 2, 3];
 
-    public static IReadOnlyList<int> FrameMultipliers { get; } = [3, 5];
+    public static IReadOnlyList<int> FrameMultipliers { get; } = [1, 2, 3, 5];
 
     public static IReadOnlyList<string> Presets { get; } = ["A", "B", "C"];
 

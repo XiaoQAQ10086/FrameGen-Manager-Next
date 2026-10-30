@@ -120,6 +120,23 @@ public sealed class FrameGenIniBuilderTests
         document.GetValue("FrameGeneration", "MaxGeneratedFrames").ShouldBe("3");
     }
 
+    [Theory]
+    [InlineData(1)]
+    [InlineData(2)]
+    [InlineData(3)]
+    [InlineData(5)]
+    public void SupportedFrameMultipliersAreAccepted(int frames)
+    {
+        var text = FrameGenIniBuilder.Build(
+            Pack,
+            Template,
+            FrameGenOptions.Default with { MaxGeneratedFrames = frames });
+        var document = IniDocument.Parse(text);
+
+        document.GetValue("FrameGeneration", "MaxGeneratedFrames").ShouldBe(
+            frames.ToString(System.Globalization.CultureInfo.InvariantCulture));
+    }
+
     [Fact]
     public void InvalidOptionsAreRejected()
     {
@@ -131,6 +148,6 @@ public sealed class FrameGenIniBuilderTests
         Should.Throw<ArgumentException>(() => FrameGenIniBuilder.Build(
             Pack,
             Template,
-            FrameGenOptions.Default with { MaxGeneratedFrames = 2 }));
+            FrameGenOptions.Default with { MaxGeneratedFrames = 4 }));
     }
 }

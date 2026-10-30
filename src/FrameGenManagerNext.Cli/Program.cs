@@ -256,7 +256,7 @@ Console.WriteLine("  fgm-next logs tail [--lines N]");
 Console.WriteLine("  fgm-next sm <inspect|enable|disable|restore> <target-dir> <game-exe>");
 Console.WriteLine("  fgm-next dlss5 <inspect|install|restore> <target-dir> <game-exe>");
 Console.WriteLine("  fgm-next deploy <inspect|framegen|restore> <target-dir>");
-Console.WriteLine("      [--proxy version.dll] [--optimized 0-3] [--frames 3|5] [--preset A|B|C]");
+Console.WriteLine("      [--proxy version.dll] [--optimized 0-3] [--frames 1|2|3|5] [--preset A|B|C]");
 Console.WriteLine("      [--engine DLSS|XeSS] [--sr Off|M-INT8|L-INT8|M-FP16|L-FP16]");
 Console.WriteLine("      [--flow Coarse|Middle|Fine] [--hudless Auto|1|0]");
 Console.WriteLine("  fgm-next pack validate <pack-dir> [--no-hash] [--schema-only]");

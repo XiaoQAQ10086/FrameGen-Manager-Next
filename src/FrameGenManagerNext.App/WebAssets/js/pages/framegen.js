@@ -350,20 +350,23 @@ export default {
       current = null;
     }
 
-    function select(id, values, selected) {
-      return `<select data-option="${id}">${values.map((value) => `<option value="${esc(value)}" ${String(value) === String(selected) ? 'selected' : ''}>${esc(value)}</option>`).join('')}</select>`;
+    const optimizedLabel = (value) => t(`Deploy.Optimized${value}`);
+    const frameLabel = (value) => t(`Deploy.Frames${value}`);
+
+    function select(id, values, selected, labelOf = (value) => String(value)) {
+      return `<select data-option="${id}">${values.map((value) => `<option value="${esc(value)}" ${String(value) === String(selected) ? 'selected' : ''}>${esc(labelOf(value))}</option>`).join('')}</select>`;
     }
 
     function optionFields() {
       return `
         <label>${esc(t('Library.Proxy'))}${select('proxySlot', options.proxySlots, 'version.dll')}</label>
-        <label>${esc(t('Library.Optimized'))}${select('optimized', options.optimizedLevels, 1)}</label>
-        <label>${esc(t('Library.Frames'))}${select('frames', options.frameMultipliers, 3)}</label>
+        <label>${esc(t('Library.Optimized'))}${select('optimized', options.optimizedLevels, 1, optimizedLabel)}</label>
+        <label>${esc(t('Library.Frames'))}${select('frames', options.frameMultipliers, 3, frameLabel)}</label>
         <label>${esc(t('Library.Preset'))}${select('preset', options.presets, 'A')}</label>
         <label>${esc(t('Library.Engine'))}${select('engine', options.engines, 'DLSS')}</label>
         <label>${esc(t('Library.SuperResolution'))}${select('superResolutionMode', options.superResolutionModes, 'Off')}</label>
         <label class="xess">${esc(t('Library.XeSsFlow'))}${select('xeSsFlow', options.xeSsFlowResolutions, 'Middle')}</label>
-        <label class="xess">${esc(t('Library.XeSsHudless'))}${select('xeSsHudlessValues', options.xeSsHudlessValues, 'Auto')}</label>`;
+        <label class="xess">${esc(t('Library.XeSsHudless'))}${select('xeSsHudless', options.xeSsHudlessValues, 'Auto')}</label>`;
     }
 
     function applyOptionValues(values) {
@@ -381,7 +384,20 @@ export default {
 
     function syncEngine() {
       const engine = optionsRoot.querySelector('[data-option="engine"]')?.value;
-      optionsRoot.querySelectorAll('.xess').forEach((label) => label.classList.toggle('hidden', engine !== 'XeSS'));
+      const xess = engine === 'XeSS';
+      optionsRoot.querySelectorAll('.xess').forEach((label) => label.classList.toggle('hidden', !xess));
+
+      // XeSS serves 2X/3X/4X only; keep 6X out of the list instead of silently
+      // deploying a different value than the one shown.
+      const frames = optionsRoot.querySelector('[data-option="frames"]');
+      if (!frames) return;
+      const current = Number(frames.value) || 3;
+      const allowed = (options.frameMultipliers || [1, 2, 3, 5]).filter((value) => !xess || value <= 3);
+      const next = allowed.includes(current) ? current : 3;
+      frames.innerHTML = allowed
+        .map((value) => `<option value="${esc(value)}">${esc(frameLabel(value))}</option>`)
+        .join('');
+      frames.value = String(next);
     }
 
     function readOptions() {
