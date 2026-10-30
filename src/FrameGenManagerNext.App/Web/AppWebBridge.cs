@@ -29,6 +29,7 @@ public sealed partial class AppWebBridge : IDisposable
     private readonly IGameLibraryService _library;
     private readonly IFrameGenDeploymentService _frameGen;
     private readonly ISmoothMotionDeploymentService _smoothMotion;
+    private readonly INvApiSmoothMotion _nvapiSmoothMotion;
     private readonly IDlss5DeploymentService _dlss5;
     private readonly IAssetMaintenanceService _maintenance;
     private readonly IGpuService _gpu;
@@ -52,6 +53,7 @@ public sealed partial class AppWebBridge : IDisposable
         IGameLibraryService library,
         IFrameGenDeploymentService frameGen,
         ISmoothMotionDeploymentService smoothMotion,
+        INvApiSmoothMotion nvapiSmoothMotion,
         IDlss5DeploymentService dlss5,
         IAssetMaintenanceService maintenance,
         IGpuService gpu,
@@ -66,6 +68,7 @@ public sealed partial class AppWebBridge : IDisposable
         _library = library;
         _frameGen = frameGen;
         _smoothMotion = smoothMotion;
+        _nvapiSmoothMotion = nvapiSmoothMotion;
         _dlss5 = dlss5;
         _maintenance = maintenance;
         _gpu = gpu;

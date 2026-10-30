@@ -251,6 +251,7 @@ export default {
       list.innerHTML = games.map((game, index) => {
         const legacy = game.state === 'InstalledWithoutManifest';
         const restorable = ['Installed', 'Partial', 'Conflict'].includes(game.state);
+        const smConflict = game.smoothMotionOn === true;
         const primaryAction = legacy ? 'clean' : restorable ? 'restore' : 'deploy';
         const primaryLabel = legacy
           ? t('Common.Clean')
@@ -259,6 +260,10 @@ export default {
             : game.state === 'Outdated'
               ? t('Common.Update')
               : t('Common.Deploy');
+        // Deploying frame generation while Smooth Motion is on creates two
+        // injectors in one process. Restore/clean stay available so the user can
+        // resolve the conflict from this card.
+        const blocked = smConflict && !restorable && !legacy;
         const stateText = game.state === 'Installed'
           ? (game.packVersion
               ? t('State.DeployedVersion').replace('{0}', game.packVersion)
@@ -276,12 +281,13 @@ export default {
                 <span class="badge">${esc(t(launcherKeys[game.launcher] || 'Common.Unknown'))}</span>
                 <span class="badge">${esc(apiKeys[game.api] || game.api || '未知')}</span>
                 <span class="badge ${game.state === 'Installed' ? 'ok' : (game.state === 'Partial' || game.state === 'Conflict' || legacy ? 'warn' : 'dim')}">${esc(stateText)}</span>
+                ${smConflict ? `<span class="badge danger">${esc(t('Conflict.SmoothMotionOn'))}</span>` : ''}
               </div>
             </div>
           </div>
           <div class="gpath" title="${esc(prettyPath(game.targetDirectory))}">${esc(prettyPath(game.targetDirectory))}</div>
           <div class="gactions">
-            <button class="btn small ${restorable || legacy ? 'danger' : 'success'}" data-action="${primaryAction}" data-id="${esc(game.id)}" type="button">${esc(primaryLabel)}</button>
+            <button class="btn small ${restorable || legacy ? 'danger' : 'success'}" data-action="${primaryAction}" data-id="${esc(game.id)}" type="button" ${blocked ? 'disabled' : ''} ${blocked ? `title="${esc(t('Conflict.SmoothMotionOn'))}"` : ''}>${esc(primaryLabel)}</button>
             <button class="btn small" data-action="open" data-id="${esc(game.id)}" type="button">${esc(t('Library.OpenFolder'))}</button>
             <span class="spacer"></span>
             <button class="btn small danger icon-only" data-action="remove" data-id="${esc(game.id)}" type="button" title="${esc(t('Common.Remove'))}" aria-label="${esc(t('Common.Remove'))}">🗑</button>
@@ -734,6 +740,10 @@ export default {
         if (!current) return;
         if (current.state === 'InstalledWithoutManifest') {
           ui.toast(t('Deploy.LegacyFilesWarning'), 'error');
+          return;
+        }
+        if (current.smoothMotionOn === true) {
+          ui.toast(t('Conflict.SmoothMotionOn'), 'error');
           return;
         }
         const game = current;

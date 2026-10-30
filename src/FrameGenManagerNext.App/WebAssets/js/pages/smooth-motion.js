@@ -88,6 +88,8 @@ export default {
           : game.enabled === true
             ? t('SmoothMotion.Disable')
             : t('SmoothMotion.Enable');
+        const fgConflict = game.frameGenDeployed === true;
+        const blocked = fgConflict && toggleAction === 'enable';
         return `
         <article class="gcard${index < 12 ? '' : ' static'}" style="animation-delay:${Math.min(index * 35, 350)}ms">
           <div class="gtop">
@@ -97,13 +99,14 @@ export default {
               <div class="badges">
                 <span class="badge ${game.component === 'Installed' ? 'ok' : (game.component === 'Partial' || game.component === 'Conflict' ? 'warn' : 'dim')}">${esc(t(componentKeys[game.component] || 'State.NotDeployed'))}</span>
                 <span class="badge ${game.enabled === true ? 'ok' : 'dim'}">${esc(game.enabled === true ? t('SmoothMotion.Driver.On') : game.enabled === false ? t('SmoothMotion.Driver.Off') : t('SmoothMotion.Driver.Unknown'))}</span>
+                ${fgConflict ? `<span class="badge danger">${esc(t('Conflict.FrameGenOn'))}</span>` : ''}
               </div>
             </div>
           </div>
           <div class="gpath" title="${esc(prettyPath(game.targetDirectory))}">${esc(prettyPath(game.targetDirectory))}</div>
           ${game.detail ? `<div class="hint">${esc(game.detail)}</div>` : ''}
           <div class="gactions">
-            <button class="btn small ${toggleAction === 'enable' ? 'success' : 'danger'}" data-action="${toggleAction}" data-id="${game.id}" type="button" ${game.available === false ? 'disabled' : ''}>${toggleLabel}</button>
+            <button class="btn small ${toggleAction === 'enable' ? 'success' : 'danger'}" data-action="${toggleAction}" data-id="${game.id}" type="button" ${game.available === false || blocked ? 'disabled' : ''} ${blocked ? `title="${esc(t('Conflict.FrameGenOn'))}"` : ''}>${toggleLabel}</button>
             <button class="btn small" data-action="open" data-id="${game.id}" type="button">${t('Library.OpenFolder')}</button>
             <span class="spacer"></span>
             <button class="btn small danger icon-only" data-action="remove" data-id="${game.id}" type="button" title="${esc(t('Common.Remove'))}" aria-label="${esc(t('Common.Remove'))}">🗑</button>

@@ -31,6 +31,7 @@
 
 1. 校验路由/驱动/目标目录。
 1.1 检测游戏目录里的内核反作弊（`BattlEye/`、`EasyAntiCheat/`、`BE*.dll`、`EasyAntiCheat*.dll`）：存在时直接拒绝部署，返回 `Conflict`。注入型代理会被反作弊拦截，PUBG 实测会以 `d3d9.dll` 的错误崩溃。
+1.2 与帧生成互斥：若该目录存在我们的帧生成部署记录（状态不是 `Restored`/`RolledBack`），拒绝开启 SM，返回 `Conflict`；界面上该游戏显示红色徽章“冲突：已开启帧生成”，开启按钮锁定。关闭/还原 SM 仍可操作，用于解除冲突。
 2. 部署对应组件包（备份同名原文件，哈希校验）。
 3. 打开 NVAPI 会话，找出**所有**绑定该 EXE 的 profile：
    - 先用 `DRS_FindApplicationByName` 定位一个；

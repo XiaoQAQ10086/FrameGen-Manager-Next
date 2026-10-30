@@ -1,4 +1,5 @@
 using System.Text.Json;
+using FrameGenManagerNext.Core.Features.Framegen;
 using FrameGenManagerNext.Domain.Deployment;
 
 namespace FrameGenManagerNext.App.Web;
@@ -63,6 +64,17 @@ public sealed partial class AppWebBridge
                 continue;
             }
 
+            var frameGen = await _frameGen.InspectAsync(
+                game.TargetDirectory,
+                FrameGenOptions.Default,
+                CancellationToken.None);
+            var frameGenDeployed = frameGen.IsSuccess && frameGen.Value.State is
+                DeploymentState.Installed or
+                DeploymentState.Outdated or
+                DeploymentState.Partial or
+                DeploymentState.Conflict or
+                DeploymentState.InstalledWithoutManifest;
+
             games.Add(new
             {
                 id = game.Id,
@@ -77,6 +89,7 @@ public sealed partial class AppWebBridge
                 enabled = inspection.Value.Setting.Enabled,
                 profile = inspection.Value.Setting.ProfileName,
                 detail = inspection.Value.Setting.Detail,
+                frameGenDeployed,
             });
         }
 

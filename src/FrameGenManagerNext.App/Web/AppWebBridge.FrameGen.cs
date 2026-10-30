@@ -82,6 +82,18 @@ public sealed partial class AppWebBridge
 
         var options = ReadFrameGenOptions(payload);
         var target = ResolveDeploymentTarget(game, payload);
+        var exePath = target.ExePath ?? game.RenderExePath;
+        if (!string.IsNullOrWhiteSpace(exePath))
+        {
+            var smoothMotion = await _nvapiSmoothMotion.GetStateAsync(exePath, CancellationToken.None);
+            if (smoothMotion.Enabled == true)
+            {
+                throw new BridgeException(
+                    Domain.Errors.ErrorCode.Conflict,
+                    "Smooth Motion is enabled for this game; turn it off before deploying frame generation.");
+            }
+        }
+
         return await RunExclusiveAsync(async () =>
         {
             await PersistTargetAsync(game, target.ExePath);

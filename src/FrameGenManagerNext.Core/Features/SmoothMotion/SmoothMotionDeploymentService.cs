@@ -99,6 +99,16 @@ public sealed class SmoothMotionDeploymentService : ISmoothMotionDeploymentServi
                 ("reason", "the game ships a kernel anti-cheat; the Smooth Motion proxy would be blocked and the game may crash")));
         }
 
+        var frameGen = await _engine.LoadManifestAsync("framegen", targetDirectory, cancellationToken);
+        if (frameGen is not null &&
+            frameGen.State is not (DeploymentManifestState.Restored or DeploymentManifestState.RolledBack))
+        {
+            return Result<SmoothMotionReport>.Fail(AppError.Create(
+                ErrorCode.Conflict,
+                ("target", targetDirectory),
+                ("reason", "frame generation is deployed for this game; restore it before enabling Smooth Motion")));
+        }
+
         var plan = await BuildPlanAsync(route.Value.Route, route.Value.PackId, targetDirectory, cancellationToken);
         if (plan.IsFailure)
         {

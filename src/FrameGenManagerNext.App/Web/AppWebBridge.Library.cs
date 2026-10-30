@@ -81,6 +81,22 @@ public sealed partial class AppWebBridge
                     : DeploymentState.NotDeployed;
                 states[index] = state;
 
+                var smoothMotionOn = false;
+                if (!string.IsNullOrWhiteSpace(game.RenderExePath))
+                {
+                    try
+                    {
+                        var setting = await _nvapiSmoothMotion.GetStateAsync(
+                            game.RenderExePath,
+                            CancellationToken.None);
+                        smoothMotionOn = setting.Enabled == true;
+                    }
+                    catch (Exception)
+                    {
+                        smoothMotionOn = false;
+                    }
+                }
+
                 entries[index] = new
                 {
                     id = game.Id,
@@ -88,6 +104,7 @@ public sealed partial class AppWebBridge
                     launcher = game.Launcher.ToString(),
                     api = game.GraphicsApi.ToString(),
                     state = state.ToString(),
+                    smoothMotionOn,
                     packVersion = inspection.IsSuccess
                         ? inspection.Value.PackVersion
                         : null,

@@ -81,6 +81,8 @@ internal static class StringCatalog
         ["State.Deployed"] = ("已部署", "Deployed"),
         ["State.InstalledWithoutManifest"] = ("已部署（无记录）", "Deployed (no record)"),
         ["State.LegacyDeployed"] = ("已部署（旧版工具）", "Deployed (old tool)"),
+        ["Conflict.SmoothMotionOn"] = ("冲突：已开启 Smooth Motion", "Conflict: Smooth Motion is on"),
+        ["Conflict.FrameGenOn"] = ("冲突：已开启帧生成", "Conflict: frame generation is on"),
         ["State.Exists"] = ("已存在", "Present"),
         ["State.CheckFailed"] = ("检查失败", "Check failed"),
         ["State.DeployFailed"] = ("部署失败", "Deployment failed"),
