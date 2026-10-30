@@ -18,9 +18,13 @@
 ## 页面状态缓存
 
 - 页面只挂载一次：切换导航时隐藏旧页面、显示已挂载页面，不再销毁 DOM 或重新探测游戏/驱动。
-- `api.js` 仍缓存 `app.info`、`games.state`、`gpu.state`、`sm.state`、`dlss5.state` 120 秒；扫描、部署、还原、开关 Smooth Motion、DLSS5 安装/卸载和语言保存会清空缓存。
+- 离开页面 5 分钟后自动卸载该页 DOM（清理事件监听、移除节点），同时清空前端 API 缓存；再次进入时按需重新挂载。这样长时间停留在某一页时，其他页的封面解码和列表节点不会一直占内存。
+- `api.js` 缓存 `app.info`、`games.state`、`gpu.state`、`sm.state`、`dlss5.state` 120 秒；扫描、部署、还原、开关 Smooth Motion、DLSS5 安装/卸载和语言保存会清空缓存。
 - 语言切换会清空已挂载页面并重建，避免留下旧语言文案。
 - 封面不再以 base64 塞进状态 JSON：缓存目录通过 `fgm-covers.local` 虚拟主机提供图片 URL，减少桥接数据量和 GDI/图片内存。
+- 封面解码前统一生成 360px 宽的 JPEG 缩略图（`cache/covers/thumbs`），卡片只加载缩略图，避免 WebView2 为 1200x1800 原图保留大块解码内存。
+- 窗口最小化或隐藏时调用 `CoreWebView2.TrySuspendAsync()` 暂停浏览器进程，恢复时 `Resume()`；暂停后顺带压缩一次托管大对象堆。这样游戏期间不会继续占用 WebView2 的 CPU/GPU，也不会持续累积渲染缓存。
+- 列表只给前 12 张卡片播放入场动画，其余卡片使用 `content-visibility: auto`；滚动到视口外时不参与布局/绘制，减少大游戏库的 GPU 开销。
 
 ## 浏览器进程故障
 

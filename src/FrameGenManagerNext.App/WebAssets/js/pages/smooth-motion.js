@@ -1,4 +1,4 @@
-import { confirmDialog, escapeHtml as esc } from '../ui.js';
+import { escapeHtml as esc } from '../ui.js';
 import { componentKeys, prettyPath } from '../labels.js';
 import { createRemovedController, removedMarkup } from '../removed-modal.js';
 
@@ -80,8 +80,16 @@ export default {
 
     function render() {
       const list = q('[data-role="games"]');
-      list.innerHTML = games.map((game, index) => `
-        <article class="gcard" style="animation-delay:${Math.min(index * 35, 350)}ms">
+      list.innerHTML = games.map((game, index) => {
+        const outdated = game.component === 'Outdated';
+        const toggleAction = outdated || game.enabled !== true ? 'enable' : 'disable';
+        const toggleLabel = outdated
+          ? t('Common.Update')
+          : game.enabled === true
+            ? t('SmoothMotion.Disable')
+            : t('SmoothMotion.Enable');
+        return `
+        <article class="gcard${index < 12 ? '' : ' static'}" style="animation-delay:${Math.min(index * 35, 350)}ms">
           <div class="gtop">
             ${game.cover ? `<img class="thumb" src="${game.cover}" alt="" loading="lazy" decoding="async">` : `<div class="thumb ph2">${esc(game.initial)}</div>`}
             <div class="ginfo">
@@ -95,17 +103,11 @@ export default {
           <div class="gpath" title="${esc(prettyPath(game.targetDirectory))}">${esc(prettyPath(game.targetDirectory))}</div>
           ${game.detail ? `<div class="hint">${esc(game.detail)}</div>` : ''}
           <div class="gactions">
-            ${game.component === 'Outdated'
-              ? `<button class="btn small success" data-action="enable" data-id="${game.id}" type="button" ${game.available === false ? 'disabled' : ''}>${t('Common.Update')}</button>`
-              : game.enabled !== true
-                ? `<button class="btn small success" data-action="enable" data-id="${game.id}" type="button" ${game.available === false ? 'disabled' : ''}>${t('SmoothMotion.Enable')}</button>`
-                : ''}
-            ${game.enabled === true
-              ? `<button class="btn small danger" data-action="disable" data-id="${game.id}" type="button">${t('SmoothMotion.Disable')}</button>`
-              : ''}
-            <button class="btn small" data-action="restore" data-id="${game.id}" type="button">${t('Common.Restore')}</button>
+            <button class="btn small" data-action="open" data-id="${game.id}" type="button">${t('Library.OpenFolder')}</button>
+            <button class="btn small ${toggleAction === 'enable' ? 'success' : 'danger'}" data-action="${toggleAction}" data-id="${game.id}" type="button" ${game.available === false ? 'disabled' : ''}>${toggleLabel}</button>
           </div>
-        </article>`).join('');
+        </article>`;
+      }).join('');
       q('[data-role="empty"]').classList.toggle('hidden', games.length > 0);
       list.classList.toggle('hidden', games.length === 0);
     }
@@ -180,17 +182,19 @@ export default {
       }
       const game = games.find((item) => item.id === button.dataset.id);
       if (!game) return;
+      if (actionName === 'open') {
+        await api.request('games.openFolder', { id: game.id })
+          .catch((error) => ui.toast(error.message, 'error'));
+        return;
+      }
       if (actionName === 'enable') {
-        if (!(await confirmDialog(t('SmoothMotion.Title'), t('SmoothMotion.Confirm.Enable').replace('{0}', game.name).replace('{1}', game.targetDirectory), t('SmoothMotion.Enable')))) return;
         return action('sm.enable', game.id);
       }
-      if (actionName === 'disable') {
-        if (!(await confirmDialog(t('SmoothMotion.Title'), t('SmoothMotion.Confirm.Disable').replace('{0}', game.name), t('SmoothMotion.Disable')))) return;
-        return action('sm.disable', game.id);
-      }
       if (actionName === 'restore') {
-        if (!(await confirmDialog(t('SmoothMotion.Title'), t('SmoothMotion.Confirm.Restore').replace('{0}', game.name), t('Common.Restore')))) return;
         return action('sm.restore', game.id);
+      }
+      if (actionName === 'disable') {
+        return action('sm.disable', game.id);
       }
     };
     root.addEventListener('click', onClick);

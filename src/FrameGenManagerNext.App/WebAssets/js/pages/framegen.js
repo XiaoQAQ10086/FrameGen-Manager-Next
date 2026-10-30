@@ -28,6 +28,8 @@ const stateKeys = {
   NotDeployed: 'State.NotDeployed',
 };
 
+const deployedStates = new Set(['Installed', 'Outdated', 'Partial', 'Conflict']);
+
 const routeKeys = {
   Sm86: 'Gpu.Route.Sm86',
   Sm75: 'Gpu.Route.Sm75',
@@ -113,7 +115,7 @@ export default {
         </main>
       </section>
       <div class="overlay hidden" data-role="overlay">
-        <section class="modal" role="dialog" aria-modal="true">
+        <section class="modal deploy-modal" role="dialog" aria-modal="true">
           <header class="modal-head">
             <div class="modal-game-head">
               <div class="modal-cover" data-role="modal-cover"></div>
@@ -127,9 +129,8 @@ export default {
           <footer class="modal-foot">
             <span class="muted small">${esc(t('Deploy.CloseGameHint'))}</span>
             <div class="foot-actions">
-              <button class="btn ghost" data-close type="button">${esc(t('Common.Cancel'))}</button>
-              <button class="btn" data-action="modal-restore" type="button">${esc(t('Common.Restore'))}</button>
-              <button class="btn primary" data-action="modal-deploy" type="button">${esc(t('Common.Deploy'))}</button>
+              <button class="btn" data-action="modal-restore" type="button" disabled>${esc(t('Common.Restore'))}</button>
+              <button class="btn success" data-action="modal-deploy" type="button">${esc(t('Common.Deploy'))}</button>
             </div>
           </footer>
         </section>
@@ -249,7 +250,7 @@ export default {
       list.innerHTML = games.map((game, index) => {
         const deployed = ['Installed', 'Outdated', 'Partial', 'Conflict', 'InstalledWithoutManifest'].includes(game.state);
         return `
-        <article class="gcard" style="animation-delay:${Math.min(index * 35, 350)}ms">
+        <article class="gcard${index < 12 ? '' : ' static'}" style="animation-delay:${Math.min(index * 35, 350)}ms">
           <div class="gtop">
             ${game.cover ? `<img class="thumb" src="${game.cover}" alt="" loading="lazy" decoding="async">` : `<div class="thumb ph2">${esc(game.initial)}</div>`}
             <div class="ginfo">
@@ -343,7 +344,24 @@ export default {
         </div>`;
       const targetSelect = deployMeta.querySelector('[data-role="modal-target"]');
       const targetHint = deployMeta.querySelector('[data-role="target-hint"]');
+      const restoreButton = deployModal.querySelector('[data-action="modal-restore"]');
       const samePath = (left, right) => String(left).toLowerCase() === String(right).toLowerCase();
+      const sameDirectory = (left, right) => samePath(
+        String(left).replace(/\//g, '\\').replace(/\\+$/, ''),
+        String(right).replace(/\//g, '\\').replace(/\\+$/, ''));
+
+      function paintRestoreState() {
+        const selected = targetSelect.value;
+        if (!selected || selected === manualTarget) {
+          restoreButton.disabled = true;
+          return;
+        }
+
+        const separator = selected.lastIndexOf('\\');
+        const directory = separator > 0 ? selected.slice(0, separator) : '';
+        restoreButton.disabled = !deployedStates.has(game.state) ||
+          !sameDirectory(directory, game.targetDirectory);
+      }
 
       function paintTargetHint() {
         targetHint.textContent = targetSelect.value && targetSelect.value !== manualTarget
@@ -366,6 +384,7 @@ export default {
         if (!picked?.path) {
           targetSelect.value = previous;
           paintTargetHint();
+          paintRestoreState();
           return;
         }
 
@@ -379,6 +398,7 @@ export default {
         option.textContent = picked.name;
         targetSelect.value = picked.path;
         paintTargetHint();
+        paintRestoreState();
       };
 
       targetSelect.addEventListener('change', () => {
@@ -386,10 +406,12 @@ export default {
           void pickTarget();
         } else {
           paintTargetHint();
+          paintRestoreState();
         }
       });
 
       paintTargetHint();
+      paintRestoreState();
       optionsRoot.innerHTML = optionFields();
       applyOptionValues(game.options);
       overlay.classList.remove('hidden');

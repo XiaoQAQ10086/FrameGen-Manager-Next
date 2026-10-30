@@ -72,7 +72,7 @@ fgm-next sm disable <target-dir> <game-exe>
 fgm-next sm restore <target-dir> <game-exe>
 ```
 
-UI：Smooth Motion 页面，逐游戏“开启 / 关闭 / 还原”。
+UI：Smooth Motion 页面，逐游戏“打开文件夹 / 开启 / 关闭”。未开启时只显示“开启”；开启成功后同一按钮变为“关闭”，关闭只写驱动开关为 0，组件文件保留，再次开启直接复用。开启不再弹确认框。还原仍保留在 CLI，供需要彻底清理文件的场景使用。
 
 ## 真机验证（2026-10-29）
 

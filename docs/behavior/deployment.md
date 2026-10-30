@@ -94,6 +94,8 @@ fgm-next deploy restore <target-dir>
 
 UI：“帧生成”页点击某个游戏的“部署”后才展开代理/优化/帧数/Preset/引擎/SR 参数；确认后部署。其余时间不占用页面空间。
 
+部署弹窗：绿色“部署”按钮；不提供“取消”按钮（右上角关闭或点遮罩退出）；“还原”只有在当前游戏的部署状态可还原、且所选目标目录与部署目录一致时才启用，否则显示灰色锁定。
+
 ## 测试
 
 - `Infrastructure.Tests/DeploymentEngineTests.cs`：部署/检查/还原、备份、冲突、缺失、文件锁、无 manifest 识别。

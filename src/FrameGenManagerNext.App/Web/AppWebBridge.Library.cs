@@ -1,26 +1,38 @@
 using System.Collections.Concurrent;
 using System.Diagnostics;
-using System.Drawing;
-using System.Drawing.Imaging;
 using System.IO;
-using System.Runtime.InteropServices;
-using System.Security.Cryptography;
-using System.Text;
 using FrameGenManagerNext.App.Localization;
 using FrameGenManagerNext.Core.Features.Framegen;
 using FrameGenManagerNext.Core.Features.Library;
 using FrameGenManagerNext.Domain.Deployment;
 using FrameGenManagerNext.Domain.Library;
-using Microsoft.Extensions.Logging;
 using Microsoft.Win32;
 
 namespace FrameGenManagerNext.App.Web;
 
 public sealed partial class AppWebBridge
 {
-    private readonly ConcurrentDictionary<string, string> _coverUrlCache =
-        new(StringComparer.OrdinalIgnoreCase);
     private readonly SemaphoreSlim _addGameGate = new(1, 1);
+    private readonly ConcurrentDictionary<string, List<object>> _exeTargetsCache =
+        new(StringComparer.OrdinalIgnoreCase);
+
+    private List<object> GetExeTargets(string directory)
+    {
+        string key;
+        try
+        {
+            key = string.IsNullOrWhiteSpace(directory)
+                ? string.Empty
+                : Path.GetFullPath(directory);
+        }
+        catch (Exception exception) when (
+            exception is ArgumentException or NotSupportedException or PathTooLongException)
+        {
+            return [];
+        }
+
+        return _exeTargetsCache.GetOrAdd(key, EnumerateExeTargets);
+    }
 
     private static object? MapFrameGenOptions(IReadOnlyDictionary<string, string>? values)
     {
@@ -81,7 +93,7 @@ public sealed partial class AppWebBridge
                         : null,
                     targetDirectory = game.TargetDirectory,
                     renderExe = game.RenderExePath,
-                    targets = EnumerateExeTargets(game.TargetDirectory),
+                    targets = GetExeTargets(game.TargetDirectory),
                     initial = string.IsNullOrWhiteSpace(game.Name) ? "?" : game.Name[..1].ToUpperInvariant(),
                     cover = settings.ShowCovers
                         ? await GetCoverUrlAsync(game)
@@ -136,6 +148,7 @@ public sealed partial class AppWebBridge
                 });
 
                 var result = await _library.ScanAsync(progress, _scanCancellation.Token);
+                _exeTargetsCache.Clear();
                 var warning = result.Warnings.Count > 0
                     ? string.Join(Environment.NewLine, result.Warnings)
                     : null;
@@ -184,6 +197,7 @@ public sealed partial class AppWebBridge
             return await RunExclusiveAsync(async () =>
             {
                 await _library.AddManualAsync(dialog.FileName, CancellationToken.None);
+                _exeTargetsCache.Clear();
                 return await BuildGamesStateAsync();
             });
         }
@@ -315,135 +329,6 @@ public sealed partial class AppWebBridge
         }
 
         return removed;
-    }
-
-    private async Task<string?> GetCoverUrlAsync(GameEntry game)
-    {
-        if (_coverUrlCache.TryGetValue(game.Id, out var cachedUrl))
-        {
-            return cachedUrl;
-        }
-
-        try
-        {
-            var path = await _covers.GetCoverPathAsync(game, CancellationToken.None);
-            string? url;
-            if (path is null || !File.Exists(path))
-            {
-                url = await GetExecutableIconUrlAsync(game.RenderExePath);
-            }
-            else
-            {
-                var info = new FileInfo(path);
-                url = info.Length is <= 0 or > 3 * 1024 * 1024 || !IsCoverLargeEnough(path)
-                    ? await GetExecutableIconUrlAsync(game.RenderExePath)
-                    : CoverUrl(await EnsureCachedCoverAsync(path));
-            }
-
-            if (!string.IsNullOrWhiteSpace(url))
-            {
-                _coverUrlCache[game.Id] = url;
-            }
-
-            return url;
-        }
-        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
-        {
-            _logger.LogDebug(exception, "Could not load cover for {Game}", game.Name);
-            return null;
-        }
-    }
-
-    private async Task<string?> GetExecutableIconUrlAsync(string? exePath)
-    {
-        if (string.IsNullOrWhiteSpace(exePath) || !File.Exists(exePath))
-        {
-            return null;
-        }
-
-        try
-        {
-            var cacheDirectory = Path.Combine(_paths.CacheDirectory, "covers", "icons");
-            Directory.CreateDirectory(cacheDirectory);
-            var key = Convert.ToHexString(SHA256.HashData(
-                Encoding.UTF8.GetBytes($"{exePath.ToLowerInvariant()}|{File.GetLastWriteTimeUtc(exePath).Ticks}")));
-            var cachePath = Path.Combine(cacheDirectory, $"{key}.png");
-
-            if (!File.Exists(cachePath))
-            {
-                await Task.Run(() =>
-                {
-                    using var icon = Icon.ExtractAssociatedIcon(exePath);
-                    if (icon is null)
-                    {
-                        return;
-                    }
-
-                    using var bitmap = icon.ToBitmap();
-                    bitmap.Save(cachePath, ImageFormat.Png);
-                });
-            }
-
-            return File.Exists(cachePath) && new FileInfo(cachePath).Length <= 3 * 1024 * 1024
-                ? CoverUrl(cachePath)
-                : null;
-        }
-        catch (Exception exception) when (
-            exception is IOException or UnauthorizedAccessException or ArgumentException or ExternalException)
-        {
-            _logger.LogDebug(exception, "Could not extract executable icon for {Exe}", exePath);
-            return null;
-        }
-    }
-
-    private async Task<string> EnsureCachedCoverAsync(string source)
-    {
-        var full = Path.GetFullPath(source);
-        var root = Path.GetFullPath(_paths.CacheDirectory);
-        if (full.StartsWith(root + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase))
-        {
-            return full;
-        }
-
-        var extension = Path.GetExtension(full).ToLowerInvariant();
-        if (extension is not (".png" or ".jpg" or ".jpeg"))
-        {
-            extension = ".jpg";
-        }
-
-        var key = Convert.ToHexString(SHA256.HashData(
-            Encoding.UTF8.GetBytes($"{full.ToLowerInvariant()}|{File.GetLastWriteTimeUtc(full).Ticks}")))
-            .ToLowerInvariant();
-        var directory = Path.Combine(root, "covers", "cache");
-        Directory.CreateDirectory(directory);
-        var destination = Path.Combine(directory, key + extension);
-        if (!File.Exists(destination))
-        {
-            await using var input = File.OpenRead(full);
-            await using var output = File.Create(destination);
-            await input.CopyToAsync(output);
-        }
-
-        return destination;
-    }
-
-    private static bool IsCoverLargeEnough(string path)
-    {
-        try
-        {
-            using var image = Image.FromFile(path);
-            return image.Width >= 500;
-        }
-        catch (Exception exception) when (exception is ArgumentException or ExternalException or IOException)
-        {
-            return false;
-        }
-    }
-
-    private string CoverUrl(string path)
-    {
-        var relative = Path.GetRelativePath(_paths.CacheDirectory, path).Replace('\\', '/');
-        return $"https://fgm-covers.local/{relative}";
     }
 
 }

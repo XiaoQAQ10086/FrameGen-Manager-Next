@@ -69,7 +69,7 @@ export default {
         ? `<img src="${game.cover}" alt="" loading="lazy" decoding="async">`
         : `<div class="ph">${esc(game.initial)}</div>`;
       return `
-        <button class="tile" data-action="open" data-id="${esc(game.id)}" type="button" style="--i:${index}">
+        <div class="tile${index < 12 ? '' : ' static'}" role="button" tabindex="0" data-action="open" data-id="${esc(game.id)}" style="--i:${index}">
           ${media}
           ${game.legacy ? `<span class="ribbon warn">${t('Dlss5.Legacy')}</span>` : ''}
           <span class="meta">
@@ -77,7 +77,8 @@ export default {
             <span class="tag">${esc(t('Dlss5.GraphicsApi'))}${esc(apiLabel(game.api))}</span>
             <span class="tag ${deployed(game) ? 'ok' : ''}">${esc(deployed(game) ? t('Dlss5.Deployed') : t('Dlss5.NotDeployed'))}</span>
           </span>
-        </button>`;
+          <button class="tile-remove" data-action="remove" data-id="${esc(game.id)}" type="button" title="${esc(t('Common.Remove'))}" aria-label="${esc(t('Common.Remove'))}">🗑</button>
+        </div>`;
     }
 
     function render() {
@@ -110,7 +111,6 @@ export default {
         <div class="badges">
           <span class="badge">${esc(apiLabel(game.api))}</span>
           <span class="badge ${deployed(game) ? 'ok' : 'dim'}">${esc(t(stateKeys[game.state] || 'State.NotDeployed'))}</span>
-          <span class="badge ${game.reShade ? 'ok' : 'dim'}">${esc(t('Dlss5.ReShade'))} ${game.reShade ? '✓' : '—'}</span>
           ${game.legacy ? `<span class="badge warn">${esc(t('Dlss5.RequiresUninstall'))}</span>` : ''}
         </div>
         <div class="deploy-picker">
@@ -209,6 +209,23 @@ export default {
           if (game) openDetail(game);
           return;
         }
+        if (name === 'remove') {
+          const game = games.find((item) => item.id === button.dataset.id);
+          if (!game) return;
+          if (!(await confirmDialog(
+            t('Library.Dialog.RemoveTitle'),
+            t('Library.Confirm.Remove').replace('{0}', game.name),
+            t('Common.Remove')))) return;
+
+          try {
+            await api.request('games.remove', { id: game.id });
+            await load();
+            ui.libraryChanged('dlss5');
+          } catch (error) {
+            ui.toast(error.message, 'error');
+          }
+          return;
+        }
         if (name === 'modal-install' || name === 'modal-uninstall') {
           if (!current) return;
           const game = current;
@@ -231,6 +248,17 @@ export default {
     };
     root.addEventListener('click', onClick);
 
+    const onKeyDown = (event) => {
+      if (event.key !== 'Enter' && event.key !== ' ') return;
+      if (event.target.closest('.tile-remove')) return;
+      const tileElement = event.target.closest('.tile[data-action="open"]');
+      if (!tileElement) return;
+      event.preventDefault();
+      const game = games.find((item) => item.id === tileElement.dataset.id);
+      if (game) openDetail(game);
+    };
+    root.addEventListener('keydown', onKeyDown);
+
     const onLibraryChanged = (event) => {
       if (event.detail?.source === 'dlss5') return;
       load();
@@ -241,6 +269,7 @@ export default {
     return () => {
       document.removeEventListener('fgm:library-changed', onLibraryChanged);
       root.removeEventListener('click', onClick);
+      root.removeEventListener('keydown', onKeyDown);
     };
   },
 };

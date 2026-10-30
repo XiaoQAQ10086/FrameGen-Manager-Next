@@ -1,5 +1,7 @@
 using System.Diagnostics;
 using System.IO;
+using System.Runtime;
+using System.Runtime.InteropServices;
 using System.Windows;
 using FrameGenManagerNext.App.Localization;
 using FrameGenManagerNext.App.Platform;
@@ -24,6 +26,7 @@ public partial class MainWindow : FluentWindow
     private string? _lastDetail;
     private int _recoveryAttempts;
     private bool _recovering;
+    private bool _suspended;
     private bool _closing;
 
     public MainWindow(AppWebBridge bridge, ILogger<MainWindow> logger)
@@ -36,6 +39,8 @@ public partial class MainWindow : FluentWindow
         _bridge.Failed += OnBridgeFailed;
         Loaded += OnLoaded;
         SizeChanged += OnWindowSizeChanged;
+        StateChanged += OnWindowStateChanged;
+        IsVisibleChanged += OnIsVisibleChanged;
         Closed += OnClosed;
     }
 
@@ -144,6 +149,7 @@ public partial class MainWindow : FluentWindow
     private async Task<bool> RecreateBrowserAsync(string? additionalBrowserArguments)
     {
         var previous = Browser;
+        _suspended = false;
         if (WebViewHost.Children.Contains(previous))
         {
             WebViewHost.Children.Remove(previous);
@@ -258,6 +264,95 @@ public partial class MainWindow : FluentWindow
         }
     }
 
+    private async void OnWindowStateChanged(object? sender, EventArgs e)
+    {
+        if (WindowState == WindowState.Minimized)
+        {
+            await SuspendBrowserAsync();
+        }
+        else
+        {
+            ResumeBrowser();
+        }
+    }
+
+    private async void OnIsVisibleChanged(object? sender, DependencyPropertyChangedEventArgs e)
+    {
+        if (!IsVisible)
+        {
+            await SuspendBrowserAsync();
+        }
+        else
+        {
+            ResumeBrowser();
+        }
+    }
+
+    private async Task SuspendBrowserAsync()
+    {
+        if (_closing || _suspended)
+        {
+            return;
+        }
+
+        var core = Browser.CoreWebView2;
+        if (core is null)
+        {
+            return;
+        }
+
+        try
+        {
+            _suspended = await core.TrySuspendAsync();
+            if (!_suspended)
+            {
+                return;
+            }
+
+            if (WindowState != WindowState.Minimized && IsVisible)
+            {
+                core.Resume();
+                _suspended = false;
+                return;
+            }
+
+            // The browser is stopped while minimized; compact the managed heap so
+            // long sessions do not keep old library/JSON buffers resident.
+            _ = Task.Run(() =>
+            {
+                GCSettings.LargeObjectHeapCompactionMode = GCLargeObjectHeapCompactionMode.CompactOnce;
+                GC.Collect(2, GCCollectionMode.Optimized, blocking: false, compacting: true);
+            });
+        }
+        catch (Exception exception) when (
+            exception is InvalidOperationException or ObjectDisposedException or NotSupportedException or COMException)
+        {
+            _logger.LogDebug(exception, "Could not suspend WebView2");
+        }
+    }
+
+    private void ResumeBrowser()
+    {
+        if (!_suspended)
+        {
+            return;
+        }
+
+        try
+        {
+            Browser.CoreWebView2?.Resume();
+        }
+        catch (Exception exception) when (
+            exception is InvalidOperationException or ObjectDisposedException or NotSupportedException or COMException)
+        {
+            _logger.LogDebug(exception, "Could not resume WebView2");
+        }
+        finally
+        {
+            _suspended = false;
+        }
+    }
+
     private void OnWindowSizeChanged(object sender, SizeChangedEventArgs e)
     {
         UpdateLoadingSize();
@@ -277,6 +372,8 @@ public partial class MainWindow : FluentWindow
         _closing = true;
         LoadingPopup.IsOpen = false;
         SizeChanged -= OnWindowSizeChanged;
+        StateChanged -= OnWindowStateChanged;
+        IsVisibleChanged -= OnIsVisibleChanged;
         _bridge.Failed -= OnBridgeFailed;
     }
 }

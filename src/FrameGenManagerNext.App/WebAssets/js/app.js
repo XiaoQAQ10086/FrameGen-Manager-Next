@@ -25,6 +25,21 @@ const state = {
   mounted: new Map(),
 };
 
+// Inactive pages keep their DOM and decoded covers alive. After a few minutes
+// away, drop them; returning remounts the page from cache/snapshot.
+const idleUnmountMs = 5 * 60 * 1000;
+
+function scheduleUnmount(name, entry) {
+  clearTimeout(entry.timer);
+  entry.timer = setTimeout(() => {
+    if (state.current === name || state.mounted.get(name) !== entry) return;
+    entry.cleanup?.();
+    entry.host.remove();
+    state.mounted.delete(name);
+    api.invalidate();
+  }, idleUnmountMs);
+}
+
 const context = {
   api,
   i18n,
@@ -86,6 +101,7 @@ async function changeLanguage(language) {
 
 function resetPages() {
   for (const entry of state.mounted.values()) {
+    clearTimeout(entry.timer);
     entry.cleanup?.();
     entry.host.remove();
   }
@@ -105,7 +121,7 @@ async function navigate(pageName, push = true) {
     const host = document.createElement('div');
     host.className = 'page-host hidden';
     view.appendChild(host);
-    entry = { host, cleanup: null };
+    entry = { host, cleanup: null, timer: null };
     state.mounted.set(name, entry);
     // Do not await: the page shell (and its skeleton) is written synchronously by
     // mount, so the tab appears immediately and data fills in afterwards.
@@ -122,8 +138,10 @@ async function navigate(pageName, push = true) {
       });
   }
 
+  clearTimeout(entry.timer);
   for (const [key, item] of state.mounted) {
     item.host.classList.toggle('hidden', key !== name);
+    if (key !== name) scheduleUnmount(key, item);
   }
   entry.host.animate(
     [

@@ -17,7 +17,7 @@ public sealed partial class AppWebBridge
         {
             var cover = settings.ShowCovers ? await GetCoverUrlAsync(game) : null;
             var initial = string.IsNullOrWhiteSpace(game.Name) ? "?" : game.Name[..1].ToUpperInvariant();
-            var targets = EnumerateExeTargets(game.TargetDirectory);
+            var targets = GetExeTargets(game.TargetDirectory);
 
             if (string.IsNullOrWhiteSpace(game.RenderExePath))
             {

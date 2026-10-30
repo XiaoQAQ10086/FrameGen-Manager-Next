@@ -127,6 +127,8 @@ button, select { font: inherit; }
   animation: cardIn .32s var(--ease) both;
 }
 .gcard:hover { transform: translateY(-2px); box-shadow: 0 18px 42px rgba(24, 39, 75, 0.14); background: rgba(255,255,255,.9); }
+.game-list > .gcard { content-visibility: auto; contain-intrinsic-size: auto 160px; }
+.gcard.static { animation: none; }
 .gtop { display: flex; align-items: center; gap: 12px; min-width: 0; }
 .thumb { width: 52px; height: 70px; border-radius: 10px; flex: 0 0 auto; object-fit: cover; background: rgba(0,122,255,.08); display: block; }
 .thumb.ph2 { display: grid; place-items: center; font-size: 20px; font-weight: 800; color: #4e6f9d; background: rgba(0,122,255,.1); }
@@ -147,6 +149,7 @@ button, select { font: inherit; }
 
 /* DLSS5 卡片墙（沿用原项目的 tile 布局） */
 .wall { display: grid; grid-template-columns: repeat(auto-fill, minmax(168px, 1fr)); gap: 14px; }
+.wall > .tile { content-visibility: auto; contain-intrinsic-size: auto 230px; }
 .tile {
   position: relative;
   aspect-ratio: .72;
@@ -164,6 +167,7 @@ button, select { font: inherit; }
   animation-delay: calc(var(--i, 0) * 25ms);
 }
 .tile:hover { transform: translateY(-4px) scale(1.015); box-shadow: 0 18px 42px rgba(18, 30, 52, .26); }
+.tile:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
 .tile > img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transition: transform .4s var(--ease); }
 .tile:hover > img { transform: scale(1.05); }
 .tile .ph { position: absolute; inset: 0; display: grid; place-items: center; font-size: 40px; font-weight: 800; color: rgba(255,255,255,.22); }
@@ -173,6 +177,28 @@ button, select { font: inherit; }
 .tile .tag.ok { color: #a8e063; font-weight: 700; }
 .tile .ribbon { position: absolute; top: 9px; left: 9px; padding: 2px 8px; border-radius: 999px; background: rgba(0,0,0,.55); color: #fff; font-size: 11px; }
 .tile .ribbon.warn { background: rgba(194,110,0,.9); }
+.tile-remove {
+  position: absolute;
+  right: 9px;
+  bottom: 10px;
+  z-index: 3;
+  width: 29px;
+  height: 29px;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(255, 255, 255, .28);
+  border-radius: 999px;
+  background: linear-gradient(180deg, #e85454, #c62828);
+  color: #fff;
+  font-size: 13px;
+  line-height: 1;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, .34);
+  transition: transform .18s var(--ease), background .18s var(--ease);
+}
+.tile-remove:hover { transform: scale(1.08); background: linear-gradient(180deg, #f06060, #d32f2f); }
+.tile .meta { padding-right: 46px; }
+.tile.static { animation: none; }
 .skeleton-tile { background: rgba(96,107,125,.1); animation: shimmer 1.2s ease-in-out infinite; }
 .deploy-meta { margin-top: 12px; }
 .deploy-meta .kv2 { margin: 7px 0; }
@@ -289,6 +315,9 @@ button, select { font: inherit; }
 .modal-cover img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .deploy-target-label { display: grid; grid-template-columns: max-content minmax(0, 1fr); align-items: center; column-gap: 14px; row-gap: 0; margin-top: 14px; color: var(--muted); font-size: 12px; }
 .deploy-target-label .select-wrap { width: 100%; max-width: 300px; }
+.deploy-modal { width: min(580px, 92vw); }
+.deploy-modal .deploy-target-label .select-wrap,
+.deploy-modal .options .select-wrap { max-width: 400px; }
 .target-hint { margin-top: 5px; color: var(--muted); font-size: 11.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .target-hint:empty { display: none; }
 .kv2.inline { justify-content: flex-start; gap: 16px; margin-top: 8px; }
