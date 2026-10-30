@@ -67,6 +67,23 @@ public sealed partial class AppWebBridge
         // Inspecting every game and loading covers used to be sequential, which made
         // the library appear several seconds after the window opened.
         using var gate = new SemaphoreSlim(Math.Max(1, Environment.ProcessorCount));
+        // Image decoding is native and much heavier than a hash check; keep its
+        // peak bounded even on many-core machines.
+        using var coverGate = new SemaphoreSlim(4);
+
+        async Task<string?> LoadCoverAsync(GameEntry game)
+        {
+            await coverGate.WaitAsync();
+            try
+            {
+                return await GetCoverUrlAsync(game);
+            }
+            finally
+            {
+                coverGate.Release();
+            }
+        }
+
         await Task.WhenAll(visible.Select(async (game, index) =>
         {
             await gate.WaitAsync();
@@ -117,7 +134,7 @@ public sealed partial class AppWebBridge
                     targets = GetExeTargets(game.TargetDirectory),
                     initial = string.IsNullOrWhiteSpace(game.Name) ? "?" : game.Name[..1].ToUpperInvariant(),
                     cover = settings.ShowCovers
-                        ? await GetCoverUrlAsync(game)
+                        ? await LoadCoverAsync(game)
                         : null,
                 };
             }
