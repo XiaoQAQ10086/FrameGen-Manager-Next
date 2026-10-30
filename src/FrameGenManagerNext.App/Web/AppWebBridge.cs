@@ -109,7 +109,7 @@ public sealed partial class AppWebBridge : IDisposable
         _addGameGate.Dispose();
     }
 
-    private const string MemoryLimitArguments = "--js-flags=--max-old-space-size=256";
+    private const string MemoryLimitArguments = "--js-flags=--max-old-space-size=192 --disable-background-networking --disable-component-update --disable-sync --disable-domain-reliability";
 
     public async Task InitializeAsync(WebView2 webView, string? additionalBrowserArguments = null)
     {
@@ -139,6 +139,17 @@ public sealed partial class AppWebBridge : IDisposable
 
         var core = webView.CoreWebView2;
         _core = core;
+
+        try
+        {
+            // The UI is a small module app; Low keeps Chromium's caches and heaps
+            // smaller between page switches.
+            core.MemoryUsageTargetLevel = CoreWebView2MemoryUsageTargetLevel.Low;
+        }
+        catch (Exception exception) when (exception is InvalidOperationException or NotSupportedException)
+        {
+            _logger.LogDebug(exception, "WebView2 memory target level is not supported by this runtime");
+        }
 
         var assets = Path.Combine(AppContext.BaseDirectory, "WebAssets");
         core.SetVirtualHostNameToFolderMapping(

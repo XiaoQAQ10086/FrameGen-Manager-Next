@@ -6,6 +6,7 @@ using System.Windows;
 using FrameGenManagerNext.App.Localization;
 using FrameGenManagerNext.App.Platform;
 using FrameGenManagerNext.App.Web;
+using FrameGenManagerNext.Infrastructure.Platform;
 using Microsoft.Extensions.Logging;
 using Microsoft.Web.WebView2.Wpf;
 using Wpf.Ui.Controls;
@@ -322,6 +323,7 @@ public partial class MainWindow : FluentWindow
             {
                 GCSettings.LargeObjectHeapCompactionMode = GCLargeObjectHeapCompactionMode.CompactOnce;
                 GC.Collect(2, GCCollectionMode.Optimized, blocking: false, compacting: true);
+                ProcessMemory.TrimWorkingSet();
             });
         }
         catch (Exception exception) when (

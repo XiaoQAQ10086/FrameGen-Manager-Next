@@ -37,20 +37,19 @@ public sealed partial class GameLibraryService : IGameLibraryService, IDisposabl
         var warnings = new List<string>();
         var candidates = new List<GameCandidate>();
 
-        for (var index = 0; index < _scanners.Count; index++)
+        // Launchers are independent; scanning them in parallel shortens the
+        // discovery phase on fast disks.
+        var launchersDone = 0;
+        await Task.WhenAll(_scanners.Select(async scanner =>
         {
             cancellationToken.ThrowIfCancellationRequested();
-            var scanner = _scanners[index];
-            progress?.Report(new GameScanProgress(
-                "launchers",
-                scanner.Launcher.ToString(),
-                index,
-                _scanners.Count));
-
             try
             {
                 var found = await scanner.ScanAsync(cancellationToken);
-                candidates.AddRange(found);
+                lock (candidates)
+                {
+                    candidates.AddRange(found);
+                }
             }
             catch (OperationCanceledException)
             {
@@ -58,11 +57,23 @@ public sealed partial class GameLibraryService : IGameLibraryService, IDisposabl
             }
             catch (Exception exception)
             {
-                var warning = $"{scanner.Launcher}: {exception.Message}";
-                warnings.Add(warning);
+                lock (warnings)
+                {
+                    warnings.Add($"{scanner.Launcher}: {exception.Message}");
+                }
+
                 LogLauncherScanFailed(_logger, exception, scanner.Launcher);
             }
-        }
+            finally
+            {
+                var done = Interlocked.Increment(ref launchersDone);
+                progress?.Report(new GameScanProgress(
+                    "launchers",
+                    scanner.Launcher.ToString(),
+                    done,
+                    _scanners.Count));
+            }
+        }));
 
         var unique = candidates
             .Where(candidate => !string.IsNullOrWhiteSpace(candidate.InstallDirectory))
@@ -78,7 +89,9 @@ public sealed partial class GameLibraryService : IGameLibraryService, IDisposabl
 
         var entries = new List<GameEntry>();
         var completed = 0;
-        using var gate = new SemaphoreSlim(6);
+        // PE parsing and directory walks benefit from more than six workers on
+        // modern CPUs; cap it so a 32-core machine does not thrash the disk.
+        using var gate = new SemaphoreSlim(Math.Clamp(Environment.ProcessorCount, 6, 12));
 
         var tasks = unique.Select(async candidate =>
         {
