@@ -55,6 +55,12 @@ public sealed partial class DeploymentEngine : IDeploymentEngine
                 var path = GetTargetPath(target.Value, file.RelativePath);
                 if (path.IsSuccess && File.Exists(path.Value))
                 {
+                    // A size mismatch cannot match the pack, so skip hashing.
+                    if (new FileInfo(path.Value).Length != file.Size)
+                    {
+                        continue;
+                    }
+
                     var hash = await HashFileAsync(path.Value, cancellationToken);
                     if (string.Equals(hash, file.Sha256, StringComparison.OrdinalIgnoreCase))
                     {
@@ -117,11 +123,27 @@ public sealed partial class DeploymentEngine : IDeploymentEngine
                 continue;
             }
 
-            var hash = await HashFileAsync(path.Value, cancellationToken);
-            if (!string.Equals(hash, record.Sha256, StringComparison.OrdinalIgnoreCase))
+            var info = new FileInfo(path.Value);
+            var unchanged = record.LastWriteTimeUtcTicks is { } ticks &&
+                            info.Length == record.Size &&
+                            info.LastWriteTimeUtc.Ticks == ticks;
+
+            if (!unchanged)
             {
-                hasConflict = true;
-                detailsList.Add($"Modified: {record.RelativePath}");
+                if (info.Length != record.Size)
+                {
+                    hasConflict = true;
+                    detailsList.Add($"Modified: {record.RelativePath}");
+                }
+                else
+                {
+                    var hash = await HashFileAsync(path.Value, cancellationToken);
+                    if (!string.Equals(hash, record.Sha256, StringComparison.OrdinalIgnoreCase))
+                    {
+                        hasConflict = true;
+                        detailsList.Add($"Modified: {record.RelativePath}");
+                    }
+                }
             }
 
             if (planned.TryGetValue(record.RelativePath, out var expectedHash) &&
@@ -149,6 +171,32 @@ public sealed partial class DeploymentEngine : IDeploymentEngine
                 : hasOutdated
                     ? DeploymentState.Outdated
                     : DeploymentState.Installed;
+
+        if (finalState == DeploymentState.Installed &&
+            manifest.Files.Any(record => record.LastWriteTimeUtcTicks is null))
+        {
+            // Older manifests have no timestamps; store them now so the next
+            // inspection can skip hashing hundreds of megabytes.
+            try
+            {
+                var stampable = new DeploymentManifest
+                {
+                    FamilyId = manifest.FamilyId,
+                    PackId = manifest.PackId,
+                    PackVersion = manifest.PackVersion,
+                    TargetDirectory = manifest.TargetDirectory,
+                    CreatedUtc = manifest.CreatedUtc,
+                    State = manifest.State,
+                    Files = StampTimestamps(manifest.Files, target.Value),
+                    Options = manifest.Options,
+                };
+                await _backups.SaveManifestAsync(stampable, cancellationToken);
+            }
+            catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
+            {
+                _logger.LogDebug(exception, "Could not add file timestamps to the deployment manifest");
+            }
+        }
 
         return Result<DeploymentInspection>.Ok(new DeploymentInspection(
             finalState,
@@ -402,7 +450,8 @@ public sealed partial class DeploymentEngine : IDeploymentEngine
             }
 
             var warnings = await CleanupStaleAsync(previous, plan, target.Value, backupDirectory, cancellationToken);
-            var installed = CreateManifest(plan, target.Value, DeploymentManifestState.Installed, records);
+            var stamped = StampTimestamps(records, target.Value);
+            var installed = CreateManifest(plan, target.Value, DeploymentManifestState.Installed, stamped);
             await _backups.SaveManifestAsync(installed, cancellationToken);
             progress?.Report(new DeploymentProgress("done", string.Empty, plan.Files.Count, plan.Files.Count));
 

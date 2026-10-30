@@ -6,4 +6,11 @@ public sealed record DeployedFileRecord(
     long Size,
     bool ExistedBefore,
     string? BackupRelativePath,
-    string Role);
+    string Role)
+{
+    /// <summary>
+    /// Last-write time captured when the file was deployed. Inspection can skip
+    /// hashing large runtime files when size and timestamp still match.
+    /// </summary>
+    public long? LastWriteTimeUtcTicks { get; init; }
+}

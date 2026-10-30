@@ -106,9 +106,17 @@ public sealed partial class AppWebBridge : IDisposable
         _addGameGate.Dispose();
     }
 
+    private const string MemoryLimitArguments = "--js-flags=--max-old-space-size=256";
+
     public async Task InitializeAsync(WebView2 webView, string? additionalBrowserArguments = null)
     {
         DetachCoreEvents();
+
+        // Keep the renderer heap bounded; the UI is a small module app, not a page
+        // with large in-memory data sets. This lowers the WebView2 baseline footprint.
+        var arguments = string.IsNullOrWhiteSpace(additionalBrowserArguments)
+            ? MemoryLimitArguments
+            : $"{additionalBrowserArguments} {MemoryLimitArguments}";
 
         var userDataFolder = ResolveUserDataFolder();
         Directory.CreateDirectory(userDataFolder);
@@ -116,10 +124,10 @@ public sealed partial class AppWebBridge : IDisposable
             "Creating WebView2 environment. Profile={Profile}; Runtime={Runtime}; Arguments={Arguments}",
             userDataFolder,
             CoreWebView2Environment.GetAvailableBrowserVersionString(),
-            additionalBrowserArguments ?? "-");
+            arguments);
 
         var options = new CoreWebView2EnvironmentOptions(
-            additionalBrowserArguments: additionalBrowserArguments);
+            additionalBrowserArguments: arguments);
         var environment = await CoreWebView2Environment.CreateAsync(
             browserExecutableFolder: null,
             userDataFolder,
