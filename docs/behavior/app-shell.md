@@ -25,7 +25,7 @@
 - 封面解码前统一生成 360px 宽的 JPEG 缩略图（`cache/covers/thumbs`），卡片只加载缩略图，避免 WebView2 为 1200x1800 原图保留大块解码内存。
 - 窗口最小化或隐藏时调用 `CoreWebView2.TrySuspendAsync()` 暂停浏览器进程，恢复时 `Resume()`；暂停后顺带压缩一次托管大对象堆。这样游戏期间不会继续占用 WebView2 的 CPU/GPU，也不会持续累积渲染缓存。
 - 列表只给前 12 张卡片播放入场动画，其余卡片使用 `content-visibility: auto`；滚动到视口外时不参与布局/绘制，减少大游戏库的 GPU 开销。
-- 主机进程启动时调用 `SetProcessInformation(ProcessPowerThrottling)` 打开 Windows 11 效率模式（EcoQoS），任务管理器会显示效率模式标记；旧版 Windows 拒绝该调用时忽略，不影响功能。
+- 主机进程启动时同时设置空闲优先级（`SetPriorityClass(IDLE_PRIORITY_CLASS)`）和 EcoQoS（`SetProcessInformation(ProcessPowerThrottling)`）。Windows 11 任务管理器必须同时看到这两者才显示“效率模式”；只设 EcoQoS 不会显示。旧版 Windows 拒绝调用时忽略。
 - WebView2 默认追加 `--js-flags=--max-old-space-size=192 --disable-background-networking --disable-component-update --disable-sync --disable-domain-reliability`，给渲染器堆设上限并关闭后台服务；初始化后把 `MemoryUsageTargetLevel` 设为 `Low`。
 - 进程配置 `System.GC.ConserveMemory=7`，用少量 CPU 换取更小的托管堆。
 - 窗口最小化/隐藏时在暂停 WebView2 后压缩 LOH 并调用 `SetProcessWorkingSetSize(-1,-1)` 修剪工作集，把空闲页移到 standby。

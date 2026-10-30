@@ -1,10 +1,10 @@
 namespace FrameGenManagerNext.Core.Features.App;
 
 /// <summary>
-/// Puts the current process into Windows 11 efficiency mode (EcoQoS) so the
-/// shell and background scans yield CPU time to the game.
+/// Windows 11 efficiency mode: EcoQoS plus idle priority while the window is not
+/// in the foreground. Restores normal priority when the user returns to the app.
 /// </summary>
 public interface IEfficiencyModeService
 {
-    bool TryEnable();
+    bool SetBackground(bool background);
 }

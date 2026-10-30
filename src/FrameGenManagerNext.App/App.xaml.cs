@@ -76,7 +76,7 @@ public partial class App : Application
             _host.Start();
             var settings = _host.Services.GetRequiredService<ISettingsService>().Load();
             LocalizationService.Current.SetLanguage(settings.Language);
-            _host.Services.GetRequiredService<IEfficiencyModeService>().TryEnable();
+            _host.Services.GetRequiredService<IEfficiencyModeService>().SetBackground(true);
         }
         catch (Exception exception)
         {
