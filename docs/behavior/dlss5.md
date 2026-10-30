@@ -25,6 +25,7 @@
    - `reshade-shaders/Shaders/...`、`reshade-shaders/Textures/...`
    - `Uplift.fx`、`UpliftMask.fx`
 3. 离线安装 ReShade（不联网、不运行 setup）：
+   - 官方 setup 会把同一份 `ReShade64.dll` 写到游戏目录，但运行它会先联网下载兼容性信息；直接解出内嵌 DLL 得到的结果相同，且没有等待。
    - 在 `ReShade_Setup_6.8.0_Addon.exe` 里按 512 字节步进查找内嵌 ZIP，取出 `ReShade64.dll`（32 位游戏取 `ReShade32.dll`）。
    - 按 API 写成代理文件名：`d3d9/d3d10/d3d11/d3d12/opengl32.dll`；目标位置已有非 ReShade 文件时拒绝覆盖并回滚（`Conflict`）。
    - 目标没有 `ReShade.ini` 时写入默认搜索路径；随后由配置服务合并 `.\reshade-shaders\Shaders\**` / `Textures\**`。
@@ -52,7 +53,7 @@
 界面只有在检测到已部署（含旧版 RenoDX/残留）时才允许点“卸载”；未部署时按钮锁定。
 
 1. 先调用部署引擎还原并清理 manifest/备份：只删除仍匹配部署哈希的文件，用户改过的文件保留。
-2. 不运行 ReShade 官方卸载器（它会联网），直接删除文件。
+2. 先尝试 ReShade 官方卸载器（`--state uninstall`），最多等 30 秒；超时或失败不报错，继续直接删除。直接删除是最终保证，不依赖任何网络。
 3. 删除 ReShade 模块、`ReShade.ini`、`ReShade.log`、`ReShadePreset.ini`。
 4. 删除 GITC 组件（`gitc-uplift.addon32/64`、`gitc-uplift-helper64.exe`、`GITC-Uplift/`）与已知 shader。
 5. 清理旧版 RenoDX：`renodx-dlss5*.addon*`、旧布局根目录 `nvngx_dlssnr.dll`。

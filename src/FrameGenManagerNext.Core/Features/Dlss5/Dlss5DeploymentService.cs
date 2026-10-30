@@ -23,6 +23,7 @@ public sealed partial class Dlss5DeploymentService : IDlss5DeploymentService
     private readonly IDeploymentEngine _engine;
     private readonly IGraphicsApiProbe _apiProbe;
     private readonly IReShadeOfflineInstaller _reShadeInstaller;
+    private readonly IProcessRunner _processRunner;
     private readonly IReShadeConfigService _reShadeConfig;
     private readonly ILogger<Dlss5DeploymentService> _logger;
 
@@ -31,6 +32,7 @@ public sealed partial class Dlss5DeploymentService : IDlss5DeploymentService
         IDeploymentEngine engine,
         IGraphicsApiProbe apiProbe,
         IReShadeOfflineInstaller reShadeInstaller,
+        IProcessRunner processRunner,
         IReShadeConfigService reShadeConfig,
         ILogger<Dlss5DeploymentService> logger)
     {
@@ -38,6 +40,7 @@ public sealed partial class Dlss5DeploymentService : IDlss5DeploymentService
         _engine = engine;
         _apiProbe = apiProbe;
         _reShadeInstaller = reShadeInstaller;
+        _processRunner = processRunner;
         _reShadeConfig = reShadeConfig;
         _logger = logger;
     }
