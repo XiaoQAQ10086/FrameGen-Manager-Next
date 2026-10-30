@@ -30,6 +30,7 @@ internal static class StringCatalog
 
         ["Common.Refresh"] = ("刷新", "Refresh"),
         ["Common.OperationDone"] = ("操作完成", "Done"),
+        ["Common.Working"] = ("处理中…", "Working…"),
         ["Progress.planning"] = ("准备", "Preparing"),
         ["Progress.writing"] = ("写入", "Writing"),
         ["Progress.restoring"] = ("还原", "Restoring"),

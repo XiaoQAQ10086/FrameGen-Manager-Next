@@ -221,7 +221,7 @@ export default {
       if (status) status.textContent = t('Progress.planning');
       installButton.disabled = true;
       uninstallButton.disabled = true;
-      installButton.textContent = t('Progress.planning');
+      installButton.textContent = t('Common.Working');
 
       const unsubscribe = api.on('progress', (data) => {
         if (!box || !bar || !status) return;
@@ -229,7 +229,6 @@ export default {
           box.classList.add('indeterminate');
           bar.style.width = '100%';
           status.textContent = t('Progress.installer');
-          installButton.textContent = t('Progress.installer');
           return;
         }
 
@@ -240,9 +239,6 @@ export default {
         status.textContent = data.total > 0
           ? `${label} ${data.current}/${data.total}`
           : label;
-        if (data.phase !== 'done' && data.phase !== 'failed') {
-          installButton.textContent = label;
-        }
       });
 
       try {
