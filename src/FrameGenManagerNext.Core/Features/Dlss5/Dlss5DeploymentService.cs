@@ -59,6 +59,19 @@ public sealed partial class Dlss5DeploymentService : IDlss5DeploymentService
             return Result<Dlss5Inspection>.Fail(api.Error!);
         }
 
+        // Large libraries: an empty game folder cannot be a deployment. Skip building
+        // the 114-file plan (and its source metadata checks) for every such game.
+        if (await IsEmptyDlss5TargetAsync(targetDirectory, cancellationToken))
+        {
+            return Result<Dlss5Inspection>.Ok(new Dlss5Inspection(
+                DeploymentState.NotDeployed,
+                api.Value,
+                false,
+                null,
+                false,
+                false));
+        }
+
         var plan = await BuildPlanAsync(targetDirectory, api.Value, cancellationToken);
         if (plan.IsFailure)
         {
@@ -79,6 +92,60 @@ public sealed partial class Dlss5DeploymentService : IDlss5DeploymentService
             inventory.ReShadeModule,
             inventory.LegacyRenoDx,
             inventory.HasLeftovers));
+    }
+
+    private async Task<bool> IsEmptyDlss5TargetAsync(
+        string targetDirectory,
+        CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(targetDirectory))
+        {
+            return false;
+        }
+
+        string target;
+        try
+        {
+            target = Path.GetFullPath(targetDirectory);
+        }
+        catch (Exception exception) when (
+            exception is ArgumentException or NotSupportedException or PathTooLongException)
+        {
+            return false;
+        }
+
+        if (!Directory.Exists(target) || SafePath.IsProtectedSystemDirectory(target))
+        {
+            return false;
+        }
+
+        var manifest = await _engine.LoadManifestAsync(FamilyId, target, cancellationToken);
+        if (manifest is not null)
+        {
+            return false;
+        }
+
+        foreach (var marker in new[]
+                 {
+                     "gitc-uplift.addon64",
+                     "gitc-uplift.addon32",
+                     "GITC-Uplift/nvngx_dlssnr.dll",
+                 })
+        {
+            var path = SafePath.CombineUnderRoot(target, marker);
+            if (path.IsSuccess && File.Exists(path.Value))
+            {
+                return false;
+            }
+        }
+
+        if (Directory.Exists(Path.Combine(target, "reshade-shaders")))
+        {
+            return false;
+        }
+
+        var inventory = ScanTarget(target);
+        return inventory.HasNothing;
     }
 
     public async Task<Result<Dlss5Report>> InstallAsync(

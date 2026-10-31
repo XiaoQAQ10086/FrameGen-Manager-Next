@@ -12,10 +12,11 @@ public sealed partial class AppWebBridge
         var settings = _settings.Load();
         var library = await _library.LoadAsync(CancellationToken.None);
         var games = new List<object>();
+        var allowCoverDownload = library.EnumerateVisibleGames().Count() <= 40;
 
         foreach (var game in library.EnumerateVisibleGames())
         {
-            var cover = settings.ShowCovers ? await GetCoverUrlAsync(game) : null;
+            var cover = settings.ShowCovers ? await GetCoverUrlAsync(game, allowCoverDownload) : null;
             var initial = string.IsNullOrWhiteSpace(game.Name) ? "?" : game.Name[..1].ToUpperInvariant();
             var targets = GetExeTargets(game.TargetDirectory);
 

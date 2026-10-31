@@ -13,6 +13,7 @@ public sealed partial class AppWebBridge
         var gpu = await _gpu.GetAsync(CancellationToken.None);
         var library = await _library.LoadAsync(CancellationToken.None);
         var games = new List<object>();
+        var allowCoverDownload = library.EnumerateVisibleGames().Count() <= 40;
 
         var exePaths = library.EnumerateVisibleGames()
             .Select(game => game.RenderExePath)
@@ -39,7 +40,7 @@ public sealed partial class AppWebBridge
 
         foreach (var game in library.EnumerateVisibleGames())
         {
-            var cover = settings.ShowCovers ? await GetCoverUrlAsync(game) : null;
+            var cover = settings.ShowCovers ? await GetCoverUrlAsync(game, allowCoverDownload) : null;
             var initial = string.IsNullOrWhiteSpace(game.Name) ? "?" : game.Name[..1].ToUpperInvariant();
 
             if (string.IsNullOrWhiteSpace(game.RenderExePath))
