@@ -40,6 +40,29 @@ public sealed partial class FrameGenDeploymentService : IFrameGenDeploymentServi
         FrameGenOptions options,
         CancellationToken cancellationToken)
     {
+        // Fast path for large libraries: most games have no FrameGen files. Building
+        // the full plan (INI template read + hash) for every one of them dominated
+        // the 300-game state load. If no target, manifest or legacy record exists,
+        // the answer cannot be anything but NotDeployed.
+        var fastTarget = TryGetFullTarget(targetDirectory);
+        if (fastTarget is not null)
+        {
+            var fastLegacy = await _legacy.FindAsync(fastTarget, cancellationToken);
+            var manifest = await _engine.LoadManifestAsync(FamilyId, fastTarget, cancellationToken);
+            if (fastLegacy is null && manifest is null)
+            {
+                var packLocation = await _packs.FindAsync(PackId, cancellationToken);
+                if (packLocation is not null && !AnyPackTargetExists(packLocation.Pack, fastTarget))
+                {
+                    return Result<DeploymentInspection>.Ok(new DeploymentInspection(
+                        DeploymentState.NotDeployed,
+                        PackVersion: null,
+                        HasManifest: false,
+                        Details: []));
+                }
+            }
+        }
+
         // Inspection must judge the deployment that is actually on disk. Using the
         // dialog defaults would report every non-default deployment as Outdated and
         // would hide a real asset update among false positives.
@@ -83,6 +106,45 @@ public sealed partial class FrameGenDeploymentService : IFrameGenDeploymentServi
         }
 
         return inspection;
+    }
+
+    private static string? TryGetFullTarget(string targetDirectory)
+    {
+        if (string.IsNullOrWhiteSpace(targetDirectory))
+        {
+            return null;
+        }
+
+        try
+        {
+            var full = Path.GetFullPath(targetDirectory);
+            return Directory.Exists(full) && !SafePath.IsProtectedSystemDirectory(full) ? full : null;
+        }
+        catch (Exception exception) when (
+            exception is ArgumentException or NotSupportedException or PathTooLongException)
+        {
+            return null;
+        }
+    }
+
+    private static bool AnyPackTargetExists(AssetPack pack, string targetDirectory)
+    {
+        foreach (var file in pack.Files)
+        {
+            var path = SafePath.CombineUnderRoot(targetDirectory, file.Target);
+            if (path.IsSuccess && File.Exists(path.Value))
+            {
+                return true;
+            }
+        }
+
+        if (pack.Ini is not null)
+        {
+            var iniPath = SafePath.CombineUnderRoot(targetDirectory, pack.Ini.Target);
+            return iniPath.IsSuccess && File.Exists(iniPath.Value);
+        }
+
+        return false;
     }
 
     private static async Task<int> CountLegacyMatchesAsync(

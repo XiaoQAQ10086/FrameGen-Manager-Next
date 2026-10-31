@@ -17,7 +17,7 @@ public sealed partial class AppWebBridge
     private readonly ConcurrentDictionary<string, string> _coverUrlCache =
         new(StringComparer.OrdinalIgnoreCase);
 
-    private async Task<string?> GetCoverUrlAsync(GameEntry game)
+    private async Task<string?> GetCoverUrlAsync(GameEntry game, bool allowDownload = true)
     {
         if (_coverUrlCache.TryGetValue(game.Id, out var cachedUrl))
         {
@@ -26,7 +26,7 @@ public sealed partial class AppWebBridge
 
         try
         {
-            var path = await _covers.GetCoverPathAsync(game, CancellationToken.None);
+            var path = await _covers.GetCoverPathAsync(game, CancellationToken.None, allowDownload);
             string? url;
             if (path is null || !File.Exists(path))
             {

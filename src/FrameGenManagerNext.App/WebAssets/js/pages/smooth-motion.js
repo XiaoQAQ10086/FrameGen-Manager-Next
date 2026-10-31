@@ -78,19 +78,20 @@ export default {
       q('[data-role="note"]').textContent = supported ? t('SmoothMotion.Ready') : t(gate);
     }
 
-    function render() {
-      const list = q('[data-role="games"]');
-      list.innerHTML = games.map((game, index) => {
-        const outdated = game.component === 'Outdated';
-        const toggleAction = outdated || game.enabled !== true ? 'enable' : 'disable';
-        const toggleLabel = outdated
-          ? t('Common.Update')
-          : game.enabled === true
-            ? t('SmoothMotion.Disable')
-            : t('SmoothMotion.Enable');
-        const fgConflict = game.frameGenDeployed === true;
-        const blocked = fgConflict && toggleAction === 'enable';
-        return `
+    const renderChunkSize = 40;
+    let renderedCount = 0;
+
+    function cardMarkup(game, index) {
+      const outdated = game.component === 'Outdated';
+      const toggleAction = outdated || game.enabled !== true ? 'enable' : 'disable';
+      const toggleLabel = outdated
+        ? t('Common.Update')
+        : game.enabled === true
+          ? t('SmoothMotion.Disable')
+          : t('SmoothMotion.Enable');
+      const fgConflict = game.frameGenDeployed === true;
+      const blocked = fgConflict && toggleAction === 'enable';
+      return `
         <article class="gcard${index < 12 ? '' : ' static'}" style="animation-delay:${Math.min(index * 35, 350)}ms">
           <div class="gtop">
             ${game.cover ? `<img class="thumb" src="${game.cover}" alt="" loading="lazy" decoding="async">` : `<div class="thumb ph2">${esc(game.initial)}</div>`}
@@ -112,7 +113,25 @@ export default {
             <button class="btn small danger icon-only" data-action="remove" data-id="${game.id}" type="button" title="${esc(t('Common.Remove'))}" aria-label="${esc(t('Common.Remove'))}">🗑</button>
           </div>
         </article>`;
-      }).join('');
+    }
+
+    function appendGames() {
+      const list = q('[data-role="games"]');
+      if (renderedCount >= games.length) return;
+      const end = Math.min(games.length, renderedCount + renderChunkSize);
+      list.insertAdjacentHTML(
+        'beforeend',
+        games.slice(renderedCount, end).map((game, offset) => cardMarkup(game, renderedCount + offset)).join(''),
+      );
+      renderedCount = end;
+    }
+
+    function render() {
+      const list = q('[data-role="games"]');
+      list.innerHTML = '';
+      list.scrollTop = 0;
+      renderedCount = 0;
+      appendGames();
       q('[data-role="empty"]').classList.toggle('hidden', games.length > 0);
       list.classList.toggle('hidden', games.length === 0);
     }
@@ -219,6 +238,13 @@ export default {
       }
     };
     root.addEventListener('click', onClick);
+
+    q('[data-role="games"]').addEventListener('scroll', () => {
+      const list = q('[data-role="games"]');
+      if (list.scrollTop + list.clientHeight >= list.scrollHeight - 400) {
+        appendGames();
+      }
+    }, { passive: true });
 
     const onLibraryChanged = (event) => {
       if (event.detail?.source === 'smooth-motion') return;

@@ -6,6 +6,7 @@ using FrameGenManagerNext.Core.Features.Framegen;
 using FrameGenManagerNext.Core.Features.Library;
 using FrameGenManagerNext.Domain.Deployment;
 using FrameGenManagerNext.Domain.Library;
+using Microsoft.Extensions.Logging;
 using Microsoft.Win32;
 
 namespace FrameGenManagerNext.App.Web;
@@ -58,6 +59,7 @@ public sealed partial class AppWebBridge
 
     private async Task<object?> BuildGamesStateAsync(string? warning = null)
     {
+        var stateClock = Stopwatch.StartNew();
         var settings = _settings.Load();
         var library = await _library.LoadAsync(CancellationToken.None);
         var visible = library.EnumerateVisibleGames().ToList();
@@ -70,6 +72,7 @@ public sealed partial class AppWebBridge
         // Image decoding is native and much heavier than a hash check; keep its
         // peak bounded even on many-core machines.
         using var coverGate = new SemaphoreSlim(4);
+        var allowCoverDownload = visible.Count <= 40;
 
         // One NVAPI/DRS session for the whole library. Opening a session per game
         // makes the driver load its profile database repeatedly (~100 MB native).
@@ -96,12 +99,13 @@ public sealed partial class AppWebBridge
             }
         }
 
+
         async Task<string?> LoadCoverAsync(GameEntry game)
         {
             await coverGate.WaitAsync();
             try
             {
-                return await GetCoverUrlAsync(game);
+                return await GetCoverUrlAsync(game, allowDownload: allowCoverDownload);
             }
             finally
             {
@@ -161,6 +165,10 @@ public sealed partial class AppWebBridge
         var installed = states.Count(state => state == DeploymentState.Installed);
 
         var removed = await BuildRemovedGamesAsync(library);
+        _logger.LogInformation(
+            "games.state count={Count} elapsed={Elapsed}ms",
+            games.Count,
+            stateClock.ElapsedMilliseconds);
 
         return new
         {

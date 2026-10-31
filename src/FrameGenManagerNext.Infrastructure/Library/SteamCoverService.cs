@@ -42,7 +42,7 @@ public sealed class SteamCoverService : IGameCoverService
         _logger = logger;
     }
 
-    public async Task<string?> GetCoverPathAsync(GameEntry game, CancellationToken cancellationToken)
+    public async Task<string?> GetCoverPathAsync(GameEntry game, CancellationToken cancellationToken, bool allowDownload = true)
     {
         cancellationToken.ThrowIfCancellationRequested();
         if (string.IsNullOrWhiteSpace(game.AppId) ||
@@ -69,8 +69,10 @@ public sealed class SteamCoverService : IGameCoverService
             }
         }
 
-        if (!appId.All(char.IsAsciiDigit))
+        if (!allowDownload || !appId.All(char.IsAsciiDigit))
         {
+            // Large libraries skip network downloads while building state: a missing
+            // remote cover must not block the first paint for hundreds of games.
             return null;
         }
 

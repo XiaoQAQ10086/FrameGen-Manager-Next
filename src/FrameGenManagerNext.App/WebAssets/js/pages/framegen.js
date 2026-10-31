@@ -246,32 +246,30 @@ export default {
         <button class="btn wide" data-action="spoof-driver" type="button" ${s.spoofed ? '' : 'disabled'}>${esc(t('Gpu.RestoreDriver'))}</button>`;
     }
 
-    function renderGames() {
-      const list = q('[data-role="games"]');
-      list.innerHTML = games.map((game, index) => {
-        const legacy = game.state === 'InstalledWithoutManifest';
-        const restorable = ['Installed', 'Partial', 'Conflict'].includes(game.state);
-        const smConflict = game.smoothMotionOn === true;
-        const primaryAction = legacy ? 'clean' : restorable ? 'restore' : 'deploy';
-        const primaryLabel = legacy
-          ? t('Common.Clean')
-          : restorable
-            ? t('Common.Restore')
-            : game.state === 'Outdated'
-              ? t('Common.Update')
-              : t('Common.Deploy');
-        // Deploying frame generation while Smooth Motion is on creates two
-        // injectors in one process. Restore/clean stay available so the user can
-        // resolve the conflict from this card.
-        const blocked = smConflict && !restorable && !legacy;
-        const stateText = game.state === 'Installed'
-          ? (game.packVersion
-              ? t('State.DeployedVersion').replace('{0}', game.packVersion)
-              : t('State.Deployed'))
-          : game.legacyTool
-            ? t('State.LegacyDeployed')
-            : t(stateKeys[game.state] || 'State.NotDeployed');
-        return `
+    const renderChunkSize = 40;
+    let renderedCount = 0;
+
+    function cardMarkup(game, index) {
+      const legacy = game.state === 'InstalledWithoutManifest';
+      const restorable = ['Installed', 'Partial', 'Conflict'].includes(game.state);
+      const smConflict = game.smoothMotionOn === true;
+      const primaryAction = legacy ? 'clean' : restorable ? 'restore' : 'deploy';
+      const primaryLabel = legacy
+        ? t('Common.Clean')
+        : restorable
+          ? t('Common.Restore')
+          : game.state === 'Outdated'
+            ? t('Common.Update')
+            : t('Common.Deploy');
+      const blocked = smConflict && !restorable && !legacy;
+      const stateText = game.state === 'Installed'
+        ? (game.packVersion
+            ? t('State.DeployedVersion').replace('{0}', game.packVersion)
+            : t('State.Deployed'))
+        : game.legacyTool
+          ? t('State.LegacyDeployed')
+          : t(stateKeys[game.state] || 'State.NotDeployed');
+      return `
         <article class="gcard${index < 12 ? '' : ' static'}" style="animation-delay:${Math.min(index * 35, 350)}ms">
           <div class="gtop">
             ${game.cover ? `<img class="thumb" src="${game.cover}" alt="" loading="lazy" decoding="async">` : `<div class="thumb ph2">${esc(game.initial)}</div>`}
@@ -293,7 +291,25 @@ export default {
             <button class="btn small danger icon-only" data-action="remove" data-id="${esc(game.id)}" type="button" title="${esc(t('Common.Remove'))}" aria-label="${esc(t('Common.Remove'))}">🗑</button>
           </div>
         </article>`;
-      }).join('');
+    }
+
+    function appendGames() {
+      const list = q('[data-role="games"]');
+      if (renderedCount >= games.length) return;
+      const end = Math.min(games.length, renderedCount + renderChunkSize);
+      list.insertAdjacentHTML(
+        'beforeend',
+        games.slice(renderedCount, end).map((game, offset) => cardMarkup(game, renderedCount + offset)).join(''),
+      );
+      renderedCount = end;
+    }
+
+    function renderGames() {
+      const list = q('[data-role="games"]');
+      list.innerHTML = '';
+      list.scrollTop = 0;
+      renderedCount = 0;
+      appendGames();
       q('[data-role="empty"]').classList.toggle('hidden', games.length > 0);
       list.classList.toggle('hidden', games.length === 0);
       const outdated = games.filter((game) => game.state === 'Outdated').length;
@@ -786,6 +802,13 @@ export default {
       }
     };
     root.addEventListener('click', onRootClick);
+
+    q('[data-role="games"]').addEventListener('scroll', () => {
+      const list = q('[data-role="games"]');
+      if (list.scrollTop + list.clientHeight >= list.scrollHeight - 400) {
+        appendGames();
+      }
+    }, { passive: true });
 
     const onLibraryChanged = (event) => {
       if (event.detail?.source === 'framegen') return;
