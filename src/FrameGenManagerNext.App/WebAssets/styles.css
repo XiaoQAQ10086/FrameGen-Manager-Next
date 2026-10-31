@@ -410,7 +410,7 @@ select:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(0, 122, 2
 .removed-empty { padding: 24px 0 10px; text-align: center; }
 .donate { display: flex; justify-content: center; align-items: flex-start; flex-wrap: wrap; gap: 22px; margin-top: 10px; }
 .qr { margin: 0; display: grid; justify-items: center; text-align: center; }
-.qr img { width: 220px; max-width: 36vw; aspect-ratio: 3 / 4; height: auto; object-fit: contain; border-radius: 14px; padding: 8px; background: #fff; box-shadow: var(--shadow); }
+.qr img { width: 300px; max-width: 42vw; aspect-ratio: 3 / 4; height: auto; object-fit: contain; border-radius: 14px; padding: 8px; background: #fff; box-shadow: var(--shadow); }
 .qr figcaption { margin-top: 8px; color: var(--muted); font-size: 12.5px; }
 .donate-note { margin-top: 22px; text-align: center; color: var(--ink); font-size: 13.5px; }
 .toast { position: fixed; right: 22px; bottom: 22px; z-index: 40; max-width: 420px; border-radius: 12px; padding: 11px 14px; background: rgba(22, 32, 50, 0.94); color: #fff; box-shadow: var(--shadow-strong); animation: toastIn .22s var(--ease) both; }
