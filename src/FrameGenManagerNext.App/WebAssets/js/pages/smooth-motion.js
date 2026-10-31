@@ -59,6 +59,10 @@ export default {
       ${removedMarkup(t)}`;
 
     const q = (selector) => root.querySelector(selector);
+    const stopScrollFade = [
+      ui.autoHideScrollbar(q('.side')),
+      ui.autoHideScrollbar(q('[data-role="games"]')),
+    ];
     const removedController = createRemovedController(root, ctx, () => removed, load);
 
     function status(value) {
@@ -128,10 +132,16 @@ export default {
 
     function render() {
       const list = q('[data-role="games"]');
+      const scrollTop = list.scrollTop;
       list.innerHTML = '';
       list.scrollTop = 0;
       renderedCount = 0;
       appendGames();
+      list.scrollTop = scrollTop;
+      while (list.scrollTop < scrollTop && renderedCount < games.length) {
+        appendGames();
+        list.scrollTop = scrollTop;
+      }
       q('[data-role="empty"]').classList.toggle('hidden', games.length > 0);
       list.classList.toggle('hidden', games.length === 0);
     }
@@ -255,6 +265,7 @@ export default {
 
     await load();
     return () => {
+      stopScrollFade.forEach((stop) => stop());
       document.removeEventListener('fgm:library-changed', onLibraryChanged);
       root.removeEventListener('click', onClick);
     };

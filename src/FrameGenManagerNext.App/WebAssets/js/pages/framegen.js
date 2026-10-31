@@ -151,6 +151,10 @@ export default {
       </div>`;
 
     const q = (selector) => root.querySelector(selector);
+    const stopScrollFade = [
+      ui.autoHideScrollbar(q('.side')),
+      ui.autoHideScrollbar(q('[data-role="games"]')),
+    ];
     const overlay = q('[data-role="overlay"]');
     const deployModal = overlay.querySelector('.modal');
     const removedOverlay = q('[data-role="removed-overlay"]');
@@ -307,10 +311,16 @@ export default {
 
     function renderGames() {
       const list = q('[data-role="games"]');
+      const scrollTop = list.scrollTop;
       list.innerHTML = '';
       list.scrollTop = 0;
       renderedCount = 0;
       appendGames();
+      list.scrollTop = scrollTop;
+      while (list.scrollTop < scrollTop && renderedCount < games.length) {
+        appendGames();
+        list.scrollTop = scrollTop;
+      }
       q('[data-role="empty"]').classList.toggle('hidden', games.length > 0);
       list.classList.toggle('hidden', games.length === 0);
       const outdated = games.filter((game) => game.state === 'Outdated').length;
@@ -877,6 +887,7 @@ export default {
       closeModal();
       closeRemoved();
       clearTimeout(scrollTimer);
+      stopScrollFade.forEach((stop) => stop());
       deployModal.removeEventListener('scroll', onModalScroll);
       document.removeEventListener('fgm:library-changed', onLibraryChanged);
       root.removeEventListener('click', onRootClick);

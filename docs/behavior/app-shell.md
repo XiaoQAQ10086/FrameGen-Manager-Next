@@ -25,6 +25,8 @@
 - 封面解码前统一生成 360px 宽的 JPEG 缩略图（`cache/covers/thumbs`），卡片只加载缩略图，避免 WebView2 为 1200x1800 原图保留大块解码内存。
 - 窗口最小化或隐藏时调用 `CoreWebView2.TrySuspendAsync()` 暂停浏览器进程，恢复时 `Resume()`；暂停后顺带压缩一次托管大对象堆。这样游戏期间不会继续占用 WebView2 的 CPU/GPU，也不会持续累积渲染缓存。
 - 列表只给前 12 张卡片播放入场动画，其余卡片使用 `content-visibility: auto`；滚动到视口外时不参与布局/绘制，减少大游戏库的 GPU 开销。
+- 帧生成与 SM 页的列表重新渲染时保留原 `scrollTop`；分批渲染会继续追加卡片直到恢复原位置，部署、扫描或状态刷新不会跳回顶部。
+- 帧生成与 SM 页的左侧栏和游戏列表使用自动隐藏滚动条：仅在滚动时显示，停止约 700 ms 后淡出；未滚动时不占视觉注意力。
 - 主机进程启动时同时设置空闲优先级（`SetPriorityClass(IDLE_PRIORITY_CLASS)`）和 EcoQoS（`SetProcessInformation(ProcessPowerThrottling)`）。Windows 11 任务管理器必须同时看到这两者才显示“效率模式”；只设 EcoQoS 不会显示。旧版 Windows 拒绝调用时忽略。
 - WebView2 默认追加 `--js-flags=--max-old-space-size=192 --disable-background-networking --disable-component-update --disable-sync --disable-domain-reliability`，给渲染器堆设上限并关闭后台服务。实测不要设置 `MemoryUsageTargetLevel=Low`：在 154.x WebView2 运行时上会把大约 95 MB 的共享内存转为宿主私有工作集，任务管理器反而从约 160 MB 涨到约 260 MB。
 - 进程配置 `System.GC.ConserveMemory=7`，用少量 CPU 换取更小的托管堆。

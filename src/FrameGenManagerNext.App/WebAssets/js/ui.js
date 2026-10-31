@@ -61,6 +61,24 @@ function hideProgress() {
   card.querySelector('.gp-track i').style.width = '0%';
 }
 
+export function autoHideScrollbar(element, idleMs = 700) {
+  if (!element || element.dataset.scrollFade === '1') return () => {};
+  element.dataset.scrollFade = '1';
+  let timer = null;
+  const onScroll = () => {
+    element.classList.add('scrolling');
+    clearTimeout(timer);
+    timer = setTimeout(() => element.classList.remove('scrolling'), idleMs);
+  };
+  element.addEventListener('scroll', onScroll, { passive: true });
+  return () => {
+    clearTimeout(timer);
+    element.removeEventListener('scroll', onScroll);
+    element.classList.remove('scrolling');
+    delete element.dataset.scrollFade;
+  };
+}
+
 export function modal(content, options = {}) {
   const root = document.getElementById('modal-root');
   const overlay = el('div', 'overlay');

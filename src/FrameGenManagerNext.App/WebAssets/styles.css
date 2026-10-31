@@ -119,6 +119,12 @@ button, select { font: inherit; }
 .progress i { display: block; width: 0; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #3aa0ff, var(--accent)); transition: width .18s var(--ease); }
 
 .game-list { min-height: 0; overflow: auto; padding: 0 4px 4px 0; display: grid; gap: 12px; align-content: start; }
+.side, .game-list { scrollbar-width: thin; scrollbar-color: transparent transparent; }
+.side::-webkit-scrollbar, .game-list::-webkit-scrollbar { width: 8px; height: 8px; }
+.side::-webkit-scrollbar-track, .game-list::-webkit-scrollbar-track { background: transparent; }
+.side::-webkit-scrollbar-thumb, .game-list::-webkit-scrollbar-thumb { background: transparent; border-radius: 999px; transition: background .3s var(--ease); }
+.side.scrolling, .game-list.scrolling { scrollbar-color: rgba(96, 107, 125, 0.32) transparent; }
+.side.scrolling::-webkit-scrollbar-thumb, .game-list.scrolling::-webkit-scrollbar-thumb { background: rgba(96, 107, 125, 0.32); }
 .gcard {
   border: 1px solid var(--card-line);
   border-radius: var(--radius);
