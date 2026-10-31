@@ -5,7 +5,7 @@ export default {
     const { api, t, ui } = ctx;
     const info = ctx.info || await api.request('app.info');
     root.innerHTML = `
-      <section class="page">
+      <section class="page about-page">
         <header class="page-head"><div><h1>${t('About.Title')}</h1><p>${t('About.Subtitle')}</p></div></header>
         <div class="panel form-panel">
           <div class="form-row"><div><h3>${t('About.Version')}</h3><p>v${info.version}</p></div></div>

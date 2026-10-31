@@ -82,6 +82,15 @@ public sealed partial class AppWebBridge
 
         var options = ReadFrameGenOptions(payload);
         var target = ResolveDeploymentTarget(game, payload);
+        var occupiedProxy = FindReShadeProxy(target.Directory);
+        if (occupiedProxy is not null &&
+            string.Equals(occupiedProxy, options.ProxySlot, StringComparison.OrdinalIgnoreCase))
+        {
+            throw new BridgeException(
+                Domain.Errors.ErrorCode.Conflict,
+                $"proxy slot {occupiedProxy} is used by DLSS5/ReShade; choose another proxy");
+        }
+
         var exePath = target.ExePath ?? game.RenderExePath;
         if (!string.IsNullOrWhiteSpace(exePath))
         {

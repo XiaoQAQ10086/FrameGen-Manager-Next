@@ -126,6 +126,7 @@ export default {
           <div class="deploy-meta" data-role="deploy-meta"></div>
           <p class="hint">${esc(t('Deploy.DialogHint'))}</p>
           <div class="options" data-role="options"></div>
+          <p class="option-note hidden" data-role="proxy-note"></p>
           <p class="option-note hidden" data-role="dlss-note">${esc(t('Deploy.DlssOnlyHint'))}</p>
           <footer class="modal-foot">
             <span class="muted small">${esc(t('Deploy.CloseGameHint'))}</span>
@@ -459,9 +460,35 @@ export default {
       applyOptionValues(game.options);
       overlay.classList.remove('hidden');
       syncEngine();
+      void applyProxyStatus(game.id);
       if (initialTarget === manualTarget) {
         void pickTarget();
       }
+    }
+
+    async function applyProxyStatus(gameId) {
+      const note = q('[data-role="proxy-note"]');
+      const selectControl = optionsRoot.querySelector('[data-option="proxySlot"]');
+      if (!note || !selectControl) return;
+      const status = await api.request('framegen.proxyStatus', { id: gameId }).catch(() => null);
+      const occupied = status?.reShadeProxy;
+      if (!occupied) {
+        note.classList.add('hidden');
+        return;
+      }
+
+      const option = Array.from(selectControl.options).find((item) => item.value === occupied);
+      if (option) {
+        option.disabled = true;
+        option.textContent = `${option.textContent}${t('Deploy.ProxyOccupied')}`;
+      }
+      if (selectControl.value === occupied) {
+        const fallback = Array.from(selectControl.options).find((item) => !item.disabled);
+        if (fallback) selectControl.value = fallback.value;
+      }
+
+      note.textContent = t('Deploy.ProxyOccupiedHint').replace('{0}', occupied);
+      note.classList.remove('hidden');
     }
 
     function closeModal() {

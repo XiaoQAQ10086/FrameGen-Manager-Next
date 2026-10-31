@@ -279,6 +279,7 @@ public sealed partial class AppWebBridge : IDisposable
             "assets.clear" => await ClearAssetUpdatesAsync(),
             "assets.cancel" => CancelAssetClear(),
             "framegen.deploy" => await DeployFrameGenAsync(payload),
+            "framegen.proxyStatus" => await GetFrameGenProxyStatusAsync(payload),
             "framegen.restore" => await RestoreFrameGenAsync(payload),
             "framegen.clean" => await CleanFrameGenAsync(payload),
             "sm.state" => await BuildSmoothMotionStateAsync(),
