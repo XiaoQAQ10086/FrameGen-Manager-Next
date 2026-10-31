@@ -144,19 +144,32 @@ public sealed partial class Dlss5DeploymentService : IDlss5DeploymentService
             return Result<Dlss5Report>.Fail(deployment.Error!);
         }
 
-        _logger.LogInformation(
-            "Installing ReShade module offline from {Installer}",
-            installer.Value.InstallerPath);
-
-        // The ReShade setup normally contacts the network to download compatibility
-        // data. Extracting the module from the bundled setup avoids that wait entirely.
-        var reShade = await _reShadeInstaller.InstallAsync(
-            installer.Value.InstallerPath,
-            plan.Value.TargetDirectory,
-            exePath,
-            api.Value,
-            progress,
-            cancellationToken);
+        // Vulkan is a global layer, not a proxy DLL: it can only be installed by
+        // running the official ReShade setup, which downloads compatibility data.
+        // Every other API uses the offline extraction path.
+        Result<string> reShade;
+        if (api.Value == GraphicsApi.Vulkan)
+        {
+            reShade = await RunOnlineInstallerAsync(
+                installer.Value,
+                plan.Value.TargetDirectory,
+                exePath,
+                progress,
+                cancellationToken);
+        }
+        else
+        {
+            _logger.LogInformation(
+                "Installing ReShade module offline from {Installer}",
+                installer.Value.InstallerPath);
+            reShade = await _reShadeInstaller.InstallAsync(
+                installer.Value.InstallerPath,
+                plan.Value.TargetDirectory,
+                exePath,
+                api.Value,
+                progress,
+                cancellationToken);
+        }
 
         if (reShade.IsFailure)
         {
@@ -189,7 +202,63 @@ public sealed partial class Dlss5DeploymentService : IDlss5DeploymentService
                 deployment.Value.FilesBackedUp,
                 warnings),
             api.Value,
-            $"ReShade module '{reShade.Value}' was installed from the bundled setup (offline)."));
+            api.Value == GraphicsApi.Vulkan
+                ? "ReShade Vulkan layer was installed by the online setup."
+                : $"ReShade module '{reShade.Value}' was installed from the bundled setup (offline)."));
+    }
+
+    private async Task<Result<string>> RunOnlineInstallerAsync(
+        InstallerInfo installer,
+        string targetDirectory,
+        string exePath,
+        IProgress<DeploymentProgress>? progress,
+        CancellationToken cancellationToken)
+    {
+        var arguments = installer.ArgumentsTemplate.Replace(
+            "{api}",
+            "vulkan",
+            StringComparison.OrdinalIgnoreCase);
+        arguments = $"{arguments} \"{exePath}\"";
+
+        _logger.LogInformation(
+            "Running ReShade setup for Vulkan {Installer} with arguments {Arguments}",
+            installer.InstallerPath,
+            arguments);
+
+        progress?.Report(new DeploymentProgress("installer", "ReShade", 0, 0));
+        var process = await _processRunner.RunAsync(
+            installer.InstallerPath,
+            arguments,
+            targetDirectory,
+            TimeSpan.FromSeconds(240),
+            cancellationToken);
+
+        if (process.TimedOut || process.ExitCode != 0)
+        {
+            _logger.LogWarning(
+                "ReShade Vulkan setup failed. exit={Exit} timedOut={TimedOut} stdout={StdOut} stderr={StdErr}",
+                process.ExitCode,
+                process.TimedOut,
+                process.StandardOutput,
+                process.StandardError);
+
+            return Result<string>.Fail(AppError.Create(
+                ErrorCode.InstallerFailed,
+                ("api", "vulkan"),
+                ("exitCode", process.ExitCode.ToString(System.Globalization.CultureInfo.InvariantCulture)),
+                ("timedOut", process.TimedOut.ToString()),
+                ("stdout", Trim(process.StandardOutput)),
+                ("stderr", Trim(process.StandardError))));
+        }
+
+        return Result<string>.Ok("ReShade (Vulkan layer)");
+    }
+
+    private static string Trim(string value)
+    {
+        const int maxLength = 2_000;
+        var trimmed = value.Trim();
+        return trimmed.Length <= maxLength ? trimmed : trimmed[..maxLength];
     }
 
     public async Task<Result<Dlss5RestoreReport>> RestoreAsync(

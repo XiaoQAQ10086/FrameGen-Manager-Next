@@ -29,7 +29,7 @@
    - 在 `ReShade_Setup_6.8.0_Addon.exe` 里按 512 字节步进查找内嵌 ZIP，取出 `ReShade64.dll`（32 位游戏取 `ReShade32.dll`）。
    - 按 API 写成代理文件名：`d3d9/d3d10/d3d11/d3d12/opengl32.dll`；目标位置已有非 ReShade 文件时拒绝覆盖并回滚（`Conflict`）。
    - 目标没有 `ReShade.ini` 时写入默认搜索路径；随后由配置服务合并 `.\reshade-shaders\Shaders\**` / `Textures\**`。
-   - Vulkan 需要全局层，无法离线落地，返回 `InstallerFailed`。
+   - Vulkan 需要全局层，无法离线落地：选择 Vulkan 时改为运行官方 ReShade 安装器（在线，超时 240 秒），其余 API 仍走离线路径。
    - 标准 ReShade shader/纹理和 GITC 指定的 fx 都在 pack 的 114 个文件里，随部署一起写入。
 4. 失败时回滚已部署文件。
 5. 界面在已部署（`Installed`）时锁定安装按钮；只有 `Outdated`/`Partial`/`Conflict` 允许重新安装或修复。详情页提供“打开文件夹”。

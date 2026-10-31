@@ -128,6 +128,7 @@ export default {
           </select></label>
         </div>
         <p class="hint">${esc(t('Dlss5.Subtitle'))}</p>
+        <p class="hint hidden" data-role="vulkan-hint">${esc(t('Dlss5.VulkanOnlineHint'))}</p>
         <div class="install-progress hidden" data-role="install-progress">
           <div class="bar"><i data-role="install-bar"></i></div>
           <p class="hint" data-role="install-status"></p>
@@ -137,9 +138,15 @@ export default {
       if (targetSelect && game.renderExe) {
         targetSelect.value = game.renderExe;
       }
+      const vulkanHint = detailBody.querySelector('[data-role="vulkan-hint"]');
+      const syncVulkanHint = () => {
+        vulkanHint?.classList.toggle('hidden', apiSelect?.value !== 'VULKAN');
+      };
       if (apiSelect) {
         apiSelect.value = apiOptions.some(([value]) => value === currentApi) ? currentApi : 'DX12';
+        apiSelect.addEventListener('change', syncVulkanHint);
       }
+      syncVulkanHint();
 
       const pickTarget = async () => {
         const previous = targets.find((target) => target.path === game.renderExe)?.path

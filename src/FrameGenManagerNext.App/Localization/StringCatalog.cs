@@ -338,6 +338,7 @@ internal static class StringCatalog
         ["Dlss5.Target"] = ("部署目标", "Deployment target"),
         ["Dlss5.ApiAuto"] = ("自动（按游戏 EXE）", "Auto (from game EXE)"),
         ["Dlss5.ApiAutoSuffix"] = ("（自动）", " (auto)"),
+        ["Dlss5.VulkanOnlineHint"] = ("Vulkan 层需要通过官方 ReShade 安装器在线安装，其余 API 使用离线安装。", "The Vulkan layer requires the online ReShade setup; other APIs install offline."),
         ["Dlss5.Deployed"] = ("DLSS5 已部署", "DLSS5 deployed"),
         ["Dlss5.NotDeployed"] = ("DLSS5 未部署", "DLSS5 not deployed"),
         ["Dlss5.Legacy"] = ("旧版 RenoDX", "Legacy RenoDX"),
