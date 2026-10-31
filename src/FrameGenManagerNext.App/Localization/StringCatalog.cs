@@ -36,6 +36,7 @@ internal static class StringCatalog
         ["Progress.restoring"] = ("还原", "Restoring"),
         ["Progress.launchers"] = ("扫描启动器", "Scanning launchers"),
         ["Progress.games"] = ("探测游戏", "Probing games"),
+        ["Progress.finalizing"] = ("正在整理游戏库", "Updating library"),
         ["Progress.installer"] = ("安装 ReShade 模块", "Installing the ReShade module"),
         ["Progress.uninstaller"] = ("运行官方卸载器（最多 30 秒）", "Running the official uninstaller (up to 30 s)"),
         ["Progress.uninstalling"] = ("清理文件", "Removing files"),

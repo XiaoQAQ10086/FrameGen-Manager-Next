@@ -668,6 +668,7 @@ export default {
         buttons.forEach((button) => button.classList.remove('loading'));
         cancel.classList.add('hidden');
         cancel.disabled = true;
+        ui.progressDone();
       }
     }
 

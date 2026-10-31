@@ -22,16 +22,43 @@ export function toast(message, level = '') {
   toast.timer = setTimeout(() => node.classList.add('hidden'), 4200);
 }
 
-export function progress(phase, subject, current, total) {
-  const bar = document.getElementById('global-progress');
-  if (!bar) return;
-  const percent = total > 0 ? Math.min(100, (current * 100) / total) : 0;
-  bar.querySelector('i').style.width = `${percent}%`;
-  if (phase === 'done' || percent >= 100) {
-    setTimeout(() => {
-      bar.querySelector('i').style.width = '0%';
-    }, 350);
+export function progress(phase, subject, current, total, options = {}) {
+  const card = document.getElementById('global-progress');
+  if (!card) return;
+  clearTimeout(progress.timer);
+  const indeterminate = options.indeterminate === true || total <= 0;
+  const percent = total > 0 ? Math.min(100, Math.round((current * 100) / total)) : 0;
+  if (card.classList.contains('hidden')) progress.shownAt = Date.now();
+  card.classList.remove('hidden');
+  card.classList.toggle('indeterminate', indeterminate);
+  card.querySelector('.gp-phase').textContent = phase || '';
+  card.querySelector('.gp-percent').textContent = total > 0 ? `${current} / ${total} · ${percent}%` : '';
+  card.querySelector('.gp-subject').textContent = subject || '';
+  const fill = card.querySelector('.gp-track i');
+  fill.style.width = indeterminate ? '' : `${percent}%`;
+  if (!indeterminate && percent >= 100) {
+    progress.timer = setTimeout(progressDone, 900);
   }
+}
+
+export function progressDone() {
+  const card = document.getElementById('global-progress');
+  if (!card) return;
+  clearTimeout(progress.timer);
+  const remaining = 650 - (Date.now() - (progress.shownAt || 0));
+  if (remaining > 0) {
+    progress.timer = setTimeout(hideProgress, remaining);
+    return;
+  }
+  hideProgress();
+}
+
+function hideProgress() {
+  const card = document.getElementById('global-progress');
+  if (!card) return;
+  card.classList.add('hidden');
+  card.classList.remove('indeterminate');
+  card.querySelector('.gp-track i').style.width = '0%';
 }
 
 export function modal(content, options = {}) {

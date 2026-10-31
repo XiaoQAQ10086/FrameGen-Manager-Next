@@ -203,6 +203,7 @@ export default {
           ui.toast(error.message, 'error');
         } finally {
           button.classList.remove('loading');
+          ui.progressDone();
         }
         return;
       }

@@ -44,7 +44,11 @@
       </select>
     </header>
 
-    <div class="global-progress" id="global-progress"><i></i></div>
+    <div class="global-progress hidden" id="global-progress" role="status" aria-live="polite">
+      <div class="gp-head"><span class="gp-phase"></span><span class="gp-percent"></span></div>
+      <div class="gp-subject"></div>
+      <div class="gp-track"><i></i></div>
+    </div>
     <main id="view" class="view">
       <div class="boot">
         <img src="app.png" alt="" class="boot-mark" />

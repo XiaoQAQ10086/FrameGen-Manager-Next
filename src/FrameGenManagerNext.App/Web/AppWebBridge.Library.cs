@@ -211,10 +211,12 @@ public sealed partial class AppWebBridge
                 var warning = result.Warnings.Count > 0
                     ? string.Join(Environment.NewLine, result.Warnings)
                     : null;
+                ReportProgress("finalizing", string.Empty, 0, 0);
                 return await BuildGamesStateAsync(warning);
             }
             catch (OperationCanceledException)
             {
+                ReportProgress("finalizing", string.Empty, 0, 0);
                 return await BuildGamesStateAsync();
             }
             finally

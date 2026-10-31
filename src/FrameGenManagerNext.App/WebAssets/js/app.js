@@ -171,7 +171,13 @@ function setupNavigation() {
 async function bootstrap() {
   api.init();
   api.on('progress', (data) => {
-    ui.progress(i18n.t(`Progress.${data.phase}`), data.subject, data.current, data.total);
+    ui.progress(
+      i18n.t(`Progress.${data.phase}`),
+      data.subject,
+      data.current,
+      data.total,
+      { indeterminate: data.phase === 'finalizing' },
+    );
   });
   api.on('toast', (data) => ui.toast(data.message, data.level));
   enhanceSelects();
