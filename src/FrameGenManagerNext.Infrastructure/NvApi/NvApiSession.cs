@@ -19,6 +19,7 @@ internal sealed partial class NvApiSession : IDisposable
     private readonly NvApiNative.SaveSettingsDelegate _saveSettings;
     private readonly NvApiNative.ProfileInfoDelegate _profileInfo;
     private readonly NvApiNative.DestroySessionDelegate? _destroySession;
+    private readonly NvApiNative.UninitializeDelegate _uninitialize;
     private bool _disposed;
 
     private NvApiSession(
@@ -34,7 +35,8 @@ internal sealed partial class NvApiSession : IDisposable
         NvApiNative.DeleteSettingDelegate deleteSetting,
         NvApiNative.SaveSettingsDelegate saveSettings,
         NvApiNative.ProfileInfoDelegate profileInfo,
-        NvApiNative.DestroySessionDelegate? destroySession)
+        NvApiNative.DestroySessionDelegate? destroySession,
+        NvApiNative.UninitializeDelegate uninitialize)
     {
         _library = library;
         _session = session;
@@ -49,6 +51,7 @@ internal sealed partial class NvApiSession : IDisposable
         _saveSettings = saveSettings;
         _profileInfo = profileInfo;
         _destroySession = destroySession;
+        _uninitialize = uninitialize;
     }
 
     public static Result<NvApiSession> Open()
@@ -61,22 +64,27 @@ internal sealed partial class NvApiSession : IDisposable
         }
 
         IntPtr session = IntPtr.Zero;
+        NvApiNative.UninitializeDelegate? uninitialize = null;
+        var initialized = false;
         try
         {
             var queryPointer = NativeLibrary.GetExport(library, "nvapi_QueryInterface");
             var query = Marshal.GetDelegateForFunctionPointer<NvApiNative.QueryInterface>(queryPointer);
 
             var initialize = GetDelegate<NvApiNative.InitializeDelegate>(query, NvApiNative.IdInitialize);
+            uninitialize = GetDelegate<NvApiNative.UninitializeDelegate>(query, NvApiNative.IdUninitialize);
             var initializeResult = initialize();
             if (initializeResult != 0)
             {
                 return FailAndFree(library, ErrorCode.NvApiCallFailed, $"NvAPI_Initialize returned {initializeResult}.");
             }
 
+            initialized = true;
             var createSession = GetDelegate<NvApiNative.CreateSessionDelegate>(query, NvApiNative.IdCreateSession);
             var createResult = createSession(out session);
             if (createResult != 0)
             {
+                TryUninitialize(uninitialize);
                 return FailAndFree(library, ErrorCode.NvApiCallFailed, $"DRS_CreateSession returned {createResult}.");
             }
 
@@ -85,6 +93,7 @@ internal sealed partial class NvApiSession : IDisposable
             if (loadResult != 0)
             {
                 TryDestroySession(library, session);
+                TryUninitialize(uninitialize);
                 return FailAndFree(library, ErrorCode.NvApiCallFailed, $"DRS_LoadSettings returned {loadResult}.");
             }
 
@@ -113,7 +122,8 @@ internal sealed partial class NvApiSession : IDisposable
                 deleteSetting,
                 saveSettings,
                 profileInfo,
-                destroySession));
+                destroySession,
+                uninitialize!));
         }
         catch (Exception exception) when (
             exception is EntryPointNotFoundException or ArgumentException or InvalidOperationException)
@@ -121,6 +131,11 @@ internal sealed partial class NvApiSession : IDisposable
             if (session != IntPtr.Zero)
             {
                 TryDestroySession(library, session);
+            }
+
+            if (initialized)
+            {
+                TryUninitialize(uninitialize);
             }
 
             NativeLibrary.Free(library);
@@ -272,6 +287,7 @@ internal sealed partial class NvApiSession : IDisposable
             }
         }
 
+        TryUninitialize(_uninitialize);
         NativeLibrary.Free(_library);
     }
 
@@ -301,6 +317,18 @@ internal sealed partial class NvApiSession : IDisposable
     {
         NativeLibrary.Free(library);
         return Result<NvApiSession>.Fail(new AppError(code, message));
+    }
+
+    private static void TryUninitialize(NvApiNative.UninitializeDelegate? uninitialize)
+    {
+        try
+        {
+            uninitialize?.Invoke();
+        }
+        catch (Exception)
+        {
+            // Best-effort cleanup.
+        }
     }
 
     private static void TryDestroySession(IntPtr library, IntPtr session)
