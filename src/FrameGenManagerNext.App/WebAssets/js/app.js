@@ -76,14 +76,21 @@ function updateIndicator() {
   indicator.style.width = `${rect.width}px`;
 }
 
+function syncLanguageSelect(info) {
+  const select = document.getElementById('lang-select');
+  if (!select) return;
+  const systemOption = select.querySelector('option[value="system"]');
+  if (systemOption) systemOption.textContent = i18n.t('Language.System');
+  select.value = info.languagePreference || (info.language === 'en' ? 'en' : 'zh');
+}
+
 async function loadInfo() {
   const info = await api.request('app.info');
   state.info = info;
   i18n.setStrings(info.strings, info.language);
   const version = document.getElementById('app-version');
   if (version) version.textContent = `v${info.version}`;
-  const language = document.getElementById('lang-select');
-  if (language) language.value = info.language === 'en' ? 'en' : 'zh';
+  syncLanguageSelect(info);
   updateSidebar();
   return info;
 }
@@ -93,6 +100,7 @@ async function changeLanguage(language) {
     const info = await api.request('app.saveSettings', { language });
     state.info = info;
     i18n.setStrings(info.strings, info.language);
+    syncLanguageSelect(info);
     resetPages();
     await navigate(state.current, false);
     refreshAssetBanner(context);

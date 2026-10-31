@@ -28,7 +28,13 @@ public sealed partial class AppWebBridge
             portable = _environment.IsPortable,
             repository = "https://github.com/XiaoQAQ10086/FrameGen-Manager-Next",
             netdiskUrl = "https://pan.quark.cn/s/adea7ed4f2b2",
-            language = settings.Language == AppLanguage.English ? "en" : "zh",
+            language = LocalizationService.Current.Language == AppLanguage.English ? "en" : "zh",
+            languagePreference = settings.Language switch
+            {
+                AppLanguage.ChineseSimplified => "zh",
+                AppLanguage.English => "en",
+                _ => "system",
+            },
             settings = new
             {
                 autoScanOnStartup = settings.AutoScanOnStartup,
@@ -41,9 +47,12 @@ public sealed partial class AppWebBridge
     private async Task<object?> SaveSettingsAsync(JsonElement payload)
     {
         var current = _settings.Load();
-        var language = ReadString(payload, "language", "zh") == "en"
-            ? AppLanguage.English
-            : AppLanguage.ChineseSimplified;
+        var language = ReadString(payload, "language", "system") switch
+        {
+            "en" => AppLanguage.English,
+            "zh" => AppLanguage.ChineseSimplified,
+            _ => AppLanguage.System,
+        };
         var updated = current with
         {
             Language = language,

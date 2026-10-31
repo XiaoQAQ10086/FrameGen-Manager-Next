@@ -368,6 +368,7 @@ internal static class StringCatalog
         ["Settings.Subtitle"] = ("界面、扫描行为和数据目录。设置立即保存到本地。", "Appearance, scanning behaviour and data folders. Settings are saved locally."),
         ["Settings.Save"] = ("保存设置", "Save settings"),
         ["Settings.Language"] = ("界面语言", "Language"),
+        ["Language.System"] = ("跟随系统", "Follow system"),
         ["Settings.LanguageHint"] = ("切换后界面文案立即更新；已打开页面的动态状态在下次刷新后更新。", "Interface text updates immediately; dynamic statuses refresh on the next refresh action."),
         ["Settings.Theme"] = ("界面主题", "Theme"),
         ["Settings.ThemeHint"] = ("深色主题为当前默认配色；切换后立即生效。", "Dark is the default palette. Changes apply immediately."),

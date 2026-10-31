@@ -4,6 +4,7 @@ public enum AppLanguage
 {
     ChineseSimplified,
     English,
+    System,
 }
 
 public enum AppTheme
@@ -22,7 +23,7 @@ public sealed record AppSettings(
 {
     public static AppSettings Default { get; } = new(
         SchemaVersion: 1,
-        Language: AppLanguage.ChineseSimplified,
+        Language: AppLanguage.System,
         Theme: AppTheme.Light,
         AutoScanOnStartup: false,
         ShowCovers: true);

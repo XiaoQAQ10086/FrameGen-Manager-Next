@@ -14,10 +14,12 @@
 
 | 字段 | 默认 |
 |---|---|
-| language | `chineseSimplified` |
+| language | `system`（跟随 Windows 显示语言：中文 → 简体中文，其他 → English） |
 | theme | `light`（固定浅色，暂不适配深色） |
 | autoScanOnStartup | `false` |
 | showCovers | `true` |
+
+可选语言值：`system`、`chineseSimplified`、`english`。选择 `system` 时每次启动重新检测系统语言；手动选择中文或 English 后保持该选择。
 
 ## 行为
 
@@ -30,6 +32,7 @@
 | SET-005 | HAGS 快捷入口 | 打开 `ms-settings:display-advancedgraphics-default`（Win11）或 `ms-settings:display-advancedgraphics`（Win10）；不写注册表 |
 | SET-006 | 窗口背景 | 使用 `WindowBackdropType=None`；Mica 在本机启动时会导致内容不绘制 |
 | SET-007 | 切换语言 | 立即更新已绑定文案；已生成的动态状态在下次刷新/操作后更新 |
+| SET-008 | 语言为 `system` | 启动时读取 `CultureInfo.InstalledUICulture`；`zh` 使用简体中文，其他使用 English |
 
 ## Steam 封面
 

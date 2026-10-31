@@ -45,6 +45,28 @@ public sealed class SettingsServiceTests : IDisposable
     }
 
     [Fact]
+    public void ExistingLanguageChoiceStillLoads()
+    {
+        var path = Path.Combine(_paths.ConfigDirectory, "app.json");
+        File.WriteAllText(path, """{"schemaVersion":1,"language":"english","theme":"light","autoScanOnStartup":false,"showCovers":true}""");
+
+        var settings = _service.Load();
+
+        settings.Language.ShouldBe(AppLanguage.English);
+    }
+
+    [Fact]
+    public void UnknownLanguageFallsBackToSystem()
+    {
+        var path = Path.Combine(_paths.ConfigDirectory, "app.json");
+        File.WriteAllText(path, """{"schemaVersion":1,"language":"klingon","theme":"light","autoScanOnStartup":false,"showCovers":true}""");
+
+        var settings = _service.Load();
+
+        settings.Language.ShouldBe(AppLanguage.System);
+    }
+
+    [Fact]
     public void CorruptFileIsQuarantined()
     {
         var path = Path.Combine(_paths.ConfigDirectory, "app.json");

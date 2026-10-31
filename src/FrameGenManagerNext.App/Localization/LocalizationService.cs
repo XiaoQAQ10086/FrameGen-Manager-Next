@@ -24,13 +24,9 @@ public sealed class LocalizationService : INotifyPropertyChanged
 
     public void SetLanguage(AppLanguage language)
     {
-        if (_language == language)
-        {
-            return;
-        }
-
-        _language = language;
-        var culture = language == AppLanguage.English
+        var effective = language == AppLanguage.System ? DetectSystemLanguage() : language;
+        _language = effective;
+        var culture = effective == AppLanguage.English
             ? CultureInfo.GetCultureInfo("en-US")
             : CultureInfo.GetCultureInfo("zh-CN");
         CultureInfo.CurrentUICulture = culture;
@@ -38,6 +34,19 @@ public sealed class LocalizationService : INotifyPropertyChanged
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("Item[]"));
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Language)));
         LanguageChanged?.Invoke(this, EventArgs.Empty);
+    }
+
+    public static AppLanguage DetectSystemLanguage()
+    {
+        var culture = CultureInfo.InstalledUICulture;
+        if (string.IsNullOrWhiteSpace(culture.Name))
+        {
+            culture = CultureInfo.CurrentUICulture;
+        }
+
+        return string.Equals(culture.TwoLetterISOLanguageName, "zh", StringComparison.OrdinalIgnoreCase)
+            ? AppLanguage.ChineseSimplified
+            : AppLanguage.English;
     }
 
     public IReadOnlyDictionary<string, string> Snapshot()
