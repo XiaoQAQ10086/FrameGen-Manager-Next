@@ -65,11 +65,14 @@ button, select { font: inherit; }
   min-height: 0;
   flex: 1;
   display: grid;
-  grid-template-columns: 300px minmax(0, 1fr);
+  grid-template-columns: 340px minmax(0, 1fr);
   gap: 18px;
 }
 
 .side { min-height: 0; overflow: auto; padding-right: 4px; display: flex; flex-direction: column; gap: 14px; }
+.side .kv2 > span { flex: 1 1 auto; min-width: 0; white-space: normal; line-height: 1.35; }
+.side .kv2 > b { flex: 0 0 auto; }
+.side .badge { max-width: none; white-space: nowrap; overflow: visible; text-overflow: clip; text-align: right; }
 .side .panel { margin-bottom: 0; }
 .content { min-height: 0; display: flex; flex-direction: column; }
 
@@ -78,7 +81,7 @@ button, select { font: inherit; }
 .listhead h1 { margin: 0; font-size: 20px; letter-spacing: .2px; }
 .listhead .sub { margin-top: 2px; color: var(--muted); font-size: 12.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .lh-actions { display: flex; gap: 8px; flex: 0 0 auto; flex-wrap: wrap; justify-content: flex-end; align-items: center; }
-.lh-actions .btn { width: 120px; flex: 0 0 120px; min-height: 34px; display: inline-flex; align-items: center; justify-content: center; gap: 3px; }
+.lh-actions .btn { min-width: 120px; width: auto; flex: 0 0 auto; padding: 0 14px; min-height: 34px; display: inline-flex; align-items: center; justify-content: center; gap: 3px; white-space: nowrap; }
 
 .panel {
   background: var(--card);
@@ -223,8 +226,9 @@ button, select { font: inherit; }
 .update-foot { margin-top: 18px; }
 .dlss-detail { display: grid; gap: 14px; margin-top: 0; }
 .deploy-picker { display: grid; gap: 10px; }
-.deploy-picker label { display: grid; grid-template-columns: max-content minmax(0, 1fr); align-items: center; column-gap: 14px; row-gap: 0; color: var(--muted); font-size: 12px; }
+.deploy-picker label { display: grid; grid-template-columns: 150px minmax(0, 1fr); align-items: center; column-gap: 14px; row-gap: 0; color: var(--muted); font-size: 12px; }
 .deploy-picker .select-wrap { width: 100%; max-width: 360px; }
+.deploy-picker label > select { width: 100%; max-width: 360px; }
 .dlss-detail .hint { margin: 0; }
 .dlss-detail .badges { margin-top: 2px; }
 .game-card {
@@ -374,6 +378,7 @@ button, select { font: inherit; }
 .options .select-wrap { width: 100%; max-width: 300px; }
 .options label:has(select:disabled) { opacity: .55; }
 .option-note { margin: 10px 0 0; color: var(--muted); font-size: 11.5px; line-height: 1.5; }
+.option-note.warn { color: var(--warn); }
 select {
   appearance: none;
   width: 100%;

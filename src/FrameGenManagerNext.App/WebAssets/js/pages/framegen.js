@@ -126,7 +126,7 @@ export default {
           <div class="deploy-meta" data-role="deploy-meta"></div>
           <p class="hint">${esc(t('Deploy.DialogHint'))}</p>
           <div class="options" data-role="options"></div>
-          <p class="option-note hidden" data-role="proxy-note"></p>
+          <p class="option-note warn hidden" data-role="proxy-note"></p>
           <p class="option-note hidden" data-role="dlss-note">${esc(t('Deploy.DlssOnlyHint'))}</p>
           <footer class="modal-foot">
             <span class="muted small">${esc(t('Deploy.CloseGameHint'))}</span>
