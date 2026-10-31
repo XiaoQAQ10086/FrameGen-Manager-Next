@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Windows;
@@ -17,6 +18,8 @@ namespace FrameGenManagerNext.App;
 
 public partial class App : Application
 {
+    internal static Stopwatch StartupClock { get; } = Stopwatch.StartNew();
+
     private readonly IHost _host;
 
     public App()
@@ -58,6 +61,7 @@ public partial class App : Application
             }
         };
 
+        Log.Information("startup.hostBuilding elapsed={Elapsed}ms", StartupClock.ElapsedMilliseconds);
         _host = Host.CreateDefaultBuilder()
             .UseSerilog()
             .ConfigureServices(services =>
@@ -67,6 +71,7 @@ public partial class App : Application
                 services.AddSingleton<MainWindow>();
             })
             .Build();
+        Log.Information("startup.hostBuilt elapsed={Elapsed}ms", StartupClock.ElapsedMilliseconds);
     }
 
     protected override void OnStartup(StartupEventArgs e)
@@ -74,6 +79,7 @@ public partial class App : Application
         try
         {
             _host.Start();
+            Log.Information("startup.hostStarted elapsed={Elapsed}ms", StartupClock.ElapsedMilliseconds);
             var settings = _host.Services.GetRequiredService<ISettingsService>().Load();
             LocalizationService.Current.SetLanguage(settings.Language);
             _host.Services.GetRequiredService<IEfficiencyModeService>().SetBackground(true);

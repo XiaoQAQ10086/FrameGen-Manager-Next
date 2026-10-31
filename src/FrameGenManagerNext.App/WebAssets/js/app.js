@@ -186,6 +186,7 @@ async function bootstrap() {
     context.startupAutoScan = state.info?.settings?.autoScanOnStartup === true;
     const initial = location.hash.replace('#', '') || 'framegen';
     await navigate(pages[initial] ? initial : 'framegen', false);
+    api.request('app.ready').catch(() => {});
     setTimeout(() => { checkForUpdates(context, { silent: true }); }, 1500);
     setTimeout(() => { checkAssetUpdates(context, { silent: true }); }, 2600);
   } catch (error) {

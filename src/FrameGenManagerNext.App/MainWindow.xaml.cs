@@ -47,6 +47,7 @@ public partial class MainWindow : FluentWindow
 
     private async void OnLoaded(object sender, RoutedEventArgs e)
     {
+        _logger.LogInformation("startup.windowLoaded elapsed={Elapsed}ms", App.StartupClock.ElapsedMilliseconds);
         var rtss = RtssExclusion.Ensure();
         if (rtss.Changed)
         {

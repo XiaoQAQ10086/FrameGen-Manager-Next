@@ -139,6 +139,7 @@ public sealed partial class AppWebBridge : IDisposable
 
         var core = webView.CoreWebView2;
         _core = core;
+        _logger.LogInformation("startup.webviewReady elapsed={Elapsed}ms", App.StartupClock.ElapsedMilliseconds);
 
         var assets = Path.Combine(AppContext.BaseDirectory, "WebAssets");
         core.SetVirtualHostNameToFolderMapping(
@@ -254,6 +255,7 @@ public sealed partial class AppWebBridge : IDisposable
         return command switch
         {
             "app.info" => BuildAppInfo(),
+            "app.ready" => MarkUiReady(),
             "app.saveSettings" => await SaveSettingsAsync(payload),
             "app.openData" => OpenDataFolder(),
             "app.openRepository" => OpenRepository(),
@@ -347,6 +349,12 @@ public sealed partial class AppWebBridge : IDisposable
             // response is harmless; MainWindow will recreate the browser.
             _logger.LogDebug("Dropped WebView2 message because the browser is unavailable");
         }
+    }
+
+    private object? MarkUiReady()
+    {
+        _logger.LogInformation("startup.uiReady elapsed={Elapsed}ms", App.StartupClock.ElapsedMilliseconds);
+        return null;
     }
 
     private void ReportProgress(string phase, string subject, int current, int total)

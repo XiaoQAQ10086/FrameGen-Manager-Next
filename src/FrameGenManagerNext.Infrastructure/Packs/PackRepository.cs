@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using FrameGenManagerNext.Core.Features.Packs;
 using FrameGenManagerNext.Domain;
 using FrameGenManagerNext.Domain.Packs;
@@ -13,6 +14,10 @@ public sealed class PackRepository : IPackRepository
 
     private readonly AppPaths _paths;
     private readonly ILogger<PackRepository> _logger;
+    // Packs are immutable for the lifetime of the process. Without this cache every
+    // game inspection re-read and re-validated the same pack.json.
+    private readonly ConcurrentDictionary<string, PackLocation> _cache =
+        new(StringComparer.OrdinalIgnoreCase);
 
     public PackRepository(AppPaths paths, ILogger<PackRepository> logger)
     {
@@ -23,6 +28,11 @@ public sealed class PackRepository : IPackRepository
     public Task<PackLocation?> FindAsync(string packId, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
+
+        if (_cache.TryGetValue(packId, out var cached))
+        {
+            return Task.FromResult<PackLocation?>(cached);
+        }
 
         PackLocation? fallback = null;
         PackLocation? best = null;
@@ -70,7 +80,13 @@ public sealed class PackRepository : IPackRepository
             }
         }
 
-        return Task.FromResult(best ?? fallback);
+        var resolved = best ?? fallback;
+        if (resolved is not null)
+        {
+            _cache[packId] = resolved;
+        }
+
+        return Task.FromResult(resolved);
     }
 
     private static int CompareVersions(string left, string right)
