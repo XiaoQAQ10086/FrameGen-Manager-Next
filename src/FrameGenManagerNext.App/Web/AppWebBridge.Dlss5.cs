@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using System.IO;
 using System.Text.Json;
+using FrameGenManagerNext.Core.Features.Framegen;
 using FrameGenManagerNext.Domain.Deployment;
 using FrameGenManagerNext.Domain.Library;
 using Microsoft.Extensions.Logging;
@@ -107,6 +108,38 @@ public sealed partial class AppWebBridge
         var target = ResolveDeploymentTarget(game, payload);
         var installExe = target.ExePath ?? game.RenderExePath!;
         var knownApi = ReadGraphicsApi(payload);
+
+        var apiModule = knownApi switch
+        {
+            GraphicsApi.Direct3D9 => "d3d9.dll",
+            GraphicsApi.Direct3D10 => "d3d10.dll",
+            GraphicsApi.Direct3D11 => "d3d11.dll",
+            GraphicsApi.Direct3D12 => "d3d12.dll",
+            GraphicsApi.OpenGl => "opengl32.dll",
+            _ => null,
+        };
+        if (apiModule is not null)
+        {
+            var frameGen = await _frameGen.InspectAsync(
+                game.TargetDirectory,
+                FrameGenOptions.Default,
+                CancellationToken.None);
+            var frameGenDeployed = frameGen.IsSuccess && frameGen.Value.State is
+                DeploymentState.Installed or
+                DeploymentState.Outdated or
+                DeploymentState.Partial or
+                DeploymentState.Conflict or
+                DeploymentState.InstalledWithoutManifest;
+            if (frameGenDeployed &&
+                frameGen.Value.Options is not null &&
+                frameGen.Value.Options.TryGetValue("proxySlot", out var proxySlot) &&
+                string.Equals(proxySlot, apiModule, StringComparison.OrdinalIgnoreCase))
+            {
+                throw new BridgeException(
+                    Domain.Errors.ErrorCode.Conflict,
+                    $"frame generation already uses the {apiModule} proxy; choose another API or restore frame generation first");
+            }
+        }
 
         return await RunExclusiveAsync(async () =>
         {
