@@ -2,7 +2,7 @@
 
 ## 检查
 
-- 程序每次启动后调用一次 GitHub Releases `latest`，不阻塞加载。
+- 程序每次启动后调用一次 GitHub Releases `latest`，不阻塞加载；不做“每天一次”之类的节流，每次启动都会检查。
 - 手动检查入口在“关于”页面。
 - 比较当前程序版本与 release tag；忽略 tag 的 `v` 前缀和构建元数据。
 - 有更新时显示当前版本、最新版本、更新日志和下载入口。
@@ -14,8 +14,14 @@
 - 下载到 `%TEMP%\FrameGen-Manager-Next\updates\<version>\`。
 - 每 180 ms 向界面发送 `update.progress`：已下载字节、总字节、百分比、实时速度。
 - 取消更新会取消 HTTP 流并删除整个版本临时目录；失败同样清理。
-- 下载完成保留文件并返回路径，由用户运行安装包或解压便携包；程序不自动替换正在运行的目录。
+- 下载完成保留文件并返回路径，由用户运行安装包或解压便携包；**程序不会自行退出，也不会自动启动下载的安装包**。
 - “网盘下载”打开发布页/备用网盘；当前指向原项目的夸克网盘地址，可在 `AppWebBridge.Update.cs` 中替换。
+
+## 安装版
+
+- 安装包使用 Velopack，每用户安装；`Setup.exe` 安装完成后会启动程序。
+- 标准卸载入口为 Windows“设置 > 应用”中的 `FrameGen Manager-Next`，实际执行 `Update.exe --uninstall`。
+- 卸载时 Velopack 删除安装目录和快捷方式，`OnBeforeUninstallFastCallback` 额外删除本地数据目录和更新临时目录；详见 [ADR-0010](../decisions/ADR-0010-velopack-installer.md)。
 
 ## 界面约束
 
