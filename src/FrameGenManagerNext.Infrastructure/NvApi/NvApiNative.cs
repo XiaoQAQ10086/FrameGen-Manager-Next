@@ -5,7 +5,7 @@ namespace FrameGenManagerNext.Infrastructure.NvApi;
 internal static class NvApiNative
 {
     public const uint IdInitialize = 0x0150_E828;
-    public const uint IdUninitialize = 0x0150_E829;
+    public const uint IdUnload = 0xD22B_DD7E;
     public const uint IdCreateSession = 0x0694_D52E;
     public const uint IdLoadSettings = 0x375D_BD6B;
     public const uint IdGetBaseProfile = 0xDA84_66A0;
@@ -19,7 +19,7 @@ internal static class NvApiNative
     public const uint IdDeleteProfileSetting = 0xD20D_29DF;
     public const uint IdGetSetting = 0xEA99_498D;
     public const uint IdProfileInfo = 0x61CD_6FD6;
-    public const uint IdDestroySession = 0xDAEF_F8B0;
+    public const uint IdDestroySession = 0xDAD9_CFF8;
     public const uint IdEnumProfiles = 0xBC37_1EE0;
     public const uint IdEnumApplications = 0x7FA2_173A;
 
@@ -42,7 +42,7 @@ internal static class NvApiNative
     public delegate int InitializeDelegate();
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-    public delegate int UninitializeDelegate();
+    public delegate int UnloadDelegate();
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     public delegate int CreateSessionDelegate(out IntPtr session);

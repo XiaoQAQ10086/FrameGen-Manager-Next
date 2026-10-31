@@ -19,7 +19,7 @@ internal sealed partial class NvApiSession : IDisposable
     private readonly NvApiNative.SaveSettingsDelegate _saveSettings;
     private readonly NvApiNative.ProfileInfoDelegate _profileInfo;
     private readonly NvApiNative.DestroySessionDelegate? _destroySession;
-    private readonly NvApiNative.UninitializeDelegate _uninitialize;
+    private readonly NvApiNative.UnloadDelegate _unload;
     private bool _disposed;
 
     private NvApiSession(
@@ -36,7 +36,7 @@ internal sealed partial class NvApiSession : IDisposable
         NvApiNative.SaveSettingsDelegate saveSettings,
         NvApiNative.ProfileInfoDelegate profileInfo,
         NvApiNative.DestroySessionDelegate? destroySession,
-        NvApiNative.UninitializeDelegate uninitialize)
+        NvApiNative.UnloadDelegate unload)
     {
         _library = library;
         _session = session;
@@ -51,7 +51,7 @@ internal sealed partial class NvApiSession : IDisposable
         _saveSettings = saveSettings;
         _profileInfo = profileInfo;
         _destroySession = destroySession;
-        _uninitialize = uninitialize;
+        _unload = unload;
     }
 
     public static Result<NvApiSession> Open()
@@ -64,7 +64,7 @@ internal sealed partial class NvApiSession : IDisposable
         }
 
         IntPtr session = IntPtr.Zero;
-        NvApiNative.UninitializeDelegate? uninitialize = null;
+        NvApiNative.UnloadDelegate? unload = null;
         var initialized = false;
         try
         {
@@ -72,7 +72,7 @@ internal sealed partial class NvApiSession : IDisposable
             var query = Marshal.GetDelegateForFunctionPointer<NvApiNative.QueryInterface>(queryPointer);
 
             var initialize = GetDelegate<NvApiNative.InitializeDelegate>(query, NvApiNative.IdInitialize);
-            uninitialize = GetDelegate<NvApiNative.UninitializeDelegate>(query, NvApiNative.IdUninitialize);
+            unload = GetDelegate<NvApiNative.UnloadDelegate>(query, NvApiNative.IdUnload);
             var initializeResult = initialize();
             if (initializeResult != 0)
             {
@@ -84,7 +84,7 @@ internal sealed partial class NvApiSession : IDisposable
             var createResult = createSession(out session);
             if (createResult != 0)
             {
-                TryUninitialize(uninitialize);
+                TryUnload(unload);
                 return FailAndFree(library, ErrorCode.NvApiCallFailed, $"DRS_CreateSession returned {createResult}.");
             }
 
@@ -93,7 +93,7 @@ internal sealed partial class NvApiSession : IDisposable
             if (loadResult != 0)
             {
                 TryDestroySession(library, session);
-                TryUninitialize(uninitialize);
+                TryUnload(unload);
                 return FailAndFree(library, ErrorCode.NvApiCallFailed, $"DRS_LoadSettings returned {loadResult}.");
             }
 
@@ -123,7 +123,7 @@ internal sealed partial class NvApiSession : IDisposable
                 saveSettings,
                 profileInfo,
                 destroySession,
-                uninitialize!));
+                unload!));
         }
         catch (Exception exception) when (
             exception is EntryPointNotFoundException or ArgumentException or InvalidOperationException)
@@ -135,7 +135,7 @@ internal sealed partial class NvApiSession : IDisposable
 
             if (initialized)
             {
-                TryUninitialize(uninitialize);
+                TryUnload(unload);
             }
 
             NativeLibrary.Free(library);
@@ -287,7 +287,7 @@ internal sealed partial class NvApiSession : IDisposable
             }
         }
 
-        TryUninitialize(_uninitialize);
+        TryUnload(_unload);
         NativeLibrary.Free(_library);
     }
 
@@ -319,11 +319,11 @@ internal sealed partial class NvApiSession : IDisposable
         return Result<NvApiSession>.Fail(new AppError(code, message));
     }
 
-    private static void TryUninitialize(NvApiNative.UninitializeDelegate? uninitialize)
+    private static void TryUnload(NvApiNative.UnloadDelegate? unload)
     {
         try
         {
-            uninitialize?.Invoke();
+            unload?.Invoke();
         }
         catch (Exception)
         {

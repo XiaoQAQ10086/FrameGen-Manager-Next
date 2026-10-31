@@ -62,7 +62,7 @@
 ## NVAPI 关键点
 
 - `nvapi64.dll` 通过 `nvapi_QueryInterface` 动态调用，不链接导入库。
-- 每个 `NvApiSession` 必须成对调用 `NvAPI_Initialize` / `NvAPI_Uninitialize`，并在 `Dispose` 时依次销毁 DRS session、反初始化、释放库句柄。只销毁 session 而不反初始化会让驱动侧内存按次累积；2026-10-31 实测每次未配对的扫描约增加 20 MB 宿主内存。
+- 每个 `NvApiSession` 必须成对调用 `NvAPI_Initialize` / `NvAPI_Unload`（`0xD22BDD7E`；NVAPI 没有 `NvAPI_Uninitialize`），并在 `Dispose` 时依次调用 `DRS_DestroySession`（`0xDAD9CFF8`）、递减初始化引用、释放库句柄。2026-10-31 发现旧实现的 `DRS_DestroySession` ID 写成 `0xDAEFF8B0`，该导出不存在；因为 destroy 是可选接口，会话从未释放，每次扫描约泄漏 20 MB 宿主内存。不能把 destroy 的缺失当作正常路径。
 - 结构体版本字段：`size | (version << 16)`（低 16 位大小，高 16 位版本）；写反会得到 `-9`（结构体版本不兼容）。
 - 设置结构体 12,320 字节；profile 4,116 字节；application V4 20,492 字节。
 - 设置名必须填 `PLACEHOLDER`，否则驱动可能拒绝。
