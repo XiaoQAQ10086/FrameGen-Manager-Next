@@ -1,7 +1,9 @@
+using System.Diagnostics;
 using System.IO;
 using System.Text.Json;
 using FrameGenManagerNext.Domain.Deployment;
 using FrameGenManagerNext.Domain.Library;
+using Microsoft.Extensions.Logging;
 
 namespace FrameGenManagerNext.App.Web;
 
@@ -9,6 +11,7 @@ public sealed partial class AppWebBridge
 {
     private async Task<object?> BuildDlss5StateAsync()
     {
+        var stateClock = Stopwatch.StartNew();
         var settings = _settings.Load();
         var library = await _library.LoadAsync(CancellationToken.None);
         var games = new List<object>();
@@ -85,7 +88,12 @@ public sealed partial class AppWebBridge
             });
         }
 
-        return new { games, removed = await BuildRemovedGamesAsync(library) };
+        var removed = await BuildRemovedGamesAsync(library);
+        _logger.LogInformation(
+            "dlss5.state count={Count} elapsed={Elapsed}ms",
+            games.Count,
+            stateClock.ElapsedMilliseconds);
+        return new { games, removed };
     }
 
     private async Task<object?> InstallDlss5Async(JsonElement payload)

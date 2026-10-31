@@ -1,7 +1,9 @@
+using System.Diagnostics;
 using System.Text.Json;
 using FrameGenManagerNext.Core.Features.Framegen;
 using FrameGenManagerNext.Core.Features.SmoothMotion;
 using FrameGenManagerNext.Domain.Deployment;
+using Microsoft.Extensions.Logging;
 
 namespace FrameGenManagerNext.App.Web;
 
@@ -9,6 +11,7 @@ public sealed partial class AppWebBridge
 {
     private async Task<object?> BuildSmoothMotionStateAsync()
     {
+        var stateClock = Stopwatch.StartNew();
         var settings = _settings.Load();
         var gpu = await _gpu.GetAsync(CancellationToken.None);
         var library = await _library.LoadAsync(CancellationToken.None);
@@ -118,6 +121,11 @@ public sealed partial class AppWebBridge
                 frameGenDeployed,
             });
         }
+
+        _logger.LogInformation(
+            "sm.state count={Count} elapsed={Elapsed}ms",
+            games.Count,
+            stateClock.ElapsedMilliseconds);
 
         return new
         {
