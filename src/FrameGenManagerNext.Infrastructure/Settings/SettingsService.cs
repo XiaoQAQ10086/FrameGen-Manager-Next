@@ -81,10 +81,15 @@ public sealed class SettingsService : ISettingsService
 
     private static AppSettings Sanitize(AppSettings settings)
     {
+        // Language became a system-following preference in schema 2. Older files
+        // stored the previous fixed default, so migrate them once to "system".
+        var migrateLanguage = settings.SchemaVersion < 2;
         return settings with
         {
-            SchemaVersion = 1,
-            Language = Enum.IsDefined(settings.Language) ? settings.Language : AppLanguage.System,
+            SchemaVersion = 2,
+            Language = migrateLanguage
+                ? AppLanguage.System
+                : (Enum.IsDefined(settings.Language) ? settings.Language : AppLanguage.System),
             Theme = AppTheme.Light,
         };
     }

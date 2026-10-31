@@ -22,7 +22,7 @@ public sealed record AppSettings(
     bool ShowCovers)
 {
     public static AppSettings Default { get; } = new(
-        SchemaVersion: 1,
+        SchemaVersion: 2,
         Language: AppLanguage.System,
         Theme: AppTheme.Light,
         AutoScanOnStartup: false,

@@ -9,6 +9,7 @@
 - 字段：`schemaVersion`、`language`、`theme`、`autoScanOnStartup`、`showCovers`。
 - 读取失败或 JSON 损坏：隔离为 `app.json.bad`，使用默认值。
 - 写入：临时文件 + 原子替换；未知枚举值回退到默认。
+- `schemaVersion = 1` 的旧文件在读取时迁移到 `schemaVersion = 2`，`language` 一并改为 `system`；之后手动选择会以 `schemaVersion = 2` 保存。
 
 默认值：
 

@@ -45,10 +45,22 @@ public sealed class SettingsServiceTests : IDisposable
     }
 
     [Fact]
-    public void ExistingLanguageChoiceStillLoads()
+    public void LegacyLanguageChoiceMigratesToSystem()
     {
         var path = Path.Combine(_paths.ConfigDirectory, "app.json");
         File.WriteAllText(path, """{"schemaVersion":1,"language":"english","theme":"light","autoScanOnStartup":false,"showCovers":true}""");
+
+        var settings = _service.Load();
+
+        settings.Language.ShouldBe(AppLanguage.System);
+        settings.SchemaVersion.ShouldBe(2);
+    }
+
+    [Fact]
+    public void ExplicitLanguageChoiceStillLoads()
+    {
+        var path = Path.Combine(_paths.ConfigDirectory, "app.json");
+        File.WriteAllText(path, """{"schemaVersion":2,"language":"english","theme":"light","autoScanOnStartup":false,"showCovers":true}""");
 
         var settings = _service.Load();
 
@@ -59,7 +71,7 @@ public sealed class SettingsServiceTests : IDisposable
     public void UnknownLanguageFallsBackToSystem()
     {
         var path = Path.Combine(_paths.ConfigDirectory, "app.json");
-        File.WriteAllText(path, """{"schemaVersion":1,"language":"klingon","theme":"light","autoScanOnStartup":false,"showCovers":true}""");
+        File.WriteAllText(path, """{"schemaVersion":2,"language":"klingon","theme":"light","autoScanOnStartup":false,"showCovers":true}""");
 
         var settings = _service.Load();
 
