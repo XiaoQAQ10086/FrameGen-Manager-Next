@@ -139,6 +139,24 @@ function showUpdateDialog(ctx, info) {
         3600000,
       );
       if (result?.cancelled) return;
+      if (result?.installer) {
+        downloading = false;
+        startButton.textContent = ctx.t('Update.Installing');
+        startButton.disabled = true;
+        laterButton.textContent = ctx.t('Update.Close');
+        laterButton.classList.remove('danger');
+        try {
+          await ctx.api.request('updates.install', { path: result.path }, 30000);
+        } catch (error) {
+          startButton.textContent = ctx.t('Update.Done');
+          startButton.classList.remove('success');
+          laterButton.textContent = ctx.t('Update.Close');
+          ctx.ui.toast(error.message || ctx.t('Update.InstallFailed'), 'error');
+        }
+        unsubscribe?.();
+        unsubscribe = null;
+        return;
+      }
       downloading = false;
       startButton.textContent = ctx.t('Update.Done');
       startButton.classList.remove('success');

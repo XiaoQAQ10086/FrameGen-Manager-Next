@@ -1,3 +1,5 @@
+import { t } from './i18n.js';
+
 export function escapeHtml(value) {
   return String(value ?? '')
     .replaceAll('&', '&amp;')
@@ -88,8 +90,10 @@ export function modal(content, options = {}) {
   root.appendChild(overlay);
 
   const close = () => {
+    if (overlay.parentNode === null) return;
     overlay.remove();
     document.removeEventListener('keydown', onKey);
+    options.onClose?.();
   };
   const onKey = (event) => {
     if (event.key === 'Escape') close();
@@ -103,13 +107,13 @@ export function modal(content, options = {}) {
   return { root: card, close };
 }
 
-export function confirmDialog(title, message, okLabel = '确定') {
+export function confirmDialog(title, message, okLabel = t('Common.OK'), cancelLabel = t('Common.Cancel')) {
   return new Promise((resolve) => {
     const dialog = modal(
       `<header class="modal-head"><div><h2>${escapeHtml(title)}</h2></div></header>
-       <p class="hint">${escapeHtml(message)}</p>
+       <p class="hint">${escapeHtml(message).replaceAll('\n', '<br>')}</p>
        <footer class="modal-foot"><span></span><div class="foot-actions">
-         <button class="btn ghost" data-close type="button">取消</button>
+         <button class="btn ghost" data-close type="button">${escapeHtml(cancelLabel)}</button>
          <button class="btn primary" data-ok type="button">${escapeHtml(okLabel)}</button>
        </div></footer>`,
     );

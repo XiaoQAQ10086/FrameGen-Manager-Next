@@ -185,6 +185,49 @@ export default {
       node.classList.toggle('hidden', !message);
     }
 
+    function confirmSpoofApply(preset) {
+      return new Promise((resolve) => {
+        let settled = false;
+        const finish = (value) => {
+          if (settled) return;
+          settled = true;
+          resolve(value);
+        };
+        const dialog = ui.modal(`
+          <header class="modal-head">
+            <div>
+              <h2>${esc(t('Gpu.Spoof.ConfirmTitle'))}</h2>
+              <p class="muted">${esc(t('Gpu.Spoof.ConfirmHint'))}</p>
+            </div>
+            <button class="icon-btn" data-cancel type="button">✕</button>
+          </header>
+          <div class="spoof-target-panel">
+            <span>${esc(t('Gpu.Spoof.TargetLabel'))}</span>
+            <b class="badge spoof-target">${esc(preset)}</b>
+          </div>
+          <p class="spoof-warning">${esc(t('Gpu.Spoof.Warning'))}</p>
+          <footer class="modal-foot">
+            <span></span>
+            <div class="foot-actions">
+              <button class="btn ghost" data-cancel type="button">${esc(t('Common.Cancel'))}</button>
+              <button class="btn primary" data-ok type="button">${esc(t('Common.Continue'))}</button>
+            </div>
+          </footer>`, {
+          onClose: () => finish(false),
+        });
+        dialog.root.querySelector('[data-ok]').addEventListener('click', () => {
+          finish(true);
+          dialog.close();
+        });
+        dialog.root.querySelectorAll('[data-cancel]').forEach((button) => {
+          button.addEventListener('click', () => {
+            finish(false);
+            dialog.close();
+          });
+        });
+      });
+    }
+
     function promptRestart() {
       return new Promise((resolve) => {
         const dialog = ui.modal(`
@@ -728,7 +771,7 @@ export default {
       }
       if (action === 'spoof-apply') {
         const preset = q('[data-role="spoof-preset"]').value;
-        if (!confirm(t('Gpu.Spoof.ConfirmApply').replace('{0}', preset).replace('{1}', t('Gpu.Spoof.Warning')))) return;
+        if (!(await confirmSpoofApply(preset))) return;
         try {
           gpu = await api.request('gpu.spoof.apply', { preset });
           renderGpu();
@@ -743,7 +786,12 @@ export default {
         return;
       }
       if (action === 'spoof-driver') {
-        if (!confirm(t('Gpu.Spoof.ConfirmDriver'))) return;
+        const confirmed = await confirmDialog(
+          t('Gpu.Spoof.ConfirmTitle'),
+          t('Gpu.Spoof.ConfirmDriver'),
+          t('Common.Continue'),
+        );
+        if (!confirmed) return;
         try {
           gpu = await api.request('gpu.spoof.restore', { target: 'driver' });
           renderGpu();

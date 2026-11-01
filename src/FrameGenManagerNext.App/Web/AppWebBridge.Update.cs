@@ -46,7 +46,7 @@ public sealed partial class AppWebBridge
                 return new { available = false, error = "Could not parse version." };
             }
 
-            var asset = SelectAsset(root);
+            var asset = SelectAsset(root, preferInstaller: !_environment.IsPortable);
             var notes = root.TryGetProperty("body", out var bodyValue) ? bodyValue.GetString() : null;
             var htmlUrl = root.TryGetProperty("html_url", out var htmlValue) ? htmlValue.GetString() : null;
 
@@ -92,7 +92,7 @@ public sealed partial class AppWebBridge
 
         var safeVersion = SafeSegment(version ?? "latest");
         var safeName = Path.GetFileName(fileName);
-        var directory = Path.Combine(Path.GetTempPath(), "FrameGen-Manager-Next", "updates", safeVersion);
+        var directory = Path.Combine(UpdateTempRoot(), safeVersion);
         var destination = Path.Combine(directory, safeName);
         using var cancellation = new CancellationTokenSource();
         _updateCancellation = cancellation;
@@ -172,6 +172,7 @@ public sealed partial class AppWebBridge
             return new
             {
                 downloaded = true,
+                installer = !_environment.IsPortable && IsInstallerAsset(safeName),
                 path = destination,
                 fileName = safeName,
                 version,
@@ -203,6 +204,83 @@ public sealed partial class AppWebBridge
         return new { cancelled = true };
     }
 
+    private object? InstallDownloadedUpdate(JsonElement payload)
+    {
+        var requested = payload.TryGetProperty("path", out var value) ? value.GetString() : null;
+        if (!TryResolveDownloadedInstaller(requested, out var installerPath))
+        {
+            throw new BridgeException(Domain.Errors.ErrorCode.InstallerFailed, "invalid update installer path");
+        }
+
+        if (_environment.IsPortable)
+        {
+            throw new BridgeException(Domain.Errors.ErrorCode.InstallerFailed, "automatic installation is disabled in portable mode");
+        }
+
+        var command = $"/c timeout /t 5 /nobreak >nul & start \"\" \"{installerPath}\"";
+        Process.Start(new ProcessStartInfo
+        {
+            FileName = "cmd.exe",
+            Arguments = command,
+            CreateNoWindow = true,
+            UseShellExecute = false,
+            WindowStyle = ProcessWindowStyle.Hidden,
+        });
+
+        _logger.LogInformation("Starting downloaded update installer {Path}", installerPath);
+        _ = ShutdownForUpdateAsync();
+        return new { installing = true };
+    }
+
+    private static bool TryResolveDownloadedInstaller(string? value, out string installerPath)
+    {
+        installerPath = string.Empty;
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return false;
+        }
+
+        try
+        {
+            var fullPath = Path.GetFullPath(value);
+            var root = Path.GetFullPath(UpdateTempRoot()) + Path.DirectorySeparatorChar;
+            if (!fullPath.StartsWith(root, StringComparison.OrdinalIgnoreCase) ||
+                !File.Exists(fullPath) ||
+                !IsInstallerAsset(Path.GetFileName(fullPath)))
+            {
+                return false;
+            }
+
+            installerPath = fullPath;
+            return true;
+        }
+        catch (Exception exception) when (exception is ArgumentException or NotSupportedException or PathTooLongException)
+        {
+            return false;
+        }
+    }
+
+    private static async Task ShutdownForUpdateAsync()
+    {
+        await Task.Delay(350).ConfigureAwait(false);
+        var application = System.Windows.Application.Current;
+        if (application is not null)
+        {
+            await application.Dispatcher.InvokeAsync(application.Shutdown);
+        }
+    }
+
+    private static string UpdateTempRoot()
+    {
+        return Path.Combine(Path.GetTempPath(), "FrameGen-Manager-Next", "updates");
+    }
+
+    private static bool IsInstallerAsset(string fileName)
+    {
+        return fileName.EndsWith(".exe", StringComparison.OrdinalIgnoreCase) &&
+               fileName.Contains("Setup", StringComparison.OrdinalIgnoreCase);
+    }
+
     private static object? OpenUpdatePage(JsonElement payload)
     {
         var requested = payload.TryGetProperty("url", out var value) ? value.GetString() : null;
@@ -211,7 +289,7 @@ public sealed partial class AppWebBridge
         return new { opened = true };
     }
 
-    private static UpdateAsset? SelectAsset(JsonElement release)
+    private static UpdateAsset? SelectAsset(JsonElement release, bool preferInstaller)
     {
         if (!release.TryGetProperty("assets", out var assets) || assets.ValueKind != JsonValueKind.Array)
         {
@@ -239,8 +317,21 @@ public sealed partial class AppWebBridge
             candidates.Add(new UpdateAsset(name, url, size));
         }
 
+        if (preferInstaller)
+        {
+            var setup = candidates.FirstOrDefault(asset =>
+                asset.Name.Contains("Setup", StringComparison.OrdinalIgnoreCase) &&
+                asset.Name.EndsWith(".exe", StringComparison.OrdinalIgnoreCase));
+            if (setup is not null)
+            {
+                return setup;
+            }
+        }
+
         return candidates.FirstOrDefault(asset =>
                    asset.Name.Contains("win-x64", StringComparison.OrdinalIgnoreCase)) ??
+               candidates.FirstOrDefault(asset =>
+                   asset.Name.EndsWith(".zip", StringComparison.OrdinalIgnoreCase)) ??
                candidates.FirstOrDefault();
     }
 

@@ -5,6 +5,8 @@ using System.Text.Json;
 using FrameGenManagerNext.App.Localization;
 using FrameGenManagerNext.Domain;
 using FrameGenManagerNext.Domain.Settings;
+using Microsoft.Extensions.Logging;
+using Microsoft.Win32;
 
 namespace FrameGenManagerNext.App.Web;
 
@@ -142,8 +144,39 @@ public sealed partial class AppWebBridge
 
     private async Task<object?> ExportLogsAsync()
     {
-        var path = await _diagnostics.ExportAsync(CancellationToken.None);
-        return new { path };
+        var temporaryPath = await _diagnostics.ExportAsync(CancellationToken.None);
+        try
+        {
+            var dialog = new SaveFileDialog
+            {
+                Title = L.T("Logs.ExportDialogTitle"),
+                FileName = Path.GetFileName(temporaryPath),
+                DefaultExt = ".zip",
+                Filter = "ZIP (*.zip)|*.zip",
+                AddExtension = true,
+                OverwritePrompt = true,
+            };
+
+            if (dialog.ShowDialog() != true)
+            {
+                return new { cancelled = true };
+            }
+
+            File.Copy(temporaryPath, dialog.FileName, overwrite: true);
+            _logger.LogInformation("Diagnostics exported to {Path}", dialog.FileName);
+            return new { path = dialog.FileName };
+        }
+        finally
+        {
+            try
+            {
+                File.Delete(temporaryPath);
+            }
+            catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
+            {
+                _logger.LogDebug(exception, "Could not remove temporary diagnostics package");
+            }
+        }
     }
 
     private static void OpenFolder(string path)

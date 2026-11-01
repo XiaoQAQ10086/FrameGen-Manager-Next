@@ -263,6 +263,7 @@ public sealed partial class AppWebBridge : IDisposable
             "updates.check" => await CheckForUpdatesAsync(),
             "updates.download" => await DownloadUpdateAsync(payload),
             "updates.cancel" => CancelUpdate(),
+            "updates.install" => InstallDownloadedUpdate(payload),
             "updates.openPage" => OpenUpdatePage(payload),
             "gpu.state" => await BuildGpuStateAsync(),
             "gpu.spoof.apply" => await ApplySpoofAsync(payload),

@@ -27,8 +27,8 @@
 | GPU / 驱动闸门 | `gpu.rs`、`scan.rs::classify_gpu`、`ui/settings.js` | `Domain/Gpu` + `Infrastructure/Gpu` | [已实现](gpu.md) |
 | 显卡名称伪装 | `gpu.rs::apply/restore/run_elevated` | `Infrastructure/Gpu` + `FrameGenManagerNext.Elevated` | [已实现](gpu-spoof.md) |
 | 设置 / 封面 | `ui/settings.js`、`ui/app.js` | `Infrastructure/Settings` + `Infrastructure/Library` | [已实现](settings.md) |
-| 更新 | `update.rs`、`apps/electron/main.js` | Velopack + `Core/Features/Packs` | 待编写 |
-| 诊断包 | `sidecar::diagnostics_export`、`ui/settings.js` | `Core/Features/Diagnostics` | 待编写 |
+| 更新 | `update.rs`、`apps/electron/main.js` | Velopack + `Core/Features/Packs` | [已实现](updates.md) |
+| 诊断包 | `sidecar::diagnostics_export`、`ui/settings.js` | `Core/Features/Diagnostics` | [已实现](diagnostics.md) |
 | 路径安全 | `util.rs::safe_join`、sidecar `checked_dir` | `Domain/Safety` | [已实现](path-safety.md) |
 | 错误码 | `err.rs` 的关键词规则 | `Domain/Errors` | 已实现（枚举 + 上下文） |
 | 资产包 schema/payload | 旧版 `deploy.rs` / `sm.rs` / `dlss5.rs` 的文件表 | `Domain/Packs`、`Infrastructure/Packs` | [已实现](asset-pack.md) |

@@ -14,12 +14,14 @@
 - 下载到 `%TEMP%\FrameGen-Manager-Next\updates\<version>\`。
 - 每 180 ms 向界面发送 `update.progress`：已下载字节、总字节、百分比、实时速度。
 - 取消更新会取消 HTTP 流并删除整个版本临时目录；失败同样清理。
-- 下载完成保留文件并返回路径，由用户运行安装包或解压便携包；**程序不会自行退出，也不会自动启动下载的安装包**。
+- **安装版**下载完成后会自动调用 `updates.install`：校验文件位于更新临时目录、扩展名为 `.exe` 且文件名包含 `Setup`，然后延迟 5 秒启动安装包并退出当前进程，由安装器完成替换并启动新版本。
+- **便携版**不自动执行下载文件，只保留文件并在弹窗中显示下载完成，避免把便携目录替换成安装版目录。
 - “网盘下载”打开发布页/备用网盘；当前指向原项目的夸克网盘地址，可在 `AppWebBridge.Update.cs` 中替换。
 
 ## 安装版
 
 - 安装包使用 Velopack，每用户安装；`Setup.exe` 安装完成后会启动程序。
+- 发布只产出安装包，不生成便携 zip；便携版仅用于本地测试。
 - 标准卸载入口为 Windows“设置 > 应用”中的 `FrameGen Manager-Next`，实际执行 `Update.exe --uninstall`。
 - 卸载时 Velopack 删除安装目录和快捷方式，`OnBeforeUninstallFastCallback` 额外删除本地数据目录和更新临时目录；详见 [ADR-0010](../decisions/ADR-0010-velopack-installer.md)。
 

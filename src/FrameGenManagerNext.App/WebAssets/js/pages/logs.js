@@ -39,6 +39,7 @@ export default {
       if (button.dataset.action === 'export') {
         try {
           const data = await api.request('logs.export');
+          if (data?.cancelled) return;
           ui.toast(t('Logs.Status.Exported').replace('{0}', data.path));
         } catch (error) {
           ui.toast(error.message, 'error');

@@ -117,10 +117,17 @@ Write-Host '> dotnet vpk pack' -ForegroundColor Cyan
     --outputDir $releases `
     --channel win `
     --instLocation PerUser `
+    --noPortable `
     --shortcuts 'Desktop,StartMenuRoot'
 
 if ($LASTEXITCODE -ne 0) {
     throw "vpk pack failed with exit code $LASTEXITCODE"
+}
+
+$setupPath = Join-Path $releases 'FrameGenManagerNext-win-Setup.exe'
+$versionedSetupPath = Join-Path $releases "FrameGenManagerNext-$version-win-Setup.exe"
+if (Test-Path -LiteralPath $setupPath) {
+    Move-Item -LiteralPath $setupPath -Destination $versionedSetupPath -Force
 }
 
 Write-Host ''

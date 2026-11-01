@@ -15,7 +15,8 @@
   - 自包含 `win-x64` 发布 App、CLI、提权助手和资产包到暂存目录；
   - 不包含 `portable.flag` 和 `data\`，安装版数据写入 `%LOCALAPPDATA%\FrameGen-Manager-Next`；
   - 生成每用户安装包（`--instLocation PerUser`），默认安装到 `%LOCALAPPDATA%\FrameGenManagerNext`；
-  - 输出 `Setup.exe`、完整包、便携 zip、`RELEASES` 和 `releases.win.json`。
+  - 使用 `--noPortable`，发布只包含安装包，不生成便携 zip；
+  - 输出 `Setup.exe`、完整包、`RELEASES` 和 `releases.win.json`。
 - `Program.Main` 在 Velopack 启动钩子中注册 `OnBeforeUninstallFastCallback`，调用 `UninstallCleanup.Run()` 删除：
   - `%LOCALAPPDATA%\FrameGen-Manager-Next`（配置、备份、封面、日志、状态和 WebView2 缓存）；
   - `%LOCALAPPDATA%\FrameGenNext`（早期 Next 开发构建遗留的数据目录）；
@@ -31,3 +32,4 @@
 3. 运行 `Update.exe --uninstall --silent`，退出码 0。
 4. 复核安装目录、`%LOCALAPPDATA%\FrameGen-Manager-Next`、`%LOCALAPPDATA%\FrameGenNext`、`%TEMP%\FrameGen-Manager-Next`、桌面/开始菜单快捷方式、开始菜单磁贴缓存和卸载注册项均已删除。
 5. 旧版 `FrameGen Manager 1.7.0` 的快捷方式和注册项保持不变。
+6. 用临时假安装器验证更新链路：下载完成后宿主进程退出，假安装器被启动并留下启动标记；真实网络更新只差 GitHub 发布资产。
