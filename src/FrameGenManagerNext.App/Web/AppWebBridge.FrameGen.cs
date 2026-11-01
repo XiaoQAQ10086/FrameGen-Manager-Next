@@ -4,6 +4,7 @@ using FrameGenManagerNext.Core.Features.Framegen;
 using FrameGenManagerNext.Domain.Deployment;
 using FrameGenManagerNext.Domain.Gpu;
 using FrameGenManagerNext.Domain.Library;
+using Microsoft.Extensions.Logging;
 
 namespace FrameGenManagerNext.App.Web;
 
@@ -151,7 +152,18 @@ public sealed partial class AppWebBridge
                 throw new BridgeException(result.Error!.Code, result.Error.Diagnostic ?? "restore failed");
             }
 
-            return await BuildGamesStateAsync();
+            var report = result.Value;
+            if (report.Conflicts > 0 || report.Leftovers.Count > 0 || report.Warnings.Count > 0)
+            {
+                _logger.LogWarning(
+                    "framegen.restore target={Target} conflicts={Conflicts} leftovers={Leftovers} warnings={Warnings}",
+                    target.Directory,
+                    report.Conflicts,
+                    report.Leftovers.Count,
+                    report.Warnings.Count);
+            }
+
+            return await BuildGamesStateAsync(restore: report);
         });
     }
 

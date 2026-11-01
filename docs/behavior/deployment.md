@@ -55,6 +55,7 @@ manifest 状态：`Installing → Installed / RolledBack / Partial`，还原后 
 4. 删除 pack 的 `ownedDirectories`（`pack.json` 声明，例如 `dlssg_sm86`）：插件运行时会往里写日志和缓存，这些文件不在 manifest 里，旧实现会把它们算成遗留文件、让每次还原都变成 `Partial`。目录下没有任何“被用户修改的部署文件”时才整目录删除；否则保留并警告。
 5. 收集剩余遗留文件，最多 20 条。
 6. 全部干净（无冲突、无警告、无遗留）才标记 `Restored`；否则 `Partial`，用户可以修复后再次还原。
+7. 还原返回 `RestoreReport`；存在冲突/残留/警告时前端必须显示未完成原因（冲突文件保留在游戏目录），不能提示“还原成功”。
 
 ## 无记录的部署（清理）
 

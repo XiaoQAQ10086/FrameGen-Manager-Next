@@ -699,9 +699,24 @@ export default {
           renderRemoved();
           saveSnapshot();
           status(t('Library.Status.Loaded').replace('{0}', games.length));
+          notice(next.warning || '');
         }
         if (next?.options) options = next.options;
-        if (successText) ui.toast(successText);
+        const restore = next?.restore;
+        const restoreProblem = restore && (
+          Number(restore.conflicts) > 0 ||
+          (restore.leftovers?.length || 0) > 0 ||
+          (restore.warnings?.length || 0) > 0
+        );
+        if (restoreProblem) {
+          const message = Number(restore.conflicts) > 0
+            ? t('Deploy.RestoreConflict').replace('{0}', restore.conflicts)
+            : t('Deploy.RestoreIncomplete');
+          notice(`${message} ${t('Deploy.RestoreConflictHint')}`);
+          ui.toast(message, 'error');
+        } else if (successText) {
+          ui.toast(successText);
+        }
       } catch (error) {
         ui.toast(ui.errorText(error, t('Errors.OperationFailed')), 'error');
       } finally {

@@ -85,6 +85,20 @@ public sealed partial class DeploymentEngine
                 var hash = await HashFileAsync(path.Value, cancellationToken);
                 if (!string.Equals(hash, record.Sha256, StringComparison.OrdinalIgnoreCase))
                 {
+                    // Steam/game repair or a manual restore may have put the original
+                    // file back already. That is a completed restore, not a conflict.
+                    if (record.ExistedBefore &&
+                        backupPath is not null &&
+                        File.Exists(backupPath))
+                    {
+                        var originalHash = await HashFileAsync(backupPath, cancellationToken);
+                        if (string.Equals(hash, originalHash, StringComparison.OrdinalIgnoreCase))
+                        {
+                            restored++;
+                            continue;
+                        }
+                    }
+
                     conflicts++;
                     conflictedPaths.Add(path.Value);
                     warnings.Add($"Modified file left in place: {record.RelativePath}");

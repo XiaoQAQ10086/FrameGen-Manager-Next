@@ -57,7 +57,7 @@ public sealed partial class AppWebBridge
         string? Read(string key) => values.TryGetValue(key, out var value) ? value : null;
     }
 
-    private async Task<object?> BuildGamesStateAsync(string? warning = null)
+    private async Task<object?> BuildGamesStateAsync(string? warning = null, RestoreReport? restore = null)
     {
         var stateClock = Stopwatch.StartNew();
         var settings = _settings.Load();
@@ -191,6 +191,14 @@ public sealed partial class AppWebBridge
                 xeSsHudlessValues = FrameGenOptionCatalog.XeSsHudlessValues,
             },
             warning,
+            restore = restore is null
+                ? null
+                : new
+                {
+                    conflicts = restore.Conflicts,
+                    leftovers = restore.Leftovers,
+                    warnings = restore.Warnings,
+                },
         };
     }
 
