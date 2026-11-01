@@ -39,7 +39,9 @@ if ($null -eq $versionNode -or [string]::IsNullOrWhiteSpace($versionNode.InnerTe
 }
 
 $version = $versionNode.InnerText.Trim()
-$staging = Join-Path $OutputRoot "staging-$version"
+# Staging is disposable build input, not a deliverable. Keep one fixed folder and
+# clear leftovers from older builds so they cannot accumulate hundreds of MB each.
+$staging = Join-Path $OutputRoot 'staging'
 $releases = Join-Path $OutputRoot 'releases'
 $appProject = Join-Path $root 'src\FrameGenManagerNext.App\FrameGenManagerNext.App.csproj'
 $cliProject = Join-Path $root 'src\FrameGenManagerNext.Cli\FrameGenManagerNext.Cli.csproj'
@@ -48,6 +50,11 @@ $icon = Join-Path $root 'src\FrameGenManagerNext.App\Assets\app.ico'
 
 if (Test-Path -LiteralPath $staging) {
     Remove-Item -LiteralPath $staging -Recurse -Force
+}
+
+if (Test-Path -LiteralPath $OutputRoot) {
+    Get-ChildItem -LiteralPath $OutputRoot -Directory -Filter 'staging-*' |
+        Remove-Item -Recurse -Force
 }
 
 New-Item -ItemType Directory -Path $staging -Force | Out-Null
@@ -126,6 +133,10 @@ Write-Host '> ISCC.exe' -ForegroundColor Cyan
 if ($LASTEXITCODE -ne 0) {
     throw "Inno Setup failed with exit code $LASTEXITCODE"
 }
+
+# The compiled setup no longer needs the uncompressed payload. Remove it only
+# after a successful build; a failed build keeps staging for diagnosis.
+Remove-Item -LiteralPath $staging -Recurse -Force
 
 Write-Host ''
 Write-Host "Installer output: $releases" -ForegroundColor Green

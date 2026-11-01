@@ -15,7 +15,8 @@
 目标与 API 的约定：
 
 - 部署目标来自界面的 EXE 选择：默认用扫描结果，也可以“手动选择游戏实际启动 EXE”。手动选择会同时更新该游戏的部署目标目录（与帧生成页一致），安装文件与 ReShade 都写到该 EXE 所在目录。
-- 图形 API 由扫描阶段自动判定，详情页把它作为默认选项并在后面标注“（自动）”；不再提供单独的“自动”行。用户改成其他 API 时按所选 API 安装。
+- 图形 API 由扫描阶段自动判定，详情页把它作为默认选项并在后面标注“（自动）”；不再提供单独的“自动”行。用户没有改过该选项时按自动模式安装：DX10/11/12 统一使用 `dxgi.dll`（与上游分析器和旧项目一致）。用户手动改成其他 API 时按所选 API 安装，例如显式 DX12 使用 `d3d12.dll`。
+- 2.0.7 之前自动模式会误写 `d3d12.dll`。升级后旧部署需要先“卸载”再重新部署，才能切到 `dxgi.dll`；只重新部署不会自动删除旧代理。
 - Unity 游戏按 Unity 的 Windows 默认值判定为 D3D11；只有目录里带 `D3D12Core.dll`（D3D12 构建）或 `vulkan-1.dll`（Vulkan 构建）时才判为对应 API。ReShade 自己的代理 DLL（版本信息 ProductName=ReShade）不参与判定，否则装过 ReShade 后重新扫描会把 API 判错。
 
 1. 校验目标目录、pack schema、安装器 SHA-256。
@@ -24,22 +25,24 @@
    - `GITC-Uplift/nvngx_dlssnr.dll`（534 MB 模型）
    - `reshade-shaders/Shaders/...`、`reshade-shaders/Textures/...`
    - `Uplift.fx`、`UpliftMask.fx`
-3. 离线安装 ReShade（不联网、不运行 setup）：
-   - 官方 setup 会把同一份 `ReShade64.dll` 写到游戏目录，但运行它会先联网下载兼容性信息；直接解出内嵌 DLL 得到的结果相同，且没有等待。
-   - 在 `ReShade_Setup_6.8.0_Addon.exe` 里按 512 字节步进查找内嵌 ZIP，取出 `ReShade64.dll`（32 位游戏取 `ReShade32.dll`）。
-   - 按 API 写成代理文件名：`d3d9/d3d10/d3d11/d3d12/opengl32.dll`；目标位置已有非 ReShade 文件时拒绝覆盖并回滚（`Conflict`）。
-   - 目标没有 `ReShade.ini` 时写入默认搜索路径；随后由配置服务合并 `.\reshade-shaders\Shaders\**` / `Textures\**`。
-   - Vulkan 需要全局层，无法离线落地：选择 Vulkan 时改为运行官方 ReShade 安装器（在线，超时 240 秒），其余 API 仍走离线路径。
+3. 非 Vulkan 优先离线安装 ReShade（不联网、不运行 setup）：
+   - 从 `ReShade_Setup_6.8.0_Addon.exe` 的 512 字节步进内嵌 ZIP 取出 `ReShade64.dll`（32 位游戏取 `ReShade32.dll`）。该 DLL 与官方 setup 写出的文件哈希一致。
+   - 按最终代理写成代理文件名：自动模式下 DX10/11/12 使用 `dxgi.dll`；显式选择时使用该 API 自己的代理（`d3d9/d3d10/d3d11/d3d12/opengl32.dll`）。目标位置已有非 ReShade 文件时拒绝覆盖并回滚（`Conflict`）。
+   - 目标没有 `ReShade.ini` 时写入有效默认配置；随后由配置服务把搜索路径合并为 `.\reshade-shaders\Shaders\**` / `Textures\**`。
+   - 只有离线解包失败时才自动回退到官方 setup（`--headless --api <api>`，超时 240 秒）；界面不提供手动选择官方安装器的入口。
+   - Vulkan 需要全局层，无法离线落地，只能使用官方 setup。
    - 标准 ReShade shader/纹理和 GITC 指定的 fx 都在 pack 的 114 个文件里，随部署一起写入。
+   - 离线路径实测完整部署约 1–2 秒；官方 setup 的联网阶段约 60–100 秒，正常安装不经过它。
 4. 失败时回滚已部署文件。
-5. 界面在已部署（`Installed`）时锁定安装按钮；只有 `Outdated`/`Partial`/`Conflict` 允许重新安装或修复。详情页提供“打开文件夹”。
-6. 安装/卸载期间详情页显示实时进度条：文件写入按数量推进，ReShade 模块阶段显示不确定进度。
+5. 界面在已部署（`Installed`）时锁定安装按钮；`Outdated`/`Partial`/`Conflict` 显示“更新”。`InstalledWithoutManifest`（文件存在但清单丢失）显示“重新部署”，不永久锁死。详情页提供“打开文件夹”。
+6. 安装/卸载期间详情页显示实时进度条：文件写入按数量推进，ReShade 模块阶段显示不确定进度。操作成功或失败后都关闭全局进度卡片；ReShade 阶段使用不确定进度时不会再残留“正在安装 ReShade”。
 
 安装前会检查帧生成是否已占用同一个代理文件（例如帧生成使用 `dxgi.dll`、DLSS5 选择 DXGI 代理）：占用时返回 `Conflict`，避免覆盖帧生成的代理入口。
 
 ## 状态检查
 
 - pack 文件状态来自部署引擎（未部署/已部署/需更新/不完整/冲突）。
+- 清单缺失但目录里仍有与当前 pack 哈希一致的文件时，状态为 `InstalledWithoutManifest`；界面允许“重新部署”或“卸载”，不会永久锁死。
 - 通过文件版本信息识别 ReShade 模块（`d3d9/d3d10/d3d11/d3d12/dxgi/opengl32.dll`，ProductName/FileDescription 含 `ReShade`），避免误删游戏自带 DLL。
 - 同时报告旧版 RenoDX 残留（根目录 `renodx-dlss5*.addon64` 或旧布局根目录 `nvngx_dlssnr.dll`）与插件运行时残渣。
 - 检测到旧版 RenoDX 时拒绝安装 GITC pack，返回 `LegacyInstallPresent`，必须先执行卸载。
@@ -54,14 +57,17 @@
 
 界面只有在检测到已部署（含旧版 RenoDX/残留）时才允许点“卸载”；未部署时按钮锁定。
 
-1. 先调用部署引擎还原并清理 manifest/备份：只删除仍匹配部署哈希的文件，用户改过的文件保留。
-2. 先尝试 ReShade 官方卸载器（`--state uninstall`），最多等 30 秒；超时或失败不报错，继续直接删除。直接删除是最终保证，不依赖任何网络。
-3. 删除 ReShade 模块、`ReShade.ini`、`ReShade.log`、`ReShadePreset.ini`。
-4. 删除 GITC 组件（`gitc-uplift.addon32/64`、`gitc-uplift-helper64.exe`、`GITC-Uplift/`）与已知 shader。
-5. 清理旧版 RenoDX：`renodx-dlss5*.addon*`、旧布局根目录 `nvngx_dlssnr.dll`。
-6. 清理插件运行时残渣（`renodx-dlss5-report*`、`ReShade.ini.renodx-dlss5*`、崩溃日志、trace）。
-7. 仅当 `D3D12\` 只有 `D3D12Core.dll` 且版本信息含 Microsoft 时删除该 Agility SDK 文件。
-8. 删除后重新扫描，返回已删除项与仍被占用的项；删除是永久的，不进回收站。
+1. 先调用部署引擎还原并清理清单/备份：删除仍匹配部署哈希的文件，恢复部署前已有的原文件；用户改过的文件保留并报告冲突。
+2. 读取卸载前的清单，记录 `ExistedBefore=true` 的路径。这些是游戏原有文件，后续按 pack 清理时必须跳过。
+3. 先尝试 ReShade 官方卸载器（`--state uninstall`），最多等 30 秒；超时或失败不报错，继续直接删除。直接删除是最终保证，不依赖任何网络。
+4. 删除 ReShade 模块、`ReShade.ini`、`ReShade.log`、`ReShadePreset.ini`。
+5. 删除 GITC 组件（`gitc-uplift.addon32/64`、`gitc-uplift-helper64.exe`、`GITC-Uplift/`）与已知 shader。
+6. 按当前 pack 的文件表扫描 `reshade-shaders/Shaders/**` 与 `reshade-shaders/Textures/**`：哈希匹配的残留直接删除；用户改过的文件保留并计入剩余项。此步骤覆盖“官方 setup 写入或清单已丢失”的纹理/着色器残留。
+7. 清理旧版 RenoDX：`renodx-dlss5*.addon*`、旧布局根目录 `nvngx_dlssnr.dll`。
+8. 清理插件运行时残渣（`renodx-dlss5-report*`、`ReShade.ini.renodx-dlss5*`、崩溃日志、trace）。
+9. 仅当 `D3D12\` 只有 `D3D12Core.dll` 且版本信息含 Microsoft 时删除该 Agility SDK 文件。
+10. 删除空目录后重新扫描；剩余项包含仍存在的 pack 文件。只有剩余项为 0 才丢弃清单和备份。
+11. 返回 `removed` / `remaining` / `clean`；界面在 `clean=false` 时显示“卸载未完成”错误，而不是提示成功。删除是永久的，不进回收站。
 
 ## 命令
 
@@ -83,5 +89,6 @@ fgm-next dlss5 uninstall <target-dir> [game-exe]
 
 ## 已知限制
 
-- `ReShade.ini` 搜索路径目前是覆盖写入，不保留用户自定义路径；后续改成合并。
-- 安装器下载“compatibility information”依赖网络；离线场景需要预先准备。
+- 官方 ReShade setup 每次都会联网下载兼容性数据，耗时约 60–100 秒；常规安装不经过它，只有 Vulkan 或离线解包失败时使用。
+- Vulkan 依赖全局 ReShade 层，只能联网运行官方 setup。
+- 官方 setup 的界面与退出码受 ReShade 上游控制；超时按失败处理并回滚。

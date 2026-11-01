@@ -1,5 +1,29 @@
 # Changelog
 
+## 2.0.7 (unreleased)
+
+### Changed
+
+- 非 Vulkan 的 DLSS5 / ReShade 恢复默认离线解包安装，避免官方 setup 每次 60–100 秒的联网等待；离线失败时才自动回退官方 setup，Vulkan 仍然只能使用官方 setup。
+- 界面不提供手动选择官方安装器的入口。
+
+### Fixed
+
+- DLSS5 自动模式对 DX10/11/12 改用 `dxgi.dll`，与旧项目一致；此前自动检测 DX12 时误写 `d3d12.dll`，可能导致部分游戏（如永劫无间）无法启动。显式选择 API 时仍使用该 API 自己的代理。
+- 彻底卸载会清理所有检测到的 ReShade 代理模块，而不只清理一个。
+
+## 2.0.6 (unreleased)
+
+### Changed
+
+- DLSS5 / ReShade 恢复使用官方 ReShade setup 安装；官方安装失败时才回退到内置 DLL 解包（Vulkan 只能走官方安装器）。
+
+### Fixed
+
+- 彻底卸载会按 pack 文件表清理 `reshade-shaders` 下遗留的 shader 与纹理；仍有残留时如实报告，不再提前丢弃部署清单。
+- 卸载后不再因为残留文件停留在“已部署（无记录）”并锁死安装按钮；该状态下允许重新部署。
+- 安装或卸载结束后关闭全局进度提示，不再残留“正在安装 ReShade”。
+
 ## 2.0.5 (unreleased)
 
 ### Fixed

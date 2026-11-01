@@ -2,7 +2,6 @@ using FrameGenManagerNext.Domain.Deployment;
 using FrameGenManagerNext.Domain.Errors;
 using FrameGenManagerNext.Domain.Results;
 using FrameGenManagerNext.Domain.Safety;
-using Microsoft.Extensions.Logging;
 
 namespace FrameGenManagerNext.Core.Features.Dlss5;
 
@@ -41,10 +40,6 @@ public sealed partial class Dlss5DeploymentService
         IProgress<DeploymentProgress>? progress,
         CancellationToken cancellationToken)
     {
-        // The exe path is kept in the contract for callers, but cleanup no longer
-        // runs the official uninstaller and therefore does not need it.
-        _ = exePath;
-
         if (string.IsNullOrWhiteSpace(targetDirectory))
         {
             return Result<Dlss5UninstallReport>.Fail(new AppError(ErrorCode.InvalidPath, "target directory is empty"));
@@ -72,6 +67,9 @@ public sealed partial class Dlss5DeploymentService
         }
 
         var inventory = ScanTarget(target);
+        var manifest = await _engine.LoadManifestAsync(FamilyId, target, cancellationToken);
+        var protectedPaths = GetProtectedPaths(manifest);
+        var packFiles = await LoadPackFileEntriesAsync(cancellationToken);
         var removed = new List<string>();
         var notes = new List<string>();
 
@@ -103,15 +101,22 @@ public sealed partial class Dlss5DeploymentService
         }
 
         progress?.Report(new DeploymentProgress("uninstalling", "ReShade files", 0, 1));
-        DeleteCoreFiles(target, inventory, removed, notes);
+        DeleteCoreFiles(target, removed, notes);
         DeleteGatheringFiles(target, removed, notes);
         DeleteKnownExtras(target, removed, notes);
         DeleteLegacyFiles(target, inventory, removed, notes);
         DeleteKnownShaders(target, removed, notes);
+        await DeletePackFilesAsync(
+            target,
+            packFiles,
+            protectedPaths,
+            removed,
+            notes,
+            cancellationToken);
         RemoveD3D12Agility(target, removed, notes);
         PruneEmptyDirectories(target, removed);
 
-        var remaining = DescribeRemaining(ScanTarget(target));
+        var remaining = DescribeRemaining(target, ScanTarget(target), packFiles, protectedPaths);
         if (remaining.Count == 0)
         {
             var discard = await _engine.DiscardBackupAsync(FamilyId, target, cancellationToken);
@@ -153,75 +158,27 @@ public sealed partial class Dlss5DeploymentService
             message));
     }
 
-    private async Task RunOfficialUninstallerAsync(
-        string target,
-        string exePath,
-        string module,
-        List<string> notes,
-        IProgress<DeploymentProgress>? progress,
-        CancellationToken cancellationToken)
-    {
-        var api = ApiFromModule(module);
-        if (api is null)
-        {
-            notes.Add("No ReShade API matches the installed module; direct deletion is used.");
-            return;
-        }
-
-        var location = await _packs.FindAsync(PackId, cancellationToken);
-        if (location is null)
-        {
-            notes.Add("The DLSS5 pack is not available; direct deletion is used.");
-            return;
-        }
-
-        var installer = ResolveInstaller(location);
-        if (installer.IsFailure)
-        {
-            notes.Add("The ReShade installer could not be verified; direct deletion is used.");
-            return;
-        }
-
-        var arguments = installer.Value.ArgumentsTemplate.Replace(
-            "{api}",
-            api,
-            StringComparison.OrdinalIgnoreCase);
-        arguments = $"{arguments} --state uninstall \"{exePath}\"";
-
-        progress?.Report(new DeploymentProgress("uninstaller", "ReShade", 0, 0));
-        try
-        {
-            var process = await _processRunner.RunAsync(
-                installer.Value.InstallerPath,
-                arguments,
-                target,
-                TimeSpan.FromSeconds(30),
-                cancellationToken);
-
-            if (process.TimedOut || process.ExitCode != 0)
-            {
-                notes.Add("The official ReShade uninstaller did not finish; remaining files are deleted directly.");
-                return;
-            }
-
-            notes.Add("The official ReShade uninstaller removed the ReShade module.");
-        }
-        catch (Exception exception) when (exception is IOException or System.ComponentModel.Win32Exception)
-        {
-            _logger.LogWarning(exception, "Could not start the ReShade uninstaller");
-            notes.Add("The official ReShade uninstaller could not be started; direct deletion is used.");
-        }
-    }
-
     private static void DeleteCoreFiles(
         string target,
-        TargetInventory inventory,
         List<string> removed,
         List<string> notes)
     {
-        if (inventory.ReShadeModule is not null)
+        foreach (var name in ReShadeModules)
         {
-            TryDeleteFile(Path.Combine(target, inventory.ReShadeModule), removed, notes);
+            var path = Path.Combine(target, name);
+            if (!File.Exists(path))
+            {
+                continue;
+            }
+
+            var description = ReadVersionText(path);
+            if (description is null ||
+                !description.Contains("ReShade", StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+
+            TryDeleteFile(path, removed, notes);
         }
 
         foreach (var name in new[] { "ReShade.ini", "ReShade.log", "ReShadePreset.ini" })

@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using FrameGenManagerNext.Domain.Safety;
 
 namespace FrameGenManagerNext.Core.Features.Dlss5;
 
@@ -130,39 +131,77 @@ public sealed partial class Dlss5DeploymentService
         };
     }
 
-    private static List<string> DescribeRemaining(TargetInventory inventory)
+    private static List<string> DescribeRemaining(
+        string target,
+        TargetInventory inventory,
+        IReadOnlyList<PackFileEntry> packFiles,
+        HashSet<string> protectedPaths)
     {
         var remaining = new List<string>();
+        var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        void Add(string value)
+        {
+            if (seen.Add(value))
+            {
+                remaining.Add(value);
+            }
+        }
+
         if (inventory.ReShadeModule is not null)
         {
-            remaining.Add(inventory.ReShadeModule);
+            Add(inventory.ReShadeModule);
         }
 
         if (inventory.ReShadeIni)
         {
-            remaining.Add("ReShade.ini");
+            Add("ReShade.ini");
         }
 
         if (inventory.ReShadeLog)
         {
-            remaining.Add("ReShade.log");
+            Add("ReShade.log");
         }
 
         if (inventory.ReShadePreset)
         {
-            remaining.Add("ReShadePreset.ini");
+            Add("ReShadePreset.ini");
         }
 
-        remaining.AddRange(inventory.LegacyAddons);
+        foreach (var addon in inventory.LegacyAddons)
+        {
+            Add(addon);
+        }
+
         if (inventory.LegacyRenoDx)
         {
-            remaining.Add("nvngx_dlssnr.dll");
+            Add("nvngx_dlssnr.dll");
         }
 
-        remaining.AddRange(inventory.Leftovers);
+        foreach (var leftover in inventory.Leftovers)
+        {
+            Add(leftover);
+        }
+
         if (inventory.Extras)
         {
-            remaining.Add("GITC Uplift files");
+            Add("GITC Uplift files");
+        }
+
+        // A missing manifest used to hide the shader/texture tree from this list, so
+        // the manifest and backups were discarded while pack files were still there.
+        foreach (var file in packFiles)
+        {
+            if (protectedPaths.Contains(file.RelativePath))
+            {
+                continue;
+            }
+
+            var path = SafePath.CombineUnderRoot(target, file.RelativePath);
+            if (path.IsSuccess && File.Exists(path.Value))
+            {
+                Add(file.RelativePath);
+            }
         }
 
         return remaining;

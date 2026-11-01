@@ -4,7 +4,6 @@ using System.Reflection.PortableExecutable;
 using FrameGenManagerNext.Core.Features.Dlss5;
 using FrameGenManagerNext.Domain.Deployment;
 using FrameGenManagerNext.Domain.Errors;
-using FrameGenManagerNext.Domain.Library;
 using FrameGenManagerNext.Domain.Results;
 
 namespace FrameGenManagerNext.Infrastructure.Dlss5;
@@ -23,17 +22,15 @@ public sealed class ReShadeOfflineInstaller : IReShadeOfflineInstaller
         string setupPath,
         string targetDirectory,
         string exePath,
-        GraphicsApi api,
+        string proxyModule,
         IProgress<DeploymentProgress>? progress,
         CancellationToken cancellationToken)
     {
-        var module = ModuleName(api);
-        if (module is null)
+        if (string.IsNullOrWhiteSpace(proxyModule))
         {
             return Result<string>.Fail(AppError.Create(
                 ErrorCode.InstallerFailed,
-                ("api", api.ToString()),
-                ("reason", "ReShade's Vulkan layer cannot be installed without running the setup")));
+                ("reason", "an offline ReShade module name is required")));
         }
 
         if (!File.Exists(setupPath))
@@ -54,7 +51,7 @@ public sealed class ReShadeOfflineInstaller : IReShadeOfflineInstaller
             return Result<string>.Fail(dll.Error!);
         }
 
-        var modulePath = Path.Combine(targetDirectory, module);
+        var modulePath = Path.Combine(targetDirectory, proxyModule);
         if (File.Exists(modulePath) && !IsReShade(modulePath))
         {
             return Result<string>.Fail(AppError.Create(
@@ -73,8 +70,8 @@ public sealed class ReShadeOfflineInstaller : IReShadeOfflineInstaller
             await File.WriteAllTextAsync(iniPath, DefaultIni, cancellationToken);
         }
 
-        progress?.Report(new DeploymentProgress("writing", module, 1, 1));
-        return Result<string>.Ok(module);
+        progress?.Report(new DeploymentProgress("writing", proxyModule, 1, 1));
+        return Result<string>.Ok(proxyModule);
     }
 
     private static Result<byte[]> ExtractEmbeddedModule(
@@ -152,19 +149,6 @@ public sealed class ReShadeOfflineInstaller : IReShadeOfflineInstaller
         {
             return false;
         }
-    }
-
-    private static string? ModuleName(GraphicsApi api)
-    {
-        return api switch
-        {
-            GraphicsApi.Direct3D9 => "d3d9.dll",
-            GraphicsApi.Direct3D10 => "d3d10.dll",
-            GraphicsApi.Direct3D11 => "d3d11.dll",
-            GraphicsApi.Direct3D12 => "d3d12.dll",
-            GraphicsApi.OpenGl => "opengl32.dll",
-            _ => null,
-        };
     }
 
     private const string DefaultIni =

@@ -1,5 +1,4 @@
 using FrameGenManagerNext.Domain.Deployment;
-using FrameGenManagerNext.Domain.Library;
 using FrameGenManagerNext.Domain.Results;
 
 namespace FrameGenManagerNext.Core.Features.Dlss5;
@@ -14,7 +13,7 @@ public interface IReShadeOfflineInstaller
         string setupPath,
         string targetDirectory,
         string exePath,
-        GraphicsApi api,
+        string proxyModule,
         IProgress<DeploymentProgress>? progress,
         CancellationToken cancellationToken);
 }

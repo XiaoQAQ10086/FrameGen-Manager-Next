@@ -142,9 +142,13 @@ export default {
       const syncVulkanHint = () => {
         vulkanHint?.classList.toggle('hidden', apiSelect?.value !== 'VULKAN');
       };
+      detailBody.dataset.apiTouched = '0';
       if (apiSelect) {
         apiSelect.value = apiOptions.some(([value]) => value === currentApi) ? currentApi : 'DX12';
-        apiSelect.addEventListener('change', syncVulkanHint);
+        apiSelect.addEventListener('change', () => {
+          detailBody.dataset.apiTouched = '1';
+          syncVulkanHint();
+        });
       }
       syncVulkanHint();
 
@@ -179,12 +183,17 @@ export default {
       });
 
       const installButton = q('[data-action="modal-install"]');
-      const repairState = game.state === 'Outdated' || game.state === 'Partial' || game.state === 'Conflict';
+      const repairState = game.state === 'Outdated' ||
+        game.state === 'Partial' ||
+        game.state === 'Conflict' ||
+        game.state === 'InstalledWithoutManifest';
       const installed = deployed(game) && !repairState;
       installButton.disabled = game.available === false || game.legacy || installed;
       installButton.textContent = t(installed
         ? 'State.Deployed'
-        : repairState ? 'Common.Update' : 'Common.Install');
+        : game.state === 'InstalledWithoutManifest'
+          ? 'Common.Redeploy'
+          : repairState ? 'Common.Update' : 'Common.Install');
 
       const uninstallButton = q('[data-action="modal-uninstall"]');
       uninstallButton.disabled = !deployed(game) && !game.legacy && !game.leftovers;
@@ -255,7 +264,12 @@ export default {
         render();
         removedController.render();
         closeDetail();
-        ui.toast(t('Common.OperationDone'));
+        if (state.uninstall && state.uninstall.clean === false) {
+          const count = state.uninstall.remaining?.length || 0;
+          ui.toast(t('Dlss5.UninstallIncomplete').replace('{0}', String(count)), 'error');
+        } else {
+          ui.toast(t('Common.OperationDone'));
+        }
       } catch (error) {
         if (box) box.classList.remove('indeterminate');
         if (status) status.textContent = error.message || error.code || t('Progress.failed');
@@ -265,6 +279,7 @@ export default {
         ui.toast(error.message || error.code || t('Progress.failed'), 'error');
       } finally {
         unsubscribe();
+        ui.progressDone();
         busy = false;
       }
     }
@@ -340,9 +355,10 @@ export default {
               ui.toast(t('Deploy.TargetRequired'), 'error');
               return;
             }
-            const api = detailBody.querySelector('[data-role="detail-api"]')?.value || 'DX12';
+            const selectedApi = detailBody.querySelector('[data-role="detail-api"]')?.value || 'DX12';
+            const apiValue = detailBody.dataset.apiTouched === '1' ? selectedApi : 'auto';
             if (!(await confirmDialog(t('Dlss5.Title'), t('Dlss5.Confirm.Install').replace('{0}', game.name).replace('{1}', prettyPath(target || game.targetDirectory)), t('Common.Install')))) return;
-            return runDetailAction('dlss5.install', game, { target, api });
+            return runDetailAction('dlss5.install', game, { target, api: apiValue });
           }
           if (!(await confirmDialog(t('Dlss5.Title'), t('Dlss5.Confirm.Uninstall').replace('{0}', game.name), t('Common.Uninstall')))) return;
           return runDetailAction('dlss5.uninstall', game);

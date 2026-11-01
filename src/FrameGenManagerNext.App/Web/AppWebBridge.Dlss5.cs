@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using System.IO;
 using System.Text.Json;
+using FrameGenManagerNext.Core.Features.Dlss5;
 using FrameGenManagerNext.Core.Features.Framegen;
 using FrameGenManagerNext.Domain.Deployment;
 using FrameGenManagerNext.Domain.Library;
@@ -10,7 +11,7 @@ namespace FrameGenManagerNext.App.Web;
 
 public sealed partial class AppWebBridge
 {
-    private async Task<object?> BuildDlss5StateAsync()
+    private async Task<object?> BuildDlss5StateAsync(Dlss5UninstallReport? uninstall = null)
     {
         var stateClock = Stopwatch.StartNew();
         var settings = _settings.Load();
@@ -94,7 +95,19 @@ public sealed partial class AppWebBridge
             "dlss5.state count={Count} elapsed={Elapsed}ms",
             games.Count,
             stateClock.ElapsedMilliseconds);
-        return new { games, removed };
+        return new
+        {
+            games,
+            removed,
+            uninstall = uninstall is null
+                ? null
+                : new
+                {
+                    removed = uninstall.Removed,
+                    remaining = uninstall.Remaining,
+                    clean = uninstall.IsClean,
+                },
+        };
     }
 
     private async Task<object?> InstallDlss5Async(JsonElement payload)
@@ -109,15 +122,9 @@ public sealed partial class AppWebBridge
         var installExe = target.ExePath ?? game.RenderExePath!;
         var knownApi = ReadGraphicsApi(payload);
 
-        var apiModule = knownApi switch
-        {
-            GraphicsApi.Direct3D9 => "d3d9.dll",
-            GraphicsApi.Direct3D10 => "d3d10.dll",
-            GraphicsApi.Direct3D11 => "d3d11.dll",
-            GraphicsApi.Direct3D12 => "d3d12.dll",
-            GraphicsApi.OpenGl => "opengl32.dll",
-            _ => null,
-        };
+        var apiModule = knownApi is null
+            ? AutoProxyModule(game.GraphicsApi)
+            : ProxyModule(knownApi.Value);
         if (apiModule is not null)
         {
             var frameGen = await _frameGen.InspectAsync(
@@ -215,7 +222,17 @@ public sealed partial class AppWebBridge
                 throw new BridgeException(result.Error!.Code, result.Error.Diagnostic ?? "uninstall failed");
             }
 
-            return await BuildDlss5StateAsync();
+            var report = result.Value;
+            if (!report.IsClean)
+            {
+                _logger.LogWarning(
+                    "dlss5.uninstall target={Target} removed={Removed} remaining={Remaining}",
+                    game.TargetDirectory,
+                    report.Removed.Count,
+                    report.Remaining.Count);
+            }
+
+            return await BuildDlss5StateAsync(report);
         });
     }
 
@@ -239,6 +256,30 @@ public sealed partial class AppWebBridge
         {
             return [];
         }
+    }
+
+    private static string? AutoProxyModule(GraphicsApi api)
+    {
+        return api switch
+        {
+            GraphicsApi.Direct3D9 => "d3d9.dll",
+            GraphicsApi.Direct3D10 or GraphicsApi.Direct3D11 or GraphicsApi.Direct3D12 => "dxgi.dll",
+            GraphicsApi.OpenGl => "opengl32.dll",
+            _ => null,
+        };
+    }
+
+    private static string? ProxyModule(GraphicsApi api)
+    {
+        return api switch
+        {
+            GraphicsApi.Direct3D9 => "d3d9.dll",
+            GraphicsApi.Direct3D10 => "d3d10.dll",
+            GraphicsApi.Direct3D11 => "d3d11.dll",
+            GraphicsApi.Direct3D12 => "d3d12.dll",
+            GraphicsApi.OpenGl => "opengl32.dll",
+            _ => null,
+        };
     }
 
     private static GraphicsApi? ReadGraphicsApi(JsonElement payload)
