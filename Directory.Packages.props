@@ -7,7 +7,7 @@
 
   <ItemGroup>
     <!-- Owner decision: Microsoft.Extensions / Pkcs / Shouldly track preview/RC.
-         Serilog and Velopack intentionally stay on stable releases. -->
+         Serilog intentionally stays on a stable release. -->
     <PackageVersion Include="coverlet.collector" Version="10.1.0" />
     <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="11.0.0-rc.3.26522.148" />
     <PackageVersion Include="Microsoft.Extensions.Hosting" Version="11.0.0-rc.3.26522.148" />
@@ -21,7 +21,6 @@
     <PackageVersion Include="Serilog.Sinks.File" Version="7.0.0" />
     <PackageVersion Include="Shouldly" Version="5.0.0-preview.2" />
     <PackageVersion Include="System.Security.Cryptography.Pkcs" Version="11.0.0-rc.3.26522.148" />
-    <PackageVersion Include="Velopack" Version="1.2.161" />
     <PackageVersion Include="WPF-UI" Version="4.3.0" />
     <PackageVersion Include="xunit.runner.visualstudio" Version="4.0.1" />
     <PackageVersion Include="xunit.v3" Version="4.0.2" />

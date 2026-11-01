@@ -97,37 +97,34 @@ foreach ($packId in $packIds) {
 # The installed app must use LocalAppData, not portable mode.
 Remove-Item -LiteralPath (Join-Path $staging 'portable.flag') -Force -ErrorAction SilentlyContinue
 Remove-Item -LiteralPath (Join-Path $staging 'data') -Recurse -Force -ErrorAction SilentlyContinue
+$manifestPath = Join-Path $staging 'install-manifest.txt'
+$relativeFiles = Get-ChildItem -LiteralPath $staging -File -Recurse |
+    ForEach-Object { $_.FullName.Substring($staging.Length + 1).Replace('\', '/') }
+Set-Content -LiteralPath $manifestPath -Value $relativeFiles -Encoding utf8
 
-Write-Host '> dotnet tool restore' -ForegroundColor Cyan
-& $dotnet tool restore
-if ($LASTEXITCODE -ne 0) {
-    throw "dotnet tool restore failed with exit code $LASTEXITCODE"
+$isccCommand = Get-Command 'ISCC.exe' -ErrorAction SilentlyContinue
+$iscc = if ($null -ne $isccCommand) { $isccCommand.Source } else { '' }
+if ([string]::IsNullOrWhiteSpace($iscc)) {
+    $iscc = Join-Path ([Environment]::GetFolderPath([Environment+SpecialFolder]::ProgramFilesX86)) 'Inno Setup 6\ISCC.exe'
 }
 
-Write-Host '> dotnet vpk pack' -ForegroundColor Cyan
-& $dotnet vpk pack `
-    --packId FrameGenManagerNext `
-    --packVersion $version `
-    --packDir $staging `
-    --runtime $Runtime `
-    --mainExe FrameGenManager-Next.exe `
-    --packTitle 'FrameGen Manager-Next' `
-    --packAuthors 'FrameGen Manager-Next' `
-    --icon $icon `
-    --outputDir $releases `
-    --channel win `
-    --instLocation PerUser `
-    --noPortable `
-    --shortcuts 'Desktop,StartMenuRoot'
-
-if ($LASTEXITCODE -ne 0) {
-    throw "vpk pack failed with exit code $LASTEXITCODE"
+if (-not (Test-Path -LiteralPath $iscc)) {
+    throw 'Inno Setup 6 was not found. Install it or add ISCC.exe to PATH.'
 }
 
-$setupPath = Join-Path $releases 'FrameGenManagerNext-win-Setup.exe'
-$versionedSetupPath = Join-Path $releases "FrameGenManagerNext-$version-win-Setup.exe"
-if (Test-Path -LiteralPath $setupPath) {
-    Move-Item -LiteralPath $setupPath -Destination $versionedSetupPath -Force
+if (Test-Path -LiteralPath $releases) {
+    Get-ChildItem -LiteralPath $releases -Force | Remove-Item -Recurse -Force
+}
+
+Write-Host '> ISCC.exe' -ForegroundColor Cyan
+& $iscc `
+    "/DAppVersion=$version" `
+    "/DSourceDir=$staging" `
+    "/DOutputDir=$releases" `
+    (Join-Path $root 'build\installer.iss')
+
+if ($LASTEXITCODE -ne 0) {
+    throw "Inno Setup failed with exit code $LASTEXITCODE"
 }
 
 Write-Host ''

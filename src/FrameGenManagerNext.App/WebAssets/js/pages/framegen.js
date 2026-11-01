@@ -332,6 +332,7 @@ export default {
             </div>
           </div>
           <div class="gpath" title="${esc(prettyPath(game.targetDirectory))}">${esc(prettyPath(game.targetDirectory))}</div>
+          ${blocked ? `<div class="conflict-hint">${esc(t('Conflict.SmoothMotionOn'))} · ${esc(t('Conflict.SmoothMotionHint'))}</div>` : ''}
           <div class="gactions">
             <button class="btn small ${restorable || legacy ? 'danger' : 'success'}" data-action="${primaryAction}" data-id="${esc(game.id)}" type="button" ${blocked ? 'disabled' : ''} ${blocked ? `title="${esc(t('Conflict.SmoothMotionOn'))}"` : ''}>${esc(primaryLabel)}</button>
             <button class="btn small" data-action="open" data-id="${esc(game.id)}" type="button">${esc(t('Library.OpenFolder'))}</button>
@@ -702,7 +703,7 @@ export default {
         if (next?.options) options = next.options;
         if (successText) ui.toast(successText);
       } catch (error) {
-        ui.toast(error.message || error.code || '操作失败', 'error');
+        ui.toast(ui.errorText(error, t('Errors.OperationFailed')), 'error');
       } finally {
         setBusy(false);
       }

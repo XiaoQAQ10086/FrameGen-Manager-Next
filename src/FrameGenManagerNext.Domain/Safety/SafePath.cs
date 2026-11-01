@@ -186,7 +186,10 @@ public static class SafePath
     }
 
     /// <summary>
-    /// Rejects drive roots and the Windows / Program Files / System directories.
+    /// Rejects drive roots, Windows/System directories, and the Program Files roots
+    /// themselves. Game installs may live under Program Files (for example the
+    /// default Steam library), so subdirectories are allowed and rely on the
+    /// filesystem ACL.
     /// </summary>
     public static bool IsProtectedSystemDirectory(string fullPath)
     {
@@ -214,13 +217,29 @@ public static class SafePath
         {
             Environment.GetFolderPath(Environment.SpecialFolder.Windows),
             Environment.GetFolderPath(Environment.SpecialFolder.System),
-            Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles),
-            Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86),
         };
 
         foreach (var directory in protectedDirectories)
         {
             if (!string.IsNullOrWhiteSpace(directory) && IsUnderRoot(directory, candidate))
+            {
+                return true;
+            }
+        }
+
+        var programRoots = new[]
+        {
+            Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles),
+            Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86),
+        };
+
+        foreach (var directory in programRoots)
+        {
+            if (!string.IsNullOrWhiteSpace(directory) &&
+                string.Equals(
+                    Path.TrimEndingDirectorySeparator(directory),
+                    Path.TrimEndingDirectorySeparator(candidate),
+                    StringComparison.OrdinalIgnoreCase))
             {
                 return true;
             }

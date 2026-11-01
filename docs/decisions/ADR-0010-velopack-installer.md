@@ -1,6 +1,6 @@
 # ADR-0010：Velopack 安装包与彻底卸载
 
-- 状态：已接受
+- 状态：已被 [ADR-0011](ADR-0011-inno-setup-installer.md) 取代
 - 日期：2026-10-31
 
 ## 背景

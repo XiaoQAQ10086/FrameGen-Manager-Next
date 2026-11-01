@@ -81,6 +81,8 @@ UI 上这类游戏显示黄色徽章：当前 pack 能匹配时是“已部署�
 
 默认值：`version.dll`、`Optimized=1`、`MaxGeneratedFrames=3`（4X）、`Preset=A`、`Engine=DLSS`、`SuperResolution=Off`、XeSS flow `Middle`、HUD-less `Auto`。
 
+> 与旧版默认值的差异：旧版配置里 `Preset` 默认是 `C`（FG Lite，生成帧 GPU 开销更低），且旧配置升级时会把 `Optimized=1` 迁移为 `2`；新版默认是 `Preset=A`、`Optimized=1`。资产相同但这两项会直接改变帧数，横向对比时必须把游戏目录 `dlssg_sm86.ini` 的 `[DLSSG] Preset/Optimized` 调成一致。
+
 | 选项 | 规则 |
 |---|---|
 | Proxy | 必须是 pack 中 `proxySlot=true` 的文件；只复制选中的一个 |

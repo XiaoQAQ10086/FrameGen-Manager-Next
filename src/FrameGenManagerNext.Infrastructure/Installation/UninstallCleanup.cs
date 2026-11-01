@@ -29,7 +29,30 @@ public static class UninstallCleanup
         }
 
         DeleteDirectory(Path.Combine(Path.GetTempPath(), AppInfo.DataDirectoryName));
+        DeleteShortcut(Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory));
+        DeleteShortcut(Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+            "Microsoft",
+            "Windows",
+            "Start Menu",
+            "Programs"));
         DeleteStartTileMetadata();
+    }
+
+    private static void DeleteShortcut(string directory)
+    {
+        try
+        {
+            var shortcut = Path.Combine(directory, "FrameGen Manager-Next.lnk");
+            if (File.Exists(shortcut))
+            {
+                File.Delete(shortcut);
+            }
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
+        {
+            // Inno also removes its own shortcut; this is a safety net.
+        }
     }
 
     private static void DeleteStartTileMetadata()

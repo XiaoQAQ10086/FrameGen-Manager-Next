@@ -217,7 +217,17 @@ public sealed partial class AppWebBridge
             throw new BridgeException(Domain.Errors.ErrorCode.InstallerFailed, "automatic installation is disabled in portable mode");
         }
 
-        var command = $"/c timeout /t 5 /nobreak >nul & start \"\" \"{installerPath}\"";
+        var installDirectory = AppContext.BaseDirectory.TrimEnd(
+            Path.DirectorySeparatorChar,
+            Path.AltDirectorySeparatorChar);
+        var parentDirectory = Directory.GetParent(installDirectory)?.FullName;
+        if (string.Equals(Path.GetFileName(installDirectory), "current", StringComparison.OrdinalIgnoreCase) &&
+            !string.IsNullOrWhiteSpace(parentDirectory))
+        {
+            installDirectory = parentDirectory;
+        }
+
+        var command = $"/c timeout /t 5 /nobreak >nul & start \"\" \"{installerPath}\" /SILENT /DIR=\"{installDirectory}\"";
         Process.Start(new ProcessStartInfo
         {
             FileName = "cmd.exe",
@@ -227,7 +237,10 @@ public sealed partial class AppWebBridge
             WindowStyle = ProcessWindowStyle.Hidden,
         });
 
-        _logger.LogInformation("Starting downloaded update installer {Path}", installerPath);
+        _logger.LogInformation(
+            "Starting downloaded update installer {Path} into {InstallDirectory}",
+            installerPath,
+            installDirectory);
         _ = ShutdownForUpdateAsync();
         return new { installing = true };
     }

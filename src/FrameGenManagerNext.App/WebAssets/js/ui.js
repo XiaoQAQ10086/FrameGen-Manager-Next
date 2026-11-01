@@ -1,5 +1,14 @@
 import { t } from './i18n.js';
 
+export function errorText(error, fallback = '') {
+  const code = error?.code;
+  if (code) {
+    const localized = t(`Errors.${code}`);
+    if (localized) return localized;
+  }
+  return error?.message || code || fallback;
+}
+
 export function escapeHtml(value) {
   return String(value ?? '')
     .replaceAll('&', '&amp;')

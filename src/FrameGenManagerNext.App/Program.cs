@@ -1,5 +1,4 @@
 using FrameGenManagerNext.Infrastructure.Installation;
-using Velopack;
 
 namespace FrameGenManagerNext.App;
 
@@ -12,9 +11,11 @@ public static class Program
     [STAThread]
     public static void Main(string[] args)
     {
-        VelopackApp.Build()
-            .OnBeforeUninstallFastCallback(_ => UninstallCleanup.Run())
-            .Run();
+        if (args.Any(argument => string.Equals(argument, "--uninstall-cleanup", StringComparison.OrdinalIgnoreCase)))
+        {
+            UninstallCleanup.Run();
+            return;
+        }
 
         // WebView2 keeps a SQLite-backed profile per user. Two hosts sharing it can
         // kill each other's browser process, so only one instance is allowed.

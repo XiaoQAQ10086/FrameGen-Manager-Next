@@ -115,6 +115,8 @@ public sealed class SafePathTests
         if (!string.IsNullOrWhiteSpace(programFiles))
         {
             SafePath.IsProtectedSystemDirectory(programFiles).ShouldBeTrue();
+            SafePath.IsProtectedSystemDirectory(
+                Path.Combine(programFiles, "Steam", "steamapps", "common", "Game")).ShouldBeFalse();
         }
 
         SafePath.IsProtectedSystemDirectory(Path.GetPathRoot(Path.GetTempPath())!).ShouldBeTrue();

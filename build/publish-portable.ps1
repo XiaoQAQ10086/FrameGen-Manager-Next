@@ -43,7 +43,7 @@ $version = $versionNode.InnerText.Trim()
 $appProject = Join-Path $root 'src\FrameGenManagerNext.App\FrameGenManagerNext.App.csproj'
 $cliProject = Join-Path $root 'src\FrameGenManagerNext.Cli\FrameGenManagerNext.Cli.csproj'
 $elevatedProject = Join-Path $root 'src\FrameGenManagerNext.Elevated\FrameGenManagerNext.Elevated.csproj'
-$folderName = "FrameGen-Manager-Next-$version-$Runtime"
+$folderName = "FrameGen-Manager-Next"
 $destination = Join-Path $OutputRoot $folderName
 
 New-Item -ItemType Directory -Path $OutputRoot -Force | Out-Null

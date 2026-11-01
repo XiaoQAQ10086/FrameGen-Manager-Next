@@ -72,6 +72,9 @@ button, select { font: inherit; }
 .side { min-height: 0; overflow: auto; padding-right: 4px; display: flex; flex-direction: column; gap: 14px; }
 .side .kv2 > span { flex: 1 1 auto; min-width: 0; white-space: normal; line-height: 1.35; }
 .side .kv2 > b { flex: 0 0 auto; }
+.side .kv2.spoof-name { align-items: flex-start; }
+.side .kv2.spoof-name > b { flex: 0 1 auto; min-width: 0; max-width: 72%; }
+.side .kv2.spoof-name .badge { max-width: 100%; white-space: normal; overflow: visible; overflow-wrap: anywhere; line-height: 1.35; text-align: right; }
 .side .badge { max-width: none; white-space: nowrap; overflow: visible; text-overflow: clip; text-align: right; }
 .side .panel { margin-bottom: 0; }
 .content { min-height: 0; display: flex; flex-direction: column; }
@@ -149,6 +152,7 @@ button, select { font: inherit; }
 .ginfo { min-width: 0; display: grid; gap: 6px; flex: 1 1 auto; }
 .gname { font-size: 15px; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .badges { display: flex; flex-wrap: wrap; gap: 6px; }
+.conflict-hint { margin-top: 2px; color: #a52222; font-size: 12px; font-weight: 600; line-height: 1.45; }
 .gpath { color: var(--muted); font-family: Consolas, "Courier New", monospace; font-size: 12px; line-height: 1.45; overflow-wrap: anywhere; }
 .gactions { display: flex; justify-content: flex-start; gap: 8px; flex-wrap: wrap; align-items: center; }
 .gactions.end { justify-content: flex-end; }

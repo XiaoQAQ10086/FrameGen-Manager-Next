@@ -26,7 +26,7 @@
 | SAFE-011 | 规范化后总长度超过 240 | 拒绝 | `InvalidPath` | 见测试 |
 | SAFE-012 | 与绝对根组合后逃出根目录 | 拒绝 | `UnsafePath` | `CombineUnderRootRejectsTraversal` |
 | SAFE-013 | 根目录是相对路径 | 拒绝 | `InvalidPath` | `CombineUnderRootRejectsRelativeRoot` |
-| SAFE-014 | 目标是盘符根、Windows、System32、Program Files、Program Files (x86) | `IsProtectedSystemDirectory` 返回 true | — | `IsProtectedSystemDirectoryRejectsWindowsAndDriveRoots` |
+| SAFE-014 | 目标是盘符根、Windows/System32，或 Program Files / Program Files (x86) 根目录本身 | `IsProtectedSystemDirectory` 返回 true；Program Files 下的游戏子目录允许部署 | — | `IsProtectedSystemDirectoryRejectsWindowsAndDriveRoots` |
 
 ## 规范化
 

@@ -14,16 +14,19 @@
 - 下载到 `%TEMP%\FrameGen-Manager-Next\updates\<version>\`。
 - 每 180 ms 向界面发送 `update.progress`：已下载字节、总字节、百分比、实时速度。
 - 取消更新会取消 HTTP 流并删除整个版本临时目录；失败同样清理。
-- **安装版**下载完成后会自动调用 `updates.install`：校验文件位于更新临时目录、扩展名为 `.exe` 且文件名包含 `Setup`，然后延迟 5 秒启动安装包并退出当前进程，由安装器完成替换并启动新版本。
+- **安装版**下载完成后会自动调用 `updates.install`：校验文件位于更新临时目录、扩展名为 `.exe` 且文件名包含 `Setup`，然后延迟 5 秒以 `/SILENT /DIR="<当前安装目录>"` 启动安装包并退出当前进程，安装完成后重新启动新版本。
 - **便携版**不自动执行下载文件，只保留文件并在弹窗中显示下载完成，避免把便携目录替换成安装版目录。
 - “网盘下载”打开发布页/备用网盘；当前指向原项目的夸克网盘地址，可在 `AppWebBridge.Update.cs` 中替换。
 
 ## 安装版
 
-- 安装包使用 Velopack，每用户安装；`Setup.exe` 安装完成后会启动程序。
+- 安装包使用 Inno Setup 6，每用户安装；安装向导允许用户选择安装目录。
+- 安装/卸载界面跟随 Windows 显示语言：中文系统显示简体中文，其他语言显示英文。
 - 发布只产出安装包，不生成便携 zip；便携版仅用于本地测试。
-- 标准卸载入口为 Windows“设置 > 应用”中的 `FrameGen Manager-Next`，实际执行 `Update.exe --uninstall`。
-- 卸载时 Velopack 删除安装目录和快捷方式，`OnBeforeUninstallFastCallback` 额外删除本地数据目录和更新临时目录；详见 [ADR-0010](../decisions/ADR-0010-velopack-installer.md)。
+- 标准卸载入口为 Windows“设置 > 应用”中的 `FrameGen Manager-Next`，由 Inno 卸载器删除安装目录、快捷方式和卸载注册项。
+- 卸载前调用 `FrameGenManager-Next.exe --uninstall-cleanup`，额外删除本地数据目录、更新临时目录、旧版 Next 数据目录和开始菜单磁贴缓存；详见 [ADR-0011](../decisions/ADR-0011-inno-setup-installer.md)。
+- 2.0.1 的 Velopack 安装会在 2.0.2 安装时清理旧安装文件/快捷方式/卸载项，但保留本地游戏库、配置和备份。
+- 2.0.2 升级时根据 `install-manifest.txt` 清空旧安装目录后再写入新版本，避免旧文件残留。
 
 ## 界面约束
 
