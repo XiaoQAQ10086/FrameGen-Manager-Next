@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.0.3 (unreleased)
+
+### Fixed
+
+- 修复部署目标下拉框滚动条无法拖动、点击后菜单关闭的问题。
+
 ## 2.0.2 (unreleased)
 
 ### Fixed

@@ -129,11 +129,26 @@ export function observeSelects() {
   observer.observe(document.body, { childList: true, subtree: true });
 }
 
-document.addEventListener('click', closeOpen);
+function isInsideOpen(target) {
+  return Boolean(
+    (openWrap && target instanceof Node && openWrap.contains(target)) ||
+    (openMenu && target instanceof Node && openMenu.contains(target)),
+  );
+}
+
+document.addEventListener('click', (event) => {
+  if (!isInsideOpen(event.target)) closeOpen();
+});
 document.addEventListener('keydown', (event) => {
   if (event.key === 'Escape') closeOpen();
 });
 window.addEventListener('resize', closeOpen);
 window.addEventListener('scroll', (event) => {
-  if (!openWrap || !event.target?.contains?.(openWrap)) closeOpen();
+  if (!openWrap) return;
+  const target = event.target;
+  if (openMenu && target instanceof Node && (target === openMenu || openMenu.contains(target))) {
+    return;
+  }
+  if (target instanceof Node && openWrap.contains(target)) return;
+  closeOpen();
 }, true);
