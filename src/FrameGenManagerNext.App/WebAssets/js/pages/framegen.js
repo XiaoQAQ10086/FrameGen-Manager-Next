@@ -7,6 +7,7 @@ const launcherKeys = {
   WeGame: 'Common.WeGame',
   Loose: 'Common.Loose',
   Manual: 'Common.Manual',
+  Xbox: 'Common.Xbox',
 };
 
 const apiKeys = {
@@ -301,6 +302,7 @@ export default {
       const legacy = game.state === 'InstalledWithoutManifest';
       const restorable = ['Installed', 'Partial', 'Conflict'].includes(game.state);
       const smConflict = game.smoothMotionOn === true;
+      const xboxProtected = game.launcher === 'Xbox' && !game.renderExe;
       const primaryAction = legacy ? 'clean' : restorable ? 'restore' : 'deploy';
       const primaryLabel = legacy
         ? t('Common.Clean')
@@ -309,7 +311,9 @@ export default {
           : game.state === 'Outdated'
             ? t('Common.Update')
             : t('Common.Deploy');
-      const blocked = smConflict && !restorable && !legacy;
+      const blocked = (smConflict || xboxProtected) && !restorable && !legacy;
+      const blockReason = xboxProtected ? t('Library.XboxProtected') : t('Conflict.SmoothMotionOn');
+      const blockHint = xboxProtected ? blockReason : `${t('Conflict.SmoothMotionOn')} · ${t('Conflict.SmoothMotionHint')}`;
       const stateText = game.state === 'Installed'
         ? (game.packVersion
             ? t('State.DeployedVersion').replace('{0}', game.packVersion)
@@ -332,9 +336,9 @@ export default {
             </div>
           </div>
           <div class="gpath" title="${esc(prettyPath(game.targetDirectory))}">${esc(prettyPath(game.targetDirectory))}</div>
-          ${blocked ? `<div class="conflict-hint">${esc(t('Conflict.SmoothMotionOn'))} · ${esc(t('Conflict.SmoothMotionHint'))}</div>` : ''}
+          ${blocked ? `<div class="conflict-hint">${esc(blockHint)}</div>` : ''}
           <div class="gactions">
-            <button class="btn small ${restorable || legacy ? 'danger' : 'success'}" data-action="${primaryAction}" data-id="${esc(game.id)}" type="button" ${blocked ? 'disabled' : ''} ${blocked ? `title="${esc(t('Conflict.SmoothMotionOn'))}"` : ''}>${esc(primaryLabel)}</button>
+            <button class="btn small ${restorable || legacy ? 'danger' : 'success'}" data-action="${primaryAction}" data-id="${esc(game.id)}" type="button" ${blocked ? 'disabled' : ''} ${blocked ? `title="${esc(blockReason)}"` : ''}>${esc(primaryLabel)}</button>
             <button class="btn small" data-action="open" data-id="${esc(game.id)}" type="button">${esc(t('Library.OpenFolder'))}</button>
             <span class="spacer"></span>
             <button class="btn small danger icon-only" data-action="remove" data-id="${esc(game.id)}" type="button" title="${esc(t('Common.Remove'))}" aria-label="${esc(t('Common.Remove'))}">🗑</button>

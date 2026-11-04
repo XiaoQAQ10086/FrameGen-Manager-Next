@@ -370,6 +370,7 @@ public sealed partial class GameLibraryService : IGameLibraryService, IDisposabl
             LauncherKind.Steam => 0,
             LauncherKind.Epic => 1,
             LauncherKind.WeGame => 2,
+            LauncherKind.Xbox => 2,
             LauncherKind.Loose => 3,
             LauncherKind.Manual => 4,
             _ => 5,

@@ -7,4 +7,5 @@ public enum LauncherKind
     WeGame,
     Loose,
     Manual,
+    Xbox,
 }

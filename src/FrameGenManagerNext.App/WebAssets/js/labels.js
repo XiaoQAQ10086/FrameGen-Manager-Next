@@ -4,6 +4,7 @@ export const launcherKeys = {
   WeGame: 'Common.WeGame',
   Loose: 'Common.Loose',
   Manual: 'Common.Manual',
+  Xbox: 'Common.Xbox',
 };
 
 export const stateKeys = {

@@ -31,6 +31,7 @@ public sealed partial class AppWebBridge
                 {
                     id = game.Id,
                     name = game.Name,
+                    launcher = game.Launcher.ToString(),
                     targetDirectory = game.TargetDirectory,
                     initial,
                     cover,
@@ -57,6 +58,7 @@ public sealed partial class AppWebBridge
                 {
                     id = game.Id,
                     name = game.Name,
+                    launcher = game.Launcher.ToString(),
                     targetDirectory = game.TargetDirectory,
                     initial,
                     cover,
@@ -76,6 +78,7 @@ public sealed partial class AppWebBridge
             {
                 id = game.Id,
                 name = game.Name,
+                launcher = game.Launcher.ToString(),
                 targetDirectory = game.TargetDirectory,
                 initial,
                 cover,

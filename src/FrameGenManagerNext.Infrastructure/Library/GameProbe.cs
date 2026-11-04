@@ -76,7 +76,7 @@ public sealed class GameProbe : IGameProbe
     private GameEntry ProbeCore(GameCandidate candidate)
     {
         var installDirectory = Path.GetFullPath(candidate.InstallDirectory);
-        var renderExe = FindRenderExe(installDirectory, candidate.Name);
+        var renderExe = FindRenderExe(installDirectory, candidate.Name, candidate.Launcher);
         var graphicsApi = renderExe is null ? GraphicsApi.Unknown : DetectApi(renderExe);
         var targetDirectory = renderExe is null
             ? installDirectory
@@ -137,7 +137,10 @@ public sealed class GameProbe : IGameProbe
             IsManual: true);
     }
 
-    private string? FindRenderExe(string installDirectory, string gameName)
+    private string? FindRenderExe(
+        string installDirectory,
+        string gameName,
+        LauncherKind launcher)
     {
         var candidates = new List<GameExeCandidate>();
         var stack = new Stack<(string Directory, int Depth)>();
@@ -172,8 +175,12 @@ public sealed class GameProbe : IGameProbe
 
                 if (Directory.Exists(entry))
                 {
+                    var directoryName = Path.GetFileName(entry);
+                    var isXboxContent =
+                        launcher == LauncherKind.Xbox &&
+                        string.Equals(directoryName, "Content", StringComparison.OrdinalIgnoreCase);
                     if (depth < MaxDepth &&
-                        !SkippedDirectories.Contains(Path.GetFileName(entry)) &&
+                        (isXboxContent || !SkippedDirectories.Contains(directoryName)) &&
                         !IsReparsePoint(entry))
                     {
                         stack.Push((entry, depth + 1));

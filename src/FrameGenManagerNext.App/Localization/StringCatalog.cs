@@ -6,6 +6,9 @@ internal static class StringCatalog
     {
         ["Startup.Title"] = ("正在启动 FrameGen Manager-Next", "Starting FrameGen Manager-Next"),
         ["Startup.Loading"] = ("正在加载本地游戏库…", "Loading the local game library…"),
+        ["Startup.FailedTitle"] = ("FrameGen Manager-Next 启动失败", "FrameGen Manager-Next failed to start"),
+        ["Startup.FailedMessage"] = ("启动失败。诊断日志已写入：", "Startup failed. A diagnostic log was written to:"),
+        ["Startup.AlreadyRunning"] = ("FrameGen Manager-Next 已经在运行。", "FrameGen Manager-Next is already running."),
         ["Fallback.Title"] = ("界面加载失败", "Interface failed to load"),
         ["Fallback.Retry"] = ("重新加载界面", "Reload interface"),
         ["Fallback.Reloading"] = ("正在重新加载界面…", "Reloading the interface…"),
@@ -75,6 +78,7 @@ internal static class StringCatalog
         ["Common.WeGame"] = ("WeGame", "WeGame"),
         ["Common.Loose"] = ("散装", "Loose"),
         ["Common.Manual"] = ("手动", "Manual"),
+        ["Common.Xbox"] = ("Xbox", "Xbox"),
 
         ["State.Installed"] = ("已安装", "Installed"),
         ["State.DeployedVersion"] = ("已部署 资产版本：{0}", "Deployed · assets {0}"),
@@ -174,6 +178,7 @@ internal static class StringCatalog
         ["Library.Status.Loading"] = ("正在读取游戏库缓存...", "Loading game library cache..."),
         ["Library.Status.Empty"] = ("游戏库为空，点击“扫描游戏”开始", "Library is empty. Click \"Scan games\" to start."),
         ["Library.Status.Loaded"] = ("已加载 {0} 个游戏", "Loaded {0} games"),
+        ["Library.XboxProtected"] = ("Xbox/商店游戏位于受保护目录，系统拒绝读取游戏文件；无法部署，请改用 Steam/Epic/GOG 版。", "This Xbox/Store game is in a protected directory and its files cannot be read; deployment is unavailable. Use the Steam/Epic/GOG version instead."),
         ["Library.AssetUpdateHint"] = ("有 {0} 个游戏的内置资产已更新。点击“更新”即可升级到当前版本，原有文件备份会保留。", "{0} game(s) use an older bundled asset pack. Choose Update to upgrade; original file backups are kept."),
         ["Library.Status.LoadFailed"] = ("读取游戏库失败", "Could not load game library"),
         ["Library.Status.ScanLaunchers"] = ("正在扫描 {0}", "Scanning {0}"),

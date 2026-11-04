@@ -20,11 +20,12 @@
 - Unity 游戏按 Unity 的 Windows 默认值判定为 D3D11；只有目录里带 `D3D12Core.dll`（D3D12 构建）或 `vulkan-1.dll`（Vulkan 构建）时才判为对应 API。ReShade 自己的代理 DLL（版本信息 ProductName=ReShade）不参与判定，否则装过 ReShade 后重新扫描会把 API 判错。
 
 1. 校验目标目录、pack schema、安装器 SHA-256。
-2. 通过统一部署引擎部署 pack 中的 114 个文件：
+2. 通过统一部署引擎部署 pack 中的 114 个文件（当前 pack `6.8.1`，GITC Uplift `1.8.0`）：
    - `gitc-uplift.addon64`、`gitc-uplift.addon32`、`gitc-uplift-helper64.exe`
-   - `GITC-Uplift/nvngx_dlssnr.dll`（534 MB 模型）
+   - `GITC-Uplift/nvngx_dlssnr.dll`（534 MB 模型，1.8.0 未更换）
    - `reshade-shaders/Shaders/...`、`reshade-shaders/Textures/...`
-   - `Uplift.fx`、`UpliftMask.fx`
+   - `Uplift.fx`、`UpliftMask.fx`（Uplift.fx 随 1.8.0 更新，新增 motion 权限复选框；UpliftMask.fx 未变）
+   - GITC 1.8.0 新增 Before Framegen（DX12/Vulkan Streamline 路由），已有设置会保留；pack 版本升到 6.8.1，已部署用户可以检测到资产更新。
 3. 非 Vulkan 优先离线安装 ReShade（不联网、不运行 setup）：
    - 从 `ReShade_Setup_6.8.0_Addon.exe` 的 512 字节步进内嵌 ZIP 取出 `ReShade64.dll`（32 位游戏取 `ReShade32.dll`）。该 DLL 与官方 setup 写出的文件哈希一致。
    - 按最终代理写成代理文件名：自动模式下 DX10/11/12 使用 `dxgi.dll`；显式选择时使用该 API 自己的代理（`d3d9/d3d10/d3d11/d3d12/opengl32.dll`）。目标位置已有非 ReShade 文件时拒绝覆盖并回滚（`Conflict`）。

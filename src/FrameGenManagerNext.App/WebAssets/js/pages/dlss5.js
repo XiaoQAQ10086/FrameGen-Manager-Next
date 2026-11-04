@@ -128,6 +128,7 @@ export default {
           </select></label>
         </div>
         <p class="hint">${esc(t('Dlss5.Subtitle'))}</p>
+        <p class="hint conflict-hint ${game.launcher === 'Xbox' && !game.renderExe ? '' : 'hidden'}">${esc(t('Library.XboxProtected'))}</p>
         <p class="hint hidden" data-role="vulkan-hint">${esc(t('Dlss5.VulkanOnlineHint'))}</p>
         <div class="install-progress hidden" data-role="install-progress">
           <div class="bar"><i data-role="install-bar"></i></div>

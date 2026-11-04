@@ -1,5 +1,39 @@
 # Changelog
 
+## 2.1.0
+
+### Added
+
+- 新增 Xbox/Microsoft Store 游戏扫描：识别 `XboxGames` 下的 `Content`/`MicrosoftGame.config`/`AppxManifest.xml`，并支持可移动磁盘；受保护目录只读展示，不绕过 ACL。
+
+### Changed
+
+- DLSS5 pack 更新到 `6.8.1`，内置 GITC Uplift `1.8.0`：更新 `gitc-uplift.addon64`、`addon32`、`gitc-uplift-helper64.exe` 和 `Uplift.fx`；模型与 ReShade 6.8.0 不变。
+- 移除内置 WebView2 运行时，应用使用系统安装的 WebView2。
+- 保留 .NET 10 CET 关闭和启动失败日志。
+- 安装器使用 Inno Setup 6.7.4 + 64 位 Setup Loader。
+
+## 2.0.10 (unreleased)
+
+### Fixed
+
+- 关闭 .NET 10 apphost 的 CET 兼容位。未完全更新的 Windows 10 22H2（KERNELBASE 19041.1949）会因 CET 检查在 CoreCLR 启动阶段以 `0x80131506` 崩溃，应用无日志、无窗口。
+- 日志收集器支持自定义安装目录（读取 Inno 的 InstallLocation/App Path/DisplayIcon/UninstallString），并收集 WER `Report.wer`、CPU 和 KERNELBASE 版本。
+
+## 2.0.9 (unreleased)
+
+### Changed
+
+- 应用目录内置固定版 WebView2 x64 运行时，优先使用它启动，不再依赖用户系统里的 Edge WebView2。
+- 新增 `collect-fgm-logs.cmd`，即使主程序打不开也能把系统、WebView2、安装文件和日志收集到桌面 zip。
+- 启动失败时写入 `startup-failure.log` 并显示日志路径；单实例冲突不再静默退出。
+
+## 2.0.8 (unreleased)
+
+### Changed
+
+- 安装包改用 Inno Setup 6.7.4，并启用 64 位 Setup Loader，避免部分 Windows 10 22H2 用户双击安装包无响应或出现 “Unknown Hard Error”。
+
 ## 2.0.7 (unreleased)
 
 ### Changed

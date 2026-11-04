@@ -92,6 +92,7 @@ $shortcut.IconLocation = (Join-Path $destination 'FrameGenManager-Next.exe') + '
 $shortcut.Description = 'FrameGen Manager-Next'
 $shortcut.Save()
 
+
 $packsSource = Join-Path $root 'packs'
 if (Test-Path -LiteralPath $packsSource) {
     Copy-Item -LiteralPath $packsSource -Destination (Join-Path $destination 'packs') -Recurse -Force

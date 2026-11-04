@@ -43,6 +43,7 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IGameScanner, SteamGameScanner>();
         services.AddSingleton<IGameScanner, EpicGameScanner>();
         services.AddSingleton<IGameScanner, WeGameGameScanner>();
+        services.AddSingleton<IGameScanner, XboxGameScanner>();
         services.AddSingleton<IGameScanner, LooseGameScanner>();
         services.AddSingleton<IGameProbe, GameProbe>();
         services.AddSingleton<IGameCoverService, SteamCoverService>();

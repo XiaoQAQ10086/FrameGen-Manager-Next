@@ -497,3 +497,9 @@ packs/*
 coverage/
 assets/*
 !assets/README.md
+
+# Local build tooling and vendored runtimes (not shipped in source)
+build/vendor/
+
+# On-demand diagnostic tooling; never packaged or published
+build/tools/

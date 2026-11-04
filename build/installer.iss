@@ -23,6 +23,13 @@ SolidCompression=yes
 WizardStyle=modern
 ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
+#ifdef LEGACY_INNO
+; Inno 6.4 has no 64-bit loader or RedirectionGuard directive.
+#else
+UseSetupLdr=x64
+RedirectionGuard=no
+#endif
+SetupLogging=yes
 AppMutex=Local\FrameGenManagerNext.App
 ShowLanguageDialog=no
 LanguageDetectionMethod=uilanguage

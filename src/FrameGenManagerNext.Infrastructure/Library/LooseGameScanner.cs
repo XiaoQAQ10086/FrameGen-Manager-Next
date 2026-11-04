@@ -184,7 +184,7 @@ public sealed class LooseGameScanner : IGameScanner
 
         foreach (var drive in drives)
         {
-            if (drive.DriveType != DriveType.Fixed || !drive.IsReady)
+            if (drive.DriveType is not (DriveType.Fixed or DriveType.Removable) || !drive.IsReady)
             {
                 continue;
             }

@@ -14,14 +14,15 @@
 | Steam | 注册表 `HKCU\Software\Valve\Steam\SteamPath`、HKLM `InstallPath`、`SteamExe` 父目录、Uninstall `DisplayName=Steam`、Program Files 的 `Steam` | 读取 `steamapps\libraryfolders.vdf` 的 `path`（兼容旧数字键）；解析 `appmanifest_*.acf` 的 `appid/name/installdir` |
 | Epic | `%ProgramData%\Epic\EpicGamesLauncher\Data\Manifests\*.item` | `bIsApplication=false` 跳过；读取 `DisplayName/InstallLocation/AppName` |
 | WeGame | 注册表 `Tencent\WeGame` 的安装路径 + `rail_apps` / `WeGameApps` 子目录 | 尽力而为；没有公开清单格式，仅收录包含 EXE 的目录 |
-| 散装 | 固定磁盘根目录下的 `Games`、`Game`、`My Games`、`SteamLibrary`、`GOG Games`、`Epic Games`、`XboxGames`、`Origin Games`、`Repacks`、`游戏`、`单机游戏`、`游戏库` | 每根目录最多 300 个子目录，最多 80 个游戏；目录深度 ≤3，EXE ≥64 KiB |
+| 散装 | 固定/可移动磁盘根目录下的 `Games`、`Game`、`My Games`、`SteamLibrary`、`GOG Games`、`Epic Games`、`Origin Games`、`Repacks`、`游戏`、`单机游戏`、`游戏库` | 每根目录最多 300 个子目录，最多 80 个游戏；目录深度 ≤3，EXE ≥64 KiB |
+| Xbox | 固定/可移动磁盘的 `XboxGames` 子目录；识别 `Content` 目录或 `MicrosoftGame.config`/`AppxManifest.xml` | 允许 Probe 进入 Xbox 的 `Content`；受 ACL 限制无法读取时仍列出游戏，但标记为不可部署 |
 | 手动 | 用户在 UI 中选择一个 EXE | 目录 = EXE 父目录，渲染 EXE = 所选 EXE |
 
 Steam junk 跳过（精确名称）：`steamworks common redistributables`、`steamvr`、`steamvr beta`、`proton experimental`、`proton hotfix`、`proton - experimental`、`steam linux runtime`；前缀 `steam linux runtime `；前缀 `proton ` 且后面第一个字符是数字。
 
 ## 去重与缓存
 
-- 启动器结果按 `InstallDirectory`（完整路径、大小写不敏感）去重；优先级 Steam > Epic > WeGame > 散装。
+- 启动器结果按 `InstallDirectory`（完整路径、大小写不敏感）去重；优先级 Steam > Epic > WeGame/Xbox > 散装。
 - 手动条目优先于扫描条目；`GameLibrary.EnumerateVisibleGames()` 按安装目录去重。
 - 移除游戏只把 id 写入 `ignoredIds`，手动条目仍保留在 `Manual` 中；`EnumerateRemovedGames()` 按 id 去重列出这些条目，恢复时从 `ignoredIds` 删除即可重新显示。
 - 用户可在部署弹窗选择“手动选择游戏实际启动 EXE”；选择结果写入 `targetOverrides[gameId]`，覆盖该游戏的渲染 EXE 和目标目录，重新扫描或重启后仍然生效。覆盖只影响目标选择，不修改游戏文件。
@@ -93,4 +94,5 @@ Steam junk 跳过（精确名称）：`steamworks common redistributables`、`st
 
 - WeGame 没有公开清单格式，当前实现比旧版更保守，可能漏掉部分游戏；可在拿到真实样本后细化。
 - 散装扫描遵循旧版启发式，可能把大型工具目录误认为游戏；UI 支持手动移除并加入忽略列表。
+- `WindowsApps` / 部分 `XboxGames` 受 ACL 保护。可以只读识别，但不能安全写入；不要修改这些目录的 ACL（会破坏商店更新，也可能触发反作弊）。UI 会显示受保护提示，部署按钮保持禁用。
 - 不读取封面、不下载元数据；封面留到后续阶段。

@@ -5,7 +5,11 @@ param(
 
     [string]$Runtime = 'win-x64',
 
-    [string]$OutputRoot = ''
+    [string]$OutputRoot = '',
+
+    [string]$IsccPath = '',
+
+    [switch]$LegacyInno
 )
 
 Set-StrictMode -Version Latest
@@ -17,6 +21,10 @@ $root = Split-Path -Parent $PSScriptRoot
 if ([string]::IsNullOrWhiteSpace($OutputRoot)) {
     $OutputRoot = Join-Path $root 'artifacts\installer'
 }
+elseif (-not [System.IO.Path]::IsPathRooted($OutputRoot)) {
+    $OutputRoot = Join-Path $root $OutputRoot
+}
+$OutputRoot = [System.IO.Path]::GetFullPath($OutputRoot)
 
 $dotnetCommand = Get-Command dotnet -ErrorAction SilentlyContinue
 if ($null -ne $dotnetCommand) {
@@ -84,6 +92,7 @@ Invoke-Publish -Project $appProject
 Invoke-Publish -Project $cliProject
 Invoke-Publish -Project $elevatedProject
 
+
 $packsSource = Join-Path $root 'packs'
 if (Test-Path -LiteralPath $packsSource) {
     Copy-Item -LiteralPath $packsSource -Destination (Join-Path $staging 'packs') -Recurse -Force
@@ -109,10 +118,16 @@ $relativeFiles = Get-ChildItem -LiteralPath $staging -File -Recurse |
     ForEach-Object { $_.FullName.Substring($staging.Length + 1).Replace('\', '/') }
 Set-Content -LiteralPath $manifestPath -Value $relativeFiles -Encoding utf8
 
-$isccCommand = Get-Command 'ISCC.exe' -ErrorAction SilentlyContinue
-$iscc = if ($null -ne $isccCommand) { $isccCommand.Source } else { '' }
-if ([string]::IsNullOrWhiteSpace($iscc)) {
-    $iscc = Join-Path ([Environment]::GetFolderPath([Environment+SpecialFolder]::ProgramFilesX86)) 'Inno Setup 6\ISCC.exe'
+$iscc = ''
+if (-not [string]::IsNullOrWhiteSpace($IsccPath)) {
+    $iscc = if ([System.IO.Path]::IsPathRooted($IsccPath)) { $IsccPath } else { Join-Path $root $IsccPath }
+}
+else {
+    $isccCommand = Get-Command 'ISCC.exe' -ErrorAction SilentlyContinue
+    $iscc = if ($null -ne $isccCommand) { $isccCommand.Source } else { '' }
+    if ([string]::IsNullOrWhiteSpace($iscc)) {
+        $iscc = Join-Path ([Environment]::GetFolderPath([Environment+SpecialFolder]::ProgramFilesX86)) 'Inno Setup 6\ISCC.exe'
+    }
 }
 
 if (-not (Test-Path -LiteralPath $iscc)) {
@@ -124,11 +139,16 @@ if (Test-Path -LiteralPath $releases) {
 }
 
 Write-Host '> ISCC.exe' -ForegroundColor Cyan
-& $iscc `
-    "/DAppVersion=$version" `
-    "/DSourceDir=$staging" `
-    "/DOutputDir=$releases" `
-    (Join-Path $root 'build\installer.iss')
+$defines = @(
+    "/DAppVersion=$version"
+    "/DSourceDir=$staging"
+    "/DOutputDir=$releases"
+)
+if ($LegacyInno) {
+    $defines += '/DLEGACY_INNO'
+}
+
+& $iscc @defines (Join-Path $root 'build\installer.iss')
 
 if ($LASTEXITCODE -ne 0) {
     throw "Inno Setup failed with exit code $LASTEXITCODE"
