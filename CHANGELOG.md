@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.1.1 (unreleased)
+
+### Fixed
+
+- Witcher 3 等只导入 `dxgi.dll` 的游戏，使用 `x64_dx12` 目录名补判 DX12。
+- 扫描结果 API 为 Unknown 时，DLSS5 安装使用详情页选中的 API，不再强制自动检测失败。
+- 扫描不到渲染 EXE 的游戏，在详情页手动选择 EXE 后可以安装 DLSS5，不再因为 `available=false` 永久锁死。
+
 ## 2.1.0
 
 ### Added

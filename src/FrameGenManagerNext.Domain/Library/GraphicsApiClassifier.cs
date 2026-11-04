@@ -15,7 +15,7 @@ public static class GraphicsApiClassifier
             return GraphicsApi.Vulkan;
         }
 
-        var fromExeName = FromExeName(facts.ExeName);
+        var fromExeName = FromName(facts.ExeName);
         if (fromExeName != GraphicsApi.Unknown)
         {
             return fromExeName;
@@ -25,6 +25,14 @@ public static class GraphicsApiClassifier
         if (fromImports != GraphicsApi.Unknown)
         {
             return fromImports;
+        }
+
+        // Witcher 3's DX12 launcher only imports dxgi; its folder name (x64_dx12)
+        // is the remaining reliable signal after the import table.
+        var fromDirectory = FromName(facts.DirectoryName);
+        if (fromDirectory != GraphicsApi.Unknown)
+        {
+            return fromDirectory;
         }
 
         var siblings = Normalize(facts.SiblingFiles);
@@ -41,7 +49,7 @@ public static class GraphicsApiClassifier
         return GraphicsApi.Unknown;
     }
 
-    private static GraphicsApi FromExeName(string? exeName)
+    private static GraphicsApi FromName(string? exeName)
     {
         if (string.IsNullOrWhiteSpace(exeName))
         {

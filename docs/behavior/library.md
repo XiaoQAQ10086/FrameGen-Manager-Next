@@ -64,7 +64,7 @@ Steam junk 跳过（精确名称）：`steamworks common redistributables`、`st
 5. 主 EXE Unknown 时，尝试引擎 DLL：`unityplayer.dll`、`engine2.dll`、`engine.dll`、`crysystem.dll`，重复步骤 2–4。
 6. 仍 Unknown。
 
-`dxgi.dll` 单独存在不算证据；`Unknown` 不阻断扫描，由部署层决定是否提示手动选择。
+`dxgi.dll` 单独存在不算证据；但目录名（如 Witcher 3 的 `x64_dx12`）可作为导入表之后的补充证据。`Unknown` 不阻断扫描，DLSS5 详情页会使用用户选中的 API。
 
 ## 真实机器对照（2026-10-29）
 

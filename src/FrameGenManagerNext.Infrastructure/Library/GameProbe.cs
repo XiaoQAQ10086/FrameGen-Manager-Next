@@ -247,11 +247,13 @@ public sealed class GameProbe : IGameProbe
             .ToList();
 
         var wrapperIsVulkan = WrapperImportsVulkan(directory);
+        var directoryName = Path.GetFileName(Path.GetDirectoryName(exePath) ?? string.Empty);
         var api = GraphicsApiClassifier.Classify(new GraphicsApiFacts(
             imports,
             siblings,
             Path.GetFileName(exePath),
-            wrapperIsVulkan));
+            wrapperIsVulkan,
+            directoryName));
 
         if (api != GraphicsApi.Unknown)
         {
@@ -277,7 +279,8 @@ public sealed class GameProbe : IGameProbe
                 engineImports,
                 siblings,
                 engineName,
-                wrapperIsVulkan));
+                wrapperIsVulkan,
+                directoryName));
 
             if (engineApi != GraphicsApi.Unknown)
             {

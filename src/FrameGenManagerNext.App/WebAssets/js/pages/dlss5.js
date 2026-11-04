@@ -153,6 +153,7 @@ export default {
       }
       syncVulkanHint();
 
+      let manualTargetPicked = false;
       const pickTarget = async () => {
         const previous = targets.find((target) => target.path === game.renderExe)?.path
           || targets[0]?.path
@@ -176,6 +177,8 @@ export default {
         option.value = picked.path;
         option.textContent = picked.name;
         targetSelect.value = picked.path;
+        manualTargetPicked = true;
+        if (installButton) installButton.disabled = game.legacy || installed;
       };
       targetSelect?.addEventListener('change', () => {
         if (targetSelect.value === manualTarget) {
@@ -189,7 +192,7 @@ export default {
         game.state === 'Conflict' ||
         game.state === 'InstalledWithoutManifest';
       const installed = deployed(game) && !repairState;
-      installButton.disabled = game.available === false || game.legacy || installed;
+      installButton.disabled = (game.available === false && !manualTargetPicked) || game.legacy || installed;
       installButton.textContent = t(installed
         ? 'State.Deployed'
         : game.state === 'InstalledWithoutManifest'
@@ -273,11 +276,12 @@ export default {
         }
       } catch (error) {
         if (box) box.classList.remove('indeterminate');
-        if (status) status.textContent = error.message || error.code || t('Progress.failed');
+        const message = ui.errorText(error, t('Progress.failed'));
+        if (status) status.textContent = message;
         installButton.textContent = previousInstall;
         installButton.disabled = false;
         uninstallButton.disabled = previousUninstallDisabled;
-        ui.toast(error.message || error.code || t('Progress.failed'), 'error');
+        ui.toast(message, 'error');
       } finally {
         unsubscribe();
         ui.progressDone();
@@ -357,7 +361,9 @@ export default {
               return;
             }
             const selectedApi = detailBody.querySelector('[data-role="detail-api"]')?.value || 'DX12';
-            const apiValue = detailBody.dataset.apiTouched === '1' ? selectedApi : 'auto';
+            const apiValue = detailBody.dataset.apiTouched === '1' || game.api === 'Unknown'
+              ? selectedApi
+              : 'auto';
             if (!(await confirmDialog(t('Dlss5.Title'), t('Dlss5.Confirm.Install').replace('{0}', game.name).replace('{1}', prettyPath(target || game.targetDirectory)), t('Common.Install')))) return;
             return runDetailAction('dlss5.install', game, { target, api: apiValue });
           }

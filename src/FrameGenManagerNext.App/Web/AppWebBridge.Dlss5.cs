@@ -116,13 +116,17 @@ public sealed partial class AppWebBridge
     private async Task<object?> InstallDlss5Async(JsonElement payload)
     {
         var game = await FindGameAsync(IdOf(payload));
-        if (game?.RenderExePath is null)
+        if (game is null)
         {
-            throw new BridgeException(Domain.Errors.ErrorCode.FileNotFound, "render executable not found");
+            throw new BridgeException(Domain.Errors.ErrorCode.FileNotFound, "game not found");
         }
 
         var target = ResolveDeploymentTarget(game, payload);
-        var installExe = target.ExePath ?? game.RenderExePath!;
+        var installExe = target.ExePath ?? game.RenderExePath;
+        if (string.IsNullOrWhiteSpace(installExe) || !File.Exists(installExe))
+        {
+            throw new BridgeException(Domain.Errors.ErrorCode.FileNotFound, "render executable not found");
+        }
         var knownApi = ReadGraphicsApi(payload);
 
         var apiModule = knownApi is null

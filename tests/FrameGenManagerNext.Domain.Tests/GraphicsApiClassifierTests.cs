@@ -85,6 +85,30 @@ public sealed class GraphicsApiClassifierTests
     }
 
     [Fact]
+    public void FolderNameResolvesDxgiOnlyWitcherExecutable()
+    {
+        var facts = new GraphicsApiFacts(
+            ["dxgi.dll"],
+            ["witcher3.exe"],
+            "witcher3.exe",
+            DirectoryName: "x64_dx12");
+
+        GraphicsApiClassifier.Classify(facts).ShouldBe(GraphicsApi.Direct3D12);
+    }
+
+    [Fact]
+    public void ExeNameStillWinsOverFolderName()
+    {
+        var facts = new GraphicsApiFacts(
+            [],
+            [],
+            "Game-vulkan.exe",
+            DirectoryName: "x64_dx12");
+
+        GraphicsApiClassifier.Classify(facts).ShouldBe(GraphicsApi.Vulkan);
+    }
+
+    [Fact]
     public void DxgiAloneIsAmbiguous()
     {
         var facts = new GraphicsApiFacts([], ["dxgi.dll"]);

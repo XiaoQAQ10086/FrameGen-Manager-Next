@@ -5,8 +5,6 @@ param(
 
     [string]$Runtime = 'win-x64',
 
-    [string]$OutputRoot = '',
-
     [string]$IsccPath = '',
 
     [switch]$LegacyInno
@@ -18,13 +16,14 @@ $env:MSBUILDDISABLENODEREUSE = '1'
 $env:DOTNET_CLI_USE_MSBUILD_SERVER = '0'
 
 $root = Split-Path -Parent $PSScriptRoot
-if ([string]::IsNullOrWhiteSpace($OutputRoot)) {
-    $OutputRoot = Join-Path $root 'artifacts\installer'
+$OutputRoot = Join-Path $root 'artifacts\installer'
+$artifactsRoot = Join-Path $root 'artifacts'
+
+# Installer artifacts are a single rolling output, never per-version folders.
+if (Test-Path -LiteralPath $artifactsRoot) {
+    Get-ChildItem -LiteralPath $artifactsRoot -Directory -Filter 'installer-*' |
+        Remove-Item -Recurse -Force
 }
-elseif (-not [System.IO.Path]::IsPathRooted($OutputRoot)) {
-    $OutputRoot = Join-Path $root $OutputRoot
-}
-$OutputRoot = [System.IO.Path]::GetFullPath($OutputRoot)
 
 $dotnetCommand = Get-Command dotnet -ErrorAction SilentlyContinue
 if ($null -ne $dotnetCommand) {

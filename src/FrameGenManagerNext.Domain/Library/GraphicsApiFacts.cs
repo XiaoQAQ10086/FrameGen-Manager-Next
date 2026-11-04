@@ -4,4 +4,5 @@ public sealed record GraphicsApiFacts(
     IReadOnlyCollection<string> ImportedModules,
     IReadOnlyCollection<string> SiblingFiles,
     string? ExeName = null,
-    bool WrapperIsVulkan = false);
+    bool WrapperIsVulkan = false,
+    string? DirectoryName = null);
