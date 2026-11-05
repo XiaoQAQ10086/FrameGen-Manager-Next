@@ -5,4 +5,5 @@ public sealed record RestoreReport(
     int RemovedFiles,
     int Conflicts,
     IReadOnlyList<string> Leftovers,
-    IReadOnlyList<string> Warnings);
+    IReadOnlyList<string> Warnings,
+    IReadOnlyList<string>? ConflictedFiles = null);

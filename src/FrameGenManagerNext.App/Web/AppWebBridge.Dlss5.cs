@@ -42,6 +42,7 @@ public sealed partial class AppWebBridge
                     api = game.GraphicsApi.ToString(),
                     reShade = false,
                     legacy = false,
+                    legacyFiles = Array.Empty<string>(),
                     leftovers = false,
                 });
                 continue;
@@ -69,6 +70,7 @@ public sealed partial class AppWebBridge
                     api = game.GraphicsApi.ToString(),
                     reShade = false,
                     legacy = false,
+                    legacyFiles = Array.Empty<string>(),
                     leftovers = false,
                 });
                 continue;
@@ -89,6 +91,7 @@ public sealed partial class AppWebBridge
                 api = inspection.Value.Api.ToString(),
                 reShade = inspection.Value.ReShadePresent,
                 legacy = inspection.Value.LegacyRenoDxPresent,
+                legacyFiles = inspection.Value.LegacyFiles ?? Array.Empty<string>(),
                 leftovers = inspection.Value.HasLeftovers,
             });
         }

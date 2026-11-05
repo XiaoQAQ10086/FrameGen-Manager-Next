@@ -47,22 +47,33 @@ public partial class MainWindow : FluentWindow
 
     private async void OnLoaded(object sender, RoutedEventArgs e)
     {
-        _logger.LogInformation("startup.windowLoaded elapsed={Elapsed}ms", App.StartupClock.ElapsedMilliseconds);
-        var rtss = RtssExclusion.Ensure();
-        if (rtss.Changed)
+        try
         {
-            _logger.LogInformation("RTSS WebView2 exclusion created: {Detail}", rtss.Detail);
-        }
-        else if (!rtss.Success)
-        {
-            _logger.LogWarning("Could not create RTSS WebView2 exclusion: {Detail}", rtss.Detail);
-        }
+            _logger.LogInformation("startup.windowLoaded elapsed={Elapsed}ms", App.StartupClock.ElapsedMilliseconds);
+            var rtss = RtssExclusion.Ensure();
+            if (rtss.Changed)
+            {
+                _logger.LogInformation("RTSS WebView2 exclusion created: {Detail}", rtss.Detail);
+            }
+            else if (!rtss.Success)
+            {
+                _logger.LogWarning("Could not create RTSS WebView2 exclusion: {Detail}", rtss.Detail);
+            }
 
-        UpdateLoadingSize();
-        LoadingPopup.IsOpen = true;
-        if (!await TryInitializeAsync(Browser, additionalBrowserArguments: null))
+            UpdateLoadingSize();
+            LoadingPopup.IsOpen = true;
+            if (!await TryInitializeAsync(Browser, additionalBrowserArguments: null))
+            {
+                await RecoverAsync();
+            }
+        }
+        catch (Exception exception)
         {
-            await RecoverAsync();
+            _logger.LogError(exception, "Window startup failed");
+            if (!_closing)
+            {
+                ShowFallback(L.T("Fallback.Generic"), exception.Message, canRetry: true);
+            }
         }
     }
 
@@ -83,7 +94,11 @@ public partial class MainWindow : FluentWindow
         {
             _logger.LogError(exception, "WebView2 initialization failed");
             _lastDetail = exception.Message;
-            ShowFallback(L.T("Fallback.Generic"), exception.Message, canRetry: true);
+            if (!_closing)
+            {
+                ShowFallback(L.T("Fallback.Generic"), exception.Message, canRetry: true);
+            }
+
             return false;
         }
     }
@@ -150,6 +165,11 @@ public partial class MainWindow : FluentWindow
 
     private async Task<bool> RecreateBrowserAsync(string? additionalBrowserArguments)
     {
+        if (_closing)
+        {
+            return false;
+        }
+
         var previous = Browser;
         _suspended = false;
         if (WebViewHost.Children.Contains(previous))
@@ -200,6 +220,11 @@ public partial class MainWindow : FluentWindow
 
     private void ShowFallback(string message, string? detail, bool canRetry)
     {
+        if (_closing)
+        {
+            return;
+        }
+
         DetachBrowser();
         LoadingPopup.IsOpen = false;
         BrowserHost.Visibility = Visibility.Collapsed;
@@ -297,14 +322,14 @@ public partial class MainWindow : FluentWindow
             return;
         }
 
-        var core = Browser.CoreWebView2;
-        if (core is null)
-        {
-            return;
-        }
-
         try
         {
+            var core = Browser.CoreWebView2;
+            if (core is null)
+            {
+                return;
+            }
+
             _suspended = await core.TrySuspendAsync();
             if (!_suspended)
             {

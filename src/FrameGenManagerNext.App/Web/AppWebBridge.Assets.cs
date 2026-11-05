@@ -81,7 +81,15 @@ public sealed partial class AppWebBridge
 
     private object? CancelAssetClear()
     {
-        _assetClearCancellation?.Cancel();
+        try
+        {
+            _assetClearCancellation?.Cancel();
+        }
+        catch (ObjectDisposedException)
+        {
+            // The clear operation already finished and released its token source.
+        }
+
         return new { cancelled = true };
     }
 

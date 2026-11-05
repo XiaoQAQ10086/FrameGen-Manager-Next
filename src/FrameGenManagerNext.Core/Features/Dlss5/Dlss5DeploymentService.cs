@@ -67,7 +67,8 @@ public sealed partial class Dlss5DeploymentService : IDlss5DeploymentService
                 false,
                 null,
                 false,
-                false));
+                false,
+                []));
         }
 
         var plan = await BuildPlanAsync(targetDirectory, api.Value, cancellationToken);
@@ -83,13 +84,22 @@ public sealed partial class Dlss5DeploymentService : IDlss5DeploymentService
         }
 
         var inventory = ScanTarget(plan.Value.TargetDirectory);
+        if (inventory.LegacyRenoDx)
+        {
+            _logger.LogInformation(
+                "dlss5.legacy target={Target} files={Files}",
+                plan.Value.TargetDirectory,
+                string.Join(", ", inventory.LegacyFiles));
+        }
+
         return Result<Dlss5Inspection>.Ok(new Dlss5Inspection(
             fileState.Value.State,
             api.Value,
             inventory.ReShadePresent,
             inventory.ReShadeModule,
             inventory.LegacyRenoDx,
-            inventory.HasLeftovers));
+            inventory.HasLeftovers,
+            inventory.LegacyFiles));
     }
 
     private async Task<bool> IsEmptyDlss5TargetAsync(

@@ -257,10 +257,11 @@ public sealed partial class FrameGenDeploymentService : IFrameGenDeploymentServi
     public async Task<Result<RestoreReport>> RestoreAsync(
         string targetDirectory,
         IProgress<DeploymentProgress>? progress,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        bool force = false)
     {
         var owned = await GetOwnedDirectoriesAsync(cancellationToken);
-        return await _engine.RestoreAsync(FamilyId, targetDirectory, progress, cancellationToken, owned);
+        return await _engine.RestoreAsync(FamilyId, targetDirectory, progress, cancellationToken, owned, force);
     }
 
     private async Task<IReadOnlyList<string>> GetOwnedDirectoriesAsync(CancellationToken cancellationToken)

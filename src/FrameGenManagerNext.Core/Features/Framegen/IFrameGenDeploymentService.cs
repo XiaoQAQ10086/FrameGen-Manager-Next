@@ -19,7 +19,8 @@ public interface IFrameGenDeploymentService
     Task<Result<RestoreReport>> RestoreAsync(
         string targetDirectory,
         IProgress<DeploymentProgress>? progress,
-        CancellationToken cancellationToken);
+        CancellationToken cancellationToken,
+        bool force = false);
 
     Task<Result<RestoreReport>> CleanAsync(
         string targetDirectory,

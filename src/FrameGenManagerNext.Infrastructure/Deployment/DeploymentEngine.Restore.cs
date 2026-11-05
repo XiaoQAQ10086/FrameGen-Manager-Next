@@ -12,7 +12,8 @@ public sealed partial class DeploymentEngine
         string targetDirectory,
         IProgress<DeploymentProgress>? progress,
         CancellationToken cancellationToken,
-        IReadOnlyList<string>? ownedDirectories = null)
+        IReadOnlyList<string>? ownedDirectories = null,
+        bool force = false)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(familyId);
 
@@ -56,6 +57,7 @@ public sealed partial class DeploymentEngine
         var removed = 0;
         var conflicts = 0;
         var conflictedPaths = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        var conflictedFiles = new List<string>();
         // Files that held original content before deployment belong to the game and must
         // survive the owned-directory sweep once they have been restored.
         var keepPaths = manifest.Files
@@ -73,6 +75,7 @@ public sealed partial class DeploymentEngine
             {
                 warnings.Add($"Invalid recorded path: {record.RelativePath}");
                 conflicts++;
+                conflictedFiles.Add(record.RelativePath);
                 continue;
             }
 
@@ -99,8 +102,35 @@ public sealed partial class DeploymentEngine
                         }
                     }
 
+                    if (force)
+                    {
+                        // The user explicitly asked to force the restore. A runtime-written
+                        // config/log or a proxy replaced by another mod must not block the
+                        // uninstall forever.
+                        if (record.ExistedBefore && backupPath is not null && File.Exists(backupPath))
+                        {
+                            File.Copy(backupPath, path.Value, overwrite: true);
+                            restored++;
+                        }
+                        else if (record.ExistedBefore)
+                        {
+                            conflicts++;
+                            conflictedPaths.Add(path.Value);
+                            conflictedFiles.Add(record.RelativePath);
+                            warnings.Add($"Original backup is missing: {record.RelativePath}");
+                        }
+                        else
+                        {
+                            File.Delete(path.Value);
+                            removed++;
+                        }
+
+                        continue;
+                    }
+
                     conflicts++;
                     conflictedPaths.Add(path.Value);
+                    conflictedFiles.Add(record.RelativePath);
                     warnings.Add($"Modified file left in place: {record.RelativePath}");
                     continue;
                 }
@@ -162,7 +192,13 @@ public sealed partial class DeploymentEngine
         await _backups.SaveManifestAsync(restoredManifest, cancellationToken);
         progress?.Report(new DeploymentProgress("done", string.Empty, manifest.Files.Count, manifest.Files.Count));
 
-        return Result<RestoreReport>.Ok(new RestoreReport(restored, removed, conflicts, leftovers, warnings));
+        return Result<RestoreReport>.Ok(new RestoreReport(
+            restored,
+            removed,
+            conflicts,
+            leftovers,
+            warnings,
+            conflictedFiles));
     }
 
     public Task<Result> DiscardBackupAsync(

@@ -313,7 +313,8 @@ public sealed class AssetMaintenanceServiceTests
             string targetDirectory,
             IProgress<DeploymentProgress>? progress,
             CancellationToken cancellationToken,
-            IReadOnlyList<string>? ownedDirectories = null)
+            IReadOnlyList<string>? ownedDirectories = null,
+            bool force = false)
         {
             throw new NotSupportedException();
         }
@@ -365,7 +366,8 @@ public sealed class AssetMaintenanceServiceTests
         public Task<Result<RestoreReport>> RestoreAsync(
             string targetDirectory,
             IProgress<DeploymentProgress>? progress,
-            CancellationToken cancellationToken)
+            CancellationToken cancellationToken,
+            bool force = false)
         {
             return Task.FromResult(Restore);
         }

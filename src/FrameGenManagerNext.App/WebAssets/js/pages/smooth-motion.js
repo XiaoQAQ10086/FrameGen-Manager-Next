@@ -94,7 +94,9 @@ export default {
           ? t('SmoothMotion.Disable')
           : t('SmoothMotion.Enable');
       const fgConflict = game.frameGenDeployed === true;
+      const antiCheat = game.antiCheat === true;
       const blocked = fgConflict && toggleAction === 'enable';
+      const blockedHint = t('Conflict.FrameGenOn');
       return `
         <article class="gcard${index < 12 ? '' : ' static'}" style="animation-delay:${Math.min(index * 35, 350)}ms">
           <div class="gtop">
@@ -105,13 +107,15 @@ export default {
                 <span class="badge ${game.component === 'Installed' ? 'ok' : (game.component === 'Partial' || game.component === 'Conflict' ? 'warn' : 'dim')}">${esc(t(componentKeys[game.component] || 'State.NotDeployed'))}</span>
                 <span class="badge ${game.enabled === true ? 'ok' : 'dim'}">${esc(game.enabled === true ? t('SmoothMotion.Driver.On') : game.enabled === false ? t('SmoothMotion.Driver.Off') : t('SmoothMotion.Driver.Unknown'))}</span>
                 ${fgConflict ? `<span class="badge danger">${esc(t('Conflict.FrameGenOn'))}</span>` : ''}
+                ${antiCheat ? `<span class="badge danger">${esc(t('SmoothMotion.AntiCheat'))}</span>` : ''}
               </div>
             </div>
           </div>
           <div class="gpath" title="${esc(prettyPath(game.targetDirectory))}">${esc(prettyPath(game.targetDirectory))}</div>
+          ${antiCheat ? `<div class="hint danger">${esc(t('SmoothMotion.AntiCheatHint'))}</div>` : ''}
           ${game.detail ? `<div class="hint">${esc(game.detail)}</div>` : ''}
           <div class="gactions">
-            <button class="btn small ${toggleAction === 'enable' ? 'success' : 'danger'}" data-action="${toggleAction}" data-id="${game.id}" type="button" ${game.available === false || blocked ? 'disabled' : ''} ${blocked ? `title="${esc(t('Conflict.FrameGenOn'))}"` : ''}>${toggleLabel}</button>
+            <button class="btn small ${toggleAction === 'enable' ? 'success' : 'danger'}" data-action="${toggleAction}" data-id="${game.id}" type="button" ${game.available === false || blocked ? 'disabled' : ''} ${blocked ? `title="${esc(blockedHint)}"` : ''}>${toggleLabel}</button>
             <button class="btn small" data-action="open" data-id="${game.id}" type="button">${t('Library.OpenFolder')}</button>
             <span class="spacer"></span>
             <button class="btn small danger icon-only" data-action="remove" data-id="${game.id}" type="button" title="${esc(t('Common.Remove'))}" aria-label="${esc(t('Common.Remove'))}">🗑</button>
@@ -157,8 +161,8 @@ export default {
         removedController.render();
         status(t('SmoothMotion.Status.Checked').replace('{0}', games.length));
       } catch (error) {
-        status(error.code || '加载失败');
-        ui.toast(error.message, 'error');
+        status(error.code || t('SmoothMotion.Status.CheckFailed'));
+        ui.toast(ui.errorText(error, t('SmoothMotion.Status.CheckFailed')), 'error');
       }
     }
 
@@ -177,7 +181,7 @@ export default {
         ui.libraryChanged('smooth-motion');
         ui.toast(t('Common.OperationDone'));
       } catch (error) {
-        ui.toast(error.message, 'error');
+        ui.toast(ui.errorText(error, t('SmoothMotion.Status.Failed')), 'error');
       } finally {
         busy = false;
       }

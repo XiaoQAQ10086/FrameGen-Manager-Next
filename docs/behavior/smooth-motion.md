@@ -23,6 +23,7 @@
 `sm inspect`：
 
 - 组件状态来自部署引擎（未部署/已部署/需更新/不完整/冲突）。
+- 反作弊状态来自游戏目录（`BattlEye/`、`EasyAntiCheat/`、`EasyAntiCheat_EOS/`、`GameGuard/`、`XignCode/`、`BEClient*.dll`、`EasyAntiCheat*.dll/.sys` 等）；命中时 `antiCheat=true`，界面显示红色“反作弊”徽章和风险提示，但**不阻止开启**。是否继续由用户判断。
 - 驱动状态来自 NVAPI：找到挂在该 EXE 上的 profile，读取设置 `0xB0D384C0`。
   - 值 1 → 开启；0 → 关闭；没有该设置 → 未知/跟随全局。
 - 找不到 profile → `smEnabled=unknown`，profile 为空。
@@ -30,7 +31,7 @@
 ## 开启
 
 1. 校验路由/驱动/目标目录。
-1.1 检测游戏目录里的内核反作弊（`BattlEye/`、`EasyAntiCheat/`、`BE*.dll`、`EasyAntiCheat*.dll`）：存在时直接拒绝部署，返回 `Conflict`。注入型代理会被反作弊拦截，PUBG 实测会以 `d3d9.dll` 的错误崩溃。
+1.1 检测游戏目录里的反作弊（`BattlEye/`、`EasyAntiCheat/`、`EasyAntiCheat_EOS/`、`GameGuard/`、`XignCode/`、`BEClient*.dll`、`EasyAntiCheat*.dll/.sys`、`BEDaisy.sys`、`vgk.sys` 等）只用于风险提示：命中时界面显示红色“反作弊”徽章和“可能被拦截/游戏可能崩溃”的提示，但部署照常执行。旧版工具同样只警告不拦截；部分单机游戏自带 EAC/BattlEye 目录但并不会加载。注意不要用宽泛的 `BE*.dll` 判断，否则会把 `BepInEx.dll` 误判成 BattlEye。
 1.2 与帧生成互斥：若该目录存在我们的帧生成部署记录（状态不是 `Restored`/`RolledBack`），拒绝开启 SM，返回 `Conflict`；界面上该游戏显示红色徽章“冲突：已开启帧生成”，开启按钮锁定。关闭/还原 SM 仍可操作，用于解除冲突。
 2. 部署对应组件包（备份同名原文件，哈希校验）。
 3. 打开 NVAPI 会话，找出**所有**绑定该 EXE 的 profile：
@@ -78,7 +79,7 @@ fgm-next sm disable <target-dir> <game-exe>
 fgm-next sm restore <target-dir> <game-exe>
 ```
 
-UI：Smooth Motion 页面，逐游戏右下角“打开文件夹 / 开启或关闭 / 垃圾桶移除”。未开启时只显示“开启”；开启成功后同一按钮变为“关闭”，关闭只写驱动开关为 0，组件文件保留，再次开启直接复用。开启不再弹确认框。还原仍保留在 CLI，供需要彻底清理文件的场景使用。
+UI：Smooth Motion 页面，逐游戏右下角“打开文件夹 / 开启或关闭 / 垃圾桶移除”。未开启时只显示“开启”；开启成功后同一按钮变为“关闭”，关闭会写驱动开关为 0，并通过部署引擎移除组件文件；再次开启重新部署。开启不再弹确认框。还原仍保留在 CLI，供需要彻底清理文件的场景使用。检出反作弊的游戏显示红色“反作弊”徽章和风险提示，但“开启”按钮保持可用；失败提示按错误码本地化，不再出现 `enable failed` 这类内部兜底文本。
 
 ## 真机验证（2026-10-29）
 
@@ -91,6 +92,8 @@ RTX 3070 / 621.01：
 ## 测试
 
 - `Infrastructure.Tests/SmProfileStoreTests.cs`
+- `Core.Tests/SmoothMotionGameRulesTests.cs`（BattlEye/EAC 目录、`BEClient*.dll`、`EasyAntiCheat*.sys`、`BepInEx.dll` 误判回归）
+- `Core.Tests/SmoothMotionDeploymentServiceTests.cs`（反作弊存在时仍继续部署组件并写 NVAPI，防止再次误加硬拦截）
 - NVAPI 读写为硬件依赖测试，未放入 CI；通过 CLI 在真机验证。
 
 ## 已知限制

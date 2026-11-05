@@ -9,7 +9,8 @@ public sealed record Dlss5Inspection(
     bool ReShadePresent,
     string? ReShadeModule = null,
     bool LegacyRenoDxPresent = false,
-    bool HasLeftovers = false);
+    bool HasLeftovers = false,
+    IReadOnlyList<string>? LegacyFiles = null);
 
 public sealed record Dlss5Report(
     DeploymentReport FileReport,

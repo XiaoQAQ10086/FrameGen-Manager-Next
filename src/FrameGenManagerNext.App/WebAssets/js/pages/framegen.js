@@ -690,9 +690,10 @@ export default {
       }
     }
 
-    async function run(action, successText) {
+    async function run(action, successText, onConflict) {
       if (busy) return;
       setBusy(true);
+      let afterConflict = null;
       try {
         const next = await action();
         if (next?.games) {
@@ -716,8 +717,15 @@ export default {
           const message = Number(restore.conflicts) > 0
             ? t('Deploy.RestoreConflict').replace('{0}', restore.conflicts)
             : t('Deploy.RestoreIncomplete');
-          notice(`${message} ${t('Deploy.RestoreConflictHint')}`);
+          const files = restore.conflictedFiles || [];
+          const fileText = files.length > 0
+            ? ` ${t('Deploy.RestoreConflictFiles').replace('{0}', files.join('、'))}`
+            : '';
+          notice(`${message} ${t('Deploy.RestoreConflictHint')}${fileText}`);
           ui.toast(message, 'error');
+          if (files.length > 0 && onConflict) {
+            afterConflict = () => onConflict(restore);
+          }
         } else if (successText) {
           ui.toast(successText);
         }
@@ -725,7 +733,30 @@ export default {
         ui.toast(ui.errorText(error, t('Errors.OperationFailed')), 'error');
       } finally {
         setBusy(false);
+        if (afterConflict) {
+          await afterConflict();
+        }
       }
+    }
+
+    async function forceRestore(game, target, restore, successText) {
+      const files = restore.conflictedFiles || [];
+      if (files.length === 0) return;
+
+      const confirmed = await confirmDialog(
+        t('Deploy.ForceRestoreTitle'),
+        t('Deploy.ForceRestoreBody').replace('{0}', files.join('\n')),
+        t('Deploy.ForceRestoreOk'),
+      );
+      if (!confirmed) return;
+
+      const payload = target ? { id: game.id, target, force: true } : { id: game.id, force: true };
+      await run(
+        () => api.request('framegen.restore', payload),
+        successText,
+      );
+      api.invalidate();
+      ui.libraryChanged('framegen');
     }
 
     async function scan() {
@@ -828,9 +859,11 @@ export default {
       }
       if (action === 'restore') {
         const game = games.find((item) => item.id === id);
+        const successText = t('Library.Status.RestoreDone').replace('{0}', game?.name || id);
         await run(
           () => api.request('framegen.restore', { id }),
-          t('Library.Status.RestoreDone').replace('{0}', game?.name || id),
+          successText,
+          game ? (restore) => forceRestore(game, undefined, restore, successText) : undefined,
         );
         api.invalidate();
         ui.libraryChanged('framegen');
@@ -899,9 +932,11 @@ export default {
           return;
         }
         closeModal();
+        const successText = t('Library.Status.RestoreDone').replace('{0}', game.name);
         await run(
           () => api.request('framegen.restore', { id: game.id, target }),
-          t('Library.Status.RestoreDone').replace('{0}', game.name),
+          successText,
+          (restore) => forceRestore(game, target, restore, successText),
         );
         api.invalidate();
         ui.libraryChanged('framegen');

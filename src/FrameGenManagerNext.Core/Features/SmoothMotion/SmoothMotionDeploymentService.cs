@@ -73,7 +73,8 @@ public sealed class SmoothMotionDeploymentService : ISmoothMotionDeploymentServi
             fileState.Value.State,
             route.Value.Route,
             route.Value.PackId,
-            setting));
+            setting,
+            SmoothMotionGameRules.HasAntiCheat(targetDirectory)));
     }
 
     public async Task<Result<SmoothMotionReport>> EnableAsync(
@@ -89,15 +90,15 @@ public sealed class SmoothMotionDeploymentService : ISmoothMotionDeploymentServi
             return Result<SmoothMotionReport>.Fail(route.Error!);
         }
 
-        if (HasAntiCheat(targetDirectory))
+        if (SmoothMotionGameRules.HasAntiCheat(targetDirectory))
         {
-            // BattlEye/EAC block the injected proxy and the game crashes with a
-            // misleading error (PUBG reports d3d9.dll). Refuse instead of leaving
-            // an unusable DLL in the game folder.
-            return Result<SmoothMotionReport>.Fail(AppError.Create(
-                ErrorCode.Conflict,
-                ("target", targetDirectory),
-                ("reason", "the game ships a kernel anti-cheat; the Smooth Motion proxy would be blocked and the game may crash")));
+            // Anti-cheat is a warning, not a gate: the old tool let users decide
+            // and some single-player games ship EAC/BattlEye without loading it.
+            // The UI shows the risk; the user keeps the final choice.
+            _logger.LogInformation(
+                "Smooth Motion proceeding with anti-cheat present game={Game} target={Target}",
+                game,
+                targetDirectory);
         }
 
         var frameGen = await _engine.LoadManifestAsync("framegen", targetDirectory, cancellationToken);
@@ -380,30 +381,5 @@ public sealed class SmoothMotionDeploymentService : ISmoothMotionDeploymentServi
                 ["route"] = route.ToString(),
                 ["pack"] = packId,
             }));
-    }
-
-    private static bool HasAntiCheat(string targetDirectory)
-    {
-        try
-        {
-            if (!Directory.Exists(targetDirectory))
-            {
-                return false;
-            }
-
-            if (Directory.Exists(Path.Combine(targetDirectory, "BattlEye")) ||
-                Directory.Exists(Path.Combine(targetDirectory, "EasyAntiCheat")) ||
-                Directory.Exists(Path.Combine(targetDirectory, "EasyAntiCheat_EOS")))
-            {
-                return true;
-            }
-
-            return Directory.EnumerateFiles(targetDirectory, "BE*.dll", SearchOption.TopDirectoryOnly).Any() ||
-                   Directory.EnumerateFiles(targetDirectory, "EasyAntiCheat*.dll", SearchOption.TopDirectoryOnly).Any();
-        }
-        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
-        {
-            return false;
-        }
     }
 }

@@ -29,7 +29,8 @@ public interface IDeploymentEngine
         string targetDirectory,
         IProgress<DeploymentProgress>? progress,
         CancellationToken cancellationToken,
-        IReadOnlyList<string>? ownedDirectories = null);
+        IReadOnlyList<string>? ownedDirectories = null,
+        bool force = false);
 
     Task<Result<RestoreReport>> CleanAsync(
         string familyId,

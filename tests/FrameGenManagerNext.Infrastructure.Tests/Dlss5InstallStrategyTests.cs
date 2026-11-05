@@ -219,7 +219,8 @@ public sealed class Dlss5InstallStrategyTests : IDisposable
             string targetDirectory,
             IProgress<DeploymentProgress>? progress,
             CancellationToken cancellationToken,
-            IReadOnlyList<string>? ownedDirectories = null)
+            IReadOnlyList<string>? ownedDirectories = null,
+            bool force = false)
         {
             throw new NotSupportedException();
         }

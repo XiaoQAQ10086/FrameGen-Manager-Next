@@ -110,6 +110,27 @@ public sealed class Dlss5UninstallCleanupTests : IDisposable
         File.ReadAllText(Path.Combine(_target, relative)).ShouldBe("game original");
     }
 
+    [Fact]
+    public async Task UninstallRemovesThirdPartyDlss5ModFiles()
+    {
+        _directory.WriteFile("game/nvngx_dlssnr.dll", "mod model");
+        _directory.WriteFile("game/renodx-dlss-SF-26100421.addon64", "mod addon");
+        var pack = PackWith("unused.bin", "unused");
+
+        var result = await CreateService(pack).UninstallAsync(
+            _target,
+            exePath: null,
+            progress: null,
+            TestContext.Current.CancellationToken);
+
+        result.IsSuccess.ShouldBeTrue(result.Error?.ToString());
+        result.Value.IsClean.ShouldBeTrue();
+        result.Value.Removed.ShouldContain("nvngx_dlssnr.dll");
+        result.Value.Removed.ShouldContain("renodx-dlss-SF-26100421.addon64");
+        File.Exists(Path.Combine(_target, "nvngx_dlssnr.dll")).ShouldBeFalse();
+        File.Exists(Path.Combine(_target, "renodx-dlss-SF-26100421.addon64")).ShouldBeFalse();
+    }
+
     private Dlss5DeploymentService CreateService(AssetPack pack)
     {
         return new Dlss5DeploymentService(

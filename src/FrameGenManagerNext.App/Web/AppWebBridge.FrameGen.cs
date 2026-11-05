@@ -135,6 +135,9 @@ public sealed partial class AppWebBridge
         }
 
         var target = ResolveDeploymentTarget(game, payload);
+        var force = payload.ValueKind == JsonValueKind.Object &&
+                    payload.TryGetProperty("force", out var forceValue) &&
+                    forceValue.ValueKind == JsonValueKind.True;
         return await RunExclusiveAsync(async () =>
         {
             await PersistTargetAsync(game, target.ExePath);
@@ -146,7 +149,8 @@ public sealed partial class AppWebBridge
             var result = await _frameGen.RestoreAsync(
                 target.Directory,
                 progress,
-                CancellationToken.None);
+                CancellationToken.None,
+                force);
             if (result.IsFailure)
             {
                 throw new BridgeException(result.Error!.Code, result.Error.Diagnostic ?? "restore failed");

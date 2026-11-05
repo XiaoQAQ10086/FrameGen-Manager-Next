@@ -196,6 +196,7 @@ public sealed partial class AppWebBridge
                 : new
                 {
                     conflicts = restore.Conflicts,
+                    conflictedFiles = restore.ConflictedFiles ?? Array.Empty<string>(),
                     leftovers = restore.Leftovers,
                     warnings = restore.Warnings,
                 },
@@ -237,7 +238,15 @@ public sealed partial class AppWebBridge
 
     private object? CancelScan()
     {
-        _scanCancellation?.Cancel();
+        try
+        {
+            _scanCancellation?.Cancel();
+        }
+        catch (ObjectDisposedException)
+        {
+            // The scan already finished and released its token source.
+        }
+
         return new { cancelled = true };
     }
 

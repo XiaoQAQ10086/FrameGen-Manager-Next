@@ -19,11 +19,13 @@ public sealed partial class Dlss5DeploymentService
 
     private static readonly string[] AddonLeftoverPrefixes =
     [
+        "reshade.ini.renodx-dlss",
         "reshade.ini.renodx-dlss5",
         "renodx-dlss5-report",
         "renodx-dlss5-crash",
         "renodx-dlss5-normtrace",
         "renodx-dlss5-edittrace",
+        "renodx-dlss-",
         "renodx-dlss5-",
     ];
 

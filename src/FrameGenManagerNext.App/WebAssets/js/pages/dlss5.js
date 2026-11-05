@@ -112,12 +112,14 @@ export default {
           ? `${label}${t('Dlss5.ApiAutoSuffix')}`
           : label;
       const manualTarget = '__manual__';
+      const legacyFiles = (game.legacyFiles || []).join(', ');
       detailBody.innerHTML = `
         <div class="badges">
           <span class="badge">${esc(apiLabel(game.api))}</span>
           <span class="badge ${deployed(game) ? 'ok' : 'dim'}">${esc(t(stateKeys[game.state] || 'State.NotDeployed'))}</span>
           ${game.legacy ? `<span class="badge warn">${esc(t('Dlss5.RequiresUninstall'))}</span>` : ''}
         </div>
+        ${game.legacy ? `<p class="hint danger">${esc(t('Dlss5.LegacyHint').replace('{0}', legacyFiles || '—'))}</p>` : ''}
         <div class="deploy-picker">
           <label>${t('Dlss5.Target')}<select data-role="detail-target">
             ${targets.map((target) => `<option value="${esc(target.path)}">${esc(target.name)}</option>`).join('')}
@@ -201,6 +203,9 @@ export default {
 
       const uninstallButton = q('[data-action="modal-uninstall"]');
       uninstallButton.disabled = !deployed(game) && !game.legacy && !game.leftovers;
+      uninstallButton.textContent = game.legacy && !deployed(game)
+        ? t('Dlss5.CleanLegacy')
+        : t('Common.Uninstall');
 
       detail.classList.remove('hidden');
     }

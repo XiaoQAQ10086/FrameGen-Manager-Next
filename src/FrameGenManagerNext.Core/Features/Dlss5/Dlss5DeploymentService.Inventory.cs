@@ -10,7 +10,15 @@ public sealed partial class Dlss5DeploymentService
         var module = FindReShadeModule(target);
         var legacyAddons = FindLegacyAddons(target);
         var leftovers = EnumerateLeftoverNames(target);
-        var legacy = legacyAddons.Length > 0 || File.Exists(Path.Combine(target, "nvngx_dlssnr.dll"));
+        var legacyModel = File.Exists(Path.Combine(target, "nvngx_dlssnr.dll"));
+        var legacy = legacyAddons.Length > 0 || legacyModel;
+        var legacyFiles = new List<string>();
+        if (legacyModel)
+        {
+            legacyFiles.Add("nvngx_dlssnr.dll");
+        }
+
+        legacyFiles.AddRange(legacyAddons);
 
         var extras = KnownExtras.Any(name => File.Exists(Path.Combine(target, name))) ||
                      Directory.Exists(Path.Combine(target, "GITC-Uplift"));
@@ -26,6 +34,7 @@ public sealed partial class Dlss5DeploymentService
             preset,
             legacy,
             legacyAddons,
+            legacyFiles,
             leftovers,
             extras);
     }
@@ -54,7 +63,7 @@ public sealed partial class Dlss5DeploymentService
     {
         try
         {
-            return Directory.EnumerateFiles(target, "renodx-dlss5*", SearchOption.TopDirectoryOnly)
+            return Directory.EnumerateFiles(target, "renodx-dlss*", SearchOption.TopDirectoryOnly)
                 .Where(path =>
                 {
                     var extension = Path.GetExtension(path);
@@ -214,6 +223,7 @@ public sealed partial class Dlss5DeploymentService
         bool ReShadePreset,
         bool LegacyRenoDx,
         IReadOnlyList<string> LegacyAddons,
+        IReadOnlyList<string> LegacyFiles,
         IReadOnlyList<string> Leftovers,
         bool Extras)
     {

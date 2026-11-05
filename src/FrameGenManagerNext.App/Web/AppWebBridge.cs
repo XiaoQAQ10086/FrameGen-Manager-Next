@@ -43,6 +43,7 @@ public sealed partial class AppWebBridge : IDisposable
     private readonly ILogger<AppWebBridge> _logger;
 
     private CoreWebView2? _core;
+    private int _disposed;
     private CancellationTokenSource? _scanCancellation;
     private CancellationTokenSource? _assetClearCancellation;
     private AssetUpdateReport? _lastAssetReport;
@@ -98,12 +99,25 @@ public sealed partial class AppWebBridge : IDisposable
 
     public void Dispose()
     {
-        _scanCancellation?.Cancel();
-        _scanCancellation?.Dispose();
-        _scanCancellation = null;
-        _assetClearCancellation?.Cancel();
-        _assetClearCancellation?.Dispose();
-        _assetClearCancellation = null;
+        if (Interlocked.Exchange(ref _disposed, 1) != 0)
+        {
+            return;
+        }
+
+        try
+        {
+            _scanCancellation?.Cancel();
+            _scanCancellation?.Dispose();
+            _scanCancellation = null;
+            _assetClearCancellation?.Cancel();
+            _assetClearCancellation?.Dispose();
+            _assetClearCancellation = null;
+        }
+        catch (ObjectDisposedException)
+        {
+            // A background operation finished and released its token source first.
+        }
+
         DetachCoreEvents();
         _operationGate.Dispose();
         _addGameGate.Dispose();
@@ -210,9 +224,11 @@ public sealed partial class AppWebBridge : IDisposable
             core.WebMessageReceived -= OnWebMessageReceived;
             core.ProcessFailed -= OnProcessFailed;
         }
-        catch (Exception exception) when (exception is InvalidOperationException or COMException)
+        catch (Exception exception) when (
+            exception is InvalidOperationException or ObjectDisposedException or COMException)
         {
             // The browser process may already be gone.
+            _logger.LogDebug(exception, "Could not detach WebView2 events");
         }
     }
 
@@ -241,7 +257,7 @@ public sealed partial class AppWebBridge : IDisposable
         }
         catch (BridgeException exception)
         {
-            SendError(id, exception.Code.ToString(), exception.Message);
+            SendError(id, exception.Code.ToString(), exception.Message, exception.Context);
         }
         catch (Exception exception)
         {
@@ -302,18 +318,39 @@ public sealed partial class AppWebBridge : IDisposable
 
     private async Task<object?> RunExclusiveAsync(Func<Task<object?>> operation)
     {
-        if (!await _operationGate.WaitAsync(0))
+        if (Volatile.Read(ref _disposed) != 0)
         {
-            throw new BridgeException(Domain.Errors.ErrorCode.FileLocked, "另一个操作正在进行");
+            throw new BridgeException(Domain.Errors.ErrorCode.OperationCancelled, "the application is closing");
         }
 
+        var acquired = false;
         try
         {
+            acquired = await _operationGate.WaitAsync(0);
+            if (!acquired)
+            {
+                throw new BridgeException(Domain.Errors.ErrorCode.FileLocked, "另一个操作正在进行");
+            }
+
             return await operation();
+        }
+        catch (ObjectDisposedException)
+        {
+            throw new BridgeException(Domain.Errors.ErrorCode.OperationCancelled, "the application is closing");
         }
         finally
         {
-            _operationGate.Release();
+            if (acquired)
+            {
+                try
+                {
+                    _operationGate.Release();
+                }
+                catch (ObjectDisposedException)
+                {
+                    // The host is shutting down; there is no gate left to release.
+                }
+            }
         }
     }
 
@@ -322,9 +359,13 @@ public sealed partial class AppWebBridge : IDisposable
         Send(new { id, ok = true, data });
     }
 
-    private void SendError(string? id, string code, string message)
+    private void SendError(
+        string? id,
+        string code,
+        string message,
+        IReadOnlyDictionary<string, string>? context = null)
     {
-        Send(new { id, ok = false, error = new { code, message } });
+        Send(new { id, ok = false, error = new { code, message, context } });
     }
 
     private void SendEvent(string eventName, object data)
@@ -372,8 +413,13 @@ public sealed partial class AppWebBridge : IDisposable
             : null;
     }
 
-    private sealed class BridgeException(Domain.Errors.ErrorCode code, string message) : Exception(message)
+    private sealed class BridgeException(
+        Domain.Errors.ErrorCode code,
+        string message,
+        IReadOnlyDictionary<string, string>? context = null) : Exception(message)
     {
         public Domain.Errors.ErrorCode Code { get; } = code;
+
+        public IReadOnlyDictionary<string, string>? Context { get; } = context;
     }
 }

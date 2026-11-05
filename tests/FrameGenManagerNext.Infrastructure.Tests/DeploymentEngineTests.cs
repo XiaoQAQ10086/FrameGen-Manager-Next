@@ -87,6 +87,8 @@ public sealed class DeploymentEngineTests : IDisposable
             TestContext.Current.CancellationToken);
         restored.IsSuccess.ShouldBeTrue(restored.Error?.ToString());
         restored.Value.Conflicts.ShouldBe(1);
+        restored.Value.ConflictedFiles.ShouldNotBeNull();
+        restored.Value.ConflictedFiles!.ShouldContain("runtime.dll");
         File.ReadAllText(Path.Combine(_target, "runtime.dll")).ShouldBe("user changed this");
 
         var manifest = await _engine.LoadManifestAsync(
@@ -95,6 +97,39 @@ public sealed class DeploymentEngineTests : IDisposable
             TestContext.Current.CancellationToken);
         manifest.ShouldNotBeNull();
         manifest.State.ShouldBe(DeploymentManifestState.Partial);
+    }
+
+    [Fact]
+    public async Task ForceRestoreRemovesModifiedFiles()
+    {
+        var plan = BuildPlan();
+        var deployed = await _engine.DeployAsync(
+            plan,
+            progress: null,
+            TestContext.Current.CancellationToken);
+        deployed.IsSuccess.ShouldBeTrue(deployed.Error?.ToString());
+
+        _directory.WriteFile("game/runtime.dll", "runtime changed after deployment");
+
+        var restored = await _engine.RestoreAsync(
+            Family,
+            _target,
+            progress: null,
+            TestContext.Current.CancellationToken,
+            ownedDirectories: null,
+            force: true);
+
+        restored.IsSuccess.ShouldBeTrue(restored.Error?.ToString());
+        restored.Value.Conflicts.ShouldBe(0);
+        File.Exists(Path.Combine(_target, "runtime.dll")).ShouldBeFalse();
+        File.Exists(Path.Combine(_target, "config.ini")).ShouldBeFalse();
+
+        var manifest = await _engine.LoadManifestAsync(
+            Family,
+            _target,
+            TestContext.Current.CancellationToken);
+        manifest.ShouldNotBeNull();
+        manifest.State.ShouldBe(DeploymentManifestState.Restored);
     }
 
     [Fact]

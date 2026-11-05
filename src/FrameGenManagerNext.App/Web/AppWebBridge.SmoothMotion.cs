@@ -88,7 +88,7 @@ public sealed partial class AppWebBridge
                     component = "Unknown",
                     enabled = (bool?)null,
                     profile = (string?)null,
-                    detail = inspection.Error.Diagnostic,
+                    detail = DescribeError(inspection.Error, string.Empty),
                 });
                 continue;
             }
@@ -118,6 +118,7 @@ public sealed partial class AppWebBridge
                 enabled = inspection.Value.Setting.Enabled,
                 profile = inspection.Value.Setting.ProfileName,
                 detail = inspection.Value.Setting.Detail,
+                antiCheat = inspection.Value.AntiCheat,
                 frameGenDeployed,
             });
         }
@@ -164,7 +165,17 @@ public sealed partial class AppWebBridge
                 CancellationToken.None);
             if (result.IsFailure)
             {
-                throw new BridgeException(result.Error!.Code, result.Error.Diagnostic ?? "enable failed");
+                _logger.LogWarning(
+                    "sm.enable failed game={Game} target={Target} code={Code} diagnostic={Diagnostic} context={Context}",
+                    game.Name,
+                    game.TargetDirectory,
+                    result.Error!.Code,
+                    result.Error.Diagnostic,
+                    ContextText(result.Error.Context));
+                throw new BridgeException(
+                    result.Error!.Code,
+                    DescribeError(result.Error, "enable failed"),
+                    result.Error.Context);
             }
 
             return await BuildSmoothMotionStateAsync();
@@ -188,7 +199,17 @@ public sealed partial class AppWebBridge
                 CancellationToken.None);
             if (result.IsFailure)
             {
-                throw new BridgeException(result.Error!.Code, result.Error.Diagnostic ?? "disable failed");
+                _logger.LogWarning(
+                    "sm.disable failed game={Game} target={Target} code={Code} diagnostic={Diagnostic} context={Context}",
+                    game.Name,
+                    game.TargetDirectory,
+                    result.Error!.Code,
+                    result.Error.Diagnostic,
+                    ContextText(result.Error.Context));
+                throw new BridgeException(
+                    result.Error!.Code,
+                    DescribeError(result.Error, "disable failed"),
+                    result.Error.Context);
             }
 
             return await BuildSmoothMotionStateAsync();
@@ -217,10 +238,45 @@ public sealed partial class AppWebBridge
                 CancellationToken.None);
             if (result.IsFailure)
             {
-                throw new BridgeException(result.Error!.Code, result.Error.Diagnostic ?? "restore failed");
+                _logger.LogWarning(
+                    "sm.restore failed game={Game} target={Target} code={Code} diagnostic={Diagnostic} context={Context}",
+                    game.Name,
+                    game.TargetDirectory,
+                    result.Error!.Code,
+                    result.Error.Diagnostic,
+                    ContextText(result.Error.Context));
+                throw new BridgeException(
+                    result.Error!.Code,
+                    DescribeError(result.Error, "restore failed"),
+                    result.Error.Context);
             }
 
             return await BuildSmoothMotionStateAsync();
         });
+    }
+
+    private static string DescribeError(Domain.Errors.AppError error, string fallback)
+    {
+        if (!string.IsNullOrWhiteSpace(error.Diagnostic))
+        {
+            return error.Diagnostic;
+        }
+
+        if (error.Context.TryGetValue("reason", out var reason) &&
+            !string.IsNullOrWhiteSpace(reason))
+        {
+            return reason;
+        }
+
+        return string.IsNullOrWhiteSpace(fallback)
+            ? error.Code.ToString()
+            : fallback;
+    }
+
+    private static string ContextText(IReadOnlyDictionary<string, string>? context)
+    {
+        return context is null || context.Count == 0
+            ? string.Empty
+            : string.Join("; ", context.Select(pair => $"{pair.Key}={pair.Value}"));
     }
 }

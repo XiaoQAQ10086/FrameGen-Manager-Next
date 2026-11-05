@@ -19,7 +19,8 @@ public sealed record SmoothMotionInspection(
     DeploymentState FileState,
     GpuRoute Route,
     string PackId,
-    SmoothMotionSettingState Setting);
+    SmoothMotionSettingState Setting,
+    bool AntiCheat = false);
 
 public sealed record SmoothMotionReport(
     DeploymentReport FileReport,

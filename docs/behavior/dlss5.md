@@ -45,8 +45,8 @@
 - pack 文件状态来自部署引擎（未部署/已部署/需更新/不完整/冲突）。
 - 清单缺失但目录里仍有与当前 pack 哈希一致的文件时，状态为 `InstalledWithoutManifest`；界面允许“重新部署”或“卸载”，不会永久锁死。
 - 通过文件版本信息识别 ReShade 模块（`d3d9/d3d10/d3d11/d3d12/dxgi/opengl32.dll`，ProductName/FileDescription 含 `ReShade`），避免误删游戏自带 DLL。
-- 同时报告旧版 RenoDX 残留（根目录 `renodx-dlss5*.addon64` 或旧布局根目录 `nvngx_dlssnr.dll`）与插件运行时残渣。
-- 检测到旧版 RenoDX 时拒绝安装 GITC pack，返回 `LegacyInstallPresent`，必须先执行卸载。
+- 同时报告旧版 DLSS5/RenoDX 残留：根目录 `renodx-dlss*.addon*`（含第三方整合包常见的 `renodx-dlss-SF-*.addon64`）或旧布局根目录 `nvngx_dlssnr.dll`；命中项写入 `legacyFiles`，详情页逐项列出，避免用户误以为是本软件部署过 ReShade。
+- 检测到旧版 DLSS5/RenoDX 时拒绝安装 GITC pack，返回 `LegacyInstallPresent`，必须先执行“清理旧版文件”。这不是按本软件的部署记录判断，而是按目录里的实际文件判断；文件可能来自其他 DLSS5 整合包或手动安装。
 
 ## 还原
 
@@ -56,7 +56,7 @@
 
 ## 彻底卸载
 
-界面只有在检测到已部署（含旧版 RenoDX/残留）时才允许点“卸载”；未部署时按钮锁定。
+界面只有在检测到已部署（含旧版 DLSS5/RenoDX/残留）时才允许点“卸载”；只有旧版文件、没有本软件部署时，按钮文字显示“清理旧版文件”。
 
 1. 先调用部署引擎还原并清理清单/备份：删除仍匹配部署哈希的文件，恢复部署前已有的原文件；用户改过的文件保留并报告冲突。
 2. 读取卸载前的清单，记录 `ExistedBefore=true` 的路径。这些是游戏原有文件，后续按 pack 清理时必须跳过。
@@ -64,8 +64,8 @@
 4. 删除 ReShade 模块、`ReShade.ini`、`ReShade.log`、`ReShadePreset.ini`。
 5. 删除 GITC 组件（`gitc-uplift.addon32/64`、`gitc-uplift-helper64.exe`、`GITC-Uplift/`）与已知 shader。
 6. 按当前 pack 的文件表扫描 `reshade-shaders/Shaders/**` 与 `reshade-shaders/Textures/**`：哈希匹配的残留直接删除；用户改过的文件保留并计入剩余项。此步骤覆盖“官方 setup 写入或清单已丢失”的纹理/着色器残留。
-7. 清理旧版 RenoDX：`renodx-dlss5*.addon*`、旧布局根目录 `nvngx_dlssnr.dll`。
-8. 清理插件运行时残渣（`renodx-dlss5-report*`、`ReShade.ini.renodx-dlss5*`、崩溃日志、trace）。
+7. 清理旧版 DLSS5/RenoDX：`renodx-dlss*.addon*`、旧布局根目录 `nvngx_dlssnr.dll`。
+8. 清理插件运行时残渣（`renodx-dlss-report*`、`renodx-dlss-*`、`ReShade.ini.renodx-dlss*`、崩溃日志、trace）。
 9. 仅当 `D3D12\` 只有 `D3D12Core.dll` 且版本信息含 Microsoft 时删除该 Agility SDK 文件。
 10. 删除空目录后重新扫描；剩余项包含仍存在的 pack 文件。只有剩余项为 0 才丢弃清单和备份。
 11. 返回 `removed` / `remaining` / `clean`；界面在 `clean=false` 时显示“卸载未完成”错误，而不是提示成功。删除是永久的，不进回收站。
