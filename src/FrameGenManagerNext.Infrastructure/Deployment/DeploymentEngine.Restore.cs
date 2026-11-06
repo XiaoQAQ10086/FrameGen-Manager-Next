@@ -85,7 +85,21 @@ public sealed partial class DeploymentEngine
 
             if (File.Exists(path.Value))
             {
-                var hash = await HashFileAsync(path.Value, cancellationToken);
+                string hash;
+                try
+                {
+                    hash = await HashFileAsync(path.Value, cancellationToken);
+                }
+                catch (Exception exception) when (
+                    exception is IOException or UnauthorizedAccessException)
+                {
+                    conflicts++;
+                    conflictedPaths.Add(path.Value);
+                    conflictedFiles.Add(record.RelativePath);
+                    warnings.Add($"Could not read {record.RelativePath}: {exception.Message}");
+                    continue;
+                }
+
                 if (!string.Equals(hash, record.Sha256, StringComparison.OrdinalIgnoreCase))
                 {
                     // Steam/game repair or a manual restore may have put the original
@@ -109,20 +123,55 @@ public sealed partial class DeploymentEngine
                         // uninstall forever.
                         if (record.ExistedBefore && backupPath is not null && File.Exists(backupPath))
                         {
-                            File.Copy(backupPath, path.Value, overwrite: true);
-                            restored++;
+                            if (TryFileAction(
+                                    () => File.Copy(backupPath, path.Value, overwrite: true),
+                                    record.RelativePath,
+                                    warnings))
+                            {
+                                restored++;
+                            }
+                            else
+                            {
+                                conflicts++;
+                                conflictedPaths.Add(path.Value);
+                                conflictedFiles.Add(record.RelativePath);
+                            }
                         }
                         else if (record.ExistedBefore)
                         {
-                            conflicts++;
-                            conflictedPaths.Add(path.Value);
-                            conflictedFiles.Add(record.RelativePath);
-                            warnings.Add($"Original backup is missing: {record.RelativePath}");
+                            // The backup needed to put the original back is gone. The
+                            // user explicitly chose force, so remove our file instead of
+                            // leaving the deployment stuck forever.
+                            if (TryFileAction(
+                                    () => File.Delete(path.Value),
+                                    record.RelativePath,
+                                    warnings))
+                            {
+                                removed++;
+                                warnings.Add($"Original backup is missing; deleted {record.RelativePath}.");
+                            }
+                            else
+                            {
+                                conflicts++;
+                                conflictedPaths.Add(path.Value);
+                                conflictedFiles.Add(record.RelativePath);
+                            }
                         }
                         else
                         {
-                            File.Delete(path.Value);
-                            removed++;
+                            if (TryFileAction(
+                                    () => File.Delete(path.Value),
+                                    record.RelativePath,
+                                    warnings))
+                            {
+                                removed++;
+                            }
+                            else
+                            {
+                                conflicts++;
+                                conflictedPaths.Add(path.Value);
+                                conflictedFiles.Add(record.RelativePath);
+                            }
                         }
 
                         continue;
@@ -139,18 +188,43 @@ public sealed partial class DeploymentEngine
                 {
                     if (backupPath is not null && File.Exists(backupPath))
                     {
-                        File.Copy(backupPath, path.Value, overwrite: true);
-                        restored++;
+                        if (TryFileAction(
+                                () => File.Copy(backupPath, path.Value, overwrite: true),
+                                record.RelativePath,
+                                warnings))
+                        {
+                            restored++;
+                        }
+                        else
+                        {
+                            conflicts++;
+                            conflictedPaths.Add(path.Value);
+                            conflictedFiles.Add(record.RelativePath);
+                        }
                     }
                     else
                     {
+                        conflicts++;
+                        conflictedPaths.Add(path.Value);
+                        conflictedFiles.Add(record.RelativePath);
                         warnings.Add($"Original backup is missing: {record.RelativePath}");
                     }
                 }
                 else
                 {
-                    File.Delete(path.Value);
-                    removed++;
+                    if (TryFileAction(
+                            () => File.Delete(path.Value),
+                            record.RelativePath,
+                            warnings))
+                    {
+                        removed++;
+                    }
+                    else
+                    {
+                        conflicts++;
+                        conflictedPaths.Add(path.Value);
+                        conflictedFiles.Add(record.RelativePath);
+                    }
                 }
             }
             else if (record.ExistedBefore)
@@ -158,13 +232,27 @@ public sealed partial class DeploymentEngine
                 if (backupPath is not null && File.Exists(backupPath))
                 {
                     var parent = Path.GetDirectoryName(path.Value);
-                    if (!string.IsNullOrWhiteSpace(parent))
-                    {
-                        Directory.CreateDirectory(parent);
-                    }
+                    if (TryFileAction(
+                            () =>
+                            {
+                                if (!string.IsNullOrWhiteSpace(parent))
+                                {
+                                    Directory.CreateDirectory(parent);
+                                }
 
-                    File.Copy(backupPath, path.Value, overwrite: true);
-                    restored++;
+                                File.Copy(backupPath, path.Value, overwrite: true);
+                            },
+                            record.RelativePath,
+                            warnings))
+                    {
+                        restored++;
+                    }
+                    else
+                    {
+                        conflicts++;
+                        conflictedPaths.Add(path.Value);
+                        conflictedFiles.Add(record.RelativePath);
+                    }
                 }
                 else
                 {
@@ -184,7 +272,10 @@ public sealed partial class DeploymentEngine
         protectedPaths.UnionWith(keepPaths);
         SweepOwnedDirectories(ownedDirectories, target.Value, protectedPaths, warnings);
         var leftovers = CollectLeftovers(manifest, target.Value);
-        var clean = conflicts == 0 && warnings.Count == 0 && leftovers.Count == 0;
+        // Warnings are informational (for example, an original backup is missing
+        // but the forced restore removed the file). Only files we could not remove
+        // or restore keep the deployment in Partial.
+        var clean = conflicts == 0 && leftovers.Count == 0;
         var finalState = clean
             ? DeploymentManifestState.Restored
             : DeploymentManifestState.Partial;
@@ -199,6 +290,24 @@ public sealed partial class DeploymentEngine
             leftovers,
             warnings,
             conflictedFiles));
+    }
+
+    private static bool TryFileAction(
+        Action action,
+        string relativePath,
+        List<string> warnings)
+    {
+        try
+        {
+            action();
+            return true;
+        }
+        catch (Exception exception) when (
+            exception is IOException or UnauthorizedAccessException)
+        {
+            warnings.Add($"Could not update {relativePath}: {exception.Message}");
+            return false;
+        }
     }
 
     public Task<Result> DiscardBackupAsync(

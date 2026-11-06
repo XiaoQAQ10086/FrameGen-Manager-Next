@@ -710,18 +710,23 @@ export default {
         const restore = next?.restore;
         const restoreProblem = restore && (
           Number(restore.conflicts) > 0 ||
-          (restore.leftovers?.length || 0) > 0 ||
-          (restore.warnings?.length || 0) > 0
+          (restore.leftovers?.length || 0) > 0
         );
         if (restoreProblem) {
           const message = Number(restore.conflicts) > 0
             ? t('Deploy.RestoreConflict').replace('{0}', restore.conflicts)
             : t('Deploy.RestoreIncomplete');
           const files = restore.conflictedFiles || [];
-          const fileText = files.length > 0
-            ? ` ${t('Deploy.RestoreConflictFiles').replace('{0}', files.join('、'))}`
-            : '';
-          notice(`${message} ${t('Deploy.RestoreConflictHint')}${fileText}`);
+          const leftovers = restore.leftovers || [];
+          const details = [];
+          if (files.length > 0) {
+            details.push(t('Deploy.RestoreConflictFiles').replace('{0}', files.join('、')));
+          }
+          if (leftovers.length > 0) {
+            details.push(t('Deploy.RestoreLeftoverFiles').replace('{0}', leftovers.slice(0, 8).join('、')));
+          }
+          const hint = files.length > 0 ? ` ${t('Deploy.RestoreConflictHint')}` : '';
+          notice(`${message}${hint}${details.length > 0 ? ` ${details.join(' ')}` : ''}`);
           ui.toast(message, 'error');
           if (files.length > 0 && onConflict) {
             afterConflict = () => onConflict(restore);

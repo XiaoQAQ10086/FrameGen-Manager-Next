@@ -133,6 +133,33 @@ public sealed class DeploymentEngineTests : IDisposable
     }
 
     [Fact]
+    public async Task RestoreReportsLockedFileInsteadOfThrowing()
+    {
+        var plan = BuildPlan();
+        var deployed = await _engine.DeployAsync(
+            plan,
+            progress: null,
+            TestContext.Current.CancellationToken);
+        deployed.IsSuccess.ShouldBeTrue(deployed.Error?.ToString());
+
+        var lockedPath = Path.Combine(_target, "runtime.dll");
+        using (new FileStream(lockedPath, FileMode.Open, FileAccess.Read, FileShare.None))
+        {
+            var restored = await _engine.RestoreAsync(
+                Family,
+                _target,
+                progress: null,
+                TestContext.Current.CancellationToken);
+
+            restored.IsSuccess.ShouldBeTrue(restored.Error?.ToString());
+            restored.Value.Conflicts.ShouldBe(1);
+            restored.Value.ConflictedFiles.ShouldNotBeNull();
+            restored.Value.ConflictedFiles!.ShouldContain("runtime.dll");
+            File.Exists(lockedPath).ShouldBeTrue();
+        }
+    }
+
+    [Fact]
     public async Task RestoreTreatsGameRepairedOriginalAsClean()
     {
         _directory.WriteFile("game/runtime.dll", "original runtime");

@@ -160,11 +160,12 @@ public sealed partial class AppWebBridge
             if (report.Conflicts > 0 || report.Leftovers.Count > 0 || report.Warnings.Count > 0)
             {
                 _logger.LogWarning(
-                    "framegen.restore target={Target} conflicts={Conflicts} leftovers={Leftovers} warnings={Warnings}",
+                    "framegen.restore target={Target} conflicts={Conflicts} conflicted={Conflicted} leftovers={Leftovers} warnings={Warnings}",
                     target.Directory,
                     report.Conflicts,
-                    report.Leftovers.Count,
-                    report.Warnings.Count);
+                    string.Join(", ", report.ConflictedFiles ?? []),
+                    string.Join("; ", report.Leftovers),
+                    string.Join("; ", report.Warnings));
             }
 
             return await BuildGamesStateAsync(restore: report);

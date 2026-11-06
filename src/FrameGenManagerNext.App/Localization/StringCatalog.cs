@@ -213,6 +213,7 @@ internal static class StringCatalog
         ["Deploy.RestoreConflict"] = ("还原未完成：{0} 个文件与部署记录不一致，已保留在游戏目录。", "Restore incomplete: {0} file(s) differ from the deployment record and were kept."),
         ["Deploy.RestoreConflictHint"] = ("ReShade、游戏或另一个 Mod 可能在运行时改写过这些文件；可在确认框中选择“强制还原”。", "ReShade, the game or another mod may have rewritten these files; choose \"Force restore\" in the dialog."),
         ["Deploy.RestoreConflictFiles"] = ("不一致的文件：{0}", "Files that differ: {0}"),
+        ["Deploy.RestoreLeftoverFiles"] = ("仍未清理的文件：{0}", "Files still present: {0}"),
         ["Deploy.ForceRestoreTitle"] = ("强制还原", "Force restore"),
         ["Deploy.ForceRestoreBody"] = ("以下文件与部署记录不一致，可能被 ReShade、游戏或另一个 Mod 改写过：\n{0}\n\n强制还原会删除这些文件；如果部署前存在原文件，则恢复原文件。继续？", "These files differ from the deployment record and may have been rewritten by ReShade, the game or another mod:\n{0}\n\nForce restore removes them, or restores the original file when one existed before deployment. Continue?"),
         ["Deploy.ForceRestoreOk"] = ("强制还原", "Force restore"),
