@@ -53,7 +53,8 @@ public sealed class SettingsServiceTests : IDisposable
         var settings = _service.Load();
 
         settings.Language.ShouldBe(AppLanguage.System);
-        settings.SchemaVersion.ShouldBe(2);
+        settings.SchemaVersion.ShouldBe(3);
+        settings.AutoInstallReframework.ShouldBeTrue();
     }
 
     [Fact]
@@ -65,6 +66,7 @@ public sealed class SettingsServiceTests : IDisposable
         var settings = _service.Load();
 
         settings.Language.ShouldBe(AppLanguage.English);
+        settings.AutoInstallReframework.ShouldBeTrue();
     }
 
     [Fact]

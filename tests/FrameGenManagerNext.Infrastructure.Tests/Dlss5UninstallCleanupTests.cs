@@ -225,5 +225,13 @@ public sealed class Dlss5UninstallCleanupTests : IDisposable
         {
             throw new NotSupportedException();
         }
+
+        public Task EnsureOverlayKeyAsync(
+            string targetDirectory,
+            int virtualKey,
+            CancellationToken cancellationToken)
+        {
+            throw new NotSupportedException();
+        }
     }
 }

@@ -69,6 +69,18 @@ export default {
       q('[data-role="status"]').textContent = value;
     }
 
+    function gateHint(value) {
+      if (value === 'DriverTooOld') {
+        return t('SmoothMotion.DriverTooOldDetail')
+          .replace('{0}', gpu?.driver || '?')
+          .replace('{1}', gpu?.minDriver || '616.64');
+      }
+      if (value === 'Unknown') {
+        return t('SmoothMotion.GateUnknownDetail');
+      }
+      return t(gateKeys[value] || 'Gpu.Gate.Unknown');
+    }
+
     function renderGpu() {
       if (!gpu) return;
       const gate = gateKeys[gpu.gate] || 'Gpu.Gate.Unknown';
@@ -79,7 +91,7 @@ export default {
       q('[data-role="gpu"]').textContent = gpu.name || '—';
       q('[data-role="driver"]').textContent = gpu.driver || t('Gpu.Status.UnknownDriver');
       q('[data-role="min-driver"]').textContent = gpu.minDriver || '616.64';
-      q('[data-role="note"]').textContent = supported ? t('SmoothMotion.Ready') : t(gate);
+      q('[data-role="note"]').textContent = supported ? t('SmoothMotion.Ready') : gateHint(gpu.gate);
     }
 
     const renderChunkSize = 40;
@@ -95,8 +107,10 @@ export default {
           : t('SmoothMotion.Enable');
       const fgConflict = game.frameGenDeployed === true;
       const antiCheat = game.antiCheat === true;
-      const blocked = fgConflict && toggleAction === 'enable';
-      const blockedHint = t('Conflict.FrameGenOn');
+      const gate = game.gate || 'Supported';
+      const gateBlocked = gate !== 'Supported';
+      const blocked = (fgConflict || gateBlocked) && toggleAction === 'enable';
+      const blockedHint = gateBlocked ? gateHint(gate) : t('Conflict.FrameGenOn');
       return `
         <article class="gcard${index < 12 ? '' : ' static'}" style="animation-delay:${Math.min(index * 35, 350)}ms">
           <div class="gtop">
@@ -105,13 +119,16 @@ export default {
               <div class="gname">${esc(game.name)}</div>
               <div class="badges">
                 <span class="badge ${game.component === 'Installed' ? 'ok' : (game.component === 'Partial' || game.component === 'Conflict' ? 'warn' : 'dim')}">${esc(t(componentKeys[game.component] || 'State.NotDeployed'))}</span>
-                <span class="badge ${game.enabled === true ? 'ok' : 'dim'}">${esc(game.enabled === true ? t('SmoothMotion.Driver.On') : game.enabled === false ? t('SmoothMotion.Driver.Off') : t('SmoothMotion.Driver.Unknown'))}</span>
+                ${gateBlocked
+                  ? `<span class="badge danger">${esc(t(gateKeys[gate] || 'Gpu.Gate.Unknown'))}</span>`
+                  : `<span class="badge ${game.enabled === true ? 'ok' : 'dim'}">${esc(game.enabled === true ? t('SmoothMotion.Driver.On') : game.enabled === false ? t('SmoothMotion.Driver.Off') : t('SmoothMotion.Driver.Unknown'))}</span>`}
                 ${fgConflict ? `<span class="badge danger">${esc(t('Conflict.FrameGenOn'))}</span>` : ''}
                 ${antiCheat ? `<span class="badge danger">${esc(t('SmoothMotion.AntiCheat'))}</span>` : ''}
               </div>
             </div>
           </div>
           <div class="gpath" title="${esc(prettyPath(game.targetDirectory))}">${esc(prettyPath(game.targetDirectory))}</div>
+          ${gateBlocked ? `<div class="hint danger">${esc(gateHint(gate))}</div>` : ''}
           ${antiCheat ? `<div class="hint danger">${esc(t('SmoothMotion.AntiCheatHint'))}</div>` : ''}
           ${game.detail ? `<div class="hint">${esc(game.detail)}</div>` : ''}
           <div class="gactions">

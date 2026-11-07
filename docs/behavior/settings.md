@@ -6,10 +6,10 @@
 ## 设置文件
 
 - 位置：`<数据目录>\config\app.json`。
-- 字段：`schemaVersion`、`language`、`theme`、`autoScanOnStartup`、`showCovers`。
+- 字段：`schemaVersion`、`language`、`theme`、`autoScanOnStartup`、`showCovers`、`autoInstallReframework`。
 - 读取失败或 JSON 损坏：隔离为 `app.json.bad`，使用默认值。
 - 写入：临时文件 + 原子替换；未知枚举值回退到默认。
-- `schemaVersion = 1` 的旧文件在读取时迁移到 `schemaVersion = 2`，`language` 一并改为 `system`；之后手动选择会以 `schemaVersion = 2` 保存。
+- `schemaVersion < 2` 的旧文件在读取时把 `language` 迁移为 `system`；`schemaVersion < 3` 的旧文件把 `autoInstallReframework` 迁移为 `true`。当前写回 `schemaVersion = 3`。
 
 默认值：
 
@@ -19,6 +19,7 @@
 | theme | `light`（固定浅色，暂不适配深色） |
 | autoScanOnStartup | `false` |
 | showCovers | `true` |
+| autoInstallReframework | `true`（检测到 RE Engine 时随 DLSS5 自动安装 REFramework） |
 
 可选语言值：`system`、`chineseSimplified`、`english`。选择 `system` 时每次启动重新检测系统语言；手动选择中文或 English 后保持该选择。
 

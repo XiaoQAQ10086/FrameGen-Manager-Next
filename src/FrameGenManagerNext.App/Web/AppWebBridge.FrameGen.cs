@@ -83,13 +83,25 @@ public sealed partial class AppWebBridge
 
         var options = ReadFrameGenOptions(payload);
         var target = ResolveDeploymentTarget(game, payload);
-        var occupiedProxy = FindReShadeProxy(target.Directory);
-        if (occupiedProxy is not null &&
-            string.Equals(occupiedProxy, options.ProxySlot, StringComparison.OrdinalIgnoreCase))
+        var occupied = await GetOccupiedProxiesAsync(target.Directory);
+        var conflict = occupied.FirstOrDefault(item =>
+            item.Owner != "FrameGen" &&
+            string.Equals(item.Module, options.ProxySlot, StringComparison.OrdinalIgnoreCase));
+        if (conflict is not null)
         {
             throw new BridgeException(
                 Domain.Errors.ErrorCode.Conflict,
-                $"proxy slot {occupiedProxy} is used by DLSS5/ReShade; choose another proxy");
+                $"proxy slot {conflict.Module} is used by {conflict.Owner}; choose another proxy");
+        }
+
+        var reframeworkAuto = _settings.Load().AutoInstallReframework &&
+                              ResolveEngine(game) == GameEngine.ReEngine;
+        if (reframeworkAuto &&
+            string.Equals(options.ProxySlot, "dinput8.dll", StringComparison.OrdinalIgnoreCase))
+        {
+            throw new BridgeException(
+                Domain.Errors.ErrorCode.Conflict,
+                "REFramework will use dinput8.dll; choose another proxy for frame generation");
         }
 
         var exePath = target.ExePath ?? game.RenderExePath;
@@ -112,6 +124,10 @@ public sealed partial class AppWebBridge
             {
                 ReportProgress(update.Phase, update.Subject, update.Current, update.Total);
             });
+            var reframeworkSkipReason = await EnsureReframeworkAsync(
+                game,
+                target.Directory,
+                progress);
             var result = await _frameGen.DeployAsync(
                 target.Directory,
                 options,
@@ -122,7 +138,7 @@ public sealed partial class AppWebBridge
                 throw new BridgeException(result.Error!.Code, result.Error.Diagnostic ?? "deployment failed");
             }
 
-            return await BuildGamesStateAsync();
+            return await BuildGamesStateAsync(reframeworkSkipReason: reframeworkSkipReason);
         });
     }
 

@@ -30,30 +30,59 @@ export default {
           </div>
         </div>
         <div class="panel form-panel">
+          <div class="ctitle">${t('About.ReEngine')}</div>
+          <div class="form-row">
+            <div><h3>${t('About.ReEngineAuto')}</h3><p>${t('About.ReEngineAutoHint')}</p></div>
+            <label class="switch">
+              <input type="checkbox" data-role="auto-reframework" aria-label="${t('About.ReEngineAuto')}"
+                ${info.settings?.autoInstallReframework !== false ? 'checked' : ''}>
+              <span></span>
+            </label>
+          </div>
+        </div>
+        <div class="panel form-panel">
           <div class="ctitle">${t('About.Feedback')}</div>
           <p class="hint">${t('About.FeedbackBody')}</p>
         </div>
       </section>`;
 
     const autoScan = root.querySelector('[data-role="auto-scan"]');
-    const onToggle = async () => {
-      const desired = autoScan.checked;
+    const autoReframework = root.querySelector('[data-role="auto-reframework"]');
+    const saveSettings = async () => {
       autoScan.disabled = true;
+      autoReframework.disabled = true;
       try {
         await api.request('app.saveSettings', {
           language: info.language === 'en' ? 'en' : 'zh',
-          autoScanOnStartup: desired,
+          autoScanOnStartup: autoScan.checked,
+          autoInstallReframework: autoReframework.checked,
         });
         await ctx.refreshInfo();
         ui.toast(t('Settings.Status.Saved'));
+        return true;
       } catch (error) {
-        autoScan.checked = !desired;
         ui.toast(error.message || error.code || t('Settings.Status.SaveFailed'), 'error');
+        return false;
       } finally {
         autoScan.disabled = false;
+        autoReframework.disabled = false;
+      }
+    };
+
+    const onToggle = async () => {
+      const desired = autoScan.checked;
+      if (!(await saveSettings())) {
+        autoScan.checked = !desired;
+      }
+    };
+    const onReframeworkToggle = async () => {
+      const desired = autoReframework.checked;
+      if (!(await saveSettings())) {
+        autoReframework.checked = !desired;
       }
     };
     autoScan.addEventListener('change', onToggle);
+    autoReframework.addEventListener('change', onReframeworkToggle);
 
     const onClick = async (event) => {
       const button = event.target.closest('[data-action]');
@@ -72,6 +101,7 @@ export default {
     return () => {
       root.removeEventListener('click', onClick);
       autoScan.removeEventListener('change', onToggle);
+      autoReframework.removeEventListener('change', onReframeworkToggle);
     };
   },
 };

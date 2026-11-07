@@ -2,16 +2,18 @@ using System.Diagnostics;
 using System.IO;
 using System.Text.Json;
 using FrameGenManagerNext.Core.Features.Dlss5;
-using FrameGenManagerNext.Core.Features.Framegen;
 using FrameGenManagerNext.Domain.Deployment;
 using FrameGenManagerNext.Domain.Library;
+using FrameGenManagerNext.Infrastructure.Library;
 using Microsoft.Extensions.Logging;
 
 namespace FrameGenManagerNext.App.Web;
 
 public sealed partial class AppWebBridge
 {
-    private async Task<object?> BuildDlss5StateAsync(Dlss5UninstallReport? uninstall = null)
+    private async Task<object?> BuildDlss5StateAsync(
+        Dlss5UninstallReport? uninstall = null,
+        string? reframeworkSkipReason = null)
     {
         var stateClock = Stopwatch.StartNew();
         var settings = _settings.Load();
@@ -40,6 +42,7 @@ public sealed partial class AppWebBridge
                     available = false,
                     state = "Unavailable",
                     api = game.GraphicsApi.ToString(),
+                    engine = ResolveEngine(game).ToString(),
                     reShade = false,
                     legacy = false,
                     legacyFiles = Array.Empty<string>(),
@@ -68,6 +71,7 @@ public sealed partial class AppWebBridge
                     available = false,
                     state = inspection.Error!.Code.ToString(),
                     api = game.GraphicsApi.ToString(),
+                    engine = ResolveEngine(game).ToString(),
                     reShade = false,
                     legacy = false,
                     legacyFiles = Array.Empty<string>(),
@@ -89,6 +93,7 @@ public sealed partial class AppWebBridge
                 available = true,
                 state = inspection.Value.FileState.ToString(),
                 api = inspection.Value.Api.ToString(),
+                engine = ResolveEngine(game).ToString(),
                 reShade = inspection.Value.ReShadePresent,
                 legacy = inspection.Value.LegacyRenoDxPresent,
                 legacyFiles = inspection.Value.LegacyFiles ?? Array.Empty<string>(),
@@ -105,6 +110,8 @@ public sealed partial class AppWebBridge
         {
             games,
             removed,
+            reframeworkSkipped = reframeworkSkipReason is not null,
+            reframeworkSkipReason,
             uninstall = uninstall is null
                 ? null
                 : new
@@ -131,32 +138,29 @@ public sealed partial class AppWebBridge
             throw new BridgeException(Domain.Errors.ErrorCode.FileNotFound, "render executable not found");
         }
         var knownApi = ReadGraphicsApi(payload);
-
-        var apiModule = knownApi is null
-            ? AutoProxyModule(game.GraphicsApi)
-            : ProxyModule(knownApi.Value);
+        var selectedProxy = ReadProxyModule(payload);
+        var apiModule = selectedProxy ??
+                        (knownApi is null
+                            ? Dlss5ProxyCatalog.AutoModule(game.GraphicsApi)
+                            : Dlss5ProxyCatalog.ExplicitModule(knownApi.Value));
         if (apiModule is not null)
         {
-            var frameGen = await _frameGen.InspectAsync(
-                game.TargetDirectory,
-                FrameGenOptions.Default,
-                CancellationToken.None);
-            var frameGenDeployed = frameGen.IsSuccess && frameGen.Value.State is
-                DeploymentState.Installed or
-                DeploymentState.Outdated or
-                DeploymentState.Partial or
-                DeploymentState.Conflict or
-                DeploymentState.InstalledWithoutManifest;
-            if (frameGenDeployed &&
-                frameGen.Value.Options is not null &&
-                frameGen.Value.Options.TryGetValue("proxySlot", out var proxySlot) &&
-                string.Equals(proxySlot, apiModule, StringComparison.OrdinalIgnoreCase))
+            var occupied = await GetOccupiedProxiesAsync(target.Directory);
+            var conflict = occupied.FirstOrDefault(item =>
+                item.Owner != "Dlss5" &&
+                string.Equals(item.Module, apiModule, StringComparison.OrdinalIgnoreCase));
+            if (conflict is not null)
             {
                 throw new BridgeException(
                     Domain.Errors.ErrorCode.Conflict,
-                    $"frame generation already uses the {apiModule} proxy; choose another API or restore frame generation first");
+                    $"proxy slot {apiModule} is used by {conflict.Owner}; choose another proxy");
             }
         }
+
+        var options = new Dlss5InstallOptions(
+            knownApi,
+            selectedProxy,
+            ReadOverlayKey(payload));
 
         return await RunExclusiveAsync(async () =>
         {
@@ -166,18 +170,54 @@ public sealed partial class AppWebBridge
             {
                 ReportProgress(update.Phase, update.Subject, update.Current, update.Total);
             });
+            var reframeworkSkipReason = await EnsureReframeworkAsync(
+                game,
+                target.Directory,
+                progress);
+
             var result = await _dlss5.InstallAsync(
                 target.Directory,
                 installExe,
                 progress,
                 CancellationToken.None,
-                knownApi);
+                options);
             if (result.IsFailure)
             {
                 throw new BridgeException(result.Error!.Code, result.Error.Diagnostic ?? "install failed");
             }
 
-            return await BuildDlss5StateAsync();
+            return await BuildDlss5StateAsync(reframeworkSkipReason: reframeworkSkipReason);
+        });
+    }
+
+    private async Task<object?> SetDlss5HotkeyAsync(JsonElement payload)
+    {
+        var game = await FindGameAsync(IdOf(payload));
+        if (game is null)
+        {
+            throw new BridgeException(Domain.Errors.ErrorCode.FileNotFound, "game not found");
+        }
+
+        var target = ResolveDeploymentTarget(game, payload);
+        var hotkey = ReadOverlayKey(payload) ??
+                     throw new BridgeException(
+                         Domain.Errors.ErrorCode.InvalidArgument,
+                         "missing ReShade overlay key");
+
+        return await RunExclusiveAsync(async () =>
+        {
+            var result = await _dlss5.SetOverlayKeyAsync(
+                target.Directory,
+                hotkey,
+                CancellationToken.None);
+            if (result.IsFailure)
+            {
+                throw new BridgeException(
+                    result.Error!.Code,
+                    result.Error.Diagnostic ?? "could not update ReShade overlay key");
+            }
+
+            return new { updated = true, hotkey };
         });
     }
 
@@ -242,8 +282,35 @@ public sealed partial class AppWebBridge
                     report.Remaining.Count);
             }
 
+            var reframework = await _reframework.UninstallAsync(
+                game.TargetDirectory,
+                progress: null,
+                CancellationToken.None);
+            if (reframework.IsFailure &&
+                reframework.Error!.Code != Domain.Errors.ErrorCode.ManifestMissing)
+            {
+                _logger.LogWarning(
+                    "reframework.uninstall target={Target} code={Code} diagnostic={Diagnostic}",
+                    game.TargetDirectory,
+                    reframework.Error.Code,
+                    reframework.Error.Diagnostic);
+            }
+
             return await BuildDlss5StateAsync(report);
         });
+    }
+
+    private static GameEngine ResolveEngine(GameEntry game)
+    {
+        if (game.Engine != GameEngine.Unknown)
+        {
+            return game.Engine;
+        }
+
+        return EngineDetector.Detect(
+            game.InstallDirectory,
+            game.TargetDirectory,
+            game.RenderExePath);
     }
 
     private static List<object> EnumerateExeTargets(string directory)
@@ -268,28 +335,47 @@ public sealed partial class AppWebBridge
         }
     }
 
-    private static string? AutoProxyModule(GraphicsApi api)
+    private static string? ReadProxyModule(JsonElement payload)
     {
-        return api switch
+        var value = payload.TryGetProperty("proxy", out var element) ? element.GetString() : null;
+        if (string.IsNullOrWhiteSpace(value) || value.Equals("auto", StringComparison.OrdinalIgnoreCase))
         {
-            GraphicsApi.Direct3D9 => "d3d9.dll",
-            GraphicsApi.Direct3D10 or GraphicsApi.Direct3D11 or GraphicsApi.Direct3D12 => "dxgi.dll",
-            GraphicsApi.OpenGl => "opengl32.dll",
-            _ => null,
-        };
+            return null;
+        }
+
+        var module = value.EndsWith(".dll", StringComparison.OrdinalIgnoreCase)
+            ? value
+            : value + ".dll";
+        if (!Dlss5ProxyCatalog.Modules.Contains(module, StringComparer.OrdinalIgnoreCase))
+        {
+            throw new BridgeException(
+                Domain.Errors.ErrorCode.InvalidArgument,
+                $"unknown ReShade proxy module: {value}");
+        }
+
+        return module;
     }
 
-    private static string? ProxyModule(GraphicsApi api)
+    private static int? ReadOverlayKey(JsonElement payload)
     {
-        return api switch
+        if (!payload.TryGetProperty("hotkey", out var element))
         {
-            GraphicsApi.Direct3D9 => "d3d9.dll",
-            GraphicsApi.Direct3D10 => "d3d10.dll",
-            GraphicsApi.Direct3D11 => "d3d11.dll",
-            GraphicsApi.Direct3D12 => "d3d12.dll",
-            GraphicsApi.OpenGl => "opengl32.dll",
-            _ => null,
-        };
+            return null;
+        }
+
+        var value = element.ValueKind == JsonValueKind.Number && element.TryGetInt32(out var number)
+            ? number
+            : int.TryParse(element.GetString(), out number)
+                ? number
+                : 0;
+        if (value is < 1 or > 255)
+        {
+            throw new BridgeException(
+                Domain.Errors.ErrorCode.InvalidArgument,
+                $"invalid ReShade overlay key: {value}");
+        }
+
+        return value;
     }
 
     private static GraphicsApi? ReadGraphicsApi(JsonElement payload)

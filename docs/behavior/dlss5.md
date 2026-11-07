@@ -28,7 +28,9 @@
    - GITC 1.8.0 新增 Before Framegen（DX12/Vulkan Streamline 路由），已有设置会保留；pack 版本升到 6.8.1，已部署用户可以检测到资产更新。
 3. 非 Vulkan 优先离线安装 ReShade（不联网、不运行 setup）：
    - 从 `ReShade_Setup_6.8.0_Addon.exe` 的 512 字节步进内嵌 ZIP 取出 `ReShade64.dll`（32 位游戏取 `ReShade32.dll`）。该 DLL 与官方 setup 写出的文件哈希一致。
-   - 按最终代理写成代理文件名：自动模式下 DX10/11/12 使用 `dxgi.dll`；显式选择时使用该 API 自己的代理（`d3d9/d3d10/d3d11/d3d12/opengl32.dll`）。目标位置已有非 ReShade 文件时拒绝覆盖并回滚（`Conflict`）。
+   - 按最终代理写成代理文件名：自动模式下 DX10/11/12 使用 `dxgi.dll`，DX9 使用 `d3d9.dll`，OpenGL 使用 `opengl32.dll`；UI 不出现独立“自动”项，默认项后标“（自动）”。用户可以手动覆盖为 `dxgi/d3d9/d3d10/d3d11/d3d12/opengl32.dll`，但必须与游戏 API 兼容，否则返回 `InvalidArgument`。目标位置已有非 ReShade 文件时拒绝覆盖并回滚（`Conflict`）。
+   - 详情页用“录制快捷键”而不是预设列表：默认显示 Home（VK 36），点击后按下自定义键，Esc 取消。安装成功后写 `ReShade.ini` 的 `[INPUT] KeyOverlay=<VK>,0,0,0`；已部署游戏修改时通过 `dlss5.setHotkey` 立即写入，不需要重新部署；已有配置只覆盖该键，保留其他设置。
+   - REFramework 不再在 DLSS5 详情页逐个询问：关于页“RE 引擎”卡片提供“RE 引擎自动安装 REFramework”开关，默认开启；检测到 RE Engine 时部署帧生成或 DLSS5 都会自动安装。REFramework 使用独立 `reframework` pack（`dinput8.dll`），占用 `dinput8.dll` 入口，帧生成必须避开。详见 `docs/behavior/reframework.md`。
    - 目标没有 `ReShade.ini` 时写入有效默认配置；随后由配置服务把搜索路径合并为 `.\reshade-shaders\Shaders\**` / `Textures\**`。
    - 只有离线解包失败时才自动回退到官方 setup（`--headless --api <api>`，超时 240 秒）；界面不提供手动选择官方安装器的入口。
    - Vulkan 需要全局层，无法离线落地，只能使用官方 setup。

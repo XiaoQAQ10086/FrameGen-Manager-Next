@@ -15,13 +15,14 @@ public sealed partial class Dlss5DeploymentService
         string exePath,
         IProgress<DeploymentProgress>? progress,
         CancellationToken cancellationToken,
-        GraphicsApi? knownApi = null)
+        Dlss5InstallOptions? options = null)
     {
         if (!File.Exists(exePath))
         {
             return Result<Dlss5Report>.Fail(new AppError(ErrorCode.InvalidPath, $"executable not found: {exePath}"));
         }
 
+        var knownApi = options?.KnownApi;
         var explicitApi = knownApi is { } selectedApi && selectedApi != GraphicsApi.Unknown;
         var api = explicitApi
             ? Result<GraphicsApi>.Ok(knownApi!.Value)
@@ -31,11 +32,32 @@ public sealed partial class Dlss5DeploymentService
             return Result<Dlss5Report>.Fail(api.Error!);
         }
 
-        // Automatic mode follows the upstream analyzer and uses dxgi for DX10/11/12.
-        // An explicitly selected API uses its own proxy (DX12 -> d3d12.dll), which
-        // lets users avoid an occupied dxgi slot.
-        var reShadeArgument = explicitApi ? ApiArgument(api.Value) : AutoApiArgument(api.Value);
-        var reShadeModule = ModuleForArgument(reShadeArgument);
+        string? reShadeArgument;
+        string? reShadeModule;
+        if (!string.IsNullOrWhiteSpace(options?.ProxyModule))
+        {
+            var proxy = options.ProxyModule;
+            if (!Dlss5ProxyCatalog.Modules.Contains(proxy, StringComparer.OrdinalIgnoreCase) ||
+                !Dlss5ProxyCatalog.IsCompatible(api.Value, proxy) ||
+                Dlss5ProxyCatalog.ArgumentFor(proxy) is not { } argument)
+            {
+                return Result<Dlss5Report>.Fail(AppError.Create(
+                    ErrorCode.InvalidArgument,
+                    ("proxy", proxy),
+                    ("api", api.Value.ToString())));
+            }
+
+            reShadeArgument = argument;
+            reShadeModule = proxy;
+        }
+        else
+        {
+            // Automatic mode follows the upstream analyzer and uses dxgi for DX10/11/12.
+            // An explicitly selected API uses its own proxy (DX12 -> d3d12.dll), which
+            // lets users avoid an occupied dxgi slot.
+            reShadeArgument = explicitApi ? ApiArgument(api.Value) : AutoApiArgument(api.Value);
+            reShadeModule = ModuleForArgument(reShadeArgument);
+        }
 
         var location = await _packs.FindAsync(PackId, cancellationToken);
         if (location is null)
@@ -152,6 +174,23 @@ public sealed partial class Dlss5DeploymentService
             _logger.LogWarning(exception, "Could not merge ReShade.ini search paths");
         }
 
+        if (options?.OverlayKey is { } overlayKey)
+        {
+            try
+            {
+                await _reShadeConfig.EnsureOverlayKeyAsync(
+                    plan.Value.TargetDirectory,
+                    overlayKey,
+                    cancellationToken);
+            }
+            catch (Exception exception) when (
+                exception is IOException or UnauthorizedAccessException or ArgumentOutOfRangeException)
+            {
+                warnings.Add($"ReShade overlay key could not be written: {exception.Message}");
+                _logger.LogWarning(exception, "Could not write ReShade overlay key");
+            }
+        }
+
         return Result<Dlss5Report>.Ok(new Dlss5Report(
             new DeploymentReport(
                 deployment.Value.State,
@@ -210,6 +249,37 @@ public sealed partial class Dlss5DeploymentService
         }
 
         return Result<string>.Ok($"ReShade ({apiArgument})");
+    }
+
+    public async Task<Result> SetOverlayKeyAsync(
+        string targetDirectory,
+        int virtualKey,
+        CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(targetDirectory))
+        {
+            return Result.Fail(new AppError(ErrorCode.InvalidPath, "target directory is empty"));
+        }
+
+        try
+        {
+            await _reShadeConfig.EnsureOverlayKeyAsync(
+                targetDirectory,
+                virtualKey,
+                cancellationToken);
+            return Result.Ok();
+        }
+        catch (ArgumentOutOfRangeException exception)
+        {
+            return Result.Fail(new AppError(ErrorCode.InvalidArgument, exception.Message));
+        }
+        catch (Exception exception) when (
+            exception is IOException or UnauthorizedAccessException)
+        {
+            return Result.Fail(new AppError(
+                exception is UnauthorizedAccessException ? ErrorCode.AccessDenied : ErrorCode.FileLocked,
+                exception.Message));
+        }
     }
 
     private static string AutoApiArgument(GraphicsApi api)

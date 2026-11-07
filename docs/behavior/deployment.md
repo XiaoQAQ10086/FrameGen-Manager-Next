@@ -29,7 +29,9 @@ manifest 状态：`Installing → Installed / RolledBack / Partial`，还原后 
 2. 通过 `FGM_PACKS_DIR`、`<exe>/packs`、数据目录 `packs` 或仓库 `packs`/`assets/packs` 定位 pack；同名 pack 取版本最高且满足 `minAppVersion` 的一份。
 3. 校验 pack schema 和源文件大小/哈希。
 4. 选择代理槽（默认 `version.dll`），加入所有非代理文件，生成 INI。
+   - 部署前若关于页开启“RE 引擎自动安装 REFramework”且检测到 RE Engine，会先安装 `reframework` pack 的 `dinput8.dll`；已有 REFramework 时跳过并弹窗说明。因此不能同时选择 `dinput8.dll` 作为帧生成代理。
    - 部署前检查目标目录里被 DLSS5/ReShade 占用的代理模块（`d3d11.dll`/`d3d12.dll`/`dxgi.dll` 等，按版本信息 ProductName=ReShade 识别）。若用户选中的槽正好被占用，界面会禁用该选项、自动切到其他槽并显示提示；后端也会返回 `Conflict`，避免覆盖 DLSS5 的代理入口。
+   - 同时检查 REFramework 的 `dinput8.dll`：存在 REFramework manifest 时禁用/拒绝 `dinput8.dll` 代理槽，避免帧生成覆盖 REFramework。
 5. 获取跨进程文件锁（`state/locks/<family>-<targetHash>.lock`）。
 6. 对每个目标文件：
    - 目标是目录 → `Conflict`。

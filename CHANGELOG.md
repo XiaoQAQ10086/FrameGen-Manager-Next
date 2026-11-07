@@ -1,5 +1,24 @@
 # Changelog
 
+## 2.1.6
+
+### Added
+
+- 更新检查改为可镜像的 `update.json`：GitHub raw、`ghfast.top`、`gh-proxy.com`、`ghproxy.net` 回退；安装包下载强制校验大小和 SHA-256，失败自动换线。
+- 更新弹窗新增【夸克网盘】和【百度网盘】按钮；关于页的“网盘下载”同步改名为“夸克网盘”。
+- DLSS5 增加代理入口选择：默认项标“（自动）”，DX9 用 `d3d9.dll`、DX10/11/12 用 `dxgi.dll`；可手动覆盖但会检查与游戏 API 的兼容性。
+- DLSS5 增加 ReShade 呼出键选择，默认 Home，写入 `ReShade.ini` 的 `[INPUT] KeyOverlay`。
+- 新增 RE Engine 检测（`re_chunk_000.pak` 等标记）和 REFramework 可选组件；卡普空 RE Engine 游戏默认勾选，MT Framework 游戏不误装。REFramework 同时服务帧生成和 DLSS5。
+- 部署 REFramework 前先检测已有安装：已装过 REFramework（含自更新版本）自动跳过并弹窗说明；其他 Mod 的 `dinput8.dll` 不再误判为 REFramework，会提示入口已被其他 Mod 占用并跳过自动安装。
+- 帧生成游戏卡片直接标出代理占用：`dxgi.dll · DLSS5`、`dinput8.dll · Reframework` 等徽章与 Steam/Epic、API、部署状态排在同一行；DLSS5 与帧生成部署弹窗也会说明代理被哪个组件占用，占用项不可选。
+
+### Fixed
+
+- 还原时单个文件被游戏/杀毒软件占用或拒绝访问，不再中断整个还原；该文件会列入冲突或残留，其他文件继续处理。
+- 只有警告或残留、没有实际冲突文件时，不再显示“强制还原”提示；强制还原入口只在存在冲突文件时出现。
+- 强制还原可处理“原备份丢失”的文件，不再让部署记录永远停在 Partial。
+- 还原日志记录具体的冲突文件、残留文件和警告内容，不再只有数量。
+
 ## 2.1.4 (unreleased)
 
 ### Fixed

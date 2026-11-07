@@ -442,7 +442,7 @@ public sealed class AssetMaintenanceServiceTests
             string exePath,
             IProgress<DeploymentProgress>? progress,
             CancellationToken cancellationToken,
-            GraphicsApi? knownApi = null)
+            Dlss5InstallOptions? options = null)
         {
             throw new NotSupportedException();
         }
@@ -450,6 +450,14 @@ public sealed class AssetMaintenanceServiceTests
         public Task<Result<Dlss5RestoreReport>> RestoreAsync(
             string targetDirectory,
             IProgress<DeploymentProgress>? progress,
+            CancellationToken cancellationToken)
+        {
+            throw new NotSupportedException();
+        }
+
+        public Task<Result> SetOverlayKeyAsync(
+            string targetDirectory,
+            int virtualKey,
             CancellationToken cancellationToken)
         {
             throw new NotSupportedException();

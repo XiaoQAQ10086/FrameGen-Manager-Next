@@ -10,6 +10,7 @@ export default {
     let busy = false;
     let addingGame = false;
     let current = null;
+    let stopHotkeyRecording = null;
 
     root.innerHTML = `
       <section class="page">
@@ -111,6 +112,17 @@ export default {
         value === currentApi && game.api !== 'Unknown'
           ? `${label}${t('Dlss5.ApiAutoSuffix')}`
           : label;
+      const proxyModules = ['dxgi.dll', 'd3d12.dll', 'd3d11.dll', 'd3d10.dll', 'd3d9.dll', 'opengl32.dll'];
+      const autoProxyForApi = (api) => api === 'DX9'
+        ? 'd3d9.dll'
+        : api === 'DX10' || api === 'DX11' || api === 'DX12'
+          ? 'dxgi.dll'
+          : api === 'OPENGL' ? 'opengl32.dll' : null;
+      const initialAutoProxy = autoProxyForApi(currentApi);
+      const proxyText = (module) =>
+        `${module}${module === initialAutoProxy ? t('Dlss5.ProxyAutoSuffix') : ''}`;
+      let hotkeyCode = 36;
+      let hotkeyName = 'Home';
       const manualTarget = '__manual__';
       const legacyFiles = (game.legacyFiles || []).join(', ');
       detailBody.innerHTML = `
@@ -128,7 +140,16 @@ export default {
           <label>${t('Dlss5.GraphicsApiLabel')}<select data-role="detail-api">
             ${apiOptions.map(([value, label]) => `<option value="${value}">${esc(apiLabelText(value, label))}</option>`).join('')}
           </select></label>
+          <label>${t('Dlss5.ProxyLabel')}<select data-role="detail-proxy">
+            ${proxyModules.map((module) => `<option value="${module}">${esc(proxyText(module))}</option>`).join('')}
+          </select></label>
+          <label>${t('Dlss5.HotkeyLabel')}<span class="hotkey-picker">
+            <button class="btn small" data-role="record-hotkey" type="button">${t('Dlss5.RecordHotkey')}</button>
+            <b data-role="hotkey-value">Home</b>
+          </span></label>
         </div>
+        <p class="hint" data-role="hotkey-hint">${esc(t('Dlss5.HotkeyHint'))}</p>
+        <p class="hint danger hidden" data-role="proxy-occupied"></p>
         <p class="hint">${esc(t('Dlss5.Subtitle'))}</p>
         <p class="hint conflict-hint ${game.launcher === 'Xbox' && !game.renderExe ? '' : 'hidden'}">${esc(t('Library.XboxProtected'))}</p>
         <p class="hint hidden" data-role="vulkan-hint">${esc(t('Dlss5.VulkanOnlineHint'))}</p>
@@ -138,9 +159,148 @@ export default {
         </div>`;
       const targetSelect = detailBody.querySelector('[data-role="detail-target"]');
       const apiSelect = detailBody.querySelector('[data-role="detail-api"]');
+      const proxySelect = detailBody.querySelector('[data-role="detail-proxy"]');
+      const recordHotkeyButton = detailBody.querySelector('[data-role="record-hotkey"]');
+      const hotkeyValue = detailBody.querySelector('[data-role="hotkey-value"]');
+      let proxyTouched = false;
+      detailBody.dataset.proxyTouched = '0';
+      const refreshProxyOptions = (selectedApi) => {
+        if (!proxySelect) return;
+        const auto = autoProxyForApi(selectedApi);
+        for (const option of proxySelect.options) {
+          option.textContent = `${option.value}${option.value === auto ? t('Dlss5.ProxyAutoSuffix') : ''}`;
+        }
+        proxySelect.disabled = selectedApi === 'VULKAN';
+        if (!proxyTouched) {
+          proxySelect.value = auto || 'dxgi.dll';
+        }
+      };
       if (targetSelect && game.renderExe) {
         targetSelect.value = game.renderExe;
       }
+      const showHotkey = () => {
+        detailBody.dataset.hotkey = String(hotkeyCode);
+        if (hotkeyValue) hotkeyValue.textContent = hotkeyName;
+      };
+      showHotkey();
+      if (recordHotkeyButton) {
+        let recording = false;
+        let restoreButton = () => {};
+        const stopRecording = () => {
+          recording = false;
+          window.removeEventListener('keydown', onRecordKey, true);
+          restoreButton();
+        };
+        restoreButton = () => {
+          recordHotkeyButton.textContent = t('Dlss5.RecordHotkey');
+        };
+        const onRecordKey = async (event) => {
+          if (!recording) return;
+          if (event.key === 'Escape') {
+            stopRecording();
+            return;
+          }
+          if (event.key === 'Control' || event.key === 'Shift' || event.key === 'Alt' || event.key === 'Meta') {
+            return;
+          }
+
+          const code = Number(event.keyCode);
+          if (!Number.isInteger(code) || code < 1 || code > 255) return;
+          event.preventDefault();
+          event.stopPropagation();
+          hotkeyCode = code;
+          hotkeyName = event.key === ' ' ? 'Space'
+            : event.key.length === 1 ? event.key.toUpperCase() : event.key;
+          showHotkey();
+          stopRecording();
+
+          if (!deployed(game)) return;
+          const selectedTarget = targetSelect?.value;
+          const target = selectedTarget && selectedTarget !== manualTarget
+            ? selectedTarget
+            : game.targetDirectory;
+          try {
+            await api.request('dlss5.setHotkey', {
+              id: game.id,
+              target,
+              hotkey: code,
+            });
+            ui.toast(t('Dlss5.HotkeySaved'));
+          } catch (error) {
+            ui.toast(ui.errorText(error, t('Dlss5.HotkeySaveFailed')), 'error');
+          }
+        };
+        recordHotkeyButton.addEventListener('click', () => {
+          if (recording) {
+            stopRecording();
+            return;
+          }
+
+          recording = true;
+          recordHotkeyButton.textContent = t('Dlss5.RecordHotkeyWaiting');
+          window.addEventListener('keydown', onRecordKey, true);
+          stopHotkeyRecording = stopRecording;
+        });
+      }
+      refreshProxyOptions(currentApi);
+      proxySelect?.addEventListener('change', () => {
+        proxyTouched = true;
+        detailBody.dataset.proxyTouched = '1';
+      });
+      const proxyOccupiedNote = detailBody.querySelector('[data-role="proxy-occupied"]');
+      const proxyOwnerKeys = {
+        FrameGen: 'Proxy.Owner.FrameGen',
+        Reframework: 'Proxy.Owner.Reframework',
+        Other: 'Proxy.Owner.Other',
+      };
+      const proxyOwnerLabel = (owner) =>
+        (proxyOwnerKeys[owner] ? t(proxyOwnerKeys[owner]) : owner);
+      const explicitProxyFor = (api) => ({
+        DX12: 'd3d12.dll',
+        DX11: 'd3d11.dll',
+        DX10: 'd3d10.dll',
+        DX9: 'd3d9.dll',
+        OPENGL: 'opengl32.dll',
+      }[api] || null);
+      const loadProxyOccupied = async () => {
+        const status = await api.request('framegen.proxyStatus', { id: game.id }).catch(() => null);
+        const occupied = (status?.occupied || [])
+          .filter((item) => item?.module && item.owner !== 'Dlss5');
+        if (occupied.length === 0) return;
+
+        const disabled = new Set();
+        for (const item of occupied) {
+          if (disabled.has(item.module)) continue;
+          disabled.add(item.module);
+          const option = proxySelect
+            ? Array.from(proxySelect.options).find((candidate) => candidate.value === item.module)
+            : null;
+          if (option) {
+            option.disabled = true;
+            option.textContent = `${option.textContent}${t('Deploy.ProxyOccupiedByOwner').replace('{0}', proxyOwnerLabel(item.owner))}`;
+          }
+
+          if (proxySelect && proxySelect.value === item.module) {
+            const preferred = explicitProxyFor(apiSelect?.value || currentApi);
+            const fallback = preferred
+              ? Array.from(proxySelect.options).find((candidate) => candidate.value === preferred && !candidate.disabled)
+              : null;
+            const next = fallback || Array.from(proxySelect.options).find((candidate) => !candidate.disabled);
+            if (next) {
+              proxySelect.value = next.value;
+              proxyTouched = true;
+              detailBody.dataset.proxyTouched = '1';
+            }
+          }
+        }
+
+        proxyOccupiedNote.textContent = t('Deploy.ProxyOccupiedByComponent').replace(
+          '{0}',
+          occupied.map((item) => `${item.module}（${proxyOwnerLabel(item.owner)}）`).join('、'),
+        );
+        proxyOccupiedNote.classList.remove('hidden');
+      };
+      void loadProxyOccupied();
       const vulkanHint = detailBody.querySelector('[data-role="vulkan-hint"]');
       const syncVulkanHint = () => {
         vulkanHint?.classList.toggle('hidden', apiSelect?.value !== 'VULKAN');
@@ -150,6 +310,7 @@ export default {
         apiSelect.value = apiOptions.some(([value]) => value === currentApi) ? currentApi : 'DX12';
         apiSelect.addEventListener('change', () => {
           detailBody.dataset.apiTouched = '1';
+          refreshProxyOptions(apiSelect.value);
           syncVulkanHint();
         });
       }
@@ -211,6 +372,8 @@ export default {
     }
 
     function closeDetail() {
+      stopHotkeyRecording?.();
+      stopHotkeyRecording = null;
       detail.classList.add('hidden');
       current = null;
     }
@@ -229,8 +392,16 @@ export default {
       }
     }
 
-    async function runDetailAction(command, game, extra = {}) {
-      if (busy) return;
+    function showReframeworkSkipped(reason) {
+      ui.modal(`
+        <header class="modal-head"><div><h2>${esc(t('Dlss5.ReframeworkSkippedTitle'))}</h2></div></header>
+        <p class="hint">${esc(reason === 'dinput8' ? t('Dlss5.Dinput8Occupied') : t('Dlss5.ReframeworkSkipped'))}</p>
+        <footer class="modal-foot"><span></span><div class="foot-actions">
+          <button class="btn primary" data-close type="button">${esc(t('Common.OK'))}</button>
+        </div></footer>`);
+    }
+
+    async function runDetailAction(command, game, extra = {}) {      if (busy) return;
       busy = true;
 
       const box = detailBody.querySelector('[data-role="install-progress"]');
@@ -273,6 +444,9 @@ export default {
         render();
         removedController.render();
         closeDetail();
+        if (state.reframeworkSkipReason) {
+          showReframeworkSkipped(state.reframeworkSkipReason);
+        }
         if (state.uninstall && state.uninstall.clean === false) {
           const count = state.uninstall.remaining?.length || 0;
           ui.toast(t('Dlss5.UninstallIncomplete').replace('{0}', String(count)), 'error');
@@ -369,8 +543,22 @@ export default {
             const apiValue = detailBody.dataset.apiTouched === '1' || game.api === 'Unknown'
               ? selectedApi
               : 'auto';
+            const selectedProxy = detailBody.querySelector('[data-role="detail-proxy"]')?.value;
+            const proxyValue = detailBody.dataset.proxyTouched === '1' && selectedApi !== 'VULKAN'
+              ? selectedProxy
+              : null;
+            const hotkeyCode = Number(detailBody.dataset.hotkey || 36);
             if (!(await confirmDialog(t('Dlss5.Title'), t('Dlss5.Confirm.Install').replace('{0}', game.name).replace('{1}', prettyPath(target || game.targetDirectory)), t('Common.Install')))) return;
-            return runDetailAction('dlss5.install', game, { target, api: apiValue });
+            return runDetailAction(
+              'dlss5.install',
+              game,
+              {
+                target,
+                api: apiValue,
+                proxy: proxyValue,
+                hotkey: hotkeyCode,
+              },
+            );
           }
           if (!(await confirmDialog(t('Dlss5.Title'), t('Dlss5.Confirm.Uninstall').replace('{0}', game.name), t('Common.Uninstall')))) return;
           return runDetailAction('dlss5.uninstall', game);

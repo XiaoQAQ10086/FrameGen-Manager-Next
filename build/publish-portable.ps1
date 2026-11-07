@@ -98,7 +98,7 @@ if (Test-Path -LiteralPath $packsSource) {
     Copy-Item -LiteralPath $packsSource -Destination (Join-Path $destination 'packs') -Recurse -Force
 }
 
-$packIds = @('framegen.sm86', 'smooth-motion.rtx30', 'smooth-motion.rtx20', 'dlss5.reshade-gitc')
+$packIds = @('framegen.sm86', 'smooth-motion.rtx30', 'smooth-motion.rtx20', 'dlss5.reshade-gitc', 'reframework')
 foreach ($packId in $packIds) {
     $packPayload = Join-Path $root "assets\packs\$packId"
     if (-not (Test-Path -LiteralPath $packPayload)) {

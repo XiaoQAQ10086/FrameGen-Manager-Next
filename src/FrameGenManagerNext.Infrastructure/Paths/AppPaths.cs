@@ -41,6 +41,13 @@ public sealed class AppPaths
 
     public string StateDirectory => Path.Combine(RootDirectory, "state");
 
+    /// <summary>
+    /// Downloaded installers are disposable and must not live in the durable data
+    /// directory. The updater and the installer launcher both resolve this path.
+    /// </summary>
+    public static string UpdateStagingDirectory =>
+        Path.Combine(Path.GetTempPath(), AppInfo.DataDirectoryName, "updates");
+
     public static AppPaths CreateDefault(string? applicationDirectory = null)
     {
         var overrideRoot = Environment.GetEnvironmentVariable(DataDirectoryEnvironmentVariable);

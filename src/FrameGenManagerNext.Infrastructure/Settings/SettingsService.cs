@@ -84,13 +84,15 @@ public sealed class SettingsService : ISettingsService
         // Language became a system-following preference in schema 2. Older files
         // stored the previous fixed default, so migrate them once to "system".
         var migrateLanguage = settings.SchemaVersion < 2;
+        var migrateReframework = settings.SchemaVersion < 3;
         return settings with
         {
-            SchemaVersion = 2,
+            SchemaVersion = 3,
             Language = migrateLanguage
                 ? AppLanguage.System
                 : (Enum.IsDefined(settings.Language) ? settings.Language : AppLanguage.System),
             Theme = AppTheme.Light,
+            AutoInstallReframework = migrateReframework ? true : settings.AutoInstallReframework,
         };
     }
 

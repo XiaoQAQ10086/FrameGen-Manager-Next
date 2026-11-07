@@ -41,6 +41,7 @@ public sealed partial class AppWebBridge
             {
                 autoScanOnStartup = settings.AutoScanOnStartup,
                 showCovers = settings.ShowCovers,
+                autoInstallReframework = settings.AutoInstallReframework,
             },
             strings = LocalizationService.Current.Snapshot(),
         };
@@ -61,6 +62,7 @@ public sealed partial class AppWebBridge
             Theme = AppTheme.Light,
             AutoScanOnStartup = ReadBool(payload, "autoScanOnStartup", current.AutoScanOnStartup),
             ShowCovers = ReadBool(payload, "showCovers", current.ShowCovers),
+            AutoInstallReframework = ReadBool(payload, "autoInstallReframework", current.AutoInstallReframework),
         };
 
         var result = await _settings.SaveAsync(updated, CancellationToken.None);

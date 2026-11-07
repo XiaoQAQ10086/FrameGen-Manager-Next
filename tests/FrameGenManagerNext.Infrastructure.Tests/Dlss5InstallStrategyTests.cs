@@ -30,7 +30,7 @@ public sealed class Dlss5InstallStrategyTests : IDisposable
             exe,
             progress: null,
             TestContext.Current.CancellationToken,
-            api);
+            new Dlss5InstallOptions(api));
 
         result.IsSuccess.ShouldBeTrue(result.Error?.ToString());
         offline.Calls.ShouldBe(1);
@@ -49,7 +49,7 @@ public sealed class Dlss5InstallStrategyTests : IDisposable
             exe,
             progress: null,
             TestContext.Current.CancellationToken,
-            GraphicsApi.Direct3D11);
+            new Dlss5InstallOptions(GraphicsApi.Direct3D11));
 
         result.IsSuccess.ShouldBeTrue(result.Error?.ToString());
         offline.Calls.ShouldBe(1);
@@ -83,10 +83,43 @@ public sealed class Dlss5InstallStrategyTests : IDisposable
             exe,
             progress: null,
             TestContext.Current.CancellationToken,
-            GraphicsApi.Direct3D12);
+            new Dlss5InstallOptions(GraphicsApi.Direct3D12));
 
         result.IsSuccess.ShouldBeTrue(result.Error?.ToString());
         offline.LastModule.ShouldBe("d3d12.dll");
+    }
+
+    [Fact]
+    public async Task ExplicitProxyOverridesApiDefault()
+    {
+        var (exe, service, offline, _) = CreateInstallContext(GraphicsApi.Direct3D12);
+
+        var result = await service.InstallAsync(
+            Path.GetDirectoryName(exe)!,
+            exe,
+            progress: null,
+            TestContext.Current.CancellationToken,
+            new Dlss5InstallOptions(GraphicsApi.Direct3D12, "d3d12.dll"));
+
+        result.IsSuccess.ShouldBeTrue(result.Error?.ToString());
+        offline.LastModule.ShouldBe("d3d12.dll");
+    }
+
+    [Fact]
+    public async Task IncompatibleProxyIsRejected()
+    {
+        var (exe, service, offline, _) = CreateInstallContext(GraphicsApi.Direct3D11);
+
+        var result = await service.InstallAsync(
+            Path.GetDirectoryName(exe)!,
+            exe,
+            progress: null,
+            TestContext.Current.CancellationToken,
+            new Dlss5InstallOptions(GraphicsApi.Direct3D11, "d3d12.dll"));
+
+        result.IsFailure.ShouldBeTrue();
+        result.Error!.Code.ShouldBe(ErrorCode.InvalidArgument);
+        offline.Calls.ShouldBe(0);
     }
 
     [Fact]
@@ -99,7 +132,7 @@ public sealed class Dlss5InstallStrategyTests : IDisposable
             exe,
             progress: null,
             TestContext.Current.CancellationToken,
-            GraphicsApi.Vulkan);
+            new Dlss5InstallOptions(GraphicsApi.Vulkan));
 
         result.IsSuccess.ShouldBeTrue(result.Error?.ToString());
         offline.Calls.ShouldBe(0);
@@ -298,6 +331,14 @@ public sealed class Dlss5InstallStrategyTests : IDisposable
     private sealed class FakeReShadeConfig : IReShadeConfigService
     {
         public Task MergeSearchPathsAsync(string targetDirectory, CancellationToken cancellationToken)
+        {
+            return Task.CompletedTask;
+        }
+
+        public Task EnsureOverlayKeyAsync(
+            string targetDirectory,
+            int virtualKey,
+            CancellationToken cancellationToken)
         {
             return Task.CompletedTask;
         }

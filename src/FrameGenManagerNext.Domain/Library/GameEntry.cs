@@ -9,4 +9,5 @@ public sealed record GameEntry(
     string TargetDirectory,
     GraphicsApi GraphicsApi,
     string? AppId,
-    bool IsManual);
+    bool IsManual,
+    GameEngine Engine = GameEngine.Unknown);

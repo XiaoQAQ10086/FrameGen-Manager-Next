@@ -81,6 +81,7 @@ public sealed class GameProbe : IGameProbe
         var targetDirectory = renderExe is null
             ? installDirectory
             : Path.GetDirectoryName(renderExe) ?? installDirectory;
+        var engine = EngineDetector.Detect(installDirectory, targetDirectory, renderExe);
 
         if (renderExe is not null)
         {
@@ -100,7 +101,8 @@ public sealed class GameProbe : IGameProbe
             targetDirectory,
             graphicsApi,
             candidate.AppId,
-            IsManual: false);
+            IsManual: false,
+            Engine: engine);
     }
 
     private static GameEntry? ProbeManualCore(string exePath)
@@ -134,7 +136,8 @@ public sealed class GameProbe : IGameProbe
             directory,
             DetectApi(fullPath),
             AppId: null,
-            IsManual: true);
+            IsManual: true,
+            Engine: EngineDetector.Detect(directory, directory, fullPath));
     }
 
     private string? FindRenderExe(

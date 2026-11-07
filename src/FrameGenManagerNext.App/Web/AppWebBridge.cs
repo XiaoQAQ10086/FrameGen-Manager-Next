@@ -10,8 +10,10 @@ using FrameGenManagerNext.Core.Features.Framegen;
 using FrameGenManagerNext.Core.Features.Gpu;
 using FrameGenManagerNext.Core.Features.Library;
 using FrameGenManagerNext.Core.Features.Maintenance;
+using FrameGenManagerNext.Core.Features.Reframework;
 using FrameGenManagerNext.Core.Features.Settings;
 using FrameGenManagerNext.Core.Features.SmoothMotion;
+using FrameGenManagerNext.Core.Features.Updates;
 using FrameGenManagerNext.Infrastructure.Paths;
 using Microsoft.Extensions.Logging;
 using Microsoft.Web.WebView2.Core;
@@ -31,12 +33,14 @@ public sealed partial class AppWebBridge : IDisposable
     private readonly ISmoothMotionDeploymentService _smoothMotion;
     private readonly INvApiSmoothMotion _nvapiSmoothMotion;
     private readonly IDlss5DeploymentService _dlss5;
+    private readonly IReframeworkDeploymentService _reframework;
     private readonly IAssetMaintenanceService _maintenance;
     private readonly IGpuService _gpu;
     private readonly IGpuSpoofService _spoof;
     private readonly IGameCoverService _covers;
     private readonly IDiagnosticsService _diagnostics;
     private readonly ISettingsService _settings;
+    private readonly IUpdateFeed _updateFeed;
     private readonly IAppEnvironment _environment;
     private readonly AppPaths _paths;
     private readonly SemaphoreSlim _operationGate = new(1, 1);
@@ -56,12 +60,14 @@ public sealed partial class AppWebBridge : IDisposable
         ISmoothMotionDeploymentService smoothMotion,
         INvApiSmoothMotion nvapiSmoothMotion,
         IDlss5DeploymentService dlss5,
+        IReframeworkDeploymentService reframework,
         IAssetMaintenanceService maintenance,
         IGpuService gpu,
         IGpuSpoofService spoof,
         IGameCoverService covers,
         IDiagnosticsService diagnostics,
         ISettingsService settings,
+        IUpdateFeed updateFeed,
         IAppEnvironment environment,
         AppPaths paths,
         ILogger<AppWebBridge> logger)
@@ -71,12 +77,14 @@ public sealed partial class AppWebBridge : IDisposable
         _smoothMotion = smoothMotion;
         _nvapiSmoothMotion = nvapiSmoothMotion;
         _dlss5 = dlss5;
+        _reframework = reframework;
         _maintenance = maintenance;
         _gpu = gpu;
         _spoof = spoof;
         _covers = covers;
         _diagnostics = diagnostics;
         _settings = settings;
+        _updateFeed = updateFeed;
         _environment = environment;
         _paths = paths;
         _logger = logger;
@@ -305,6 +313,7 @@ public sealed partial class AppWebBridge : IDisposable
             "sm.restore" => await RestoreSmoothMotionAsync(payload),
             "dlss5.state" => await BuildDlss5StateAsync(),
             "dlss5.install" => await InstallDlss5Async(payload),
+            "dlss5.setHotkey" => await SetDlss5HotkeyAsync(payload),
             "dlss5.restore" => await RestoreDlss5Async(payload),
             "dlss5.uninstall" => await UninstallDlss5Async(payload),
             "logs.tail" => await ReadLogsAsync(payload),

@@ -23,4 +23,22 @@ public sealed class ReShadeConfigService : IReShadeConfigService
 
         await File.WriteAllTextAsync(iniPath, document.ToText("\r\n"), cancellationToken);
     }
+
+    public async Task EnsureOverlayKeyAsync(
+        string targetDirectory,
+        int virtualKey,
+        CancellationToken cancellationToken)
+    {
+        if (virtualKey is < 1 or > 255)
+        {
+            throw new ArgumentOutOfRangeException(nameof(virtualKey));
+        }
+
+        var iniPath = Path.Combine(targetDirectory, "ReShade.ini");
+        var document = File.Exists(iniPath)
+            ? IniDocument.Parse(await File.ReadAllTextAsync(iniPath, cancellationToken))
+            : IniDocument.Parse(string.Empty);
+        document.SetValue("INPUT", "KeyOverlay", $"{virtualKey},0,0,0");
+        await File.WriteAllTextAsync(iniPath, document.ToText("\r\n"), cancellationToken);
+    }
 }

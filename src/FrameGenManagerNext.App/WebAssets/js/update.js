@@ -69,10 +69,14 @@ function showUpdateDialog(ctx, info) {
         <div class="update-meta">
           <span data-role="update-percent">0%</span>
           <span data-role="update-speed"></span>
+          <span data-role="update-source"></span>
         </div>
       </div>
       <footer class="modal-foot update-foot">
-        <button class="btn" data-update-cloud type="button">${esc(ctx.t('Update.Cloud'))}</button>
+        <div class="foot-actions">
+          <button class="btn" data-update-quark type="button">${esc(ctx.t('Update.Cloud'))}</button>
+          <button class="btn" data-update-baidu type="button">${esc(ctx.t('Update.Baidu'))}</button>
+        </div>
         <div class="foot-actions">
           <button class="btn ghost" data-update-close type="button">${esc(ctx.t('Update.Later'))}</button>
           <button class="btn success" data-update-start type="button">${esc(ctx.t('Update.Install'))}</button>
@@ -85,9 +89,11 @@ function showUpdateDialog(ctx, info) {
   const bar = overlay.querySelector('[data-role="update-bar"]');
   const percent = overlay.querySelector('[data-role="update-percent"]');
   const speed = overlay.querySelector('[data-role="update-speed"]');
+  const source = overlay.querySelector('[data-role="update-source"]');
   const startButton = overlay.querySelector('[data-update-start]');
   const laterButton = overlay.querySelector('.update-foot [data-update-close]');
-  const cloudButton = overlay.querySelector('[data-update-cloud]');
+  const quarkButton = overlay.querySelector('[data-update-quark]');
+  const baiduButton = overlay.querySelector('[data-update-baidu]');
   const closeButtons = overlay.querySelectorAll('[data-update-close]');
   let downloading = false;
   let unsubscribe = null;
@@ -104,15 +110,17 @@ function showUpdateDialog(ctx, info) {
 
   closeButtons.forEach((button) => button.addEventListener('click', close));
 
-  overlay.querySelector('[data-update-cloud]').addEventListener('click', () => {
-    ctx.api.request('updates.openPage', { url: info.cloudUrl || info.htmlUrl }).catch((error) => {
+  const openDownloadPage = (url) => {
+    ctx.api.request('updates.openPage', { url: url || info.htmlUrl }).catch((error) => {
       ctx.ui.toast(error.message || error.code || ctx.t('Update.OpenFailed'), 'error');
     });
-  });
+  };
+  quarkButton.addEventListener('click', () => openDownloadPage(info.cloudUrl));
+  baiduButton.addEventListener('click', () => openDownloadPage(info.baiduUrl));
 
   startButton.addEventListener('click', async () => {
     if (downloading) return;
-    if (!info.downloadUrl) {
+    if (!info.assetName) {
       await ctx.api.request('updates.openPage', { url: info.htmlUrl }).catch(() => {});
       close();
       return;
@@ -123,19 +131,21 @@ function showUpdateDialog(ctx, info) {
     startButton.textContent = ctx.t('Update.Downloading');
     laterButton.textContent = ctx.t('Update.Cancel');
     laterButton.classList.add('danger');
-    cloudButton.disabled = true;
+    quarkButton.disabled = true;
+    baiduButton.disabled = true;
     progress.classList.remove('hidden');
     unsubscribe = ctx.api.on('update.progress', (data) => {
       const value = Math.max(0, Math.min(100, Number(data.percent) || 0));
       bar.style.width = `${value}%`;
       percent.textContent = `${value.toFixed(0)}%`;
       speed.textContent = data.speed ? formatSpeed(data.speed) : '';
+      source.textContent = data.source ? ctx.t('Update.Source').replace('{0}', data.source) : '';
     });
 
     try {
       const result = await ctx.api.request(
         'updates.download',
-        { url: info.downloadUrl, fileName: info.assetName, version: info.latestVersion },
+        { version: info.latestVersion },
         3600000,
       );
       if (result?.cancelled) return;
@@ -175,7 +185,8 @@ function showUpdateDialog(ctx, info) {
       startButton.textContent = ctx.t('Update.Install');
       laterButton.textContent = ctx.t('Update.Later');
       laterButton.classList.remove('danger');
-      cloudButton.disabled = false;
+      quarkButton.disabled = false;
+      baiduButton.disabled = false;
       ctx.ui.toast(error.message || error.code || ctx.t('Update.DownloadFailed'), 'error');
     }
   });

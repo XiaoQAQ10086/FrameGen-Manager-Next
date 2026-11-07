@@ -60,6 +60,13 @@ export default {
     let addingGame = false;
     let current = null;
     let unsupportedGpuShown = sessionStorage.getItem('fgm.gpuUnsupportedShown') === '1';
+    const proxyOwnerKeys = {
+      FrameGen: 'Proxy.Owner.FrameGen',
+      Dlss5: 'Proxy.Owner.Dlss5',
+      Reframework: 'Proxy.Owner.Reframework',
+      Other: 'Proxy.Owner.Other',
+    };
+    const proxyOwnerLabel = (owner) => (proxyOwnerKeys[owner] ? t(proxyOwnerKeys[owner]) : owner);
 
     root.innerHTML = `
       <section class="page">
@@ -303,6 +310,7 @@ export default {
       const restorable = ['Installed', 'Partial', 'Conflict'].includes(game.state);
       const smConflict = game.smoothMotionOn === true;
       const xboxProtected = game.launcher === 'Xbox' && !game.renderExe;
+      const occupied = (game.occupiedProxies || []).filter((item) => item.owner !== 'FrameGen');
       const primaryAction = legacy ? 'clean' : restorable ? 'restore' : 'deploy';
       const primaryLabel = legacy
         ? t('Common.Clean')
@@ -332,6 +340,7 @@ export default {
                 <span class="badge">${esc(apiKeys[game.api] || game.api || '未知')}</span>
                 <span class="badge ${game.state === 'Installed' ? 'ok' : (game.state === 'Partial' || game.state === 'Conflict' || legacy ? 'warn' : 'dim')}">${esc(stateText)}</span>
                 ${smConflict ? `<span class="badge danger">${esc(t('Conflict.SmoothMotionOn'))}</span>` : ''}
+                ${occupied.map((item) => `<span class="badge warn">${esc(item.module)} · ${esc(proxyOwnerLabel(item.owner))}</span>`).join('')}
               </div>
             </div>
           </div>
@@ -529,23 +538,37 @@ export default {
       const selectControl = optionsRoot.querySelector('[data-option="proxySlot"]');
       if (!note || !selectControl) return;
       const status = await api.request('framegen.proxyStatus', { id: gameId }).catch(() => null);
-      const occupied = status?.reShadeProxy;
-      if (!occupied) {
+      const ownerLabel = proxyOwnerLabel;
+      const occupied = status?.occupied?.length
+        ? status.occupied
+        : [
+            status?.reShadeProxy ? { module: status.reShadeProxy, owner: 'Dlss5' } : null,
+            status?.reframeworkProxy ? { module: status.reframeworkProxy, owner: 'Reframework' } : null,
+          ].filter(Boolean);
+      if (occupied.length === 0) {
         note.classList.add('hidden');
         return;
       }
 
-      const option = Array.from(selectControl.options).find((item) => item.value === occupied);
-      if (option) {
-        option.disabled = true;
-        option.textContent = `${option.textContent}${t('Deploy.ProxyOccupied')}`;
-      }
-      if (selectControl.value === occupied) {
-        const fallback = Array.from(selectControl.options).find((item) => !item.disabled);
-        if (fallback) selectControl.value = fallback.value;
+      const disabledModules = new Set();
+      for (const item of occupied) {
+        if (!item?.module || disabledModules.has(item.module)) continue;
+        disabledModules.add(item.module);
+        const option = Array.from(selectControl.options).find((candidate) => candidate.value === item.module);
+        if (option) {
+          option.disabled = true;
+          option.textContent = `${option.textContent}${t('Deploy.ProxyOccupiedByOwner').replace('{0}', ownerLabel(item.owner))}`;
+        }
+        if (selectControl.value === item.module) {
+          const fallback = Array.from(selectControl.options).find((candidate) => !candidate.disabled);
+          if (fallback) selectControl.value = fallback.value;
+        }
       }
 
-      note.textContent = t('Deploy.ProxyOccupiedHint').replace('{0}', occupied);
+      note.textContent = t('Deploy.ProxyOccupiedByComponent').replace(
+        '{0}',
+        occupied.map((item) => `${item.module}（${ownerLabel(item.owner)}）`).join('、'),
+      );
       note.classList.remove('hidden');
     }
 
@@ -690,12 +713,24 @@ export default {
       }
     }
 
+    function showReframeworkSkipped(reason) {
+      ui.modal(`
+        <header class="modal-head"><div><h2>${esc(t('Dlss5.ReframeworkSkippedTitle'))}</h2></div></header>
+        <p class="hint">${esc(reason === 'dinput8' ? t('Dlss5.Dinput8Occupied') : t('Dlss5.ReframeworkSkipped'))}</p>
+        <footer class="modal-foot"><span></span><div class="foot-actions">
+          <button class="btn primary" data-close type="button">${esc(t('Common.OK'))}</button>
+        </div></footer>`);
+    }
+
     async function run(action, successText, onConflict) {
       if (busy) return;
       setBusy(true);
       let afterConflict = null;
       try {
         const next = await action();
+        if (next?.reframeworkSkipReason) {
+          showReframeworkSkipped(next.reframeworkSkipReason);
+        }
         if (next?.games) {
           games = next.games;
           removed = next.removed || removed;

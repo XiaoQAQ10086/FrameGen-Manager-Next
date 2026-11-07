@@ -2,65 +2,56 @@ using System.Diagnostics;
 using System.IO;
 using System.Net.Http;
 using System.Text.Json;
+using FrameGenManagerNext.Core.Features.Updates;
 using FrameGenManagerNext.Domain;
+using FrameGenManagerNext.Domain.Updates;
+using FrameGenManagerNext.Infrastructure.Paths;
 using Microsoft.Extensions.Logging;
 
 namespace FrameGenManagerNext.App.Web;
 
 public sealed partial class AppWebBridge
 {
-    private const string LatestReleaseUrl = "https://api.github.com/repos/XiaoQAQ10086/FrameGen-Manager-Next/releases/latest";
     private const string CloudDownloadUrl = "https://pan.quark.cn/s/adea7ed4f2b2";
-
-    private static readonly HttpClient UpdateHttpClient = CreateUpdateClient();
+    private const string BaiduCloudUrl = "https://pan.baidu.com/s/1DDP4W7Lsqbjt5WMKY-m4jA?pwd=1234";
 
     private CancellationTokenSource? _updateCancellation;
+    private UpdateManifest? _pendingUpdate;
 
     private async Task<object?> CheckForUpdatesAsync()
     {
-        using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(20));
+        using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(25));
         try
         {
-            using var request = new HttpRequestMessage(HttpMethod.Get, LatestReleaseUrl);
-            request.Headers.UserAgent.ParseAdd("FrameGen-Manager-Next");
-            using var response = await UpdateHttpClient.SendAsync(request, timeout.Token);
-            if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+            var result = await _updateFeed.CheckAsync(timeout.Token);
+            if (result.IsFailure)
             {
-                return new { available = false };
+                return new { available = false, error = result.Error!.Diagnostic ?? "update feed unavailable" };
             }
 
-            if (!response.IsSuccessStatusCode)
-            {
-                return new { available = false, error = $"Update feed returned {(int)response.StatusCode}." };
-            }
-
-            await using var stream = await response.Content.ReadAsStreamAsync(timeout.Token);
-            using var document = await JsonDocument.ParseAsync(stream, cancellationToken: timeout.Token);
-            var root = document.RootElement;
-
-            var tag = root.TryGetProperty("tag_name", out var tagValue) ? tagValue.GetString() : null;
-            var latest = NormalizeVersion(tag);
+            var manifest = result.Value;
+            var latest = NormalizeVersion(manifest.Version);
             if (!TryParseVersion(latest, out var latestVersion) ||
                 !TryParseVersion(AppInfo.Version, out var currentVersion))
             {
                 return new { available = false, error = "Could not parse version." };
             }
 
-            var asset = SelectAsset(root, preferInstaller: !_environment.IsPortable);
-            var notes = root.TryGetProperty("body", out var bodyValue) ? bodyValue.GetString() : null;
-            var htmlUrl = root.TryGetProperty("html_url", out var htmlValue) ? htmlValue.GetString() : null;
-
+            var available = latestVersion > currentVersion;
+            _pendingUpdate = available ? manifest : null;
             return new
             {
-                available = latestVersion > currentVersion,
+                available,
                 currentVersion = AppInfo.Version,
                 latestVersion = latest,
-                notes = notes ?? string.Empty,
-                htmlUrl,
+                notes = manifest.Notes ?? string.Empty,
+                htmlUrl = manifest.PageUrl ?? CloudDownloadUrl,
                 cloudUrl = CloudDownloadUrl,
-                assetName = asset?.Name,
-                assetSize = asset?.Size,
-                downloadUrl = asset?.DownloadUrl,
+                baiduUrl = BaiduCloudUrl,
+                assetName = manifest.InstallerName,
+                assetSize = manifest.InstallerSize,
+                sha256 = manifest.InstallerSha256,
+                sources = manifest.InstallerUrls.Count,
             };
         }
         catch (OperationCanceledException)
@@ -76,118 +67,81 @@ public sealed partial class AppWebBridge
 
     private async Task<object?> DownloadUpdateAsync(JsonElement payload)
     {
-        var url = payload.TryGetProperty("url", out var urlValue) ? urlValue.GetString() : null;
-        var fileName = payload.TryGetProperty("fileName", out var nameValue) ? nameValue.GetString() : null;
-        var version = payload.TryGetProperty("version", out var versionValue) ? versionValue.GetString() : null;
-
-        if (!TryValidateDownloadUrl(url) || string.IsNullOrWhiteSpace(fileName))
+        var manifest = _pendingUpdate;
+        if (manifest is null)
         {
-            throw new BridgeException(Domain.Errors.ErrorCode.InvalidArgument, "invalid update download URL");
+            throw new BridgeException(
+                Domain.Errors.ErrorCode.InvalidArgument,
+                "no update is pending; check for updates first");
+        }
+
+        var requestedVersion = payload.TryGetProperty("version", out var versionValue)
+            ? versionValue.GetString()
+            : null;
+        if (!string.IsNullOrWhiteSpace(requestedVersion) &&
+            !string.Equals(
+                NormalizeVersion(requestedVersion),
+                NormalizeVersion(manifest.Version),
+                StringComparison.OrdinalIgnoreCase))
+        {
+            throw new BridgeException(
+                Domain.Errors.ErrorCode.InvalidArgument,
+                "update version does not match the checked manifest");
         }
 
         if (_updateCancellation is not null)
         {
-            throw new BridgeException(Domain.Errors.ErrorCode.FileLocked, "another update is already downloading");
+            throw new BridgeException(
+                Domain.Errors.ErrorCode.FileLocked,
+                "another update is already downloading");
         }
 
-        var safeVersion = SafeSegment(version ?? "latest");
-        var safeName = Path.GetFileName(fileName);
-        var directory = Path.Combine(UpdateTempRoot(), safeVersion);
-        var destination = Path.Combine(directory, safeName);
         using var cancellation = new CancellationTokenSource();
         _updateCancellation = cancellation;
-
         try
         {
-            if (Directory.Exists(directory))
+            var progress = new Progress<UpdateDownloadProgress>(update =>
             {
-                Directory.Delete(directory, recursive: true);
-            }
-
-            Directory.CreateDirectory(directory);
-            using var response = await UpdateHttpClient.GetAsync(
-                url,
-                HttpCompletionOption.ResponseHeadersRead,
-                cancellation.Token);
-            response.EnsureSuccessStatusCode();
-
-            var total = response.Content.Headers.ContentLength ?? 0;
-            await using var input = await response.Content.ReadAsStreamAsync(cancellation.Token);
-            await using var output = new FileStream(
-                destination,
-                FileMode.CreateNew,
-                FileAccess.Write,
-                FileShare.None,
-                bufferSize: 128 * 1024,
-                useAsync: true);
-
-            var buffer = new byte[128 * 1024];
-            long received = 0;
-            var speedWindow = Stopwatch.StartNew();
-            long speedWindowBytes = 0;
-            var lastReport = Stopwatch.StartNew();
-
-            while (true)
-            {
-                var read = await input.ReadAsync(buffer, cancellation.Token);
-                if (read == 0)
+                var total = update.Total > 0 ? update.Total : update.Received;
+                var percent = total > 0 ? Math.Min(100, update.Received * 100.0 / total) : 0;
+                SendEvent("update.progress", new
                 {
-                    break;
-                }
-
-                await output.WriteAsync(buffer.AsMemory(0, read), cancellation.Token);
-                received += read;
-                speedWindowBytes += read;
-
-                if (lastReport.ElapsedMilliseconds >= 180)
-                {
-                    var seconds = Math.Max(0.001, speedWindow.Elapsed.TotalSeconds);
-                    SendEvent("update.progress", new
-                    {
-                        received,
-                        total,
-                        percent = total > 0 ? Math.Min(100, received * 100.0 / total) : 0,
-                        speed = speedWindowBytes / seconds,
-                    });
-                    speedWindow.Restart();
-                    speedWindowBytes = 0;
-                    lastReport.Restart();
-                }
-            }
-
-            SendEvent("update.progress", new
-            {
-                received,
-                total = total > 0 ? total : received,
-                percent = 100,
-                speed = 0,
+                    received = update.Received,
+                    total,
+                    percent,
+                    speed = update.BytesPerSecond,
+                    source = update.Source,
+                });
             });
 
-            _logger.LogInformation(
-                "Update downloaded: version={Version} file={File} bytes={Bytes}",
-                version,
-                destination,
-                received);
+            var result = await _updateFeed.DownloadInstallerAsync(
+                manifest,
+                progress,
+                cancellation.Token);
+            if (result.IsFailure)
+            {
+                throw new BridgeException(
+                    result.Error!.Code,
+                    result.Error.Diagnostic ?? "update download failed");
+            }
 
+            _logger.LogInformation(
+                "Update downloaded: version={Version} file={File}",
+                manifest.Version,
+                result.Value);
             return new
             {
                 downloaded = true,
-                installer = !_environment.IsPortable && IsInstallerAsset(safeName),
-                path = destination,
-                fileName = safeName,
-                version,
+                installer = !_environment.IsPortable && IsInstallerAsset(manifest.InstallerName),
+                path = result.Value,
+                fileName = manifest.InstallerName,
+                version = manifest.Version,
             };
         }
         catch (OperationCanceledException)
         {
-            DeleteDirectoryBestEffort(directory);
-            _logger.LogInformation("Update download cancelled and temporary files removed");
+            _logger.LogInformation("Update download cancelled");
             return new { cancelled = true };
-        }
-        catch
-        {
-            DeleteDirectoryBestEffort(directory);
-            throw;
         }
         finally
         {
@@ -256,7 +210,7 @@ public sealed partial class AppWebBridge
         try
         {
             var fullPath = Path.GetFullPath(value);
-            var root = Path.GetFullPath(UpdateTempRoot()) + Path.DirectorySeparatorChar;
+            var root = Path.GetFullPath(AppPaths.UpdateStagingDirectory) + Path.DirectorySeparatorChar;
             if (!fullPath.StartsWith(root, StringComparison.OrdinalIgnoreCase) ||
                 !File.Exists(fullPath) ||
                 !IsInstallerAsset(Path.GetFileName(fullPath)))
@@ -283,11 +237,6 @@ public sealed partial class AppWebBridge
         }
     }
 
-    private static string UpdateTempRoot()
-    {
-        return Path.Combine(Path.GetTempPath(), "FrameGen-Manager-Next", "updates");
-    }
-
     private static bool IsInstallerAsset(string fileName)
     {
         return fileName.EndsWith(".exe", StringComparison.OrdinalIgnoreCase) &&
@@ -302,52 +251,6 @@ public sealed partial class AppWebBridge
         return new { opened = true };
     }
 
-    private static UpdateAsset? SelectAsset(JsonElement release, bool preferInstaller)
-    {
-        if (!release.TryGetProperty("assets", out var assets) || assets.ValueKind != JsonValueKind.Array)
-        {
-            return null;
-        }
-
-        var candidates = new List<UpdateAsset>();
-        foreach (var item in assets.EnumerateArray())
-        {
-            var name = item.TryGetProperty("name", out var nameValue) ? nameValue.GetString() : null;
-            var url = item.TryGetProperty("browser_download_url", out var urlValue) ? urlValue.GetString() : null;
-            var size = item.TryGetProperty("size", out var sizeValue) ? sizeValue.GetInt64() : 0;
-            if (string.IsNullOrWhiteSpace(name) || string.IsNullOrWhiteSpace(url))
-            {
-                continue;
-            }
-
-            var lower = name.ToLowerInvariant();
-            if (!lower.EndsWith(".zip", StringComparison.Ordinal) &&
-                !lower.EndsWith(".exe", StringComparison.Ordinal))
-            {
-                continue;
-            }
-
-            candidates.Add(new UpdateAsset(name, url, size));
-        }
-
-        if (preferInstaller)
-        {
-            var setup = candidates.FirstOrDefault(asset =>
-                asset.Name.Contains("Setup", StringComparison.OrdinalIgnoreCase) &&
-                asset.Name.EndsWith(".exe", StringComparison.OrdinalIgnoreCase));
-            if (setup is not null)
-            {
-                return setup;
-            }
-        }
-
-        return candidates.FirstOrDefault(asset =>
-                   asset.Name.Contains("win-x64", StringComparison.OrdinalIgnoreCase)) ??
-               candidates.FirstOrDefault(asset =>
-                   asset.Name.EndsWith(".zip", StringComparison.OrdinalIgnoreCase)) ??
-               candidates.FirstOrDefault();
-    }
-
     private static bool TryValidateDownloadUrl(string? value)
     {
         if (!Uri.TryCreate(value, UriKind.Absolute, out var uri) || uri.Scheme != Uri.UriSchemeHttps)
@@ -357,7 +260,8 @@ public sealed partial class AppWebBridge
 
         return uri.Host.Equals("github.com", StringComparison.OrdinalIgnoreCase) ||
                uri.Host.EndsWith(".githubusercontent.com", StringComparison.OrdinalIgnoreCase) ||
-               uri.Host.Equals("pan.quark.cn", StringComparison.OrdinalIgnoreCase);
+               uri.Host.Equals("pan.quark.cn", StringComparison.OrdinalIgnoreCase) ||
+               uri.Host.Equals("pan.baidu.com", StringComparison.OrdinalIgnoreCase);
     }
 
     private static string NormalizeVersion(string? value)
@@ -370,37 +274,4 @@ public sealed partial class AppWebBridge
         var normalized = value.Split('-', '+')[0];
         return Version.TryParse(normalized, out version!);
     }
-
-    private static string SafeSegment(string value)
-    {
-        var safe = new string(value
-            .Where(character => char.IsLetterOrDigit(character) || character is '.' or '-' or '_')
-            .ToArray())
-            .Trim('.');
-        return string.IsNullOrWhiteSpace(safe) ? "latest" : safe;
-    }
-
-    private static void DeleteDirectoryBestEffort(string directory)
-    {
-        try
-        {
-            if (Directory.Exists(directory))
-            {
-                Directory.Delete(directory, recursive: true);
-            }
-        }
-        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
-        {
-            // A locked file will be cleaned on the next update attempt.
-        }
-    }
-
-    private static HttpClient CreateUpdateClient()
-    {
-        var client = new HttpClient { Timeout = Timeout.InfiniteTimeSpan };
-        client.DefaultRequestHeaders.UserAgent.ParseAdd("FrameGen-Manager-Next");
-        return client;
-    }
-
-    private sealed record UpdateAsset(string Name, string DownloadUrl, long Size);
 }

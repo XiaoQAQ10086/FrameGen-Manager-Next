@@ -57,7 +57,10 @@ public sealed partial class AppWebBridge
         string? Read(string key) => values.TryGetValue(key, out var value) ? value : null;
     }
 
-    private async Task<object?> BuildGamesStateAsync(string? warning = null, RestoreReport? restore = null)
+    private async Task<object?> BuildGamesStateAsync(
+        string? warning = null,
+        RestoreReport? restore = null,
+        string? reframeworkSkipReason = null)
     {
         var stateClock = Stopwatch.StartNew();
         var settings = _settings.Load();
@@ -127,6 +130,10 @@ public sealed partial class AppWebBridge
                     : DeploymentState.NotDeployed;
                 states[index] = state;
 
+                var occupiedProxies = await GetOccupiedProxiesAsync(
+                    game.TargetDirectory,
+                    inspection.IsSuccess ? inspection.Value : null);
+
                 var smoothMotionOn = !string.IsNullOrWhiteSpace(game.RenderExePath) &&
                                      smoothMotionStates.TryGetValue(game.RenderExePath, out var smEnabled) &&
                                      smEnabled;
@@ -139,6 +146,11 @@ public sealed partial class AppWebBridge
                     api = game.GraphicsApi.ToString(),
                     state = state.ToString(),
                     smoothMotionOn,
+                    occupiedProxies = occupiedProxies.Select(item => new
+                    {
+                        module = item.Module,
+                        owner = item.Owner,
+                    }),
                     packVersion = inspection.IsSuccess
                         ? inspection.Value.PackVersion
                         : null,
@@ -174,6 +186,8 @@ public sealed partial class AppWebBridge
         {
             games,
             removed,
+            reframeworkSkipped = reframeworkSkipReason is not null,
+            reframeworkSkipReason,
             counts = new
             {
                 total = games.Count,

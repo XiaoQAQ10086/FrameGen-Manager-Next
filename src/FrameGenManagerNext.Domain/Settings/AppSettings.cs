@@ -19,12 +19,14 @@ public sealed record AppSettings(
     AppLanguage Language,
     AppTheme Theme,
     bool AutoScanOnStartup,
-    bool ShowCovers)
+    bool ShowCovers,
+    bool AutoInstallReframework = true)
 {
     public static AppSettings Default { get; } = new(
-        SchemaVersion: 2,
+        SchemaVersion: 3,
         Language: AppLanguage.System,
         Theme: AppTheme.Light,
         AutoScanOnStartup: false,
-        ShowCovers: true);
+        ShowCovers: true,
+        AutoInstallReframework: true);
 }

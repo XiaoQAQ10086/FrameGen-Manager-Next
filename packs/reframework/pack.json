@@ -1,0 +1,36 @@
+{
+    "schemaVersion": 1,
+    "id": "reframework",
+    "version": "1.0.0",
+    "displayName": "REFramework nightly (RE Engine)",
+    "minAppVersion": "2.0.0",
+    "gpuRoutes": [
+        "Any"
+    ],
+    "files": [
+        {
+            "source": "dinput8.dll",
+            "target": "dinput8.dll",
+            "role": "runtime",
+            "required": true,
+            "proxySlot": false,
+            "sha256": "748d6543b45a5ddd6b2d5170d1ba16ed56219c7f0d52141797a95c3bda189e5f",
+            "size": 23096320
+        },
+        {
+            "source": "reframework_revision.txt",
+            "target": "reframework_revision.txt",
+            "role": "config",
+            "required": true,
+            "proxySlot": false,
+            "sha256": "5a6f9faff650d8675e0950c5ed7a21c991d367c1f85b7541ba5a4be02e53e3a6",
+            "size": 42
+        }
+    ],
+    "steps": [
+        {
+            "type": "copyFiles"
+        }
+    ],
+    "trust": "bundled"
+}

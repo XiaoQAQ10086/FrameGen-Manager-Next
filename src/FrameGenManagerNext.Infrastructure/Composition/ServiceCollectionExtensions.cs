@@ -7,8 +7,10 @@ using FrameGenManagerNext.Core.Features.Gpu;
 using FrameGenManagerNext.Core.Features.Library;
 using FrameGenManagerNext.Core.Features.Maintenance;
 using FrameGenManagerNext.Core.Features.Packs;
+using FrameGenManagerNext.Core.Features.Reframework;
 using FrameGenManagerNext.Core.Features.Settings;
 using FrameGenManagerNext.Core.Features.SmoothMotion;
+using FrameGenManagerNext.Core.Features.Updates;
 using FrameGenManagerNext.Infrastructure.Deployment;
 using FrameGenManagerNext.Infrastructure.Diagnostics;
 using FrameGenManagerNext.Infrastructure.Dlss5;
@@ -21,7 +23,9 @@ using FrameGenManagerNext.Infrastructure.Platform;
 using FrameGenManagerNext.Infrastructure.Processes;
 using FrameGenManagerNext.Infrastructure.Settings;
 using FrameGenManagerNext.Infrastructure.SmoothMotion;
+using FrameGenManagerNext.Infrastructure.Updates;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 
 namespace FrameGenManagerNext.Infrastructure.Composition;
 
@@ -68,7 +72,10 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IReShadeOfflineInstaller, ReShadeOfflineInstaller>();
         services.AddSingleton<IReShadeConfigService, ReShadeConfigService>();
         services.AddSingleton<IDlss5DeploymentService, Dlss5DeploymentService>();
+        services.AddSingleton<IReframeworkDeploymentService, ReframeworkDeploymentService>();
         services.AddSingleton<IAssetMaintenanceService, AssetMaintenanceService>();
+        services.AddSingleton<IUpdateFeed>(services => new UpdateFeedClient(
+            services.GetRequiredService<ILogger<UpdateFeedClient>>()));
 
         return services;
     }

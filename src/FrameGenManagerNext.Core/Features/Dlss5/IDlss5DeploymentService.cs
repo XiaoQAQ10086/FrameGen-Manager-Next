@@ -17,11 +17,16 @@ public interface IDlss5DeploymentService
         string exePath,
         IProgress<DeploymentProgress>? progress,
         CancellationToken cancellationToken,
-        GraphicsApi? knownApi = null);
+        Dlss5InstallOptions? options = null);
 
     Task<Result<Dlss5RestoreReport>> RestoreAsync(
         string targetDirectory,
         IProgress<DeploymentProgress>? progress,
+        CancellationToken cancellationToken);
+
+    Task<Result> SetOverlayKeyAsync(
+        string targetDirectory,
+        int virtualKey,
         CancellationToken cancellationToken);
 
     Task<Result<Dlss5UninstallReport>> UninstallAsync(
