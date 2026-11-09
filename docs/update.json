@@ -1,16 +1,16 @@
 {
-  "version": "2.1.7",
-  "notes": "【更新】\n1.游戏卡片增加【启动游戏】按钮，可以快捷启动游戏\n2.修复上一版本遗留的BUG\n3.尝试解决游戏安装在C盘时部分用户无法部署的问题",
-  "pageUrl": "https://github.com/XiaoQAQ10086/FrameGen-Manager-Next/releases/tag/v2.1.7",
+  "version": "2.1.8",
+  "notes": "【修复】\n修复上一版本的BUG",
+  "pageUrl": "https://github.com/XiaoQAQ10086/FrameGen-Manager-Next/releases/tag/v2.1.8",
   "installer": {
-    "name": "FrameGenManagerNext-2.1.7-win-Setup.exe",
-    "size": 389976272,
-    "sha256": "70a4858ea386da05db8dcd4066f343775d55d29a80c054f348ce14326f394bf5",
+    "name": "FrameGenManagerNext-2.1.8-win-Setup.exe",
+    "size": 389976331,
+    "sha256": "7f73c330112a6d330d26abc32012a47d4f752accb75af3c5285d3a48018b5516",
     "urls": [
-      "https://github.com/XiaoQAQ10086/FrameGen-Manager-Next/releases/download/v2.1.7/FrameGenManagerNext-2.1.7-win-Setup.exe",
-      "https://ghfast.top/https://github.com/XiaoQAQ10086/FrameGen-Manager-Next/releases/download/v2.1.7/FrameGenManagerNext-2.1.7-win-Setup.exe",
-      "https://gh-proxy.com/https://github.com/XiaoQAQ10086/FrameGen-Manager-Next/releases/download/v2.1.7/FrameGenManagerNext-2.1.7-win-Setup.exe",
-      "https://ghproxy.net/https://github.com/XiaoQAQ10086/FrameGen-Manager-Next/releases/download/v2.1.7/FrameGenManagerNext-2.1.7-win-Setup.exe"
+      "https://github.com/XiaoQAQ10086/FrameGen-Manager-Next/releases/download/v2.1.8/FrameGenManagerNext-2.1.8-win-Setup.exe",
+      "https://ghfast.top/https://github.com/XiaoQAQ10086/FrameGen-Manager-Next/releases/download/v2.1.8/FrameGenManagerNext-2.1.8-win-Setup.exe",
+      "https://gh-proxy.com/https://github.com/XiaoQAQ10086/FrameGen-Manager-Next/releases/download/v2.1.8/FrameGenManagerNext-2.1.8-win-Setup.exe",
+      "https://ghproxy.net/https://github.com/XiaoQAQ10086/FrameGen-Manager-Next/releases/download/v2.1.8/FrameGenManagerNext-2.1.8-win-Setup.exe"
     ]
   }
 }

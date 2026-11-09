@@ -49,10 +49,13 @@ Name: "{group}\{#AppName}"; Filename: "{app}\{#AppExeName}"
 Name: "{autodesktop}\{#AppName}"; Filename: "{app}\{#AppExeName}"; Tasks: desktopicon
 
 [Run]
-Filename: "{app}\{#AppExeName}"; Flags: nowait
+; The app requires administrator rights, but this installer is per-user
+; (PrivilegesRequired=lowest). ShellExecuteEx is needed to raise the UAC
+; prompt; CreateProcess fails with error 740.
+Filename: "{app}\{#AppExeName}"; Flags: nowait shellexec
 
 [UninstallRun]
-Filename: "{app}\{#AppExeName}"; Parameters: "--uninstall-cleanup"; Flags: runhidden waituntilterminated; RunOnceId: "CleanupUserData"
+Filename: "{app}\{#AppExeName}"; Parameters: "--uninstall-cleanup"; Flags: runhidden waituntilterminated shellexec; RunOnceId: "CleanupUserData"
 
 [UninstallDelete]
 Type: files; Name: "{userdesktop}\FrameGen Manager-Next.lnk"
