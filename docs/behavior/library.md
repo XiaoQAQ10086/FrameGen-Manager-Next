@@ -90,6 +90,16 @@ Steam junk 跳过（精确名称）：`steamworks common redistributables`、`st
 - `Infrastructure.Tests/GameProbeTests.cs`
 - `Infrastructure.Tests/PeImportReaderTests.cs`
 
+## 启动游戏
+
+- 卡片“启动游戏”按启动器选择入口，不直接双击渲染 EXE，避免绕过 Steam/Epic 的 DRM 与在线服务：
+  - Steam：`steam://rungameid/<AppId>`，AppId 来自 `appmanifest_*.acf`。
+  - Epic：`com.epicgames.launcher://apps/<AppName>?action=launch&silent=true`，AppName 来自 `.item`。
+  - 手动/散装/WeGame：直接运行 `RenderExePath`，工作目录为 EXE 所在目录。
+  - Xbox：受保护游戏无法直接启动，返回 `LaunchUnsupported`，按钮禁用并提示从 Xbox 应用启动。
+- 启动是只读操作，不改游戏文件；失败返回 `LaunchFailed` 或 `FileNotFound`，日志记录 game id、启动器和启动方式。
+- App 只负责调用 `IGameLauncher`；入口选择规则在 `Core/Features/Library/GameLaunchPlanner`，便于测试。
+
 ## 已知限制
 
 - WeGame 没有公开清单格式，当前实现比旧版更保守，可能漏掉部分游戏；可在拿到真实样本后细化。

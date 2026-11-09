@@ -40,4 +40,6 @@ public enum ErrorCode
     ElevationRequired,
     ElevationCancelled,
     GpuSpoofFailed,
+    LaunchFailed,
+    LaunchUnsupported,
 }

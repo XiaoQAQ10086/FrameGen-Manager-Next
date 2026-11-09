@@ -6,6 +6,7 @@
     <UseWPF>true</UseWPF>
     <AssemblyName>FrameGenManager-Next</AssemblyName>
     <ApplicationIcon>Assets\app.ico</ApplicationIcon>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
     <StartupObject>FrameGenManagerNext.App.Program</StartupObject>
   </PropertyGroup>
 

@@ -299,6 +299,8 @@ button, select { font: inherit; }
 .btn.small { padding: 5px 9px; font-size: 12px; border-radius: 9px; }
 .btn.success { background: linear-gradient(180deg, #239f48, #157a33); border-color: #0f632a; color: #fff; font-weight: 650; }
 .btn.success:hover { filter: brightness(1.06); }
+.btn.launch { background: linear-gradient(180deg, #ffd34d, #f5b301); border-color: #d99a00; color: #3d2c00; font-weight: 650; }
+.btn.launch:hover { filter: brightness(1.04); }
 .btn.icon-only { padding: 5px 8px; font-size: 14px; line-height: 1.1; }
 .btn.wide { display: block; width: 100%; margin-top: 9px; text-align: center; }
 

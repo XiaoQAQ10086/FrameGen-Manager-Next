@@ -1,16 +1,16 @@
 {
-  "version": "2.1.6",
-  "notes": "【更新】\n1.DLSS5 增加 ReShade 呼出键选择，默认 Home。可以手动更改呼出的快捷键。已部署DLSS5的游戏也可以修改，立即生效，不需要重新部署\n2.新增 RE Engine 检测（re_chunk_000.pak 等标记）和 REFramework 可选组件。部署游戏时自动检测并安装RE引擎框架。已部署Re框架会自动跳过。现在像生化危机系列与怪物猎人等能使用帧生成了\n\n【改进】\n1.帧生成游戏卡片标出代理占用\n\n[Update]\n1. DLSS5 has added the option to select the ReShade activation key, defaulting to Home. The activation shortcut can be manually changed. Games that have already deployed DLSS5 can also have this modified, taking effect immediately without needing redeployment.\n2. Added RE Engine detection (markers like re_chunk_000.pak) and optional REFramework components. When deploying a game, the RE Engine framework will be automatically detected and installed. Already deployed REFramework will be automatically skipped. Now, games such as the Resident Evil series and Monster Hunter can utilize frame generation.\n\n[Improvements]\n1. Frame generation game cards now indicate proxy usage.",
-  "pageUrl": "https://github.com/XiaoQAQ10086/FrameGen-Manager-Next/releases/tag/v2.1.6",
+  "version": "2.1.7",
+  "notes": "【更新】\n1.游戏卡片增加【启动游戏】按钮，可以快捷启动游戏\n2.修复上一版本遗留的BUG\n3.尝试解决游戏安装在C盘时部分用户无法部署的问题",
+  "pageUrl": "https://github.com/XiaoQAQ10086/FrameGen-Manager-Next/releases/tag/v2.1.7",
   "installer": {
-    "name": "FrameGenManagerNext-2.1.6-win-Setup.exe",
-    "size": 389969694,
-    "sha256": "3b00dbbb67c20acb4f3ebd56c9abf370703458875124a248438a1e4daa2f5ceb",
+    "name": "FrameGenManagerNext-2.1.7-win-Setup.exe",
+    "size": 389976272,
+    "sha256": "70a4858ea386da05db8dcd4066f343775d55d29a80c054f348ce14326f394bf5",
     "urls": [
-      "https://github.com/XiaoQAQ10086/FrameGen-Manager-Next/releases/download/v2.1.6/FrameGenManagerNext-2.1.6-win-Setup.exe",
-      "https://ghfast.top/https://github.com/XiaoQAQ10086/FrameGen-Manager-Next/releases/download/v2.1.6/FrameGenManagerNext-2.1.6-win-Setup.exe",
-      "https://gh-proxy.com/https://github.com/XiaoQAQ10086/FrameGen-Manager-Next/releases/download/v2.1.6/FrameGenManagerNext-2.1.6-win-Setup.exe",
-      "https://ghproxy.net/https://github.com/XiaoQAQ10086/FrameGen-Manager-Next/releases/download/v2.1.6/FrameGenManagerNext-2.1.6-win-Setup.exe"
+      "https://github.com/XiaoQAQ10086/FrameGen-Manager-Next/releases/download/v2.1.7/FrameGenManagerNext-2.1.7-win-Setup.exe",
+      "https://ghfast.top/https://github.com/XiaoQAQ10086/FrameGen-Manager-Next/releases/download/v2.1.7/FrameGenManagerNext-2.1.7-win-Setup.exe",
+      "https://gh-proxy.com/https://github.com/XiaoQAQ10086/FrameGen-Manager-Next/releases/download/v2.1.7/FrameGenManagerNext-2.1.7-win-Setup.exe",
+      "https://ghproxy.net/https://github.com/XiaoQAQ10086/FrameGen-Manager-Next/releases/download/v2.1.7/FrameGenManagerNext-2.1.7-win-Setup.exe"
     ]
   }
 }

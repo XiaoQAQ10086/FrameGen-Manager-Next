@@ -35,6 +35,17 @@ foreach ($file in $sourceFiles) {
     }
 }
 
+$manifestPath = Join-Path $Root 'src\FrameGenManagerNext.App\app.manifest'
+if (-not (Test-Path -LiteralPath $manifestPath)) {
+    $violations.Add('MANIFEST: src\FrameGenManagerNext.App\app.manifest is missing')
+}
+else {
+    $manifestText = Get-Content -LiteralPath $manifestPath -Raw
+    if ($manifestText -notmatch 'requestedExecutionLevel\s+level="requireAdministrator"') {
+        $violations.Add('MANIFEST: the app must request administrator privileges')
+    }
+}
+
 $strictFiles = @(
     Get-SourceFiles -Path (Join-Path $Root 'src\FrameGenManagerNext.Domain')
     Get-SourceFiles -Path (Join-Path $Root 'src\FrameGenManagerNext.Core')

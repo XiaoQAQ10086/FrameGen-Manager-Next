@@ -145,6 +145,7 @@ public sealed partial class AppWebBridge
                     launcher = game.Launcher.ToString(),
                     api = game.GraphicsApi.ToString(),
                     state = state.ToString(),
+                    launchMode = LaunchModeOf(game),
                     smoothMotionOn,
                     occupiedProxies = occupiedProxies.Select(item => new
                     {
@@ -327,6 +328,37 @@ public sealed partial class AppWebBridge
             await _library.SetIgnoredAsync(id, ignored: false, CancellationToken.None);
             return await BuildGamesStateAsync();
         });
+    }
+
+    private static string LaunchModeOf(GameEntry game)
+    {
+        return GameLaunchPlanner.Resolve(game) switch
+        {
+            GameLaunchKind.Steam => "steam",
+            GameLaunchKind.Epic => "epic",
+            GameLaunchKind.Executable when !string.IsNullOrWhiteSpace(game.RenderExePath) &&
+                                           File.Exists(game.RenderExePath) => "exe",
+            _ => "none",
+        };
+    }
+
+    private async Task<object?> LaunchGameAsync(System.Text.Json.JsonElement payload)
+    {
+        var game = await FindGameAsync(IdOf(payload));
+        if (game is null)
+        {
+            throw new BridgeException(Domain.Errors.ErrorCode.FileNotFound, "game not found");
+        }
+
+        var result = await _launcher.LaunchAsync(game, CancellationToken.None);
+        if (result.IsFailure && result.Error is not null)
+        {
+            throw new BridgeException(
+                result.Error.Code,
+                result.Error.Diagnostic ?? result.Error.Code.ToString());
+        }
+
+        return new { launched = true };
     }
 
     private async Task<object?> OpenGameFolderAsync(System.Text.Json.JsonElement payload)

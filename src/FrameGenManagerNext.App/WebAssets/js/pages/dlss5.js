@@ -444,6 +444,8 @@ export default {
         render();
         removedController.render();
         closeDetail();
+        api.invalidate();
+        ui.libraryChanged('dlss5');
         if (state.reframeworkSkipReason) {
           showReframeworkSkipped(state.reframeworkSkipReason);
         }

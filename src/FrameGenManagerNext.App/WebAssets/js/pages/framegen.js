@@ -349,6 +349,7 @@ export default {
           <div class="gactions">
             <button class="btn small ${restorable || legacy ? 'danger' : 'success'}" data-action="${primaryAction}" data-id="${esc(game.id)}" type="button" ${blocked ? 'disabled' : ''} ${blocked ? `title="${esc(blockReason)}"` : ''}>${esc(primaryLabel)}</button>
             <button class="btn small" data-action="open" data-id="${esc(game.id)}" type="button">${esc(t('Library.OpenFolder'))}</button>
+            <button class="btn small launch" data-action="launch" data-id="${esc(game.id)}" type="button" ${game.launchMode === 'none' ? 'disabled' : ''} ${game.launchMode === 'none' ? `title="${esc(t('Library.LaunchUnsupported'))}"` : ''}>${esc(t('Library.Launch'))}</button>
             <span class="spacer"></span>
             <button class="btn small danger icon-only" data-action="remove" data-id="${esc(game.id)}" type="button" title="${esc(t('Common.Remove'))}" aria-label="${esc(t('Common.Remove'))}">🗑</button>
           </div>
@@ -889,6 +890,21 @@ export default {
           ui.toast(t('Gpu.Spoof.Done'));
         } catch (error) {
           ui.toast(error.message, 'error');
+        }
+        return;
+      }
+      if (action === 'launch') {
+        const game = games.find((item) => item.id === id);
+        try {
+          await api.request('games.launch', { id }, 20000);
+          ui.toast(t('Library.Launching').replace('{0}', game?.name || ''));
+        } catch (error) {
+          ui.toast(
+            error?.code === 'LaunchUnsupported'
+              ? t('Library.LaunchUnsupported')
+              : t('Library.LaunchFailed'),
+            'error',
+          );
         }
         return;
       }

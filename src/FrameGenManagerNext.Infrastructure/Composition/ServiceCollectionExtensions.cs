@@ -52,6 +52,7 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IGameProbe, GameProbe>();
         services.AddSingleton<IGameCoverService, SteamCoverService>();
         services.AddSingleton<IGameLibraryService, GameLibraryService>();
+        services.AddSingleton<IGameLauncher, GameLauncher>();
 
         services.AddSingleton<IGpuProbe, NvidiaSmiGpuProbe>();
         services.AddSingleton<IGpuService, GpuService>();

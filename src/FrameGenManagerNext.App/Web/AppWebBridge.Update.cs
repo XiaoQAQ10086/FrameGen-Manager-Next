@@ -158,12 +158,40 @@ public sealed partial class AppWebBridge
         return new { cancelled = true };
     }
 
-    private object? InstallDownloadedUpdate(JsonElement payload)
+    private async Task<object?> InstallDownloadedUpdateAsync(JsonElement payload)
     {
         var requested = payload.TryGetProperty("path", out var value) ? value.GetString() : null;
         if (!TryResolveDownloadedInstaller(requested, out var installerPath))
         {
             throw new BridgeException(Domain.Errors.ErrorCode.InstallerFailed, "invalid update installer path");
+        }
+
+        var manifest = _pendingUpdate;
+        if (manifest is null ||
+            !string.Equals(
+                Path.GetFileName(installerPath),
+                manifest.InstallerName,
+                StringComparison.OrdinalIgnoreCase) ||
+            new FileInfo(installerPath).Length != manifest.InstallerSize)
+        {
+            throw new BridgeException(Domain.Errors.ErrorCode.InstallerFailed, "installer does not match the checked update");
+        }
+
+        // The app runs elevated, and the staging directory is user-writable.
+        // Re-check the hash right before execution so a swapped file cannot
+        // inherit administrator rights.
+        string actualHash;
+        await using (var stream = File.OpenRead(installerPath))
+        {
+            var hash = await System.Security.Cryptography.SHA256.HashDataAsync(stream)
+                .ConfigureAwait(false);
+            actualHash = Convert.ToHexString(hash).ToLowerInvariant();
+        }
+
+        if (!string.Equals(actualHash, manifest.InstallerSha256, StringComparison.OrdinalIgnoreCase))
+        {
+            _logger.LogWarning("Downloaded update installer failed the hash check before execution");
+            throw new BridgeException(Domain.Errors.ErrorCode.PackHashMismatch, "update installer hash mismatch");
         }
 
         if (_environment.IsPortable)

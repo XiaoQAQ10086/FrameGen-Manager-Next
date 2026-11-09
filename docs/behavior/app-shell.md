@@ -8,6 +8,15 @@
 4. 加载层是独立 `Popup`，不会把 WebView2 的父容器设为 `Collapsed`（WebView2 在不可见时会延迟初始化）；WebView2 就绪后关闭加载层。
 5. 页面自身也带启动骨架；游戏库状态读取完成前显示骨架卡片，不显示空白页。
 
+## 权限模型
+
+- 主程序通过 `app.manifest` 声明 `requireAdministrator`，启动时由 UAC 提权；用于写入 `C:\Program Files` 等受保护的游戏目录。
+- UI 与 WebView2 和主程序同进程，因此整个界面处于高完整性级别。程序只加载本地 `WebAssets`，不加载远程页面；便携版发布后也应放在受信任目录。
+- 安装版和便携版行为一致。标准用户（没有管理员凭据）无法启动。
+- 游戏启动继承当前进程令牌；Steam/Epic 协议通常交给已运行的客户端，直接运行 EXE 的手动/散装游戏会以管理员权限运行（当前明确不做降权启动）。
+- `--uninstall-cleanup` 也继承该清单；从按用户安装的卸载器触发时会出现一次 UAC。
+- Xbox/商店游戏的 `WindowsApps` 即使管理员也只有读+执行权限，仍然按只读处理，不抢所有权。
+
 ## WebView2 配置
 
 - 用户数据目录：`%LOCALAPPDATA%\FrameGen-Manager-Next\webview2\<安装路径 SHA-256 前 12 位>`。

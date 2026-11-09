@@ -134,6 +134,7 @@ export default {
           <div class="gactions">
             <button class="btn small ${toggleAction === 'enable' ? 'success' : 'danger'}" data-action="${toggleAction}" data-id="${game.id}" type="button" ${game.available === false || blocked ? 'disabled' : ''} ${blocked ? `title="${esc(blockedHint)}"` : ''}>${toggleLabel}</button>
             <button class="btn small" data-action="open" data-id="${game.id}" type="button">${t('Library.OpenFolder')}</button>
+            <button class="btn small launch" data-action="launch" data-id="${game.id}" type="button" ${!game.launchMode || game.launchMode === 'none' ? 'disabled' : ''} ${!game.launchMode || game.launchMode === 'none' ? `title="${esc(t('Library.LaunchUnsupported'))}"` : ''}>${t('Library.Launch')}</button>
             <span class="spacer"></span>
             <button class="btn small danger icon-only" data-action="remove" data-id="${game.id}" type="button" title="${esc(t('Common.Remove'))}" aria-label="${esc(t('Common.Remove'))}">🗑</button>
           </div>
@@ -243,6 +244,20 @@ export default {
       if (actionName === 'open') {
         await api.request('games.openFolder', { id: game.id })
           .catch((error) => ui.toast(error.message, 'error'));
+        return;
+      }
+      if (actionName === 'launch') {
+        try {
+          await api.request('games.launch', { id: game.id }, 20000);
+          ui.toast(t('Library.Launching').replace('{0}', game.name));
+        } catch (error) {
+          ui.toast(
+            error?.code === 'LaunchUnsupported'
+              ? t('Library.LaunchUnsupported')
+              : t('Library.LaunchFailed'),
+            'error',
+          );
+        }
         return;
       }
       if (actionName === 'enable') {

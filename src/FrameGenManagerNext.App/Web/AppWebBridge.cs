@@ -29,6 +29,7 @@ public sealed partial class AppWebBridge : IDisposable
     };
 
     private readonly IGameLibraryService _library;
+    private readonly IGameLauncher _launcher;
     private readonly IFrameGenDeploymentService _frameGen;
     private readonly ISmoothMotionDeploymentService _smoothMotion;
     private readonly INvApiSmoothMotion _nvapiSmoothMotion;
@@ -56,6 +57,7 @@ public sealed partial class AppWebBridge : IDisposable
 
     public AppWebBridge(
         IGameLibraryService library,
+        IGameLauncher launcher,
         IFrameGenDeploymentService frameGen,
         ISmoothMotionDeploymentService smoothMotion,
         INvApiSmoothMotion nvapiSmoothMotion,
@@ -73,6 +75,7 @@ public sealed partial class AppWebBridge : IDisposable
         ILogger<AppWebBridge> logger)
     {
         _library = library;
+        _launcher = launcher;
         _frameGen = frameGen;
         _smoothMotion = smoothMotion;
         _nvapiSmoothMotion = nvapiSmoothMotion;
@@ -287,7 +290,7 @@ public sealed partial class AppWebBridge : IDisposable
             "updates.check" => await CheckForUpdatesAsync(),
             "updates.download" => await DownloadUpdateAsync(payload),
             "updates.cancel" => CancelUpdate(),
-            "updates.install" => InstallDownloadedUpdate(payload),
+            "updates.install" => await InstallDownloadedUpdateAsync(payload),
             "updates.openPage" => OpenUpdatePage(payload),
             "gpu.state" => await BuildGpuStateAsync(),
             "gpu.spoof.apply" => await ApplySpoofAsync(payload),
@@ -298,6 +301,7 @@ public sealed partial class AppWebBridge : IDisposable
             "games.add" => await AddGameAsync(),
             "games.remove" => await RemoveGameAsync(payload),
             "games.restore" => await RestoreGameAsync(payload),
+            "games.launch" => await LaunchGameAsync(payload),
             "games.openFolder" => await OpenGameFolderAsync(payload),
             "games.pickExecutable" => await PickGameExecutableAsync(payload),
             "assets.check" => await CheckAssetUpdatesAsync(),

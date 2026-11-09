@@ -1,5 +1,17 @@
 # Changelog
 
+## 2.1.7
+
+### Added
+
+- 帧生成和 Smooth Motion 游戏卡片新增【启动游戏】按钮：Steam 走 `steam://rungameid`，Epic 走 `com.epicgames.launcher://`，手动/散装游戏直接运行所选 EXE；Xbox 游戏保持禁用。
+- 主程序改为启动时请求管理员权限，可直接写入 `C:\Program Files` 等受保护目录，解决默认安装在 C 盘的游戏无法部署的问题。Xbox/商店游戏的 `WindowsApps` 仍按只读处理。
+
+### Fixed
+
+- DLSS5 安装或卸载后，帧生成卡片会立即刷新代理占用状态，不再残留 `dxgi.dll · DLSS5` 徽章。
+- 更新安装包在运行前重新校验文件名、大小和 SHA-256，避免提权后执行被替换的安装包。
+
 ## 2.1.6
 
 ### Added
