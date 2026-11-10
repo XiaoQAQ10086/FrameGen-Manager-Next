@@ -424,6 +424,7 @@ select:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(0, 122, 2
 .removed-initial { display: grid; place-items: center; font-size: 16px; font-weight: 650; color: #4e6f9d; background: rgba(0, 122, 255, .1); }
 .removed-cover { object-fit: cover; display: block; background: rgba(0, 122, 255, .1); }
 .removed-info { min-width: 0; }
+.removed-actions { display: flex; gap: 8px; align-items: center; }
 .removed-name { font-size: 14px; font-weight: 650; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .removed-info .game-path { margin-top: 1px; }
 .removed-empty { padding: 24px 0 10px; text-align: center; }

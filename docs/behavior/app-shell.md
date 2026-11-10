@@ -37,7 +37,7 @@
 - 帧生成与 SM 页的列表重新渲染时保留原 `scrollTop`；分批渲染会继续追加卡片直到恢复原位置，部署、扫描或状态刷新不会跳回顶部。
 - 帧生成与 SM 页的左侧栏和游戏列表使用自动隐藏滚动条：仅在滚动时显示，停止约 700 ms 后淡出；未滚动时不占视觉注意力。
 - 主机进程启动时同时设置空闲优先级（`SetPriorityClass(IDLE_PRIORITY_CLASS)`）和 EcoQoS（`SetProcessInformation(ProcessPowerThrottling)`）。Windows 11 任务管理器必须同时看到这两者才显示“效率模式”；只设 EcoQoS 不会显示。旧版 Windows 拒绝调用时忽略。
-- WebView2 默认追加 `--js-flags=--max-old-space-size=192 --disable-background-networking --disable-component-update --disable-sync --disable-domain-reliability`，给渲染器堆设上限并关闭后台服务。实测不要设置 `MemoryUsageTargetLevel=Low`：在 154.x WebView2 运行时上会把大约 95 MB 的共享内存转为宿主私有工作集，任务管理器反而从约 160 MB 涨到约 260 MB。
+- WebView2 默认追加 `--js-flags=--max-old-space-size=192 --disable-background-networking --disable-component-update --disable-sync --disable-domain-reliability --disable-http-cache`，给渲染器堆设上限并关闭后台服务。`--disable-http-cache` 用于本地 WebAssets：升级后不会继续加载上一版本缓存的 JS/CSS。实测不要设置 `MemoryUsageTargetLevel=Low`：在 154.x WebView2 运行时上会把大约 95 MB 的共享内存转为宿主私有工作集，任务管理器反而从约 160 MB 涨到约 260 MB。
 - 进程配置 `System.GC.ConserveMemory=7`，用少量 CPU 换取更小的托管堆。
 - 窗口最小化/隐藏时在暂停 WebView2 后压缩 LOH 并调用 `SetProcessWorkingSetSize(-1,-1)` 修剪工作集，把空闲页移到 standby。
 - 部署清单记录每个已写文件的最后写入时间；再次检查时大小和时间都一致就跳过哈希，避免每次打开页面重读数百 MB 的运行库（旧清单在首次检查通过后自动补写时间戳）。

@@ -407,9 +407,13 @@ export default {
               <div class="chips">
                 <span class="chip">${esc(t(launcherKeys[game.launcher] || 'Common.Unknown'))}</span>
                 <span class="chip">${esc(apiKeys[game.api] || game.api || '未知')}</span>
+                ${game.available === false ? `<span class="chip warn">${esc(t('Library.Missing'))}</span>` : ''}
               </div>
             </div>
-            <button class="btn small primary" data-action="restore-removed" data-id="${esc(game.id)}" type="button">${esc(t('Library.RestoreRemoved'))}</button>
+            <div class="removed-actions">
+              <button class="btn small primary" data-action="restore-removed" data-id="${esc(game.id)}" type="button" ${game.available === false ? 'disabled' : ''} ${game.available === false ? `title="${esc(t('Library.Missing'))}"` : ''}>${esc(t('Library.RestoreRemoved'))}</button>
+              <button class="btn small danger" data-action="forget-removed" data-id="${esc(game.id)}" type="button">${esc(t('Library.Forget'))}</button>
+            </div>
           </div>`).join('')
         : `<p class="muted removed-empty">${esc(t('Library.RemovedEmpty'))}</p>`;
       updateRemovedCount();
@@ -850,6 +854,17 @@ export default {
           () => api.request('games.restore', { id }),
           t('Library.Status.Restored').replace('{0}', game.name),
         );
+        return;
+      }
+      if (action === 'forget-removed') {
+        const game = removed.find((item) => item.id === id);
+        if (!game) return;
+        if (!(await confirmDialog(
+          t('Library.Forget'),
+          t('Library.Confirm.Forget').replace('{0}', game.name),
+          t('Library.Forget'),
+        ))) return;
+        await run(() => api.request('games.forget', { id }), null);
         return;
       }
       if (action === 'open-hags') {

@@ -58,6 +58,36 @@ public sealed class GameLibraryRemovalTests
     }
 
     [Fact]
+    public async Task ForgettingRemovedEntryDropsItsRecord()
+    {
+        var manual = Game("manual:1", @"C:\Games\Manual", isManual: true);
+        var other = Game("steam:1", @"C:\Games\Scanned", isManual: false);
+        var store = new MemoryStore(new GameLibrary
+        {
+            Manual = [manual],
+            Scanned = [other],
+            IgnoredIds = [manual.Id],
+            TargetOverrides = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+            {
+                [manual.Id] = manual.RenderExePath!,
+            },
+        });
+        using var service = new GameLibraryService(
+            [],
+            new UnusedProbe(),
+            store,
+            NullLogger<GameLibraryService>.Instance);
+
+        await service.ForgetAsync(manual.Id, TestContext.Current.CancellationToken);
+
+        store.Library.Manual.ShouldBeEmpty();
+        store.Library.IgnoredIds.ShouldNotContain(manual.Id);
+        store.Library.TargetOverrides.ShouldNotContainKey(manual.Id);
+        store.Library.EnumerateRemovedGames().ShouldNotContain(manual);
+        store.Library.Scanned.ShouldContain(other);
+    }
+
+    [Fact]
     public async Task SettingTargetPersistsTheSelectedExecutable()
     {
         var directory = Path.Combine(Path.GetTempPath(), $"fgm-target-{Guid.NewGuid():N}");

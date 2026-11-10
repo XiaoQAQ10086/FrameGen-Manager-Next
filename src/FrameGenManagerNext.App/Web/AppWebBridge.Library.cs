@@ -315,6 +315,21 @@ public sealed partial class AppWebBridge
         });
     }
 
+    private async Task<object?> ForgetGameAsync(System.Text.Json.JsonElement payload)
+    {
+        var id = IdOf(payload);
+        if (string.IsNullOrWhiteSpace(id))
+        {
+            throw new BridgeException(Domain.Errors.ErrorCode.InvalidArgument, "missing game id");
+        }
+
+        return await RunExclusiveAsync(async () =>
+        {
+            await _library.ForgetAsync(id, CancellationToken.None);
+            return await BuildGamesStateAsync();
+        });
+    }
+
     private async Task<object?> RestoreGameAsync(System.Text.Json.JsonElement payload)
     {
         var id = IdOf(payload);
@@ -447,6 +462,9 @@ public sealed partial class AppWebBridge
                 launcher = game.Launcher.ToString(),
                 api = game.GraphicsApi.ToString(),
                 targetDirectory = game.TargetDirectory,
+                available = Directory.Exists(game.TargetDirectory) &&
+                            (string.IsNullOrWhiteSpace(game.RenderExePath) ||
+                             File.Exists(game.RenderExePath)),
                 initial = string.IsNullOrWhiteSpace(game.Name) ? "?" : game.Name[..1].ToUpperInvariant(),
                 cover = await GetCoverUrlAsync(game),
             });

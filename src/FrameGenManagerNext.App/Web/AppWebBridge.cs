@@ -134,7 +134,9 @@ public sealed partial class AppWebBridge : IDisposable
         _addGameGate.Dispose();
     }
 
-    private const string MemoryLimitArguments = "--js-flags=--max-old-space-size=192 --disable-background-networking --disable-component-update --disable-sync --disable-domain-reliability";
+    // The UI is served from the local WebAssets folder. Disable the HTTP cache so
+    // a new app version cannot keep loading the previous version's JS/CSS.
+    private const string DefaultBrowserArguments = "--js-flags=--max-old-space-size=192 --disable-background-networking --disable-component-update --disable-sync --disable-domain-reliability --disable-http-cache";
 
     public async Task InitializeAsync(WebView2 webView, string? additionalBrowserArguments = null)
     {
@@ -143,8 +145,8 @@ public sealed partial class AppWebBridge : IDisposable
         // Keep the renderer heap bounded; the UI is a small module app, not a page
         // with large in-memory data sets. This lowers the WebView2 baseline footprint.
         var arguments = string.IsNullOrWhiteSpace(additionalBrowserArguments)
-            ? MemoryLimitArguments
-            : $"{additionalBrowserArguments} {MemoryLimitArguments}";
+            ? DefaultBrowserArguments
+            : $"{additionalBrowserArguments} {DefaultBrowserArguments}";
 
         var userDataFolder = ResolveUserDataFolder();
         Directory.CreateDirectory(userDataFolder);
@@ -300,6 +302,7 @@ public sealed partial class AppWebBridge : IDisposable
             "games.cancelScan" => CancelScan(),
             "games.add" => await AddGameAsync(),
             "games.remove" => await RemoveGameAsync(payload),
+            "games.forget" => await ForgetGameAsync(payload),
             "games.restore" => await RestoreGameAsync(payload),
             "games.launch" => await LaunchGameAsync(payload),
             "games.openFolder" => await OpenGameFolderAsync(payload),

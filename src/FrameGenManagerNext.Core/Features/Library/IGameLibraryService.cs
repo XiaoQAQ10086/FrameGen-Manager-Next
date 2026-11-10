@@ -16,5 +16,11 @@ public interface IGameLibraryService
 
     Task<GameLibrary> SetIgnoredAsync(string gameId, bool ignored, CancellationToken cancellationToken);
 
+    /// <summary>
+    /// Permanently forgets a library entry. Game files and deployment backups are
+    /// left untouched; a later scan can discover an installed game again.
+    /// </summary>
+    Task<GameLibrary> ForgetAsync(string gameId, CancellationToken cancellationToken);
+
     Task<GameLibrary> SetTargetAsync(string gameId, string exePath, CancellationToken cancellationToken);
 }

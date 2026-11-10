@@ -25,6 +25,7 @@ Steam junk 跳过（精确名称）：`steamworks common redistributables`、`st
 - 启动器结果按 `InstallDirectory`（完整路径、大小写不敏感）去重；优先级 Steam > Epic > WeGame/Xbox > 散装。
 - 手动条目优先于扫描条目；`GameLibrary.EnumerateVisibleGames()` 按安装目录去重。
 - 移除游戏只把 id 写入 `ignoredIds`，手动条目仍保留在 `Manual` 中；`EnumerateRemovedGames()` 按 id 去重列出这些条目，恢复时从 `ignoredIds` 删除即可重新显示。
+- 已移除的游戏可以“删除记录”：只从 `Manual`、`Scanned`、`ignoredIds` 和 `targetOverrides` 中清掉该条目，不删除游戏文件和部署备份；如果游戏仍然安装，下次扫描会重新发现它。游戏目录已不存在时标记“游戏目录不存在”，恢复按钮禁用。
 - 用户可在部署弹窗选择“手动选择游戏实际启动 EXE”；选择结果写入 `targetOverrides[gameId]`，覆盖该游戏的渲染 EXE 和目标目录，重新扫描或重启后仍然生效。覆盖只影响目标选择，不修改游戏文件。
 - 页面读取游戏库时并发探测数量等于 CPU 逻辑核心数，结果按游戏库顺序返回；启动不再逐个串行等待。
 - 扫描时各启动器并行枚举（Steam/Epic/WeGame/散装互不依赖），再统一去重；游戏探测也使用全部逻辑核心，不再写死 6/12 的上限。

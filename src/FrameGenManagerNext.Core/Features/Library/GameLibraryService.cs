@@ -232,6 +232,47 @@ public sealed partial class GameLibraryService : IGameLibraryService, IDisposabl
         }
     }
 
+    public async Task<GameLibrary> ForgetAsync(string gameId, CancellationToken cancellationToken)
+    {
+        await _writeLock.WaitAsync(cancellationToken);
+        try
+        {
+            var library = await _store.LoadAsync(cancellationToken);
+
+            var overrides = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            foreach (var (key, value) in library.TargetOverrides)
+            {
+                if (!string.Equals(key, gameId, StringComparison.OrdinalIgnoreCase))
+                {
+                    overrides[key] = value;
+                }
+            }
+
+            var updated = new GameLibrary
+            {
+                SchemaVersion = library.SchemaVersion,
+                LastScanUtc = library.LastScanUtc,
+                Scanned = library.Scanned
+                    .Where(game => !string.Equals(game.Id, gameId, StringComparison.OrdinalIgnoreCase))
+                    .ToList(),
+                Manual = library.Manual
+                    .Where(game => !string.Equals(game.Id, gameId, StringComparison.OrdinalIgnoreCase))
+                    .ToList(),
+                IgnoredIds = library.IgnoredIds
+                    .Where(id => !string.Equals(id, gameId, StringComparison.OrdinalIgnoreCase))
+                    .ToList(),
+                TargetOverrides = overrides,
+            };
+
+            await _store.SaveAsync(updated, cancellationToken);
+            return updated;
+        }
+        finally
+        {
+            _writeLock.Release();
+        }
+    }
+
     public async Task<GameLibrary> SetIgnoredAsync(
         string gameId,
         bool ignored,

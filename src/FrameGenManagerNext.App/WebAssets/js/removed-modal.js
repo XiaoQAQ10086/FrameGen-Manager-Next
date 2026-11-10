@@ -1,4 +1,4 @@
-import { escapeHtml as esc } from './ui.js';
+import { confirmDialog, escapeHtml as esc } from './ui.js';
 import { apiLabel, launcherKeys, prettyPath } from './labels.js';
 
 export function removedMarkup(t) {
@@ -38,9 +38,13 @@ export function createRemovedController(root, ctx, getRemoved, reload) {
             <div class="chips">
               <span class="chip">${esc(t(launcherKeys[game.launcher] || 'Common.Unknown'))}</span>
               <span class="chip">${esc(apiLabel(game.api))}</span>
+              ${game.available === false ? `<span class="chip warn">${esc(t('Library.Missing'))}</span>` : ''}
             </div>
           </div>
-          <button class="btn small" data-action="restore-removed" data-id="${esc(game.id)}" type="button">${esc(t('Library.RestoreRemoved'))}</button>
+          <div class="removed-actions">
+            <button class="btn small" data-action="restore-removed" data-id="${esc(game.id)}" type="button" ${game.available === false ? 'disabled' : ''} ${game.available === false ? `title="${esc(t('Library.Missing'))}"` : ''}>${esc(t('Library.RestoreRemoved'))}</button>
+            <button class="btn small danger" data-action="forget-removed" data-id="${esc(game.id)}" type="button">${esc(t('Library.Forget'))}</button>
+          </div>
         </div>`).join('')
       : `<p class="muted removed-empty">${esc(t('Library.RemovedEmpty'))}</p>`;
   }
@@ -55,6 +59,28 @@ export function createRemovedController(root, ctx, getRemoved, reload) {
   }
 
   overlay.addEventListener('click', async (event) => {
+    const forgetButton = event.target.closest('[data-action="forget-removed"]');
+    if (forgetButton) {
+      const game = getRemoved().find((item) => item.id === forgetButton.dataset.id);
+      if (!game) return;
+      const confirmed = await confirmDialog(
+        t('Library.Forget'),
+        t('Library.Confirm.Forget').replace('{0}', game.name),
+        t('Library.Forget'),
+      );
+      if (!confirmed) return;
+
+      try {
+        await api.request('games.forget', { id: game.id });
+        await reload();
+        render();
+        ui.toast(t('Common.OperationDone'));
+      } catch (error) {
+        ui.toast(error.message || error.code || t('Library.Forget'), 'error');
+      }
+      return;
+    }
+
     const button = event.target.closest('[data-action="restore-removed"]');
     if (button) {
       try {
@@ -62,7 +88,7 @@ export function createRemovedController(root, ctx, getRemoved, reload) {
         await reload();
         render();
       } catch (error) {
-        ui.toast(error.message || error.code || '恢复失败', 'error');
+        ui.toast(error.message || error.code || t('Library.RestoreRemoved'), 'error');
       }
       return;
     }

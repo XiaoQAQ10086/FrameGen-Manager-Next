@@ -1,16 +1,16 @@
 {
-  "version": "2.1.8",
-  "notes": "【修复】\n修复上一版本的BUG",
-  "pageUrl": "https://github.com/XiaoQAQ10086/FrameGen-Manager-Next/releases/tag/v2.1.8",
+  "version": "2.1.9",
+  "notes": "【修复】\n1.游戏卸载后，已移除的游戏库里仍然显示该游戏且无法删除的问题\n2.已在被移除的游戏库里增加【删除记录】按钮",
+  "pageUrl": "https://github.com/XiaoQAQ10086/FrameGen-Manager-Next/releases/tag/v2.1.9",
   "installer": {
-    "name": "FrameGenManagerNext-2.1.8-win-Setup.exe",
-    "size": 389976331,
-    "sha256": "7f73c330112a6d330d26abc32012a47d4f752accb75af3c5285d3a48018b5516",
+    "name": "FrameGenManagerNext-2.1.9-win-Setup.exe",
+    "size": 389980462,
+    "sha256": "fbc26a57150cfac201a75ed4f68d9efbd6494033f547c5548ae245cf83572746",
     "urls": [
-      "https://github.com/XiaoQAQ10086/FrameGen-Manager-Next/releases/download/v2.1.8/FrameGenManagerNext-2.1.8-win-Setup.exe",
-      "https://ghfast.top/https://github.com/XiaoQAQ10086/FrameGen-Manager-Next/releases/download/v2.1.8/FrameGenManagerNext-2.1.8-win-Setup.exe",
-      "https://gh-proxy.com/https://github.com/XiaoQAQ10086/FrameGen-Manager-Next/releases/download/v2.1.8/FrameGenManagerNext-2.1.8-win-Setup.exe",
-      "https://ghproxy.net/https://github.com/XiaoQAQ10086/FrameGen-Manager-Next/releases/download/v2.1.8/FrameGenManagerNext-2.1.8-win-Setup.exe"
+      "https://github.com/XiaoQAQ10086/FrameGen-Manager-Next/releases/download/v2.1.9/FrameGenManagerNext-2.1.9-win-Setup.exe",
+      "https://ghfast.top/https://github.com/XiaoQAQ10086/FrameGen-Manager-Next/releases/download/v2.1.9/FrameGenManagerNext-2.1.9-win-Setup.exe",
+      "https://gh-proxy.com/https://github.com/XiaoQAQ10086/FrameGen-Manager-Next/releases/download/v2.1.9/FrameGenManagerNext-2.1.9-win-Setup.exe",
+      "https://ghproxy.net/https://github.com/XiaoQAQ10086/FrameGen-Manager-Next/releases/download/v2.1.9/FrameGenManagerNext-2.1.9-win-Setup.exe"
     ]
   }
 }

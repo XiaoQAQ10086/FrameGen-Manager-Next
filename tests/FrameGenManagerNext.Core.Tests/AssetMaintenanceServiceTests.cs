@@ -247,6 +247,11 @@ public sealed class AssetMaintenanceServiceTests
             throw new NotSupportedException();
         }
 
+        public Task<GameLibrary> ForgetAsync(string gameId, CancellationToken cancellationToken)
+        {
+            throw new NotSupportedException();
+        }
+
         public Task<GameLibrary> SetTargetAsync(
             string gameId,
             string exePath,
