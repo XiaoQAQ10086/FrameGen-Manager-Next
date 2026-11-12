@@ -9,7 +9,7 @@
     <!-- Owner decision: Microsoft.Extensions / Pkcs / Shouldly track preview/RC.
          Serilog intentionally stays on a stable release. -->
     <PackageVersion Include="coverlet.collector" Version="10.1.0" />
-    <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="11.0.0-rc.3.26522.148" />
+    <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="11.0.0" />
     <PackageVersion Include="Microsoft.Extensions.Hosting" Version="11.0.0-rc.3.26522.148" />
     <PackageVersion Include="Microsoft.Extensions.Logging" Version="11.0.0-rc.3.26522.148" />
     <PackageVersion Include="Microsoft.Extensions.Logging.Abstractions" Version="11.0.0-rc.3.26522.148" />
