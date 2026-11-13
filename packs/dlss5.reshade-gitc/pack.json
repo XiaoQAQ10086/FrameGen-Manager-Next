@@ -1,8 +1,8 @@
 {
     "schemaVersion":  1,
     "id":  "dlss5.reshade-gitc",
-    "version":  "6.8.1",
-    "displayName":  "DLSS5 ReShade 6.8.0 + GITC Uplift 1.8.0",
+    "version":  "6.8.2",
+    "displayName":  "DLSS5 ReShade 6.8.0 + GITC Uplift 2.0.0",
     "minAppVersion":  "2.0.0",
     "gpuRoutes":  [
                       "Sm86",
@@ -15,8 +15,8 @@
                       "role":  "addon",
                       "required":  true,
                       "proxySlot":  false,
-                      "sha256":  "3c939d99e22d1039bfc82222fd8dbc432db493d13ccec34efa26ef8cc39bf773",
-                      "size":  6197248
+                      "sha256":  "fa18fbbc2f67e31cde2d25b585b78c9d8359566eb916ea44e02fa54277eb40c2",
+                      "size":  6373376
                   },
                   {
                       "source":  "gitc-uplift.addon32",
@@ -24,8 +24,8 @@
                       "role":  "addon",
                       "required":  true,
                       "proxySlot":  false,
-                      "sha256":  "c5ca5ec8a8568e546ba8a565eb015c76c34358e5d3e44addc4e35a6e53dc9cd6",
-                      "size":  3031040
+                      "sha256":  "baec0d6d78a0503ff0bb175f4bd2b1a1fb443887bdd7758115a3b261b5396a71",
+                      "size":  3087360
                   },
                   {
                       "source":  "gitc-uplift-helper64.exe",
@@ -33,8 +33,8 @@
                       "role":  "other",
                       "required":  true,
                       "proxySlot":  false,
-                      "sha256":  "fe1afc03bd70682e29b8fd46c3fe1b777609526317571314268c20e2d518e4b7",
-                      "size":  3312128
+                      "sha256":  "9c593aefee8db43f6d1d971666a1eb3564eed59d1c9b0cdfbc6d1b671de697f6",
+                      "size":  3346944
                   },
                   {
                       "source":  "Uplift.fx",
@@ -42,8 +42,8 @@
                       "role":  "shader",
                       "required":  true,
                       "proxySlot":  false,
-                      "sha256":  "04f7d632118072b3709a1ab5700867816f582e2a1be484e1cecd9e1b95557bf7",
-                      "size":  10040
+                      "sha256":  "488512e79ab257b67499bba4351815ccf92f3eef257a39a67cddc9a43c8c7e43",
+                      "size":  10219
                   },
                   {
                       "source":  "UpliftMask.fx",
@@ -51,8 +51,8 @@
                       "role":  "shader",
                       "required":  true,
                       "proxySlot":  false,
-                      "sha256":  "df89b186d140f28aa27998a524421038aadceb69c8bad9cab24d33bf8d274314",
-                      "size":  1383
+                      "sha256":  "98c3bfb871d67a6d1ec3a492305b21b45ef46a1667b87060de1823e36bc0c2d2",
+                      "size":  1401
                   },
                   {
                       "source":  "nvngx_dlssnr.dll",

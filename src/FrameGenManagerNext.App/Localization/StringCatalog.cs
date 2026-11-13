@@ -1,6 +1,6 @@
 namespace FrameGenManagerNext.App.Localization;
 
-internal static class StringCatalog
+internal static partial class StringCatalog
 {
     internal static readonly Dictionary<string, (string Chinese, string English)> Entries = new(StringComparer.Ordinal)
     {
@@ -19,10 +19,10 @@ internal static class StringCatalog
             "检测到 RivaTuner Statistics Server (RTSS) 正在向 WebView2 注入 DLL，浏览器进程因此崩溃。程序已尝试添加 RTSS 排除配置；如果仍失败，请以管理员身份运行一次本程序，或在 RTSS 中把 msedgewebview2.exe 加入排除列表（Application detection level = None）。",
             "RivaTuner Statistics Server (RTSS) is injecting into WebView2 and crashing the browser process. The app tried to add an RTSS exclusion; if it still fails, run the app once as administrator, or add msedgewebview2.exe as an exclusion in RTSS (Application detection level = None)."),
         ["Fallback.Detail"] = ("诊断信息：{0}", "Diagnostics: {0}"),
-        ["Nav.Library"] = ("帧生成", "Frame generation"),
+        ["Nav.Library"] = ("帧生成", "FrameGen"),
         ["Nav.Gpu"] = ("GPU 状态", "GPU"),
         ["Nav.SmoothMotion"] = ("Smooth Motion", "Smooth Motion"),
-        ["Nav.Dlss5"] = ("DLSS5 / ReShade", "DLSS5 / ReShade"),
+        ["Nav.Dlss5"] = ("DLSS5 / ReShade", "DLSS5"),
         ["Nav.Logs"] = ("日志", "Logs"),
         ["Nav.Settings"] = ("设置", "Settings"),
         ["Nav.About"] = ("关于", "About"),
@@ -30,6 +30,7 @@ internal static class StringCatalog
         ["Common.OperationDone"] = ("操作完成", "Done"),
         ["Common.Working"] = ("处理中…", "Working…"),
         ["Progress.planning"] = ("准备", "Preparing"),
+        ["Progress.preflight"] = ("校验文件", "Verifying files"),
         ["Progress.writing"] = ("写入", "Writing"),
         ["Progress.restoring"] = ("还原", "Restoring"),
         ["Progress.launchers"] = ("扫描启动器", "Scanning launchers"),
@@ -66,7 +67,6 @@ internal static class StringCatalog
         ["Common.NotInstalled"] = ("未安装", "Not installed"),
         ["Common.Enabled"] = ("已开启", "Enabled"),
         ["Common.Disabled"] = ("已关闭", "Disabled"),
-        ["Common.None"] = ("—", "—"),
         ["Common.Steam"] = ("Steam", "Steam"),
         ["Common.Epic"] = ("Epic", "Epic"),
         ["Common.WeGame"] = ("WeGame", "WeGame"),
@@ -86,9 +86,6 @@ internal static class StringCatalog
         ["Conflict.SmoothMotionOn"] = ("冲突：已开启 Smooth Motion", "Conflict: Smooth Motion is on"),
         ["Conflict.SmoothMotionHint"] = ("请先在 Smooth Motion 页面关闭该游戏", "Turn it off on the Smooth Motion page first"),
         ["Conflict.FrameGenOn"] = ("冲突：已开启帧生成", "Conflict: frame generation is on"),
-        ["State.Exists"] = ("已存在", "Present"),
-        ["State.CheckFailed"] = ("检查失败", "Check failed"),
-        ["State.DeployFailed"] = ("部署失败", "Deployment failed"),
 
         ["Library.Title"] = ("帧生成", "Frame generation"),
         ["Library.Subtitle"] = ("选择游戏后点“部署”，再调整帧生成参数。", "Pick a game, click Deploy, then adjust frame generation options."),
@@ -142,6 +139,7 @@ internal static class StringCatalog
         ["Errors.ProtectedPath"] = ("目标目录位于受保护的系统位置，不能写入。", "The target directory is in a protected system location."),
         ["Errors.FileLocked"] = ("文件被占用：游戏进程还没有完全退出。请彻底关闭游戏（包括后台进程）后重试。", "File is in use: the game process has not fully exited. Close the game completely (including background processes) and try again."),
         ["Errors.GameRunning"] = ("游戏进程仍在运行，请彻底关闭游戏后重试。", "The game is still running. Close it completely and try again."),
+        ["Errors.OperationTimedOut"] = ("读取文件长时间没有进展，已中止。请检查磁盘或网络后重试。", "Reading a file made no progress and was aborted. Check the disk or network and try again."),
         ["Errors.AccessDenied"] = ("没有权限修改目标文件，请检查管理员权限或杀毒软件拦截。", "Access denied while changing the target files. Check administrator rights or antivirus blocking."),
         ["Errors.Conflict"] = ("目标文件存在冲突，请先还原旧部署或手动检查冲突文件。", "The target files are in conflict. Restore the previous deployment or inspect the conflicting files."),
         ["Errors.NvApiCallFailed"] = ("NVIDIA 驱动设置写入失败，请确认驱动正常、游戏已关闭后重试。", "Could not write the NVIDIA driver setting. Check the driver and close the game, then try again."),
@@ -170,11 +168,8 @@ internal static class StringCatalog
         ["Library.SuperResolution"] = ("超分", "Super resolution"),
         ["Library.XeSsFlow"] = ("XeSS Flow", "XeSS Flow"),
         ["Library.XeSsHudless"] = ("HUD-less", "HUD-less"),
-        ["Library.Name"] = ("名称", "Name"),
         ["Library.Platform"] = ("平台", "Platform"),
         ["Library.DeploymentState"] = ("部署状态", "Deployment"),
-        ["Library.TargetDirectory"] = ("目标目录", "Target folder"),
-        ["Library.RenderExe"] = ("渲染 EXE", "Render EXE"),
         ["Library.Empty"] = ("还没有游戏。点击右上角“扫描游戏”，或手动添加一个 EXE。", "No games yet. Click \"Scan games\" or add an EXE manually."),
         ["Library.Status.NotLoaded"] = ("尚未加载游戏库", "Library not loaded"),
         ["Library.Status.Loading"] = ("正在读取游戏库缓存...", "Loading game library cache..."),
@@ -341,7 +336,7 @@ internal static class StringCatalog
         ["SmoothMotion.Component.Present"] = ("组件已存在", "Component present"),
 
         ["Dlss5.Title"] = ("DLSS5 / ReShade", "DLSS5 / ReShade"),
-        ["Dlss5.Subtitle"] = ("安装 ReShade + GITC Uplift 模型/插件/着色器；仅支持 RTX 20/30。", "Installs ReShade plus the GITC Uplift model/addon/shaders. RTX 20/30 only."),
+        ["Dlss5.Subtitle"] = ("安装 ReShade + GITC Uplift 2.0 模型/插件/着色器；2.0 起 NR 每次启动默认关闭，需在 ReShade 面板开启；仅支持 RTX 20/30。", "Installs ReShade plus the GITC Uplift 2.0 model/addon/shaders. GITC 2.0 starts NR off each session; enable it in the ReShade panel. RTX 20/30 only."),
         ["Dlss5.File"] = ("文件", "Files"),
         ["Dlss5.ReShade"] = ("ReShade", "ReShade"),
         ["Dlss5.Empty"] = ("游戏库为空。先在“游戏库”扫描游戏，再回来安装 DLSS5。", "The library is empty. Scan games first, then come back to install DLSS5."),
@@ -374,6 +369,7 @@ internal static class StringCatalog
         ["Dlss5.ProxyAutoSuffix"] = ("（自动）", " (auto)"),
         ["Dlss5.HotkeyLabel"] = ("ReShade 呼出键", "ReShade overlay key"),
         ["Dlss5.RecordHotkey"] = ("录制快捷键", "Record shortcut"),
+        ["Dlss5.HotkeyQueued"] = ("游戏正在运行，快捷键已排队，退出游戏后自动写入。", "The game is running. The shortcut is queued and will be written after the game exits."),
         ["Dlss5.RecordHotkeyWaiting"] = ("请按下按键…", "Press a key…"),
         ["Dlss5.HotkeyHint"] = ("点击“录制快捷键”后按下你想用的键，Esc 取消；已部署的游戏会立即写入 ReShade.ini，不需要重新部署。", "Click \"Record shortcut\" and press the key you want; Esc cancels. For deployed games the key is written to ReShade.ini immediately, no redeploy needed."),
         ["Dlss5.ReframeworkSkippedTitle"] = ("REFramework", "REFramework"),
@@ -411,6 +407,9 @@ internal static class StringCatalog
         ["Logs.Status.Exporting"] = ("正在生成诊断包...", "Creating diagnostics package..."),
         ["Logs.Status.Exported"] = ("诊断包已生成：{0}", "Diagnostics package created: {0}"),
         ["Logs.Status.ExportFailed"] = ("诊断包生成失败", "Could not create diagnostics package"),
+        ["Logs.Clear"] = ("清理日志", "Clear logs"),
+        ["Logs.ClearDone"] = ("已清理 {0} 个历史日志", "Cleared {0} old log file(s)"),
+        ["Logs.ClearNone"] = ("没有可清理的历史日志", "No old logs to clear"),
 
         ["Settings.Title"] = ("设置", "Settings"),
         ["Settings.Subtitle"] = ("界面、扫描行为和数据目录。设置立即保存到本地。", "Appearance, scanning behaviour and data folders. Settings are saved locally."),

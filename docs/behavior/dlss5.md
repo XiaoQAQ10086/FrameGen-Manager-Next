@@ -20,16 +20,16 @@
 - Unity 游戏按 Unity 的 Windows 默认值判定为 D3D11；只有目录里带 `D3D12Core.dll`（D3D12 构建）或 `vulkan-1.dll`（Vulkan 构建）时才判为对应 API。ReShade 自己的代理 DLL（版本信息 ProductName=ReShade）不参与判定，否则装过 ReShade 后重新扫描会把 API 判错。
 
 1. 校验目标目录、pack schema、安装器 SHA-256。
-2. 通过统一部署引擎部署 pack 中的 114 个文件（当前 pack `6.8.1`，GITC Uplift `1.8.0`）：
+2. 通过统一部署引擎部署 pack 中的 114 个文件（当前 pack `6.8.2`，GITC Uplift `2.0.0`）：
    - `gitc-uplift.addon64`、`gitc-uplift.addon32`、`gitc-uplift-helper64.exe`
-   - `GITC-Uplift/nvngx_dlssnr.dll`（534 MB 模型，1.8.0 未更换）
+   - `GITC-Uplift/nvngx_dlssnr.dll`（534 MB 模型，2.0.0 未更换，仍由用户自备/沿用）
    - `reshade-shaders/Shaders/...`、`reshade-shaders/Textures/...`
-   - `Uplift.fx`、`UpliftMask.fx`（Uplift.fx 随 1.8.0 更新，新增 motion 权限复选框；UpliftMask.fx 未变）
-   - GITC 1.8.0 新增 Before Framegen（DX12/Vulkan Streamline 路由），已有设置会保留；pack 版本升到 6.8.1，已部署用户可以检测到资产更新。
+   - `Uplift.fx`、`UpliftMask.fx`（随 2.0.0 更新）
+   - GITC 2.0.0 起 NR 每次启动默认关闭，需在 ReShade 面板或热键开启；要恢复旧行为，在 `ReShade.ini` 的 `[Uplift]` 写 `StartEnabled=1`。pack 版本升到 6.8.2，已部署用户会检测到资产更新。
 3. 非 Vulkan 优先离线安装 ReShade（不联网、不运行 setup）：
    - 从 `ReShade_Setup_6.8.0_Addon.exe` 的 512 字节步进内嵌 ZIP 取出 `ReShade64.dll`（32 位游戏取 `ReShade32.dll`）。该 DLL 与官方 setup 写出的文件哈希一致。
    - 按最终代理写成代理文件名：自动模式下 DX10/11/12 使用 `dxgi.dll`，DX9 使用 `d3d9.dll`，OpenGL 使用 `opengl32.dll`；UI 不出现独立“自动”项，默认项后标“（自动）”。用户可以手动覆盖为 `dxgi/d3d9/d3d10/d3d11/d3d12/opengl32.dll`，但必须与游戏 API 兼容，否则返回 `InvalidArgument`。目标位置已有非 ReShade 文件时拒绝覆盖并回滚（`Conflict`）。
-   - 详情页用“录制快捷键”而不是预设列表：默认显示 Home（VK 36），点击后按下自定义键，Esc 取消。安装成功后写 `ReShade.ini` 的 `[INPUT] KeyOverlay=<VK>,0,0,0`；已部署游戏修改时通过 `dlss5.setHotkey` 立即写入，不需要重新部署；已有配置只覆盖该键，保留其他设置。
+   - 详情页用“录制快捷键”而不是预设列表：默认显示 Home（VK 36），点击后按下自定义键，Esc 取消。安装成功后写 `ReShade.ini` 的 `[INPUT] KeyOverlay=<VK>,0,0,0`；已部署游戏修改时通过 `dlss5.setHotkey` 立即写入，不需要重新部署；已有配置只覆盖该键，保留其他设置。游戏正在运行或 `ReShade.ini` 被锁时，写入进入 `state/hotkey-queue.json`，后台每 30 秒重试，游戏退出后自动补写；详情页“应用到已安装游戏”会把当前快捷键同步到所有已部署游戏。
    - REFramework 不再在 DLSS5 详情页逐个询问：关于页“RE 引擎”卡片提供“RE 引擎自动安装 REFramework”开关，默认开启；检测到 RE Engine 时部署帧生成或 DLSS5 都会自动安装。REFramework 使用独立 `reframework` pack（`dinput8.dll`），占用 `dinput8.dll` 入口，帧生成必须避开。详见 `docs/behavior/reframework.md`。
    - 目标没有 `ReShade.ini` 时写入有效默认配置；随后由配置服务把搜索路径合并为 `.\reshade-shaders\Shaders\**` / `Textures\**`。
    - 只有离线解包失败时才自动回退到官方 setup（`--headless --api <api>`，超时 240 秒）；界面不提供手动选择官方安装器的入口。
@@ -41,6 +41,11 @@
 6. 安装/卸载期间详情页显示实时进度条：文件写入按数量推进，ReShade 模块阶段显示不确定进度。操作成功或失败后都关闭全局进度卡片；ReShade 阶段使用不确定进度时不会再残留“正在安装 ReShade”。
 
 安装前会检查帧生成是否已占用同一个代理文件（例如帧生成使用 `dxgi.dll`、DLSS5 选择 DXGI 代理）：占用时返回 `Conflict`，避免覆盖帧生成的代理入口。
+
+部署前还会做 ReShade 入口检查：
+
+- GITC pack 同时包含 `gitc-uplift.addon32` 和 `gitc-uplift.addon64`，ReShade 离线安装会按游戏 EXE 选择 `ReShade32.dll` / `ReShade64.dll`，因此 32 位游戏可以正常部署。
+- 目录里已有多个 ReShade 代理入口，或已有入口位数与游戏不匹配时返回 `Conflict`，提示用户先清理旧的 ReShade 入口。
 
 ## 状态检查
 

@@ -16,6 +16,7 @@ public sealed partial class DeploymentEngine : IDeploymentEngine
 
     private readonly AppPaths _paths;
     private readonly BackupStore _backups;
+    private readonly DeploymentSessionStore _sessions;
     private readonly ILogger<DeploymentEngine> _logger;
 
     public DeploymentEngine(
@@ -25,6 +26,7 @@ public sealed partial class DeploymentEngine : IDeploymentEngine
     {
         _paths = paths;
         _backups = backups;
+        _sessions = new DeploymentSessionStore(paths);
         _logger = logger;
     }
 
@@ -61,8 +63,13 @@ public sealed partial class DeploymentEngine : IDeploymentEngine
                         continue;
                     }
 
-                    var hash = await HashFileAsync(path.Value, cancellationToken);
-                    if (string.Equals(hash, file.Sha256, StringComparison.OrdinalIgnoreCase))
+                    var hash = await TryHashFileAsync(path.Value, cancellationToken);
+                    if (hash.IsFailure)
+                    {
+                        return Result<DeploymentInspection>.Fail(hash.Error!);
+                    }
+
+                    if (string.Equals(hash.Value, file.Sha256, StringComparison.OrdinalIgnoreCase))
                     {
                         matches++;
                     }
@@ -137,8 +144,13 @@ public sealed partial class DeploymentEngine : IDeploymentEngine
                 }
                 else
                 {
-                    var hash = await HashFileAsync(path.Value, cancellationToken);
-                    if (!string.Equals(hash, record.Sha256, StringComparison.OrdinalIgnoreCase))
+                    var hash = await TryHashFileAsync(path.Value, cancellationToken);
+                    if (hash.IsFailure)
+                    {
+                        return Result<DeploymentInspection>.Fail(hash.Error!);
+                    }
+
+                    if (!string.Equals(hash.Value, record.Sha256, StringComparison.OrdinalIgnoreCase))
                     {
                         hasConflict = true;
                         detailsList.Add($"Modified: {record.RelativePath}");
@@ -206,43 +218,6 @@ public sealed partial class DeploymentEngine : IDeploymentEngine
             manifest.Options));
     }
 
-    public async Task<IReadOnlyDictionary<string, string>?> LoadOptionsAsync(
-        string familyId,
-        string targetDirectory,
-        CancellationToken cancellationToken)
-    {
-        ArgumentException.ThrowIfNullOrWhiteSpace(familyId);
-
-        var target = ValidateTarget(targetDirectory);
-        if (target.IsFailure)
-        {
-            return null;
-        }
-
-        var manifest = await _backups.LoadManifestAsync(familyId, target.Value, cancellationToken);
-        if (manifest is null ||
-            manifest.State is DeploymentManifestState.Restored or DeploymentManifestState.RolledBack ||
-            manifest.Options.Count == 0)
-        {
-            return null;
-        }
-
-        return manifest.Options;
-    }
-
-    public Task<DeploymentManifest?> LoadManifestAsync(
-        string familyId,
-        string targetDirectory,
-        CancellationToken cancellationToken)
-    {
-        ArgumentException.ThrowIfNullOrWhiteSpace(familyId);
-
-        var target = ValidateTarget(targetDirectory);
-        return target.IsFailure
-            ? Task.FromResult<DeploymentManifest?>(null)
-            : _backups.LoadManifestAsync(familyId, target.Value, cancellationToken);
-    }
-
     public async Task<Result<DeploymentReport>> DeployAsync(
         DeploymentPlan plan,
         IProgress<DeploymentProgress>? progress,
@@ -272,10 +247,31 @@ public sealed partial class DeploymentEngine : IDeploymentEngine
                 ("reason", "another deployment is already running")));
         }
 
+        _sessions.RecoverStale(TimeSpan.FromMinutes(2));
+        using var session = _sessions.Begin(plan.FamilyId, target.Value);
+        progress = new DeploymentProgressRelay(session, progress);
+
         var previous = await _backups.LoadManifestAsync(plan.FamilyId, target.Value, cancellationToken);
         var backupDirectory = _backups.GetBackupDirectory(plan.FamilyId, target.Value);
         var records = new List<DeployedFileRecord>(plan.Files.Count);
         var backupsCreated = 0;
+
+        // Verify every packed source before backing up or touching the game
+        // directory. A slow or incomplete read aborts here, not halfway through
+        // the deployment.
+        for (var index = 0; index < plan.Files.Count; index++)
+        {
+            var verification = await VerifyPlannedFileAsync(
+                plan.Files[index],
+                progress,
+                index + 1,
+                plan.Files.Count,
+                cancellationToken);
+            if (verification.IsFailure)
+            {
+                return Result<DeploymentReport>.Fail(verification.Error!);
+            }
+        }
 
         try
         {
@@ -362,14 +358,12 @@ public sealed partial class DeploymentEngine : IDeploymentEngine
         {
             return Result<DeploymentReport>.Fail(MapIoError(exception, target.Value));
         }
-
-        foreach (var file in plan.Files)
+        catch (TimeoutException exception)
         {
-            var verification = await VerifyPlannedFileAsync(file, cancellationToken);
-            if (verification.IsFailure)
-            {
-                return Result<DeploymentReport>.Fail(verification.Error!);
-            }
+            return Result<DeploymentReport>.Fail(AppError.Create(
+                ErrorCode.OperationTimedOut,
+                ("target", target.Value),
+                ("reason", exception.Message)));
         }
 
         var manifest = CreateManifest(plan, target.Value, DeploymentManifestState.Installing, records);
@@ -384,6 +378,13 @@ public sealed partial class DeploymentEngine : IDeploymentEngine
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
         {
             return Result<DeploymentReport>.Fail(MapIoError(exception, target.Value));
+        }
+        catch (TimeoutException exception)
+        {
+            return Result<DeploymentReport>.Fail(AppError.Create(
+                ErrorCode.OperationTimedOut,
+                ("target", target.Value),
+                ("reason", exception.Message)));
         }
 
         var written = new List<DeployedFileRecord>();
@@ -454,6 +455,7 @@ public sealed partial class DeploymentEngine : IDeploymentEngine
             var installed = CreateManifest(plan, target.Value, DeploymentManifestState.Installed, stamped);
             await _backups.SaveManifestAsync(installed, cancellationToken);
             progress?.Report(new DeploymentProgress("done", string.Empty, plan.Files.Count, plan.Files.Count));
+            DeploymentSessionStore.Complete(session);
 
             return Result<DeploymentReport>.Ok(new DeploymentReport(
                 DeploymentState.Installed,
@@ -473,6 +475,16 @@ public sealed partial class DeploymentEngine : IDeploymentEngine
             await RollbackAsync(written, target.Value, backupDirectory);
             await SaveRolledBackAsync(manifest);
             return Result<DeploymentReport>.Fail(MapIoError(exception, target.Value));
+        }
+        catch (TimeoutException exception)
+        {
+            _logger.LogError(exception, "Deployment timed out for {Target}", target.Value);
+            await RollbackAsync(written, target.Value, backupDirectory);
+            await SaveRolledBackAsync(manifest);
+            return Result<DeploymentReport>.Fail(AppError.Create(
+                ErrorCode.OperationTimedOut,
+                ("target", target.Value),
+                ("reason", exception.Message)));
         }
     }
 

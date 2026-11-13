@@ -24,8 +24,9 @@ public interface IDlss5DeploymentService
         IProgress<DeploymentProgress>? progress,
         CancellationToken cancellationToken);
 
-    Task<Result> SetOverlayKeyAsync(
+    Task<Result<HotkeyWriteResult>> SetOverlayKeyAsync(
         string targetDirectory,
+        string? exePath,
         int virtualKey,
         CancellationToken cancellationToken);
 

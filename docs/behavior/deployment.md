@@ -45,6 +45,12 @@ manifest 状态：`Installing → Installed / RolledBack / Partial`，还原后 
 9. 写入 manifest（`Installed`）。
 10. 任一步失败：回滚已写文件（恢复备份或删除新建文件），manifest 标记 `RolledBack`。
 
+## 部署前预检与会话
+
+- 部署、还原、清理前按渲染 EXE 检查游戏进程；检测到进程仍在运行直接返回 `GameRunning`，不等待文件锁报错。
+- 写入前先对所有 pack 源文件做分块 SHA-256 预检：1 MiB 一块、30 秒无进展超时、逐文件回报进度。任一文件缺失、哈希不符或读取停滞都立即失败，不备份、不写游戏目录。
+- 获取目标锁后写 `state/sessions/<family>_<targetHash>.json`：记录阶段、进度和心跳。成功标记 `completed`，失败/中断标记 `failed`；新部署开始时把超过 2 分钟没有心跳的 `running` 会话标记为 `abandoned`，用于诊断“上次卡在哪一步”。
+
 ## 还原流程
 
 1. 获取锁，读取 manifest；没有 manifest → `ManifestMissing`。
@@ -118,6 +124,8 @@ fgm-next deploy restore <target-dir>
 UI：“帧生成”页点击某个游戏的“部署”后才展开代理/优化/帧数/Preset/引擎/SR 参数；确认后部署。其余时间不占用页面空间。
 
 部署弹窗：绿色“部署”按钮；不提供“取消”按钮（右上角关闭或点遮罩退出）；“还原”只有在当前游戏的部署状态可还原、且所选目标目录与部署目录一致时才启用，否则显示灰色锁定。游戏卡片的主动作在部署成功后从“部署”变为“还原”；已部署徽章显示 `已部署 资产版本：<packVersion>`。
+
+显卡门控：桥接层在部署前重新读取 GPU；帧生成只接受 `Supported`（RTX 20/30 系且驱动 ≥ 580），`GpuNotNeeded`、`DriverTooOld`、`GpuUnsupported` 分别返回对应错误码，AMD/Intel 即使绕过前端也无法部署。游戏卡片同时显示 Smooth Motion/ANR 的部署徽章；部署/还原后广播库变更，其他模式页面与重新显示的页面会刷新徽章。
 
 ## 测试
 

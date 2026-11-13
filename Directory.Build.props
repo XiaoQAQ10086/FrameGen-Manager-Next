@@ -12,10 +12,10 @@
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <NoWarn>$(NoWarn);CS1591</NoWarn>
 
-    <Version>2.1.9</Version>
-    <AssemblyVersion>2.1.9.0</AssemblyVersion>
-    <FileVersion>2.1.9.0</FileVersion>
-    <InformationalVersion>2.1.9</InformationalVersion>
+    <Version>2.2.0</Version>
+    <AssemblyVersion>2.2.0.0</AssemblyVersion>
+    <FileVersion>2.2.0.0</FileVersion>
+    <InformationalVersion>2.2.0</InformationalVersion>
     <!-- .NET 9+ apphosts enable CET by default. Unpatched Windows 10 22H2
          (kernelbase 19041.1949) aborts in CoreCLR with 0x80131506. -->
     <CETCompat>false</CETCompat>

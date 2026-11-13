@@ -91,7 +91,7 @@ public sealed partial class DeploymentEngine
                     hash = await HashFileAsync(path.Value, cancellationToken);
                 }
                 catch (Exception exception) when (
-                    exception is IOException or UnauthorizedAccessException)
+                    exception is IOException or UnauthorizedAccessException or TimeoutException)
                 {
                     conflicts++;
                     conflictedPaths.Add(path.Value);

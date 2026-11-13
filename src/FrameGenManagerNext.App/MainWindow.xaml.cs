@@ -3,6 +3,7 @@ using System.IO;
 using System.Runtime;
 using System.Runtime.InteropServices;
 using System.Windows;
+using System.Windows.Shell;
 using FrameGenManagerNext.App.Localization;
 using FrameGenManagerNext.App.Platform;
 using FrameGenManagerNext.App.Web;
@@ -43,6 +44,25 @@ public partial class MainWindow : FluentWindow
         StateChanged += OnWindowStateChanged;
         IsVisibleChanged += OnIsVisibleChanged;
         Closed += OnClosed;
+    }
+
+    // WebView2 covers the client area edge-to-edge, so its child HWND swallows
+    // resizing pointer messages. A slightly thicker chrome (plus the host margin)
+    // keeps the grab area on the WPF window itself.
+    protected override void SetWindowChrome()
+    {
+        WindowChrome.SetWindowChrome(this, new WindowChrome
+        {
+            CaptionHeight = 0,
+            CornerRadius = default,
+            GlassFrameThickness = WindowBackdropType == WindowBackdropType.None
+                ? new Thickness(0.00001)
+                : new Thickness(-1),
+            ResizeBorderThickness = ResizeMode == ResizeMode.NoResize
+                ? default
+                : new Thickness(6),
+            UseAeroCaptionButtons = false,
+        });
     }
 
     private async void OnLoaded(object sender, RoutedEventArgs e)

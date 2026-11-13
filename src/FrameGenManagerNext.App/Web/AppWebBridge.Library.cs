@@ -137,6 +137,11 @@ public sealed partial class AppWebBridge
                 var smoothMotionOn = !string.IsNullOrWhiteSpace(game.RenderExePath) &&
                                      smoothMotionStates.TryGetValue(game.RenderExePath, out var smEnabled) &&
                                      smEnabled;
+                var anr = await _anr.InspectAsync(game.TargetDirectory, CancellationToken.None);
+                var anrDeployed = anr.State is
+                    DeploymentState.Installed or
+                    DeploymentState.Partial or
+                    DeploymentState.Conflict;
 
                 entries[index] = new
                 {
@@ -147,6 +152,7 @@ public sealed partial class AppWebBridge
                     state = state.ToString(),
                     launchMode = LaunchModeOf(game),
                     smoothMotionOn,
+                    anrDeployed,
                     occupiedProxies = occupiedProxies.Select(item => new
                     {
                         module = item.Module,
@@ -343,6 +349,17 @@ public sealed partial class AppWebBridge
             await _library.SetIgnoredAsync(id, ignored: false, CancellationToken.None);
             return await BuildGamesStateAsync();
         });
+    }
+
+    private void EnsureGameStopped(GameEntry game, string? exePath = null)
+    {
+        var path = string.IsNullOrWhiteSpace(exePath) ? game.RenderExePath : exePath;
+        if (_gameProcess.IsRunning(path))
+        {
+            throw new BridgeException(
+                Domain.Errors.ErrorCode.GameRunning,
+                $"game process is still running: {path}");
+        }
     }
 
     private static string LaunchModeOf(GameEntry game)

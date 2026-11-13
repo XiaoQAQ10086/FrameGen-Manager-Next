@@ -14,8 +14,9 @@ if ([string]::IsNullOrWhiteSpace($RepoRoot)) {
 $fgRoot = Join-Path $OldRoot 'apps\electron\bundled-assets'
 $smRoot = Join-Path $OldRoot 'bundled-sm'
 $dlss5Root = Join-Path $OldRoot 'apps\electron\bundled-dlss5'
+$gitcRoot = Join-Path $RepoRoot 'build\vendor\gitc-2.0.0\extracted'
 
-foreach ($path in @($fgRoot, $smRoot, $dlss5Root)) {
+foreach ($path in @($fgRoot, $smRoot, $dlss5Root, $gitcRoot)) {
     if (-not (Test-Path -LiteralPath $path -PathType Container)) {
         throw "Asset root not found: $path"
     }
@@ -338,15 +339,15 @@ Write-Host 'Generating DLSS5 pack...' -ForegroundColor Cyan
 $workspace = New-PackWorkspace -Id 'dlss5.reshade-gitc'
 $files = [System.Collections.Generic.List[object]]::new()
 foreach ($item in @(
-    [pscustomobject]@{ Source = 'gitc-uplift.addon64'; Target = 'gitc-uplift.addon64'; Role = 'addon' },
-    [pscustomobject]@{ Source = 'gitc-uplift.addon32'; Target = 'gitc-uplift.addon32'; Role = 'addon' },
-    [pscustomobject]@{ Source = 'gitc-uplift-helper64.exe'; Target = 'gitc-uplift-helper64.exe'; Role = 'other' },
-    [pscustomobject]@{ Source = 'Uplift.fx'; Target = 'reshade-shaders/Shaders/GITC-Uplift/Uplift.fx'; Role = 'shader' },
-    [pscustomobject]@{ Source = 'UpliftMask.fx'; Target = 'reshade-shaders/Shaders/GITC-Uplift/UpliftMask.fx'; Role = 'shader' },
-    [pscustomobject]@{ Source = 'nvngx_dlssnr.dll'; Target = 'GITC-Uplift/nvngx_dlssnr.dll'; Role = 'model' }
+    [pscustomobject]@{ Root = $gitcRoot; Source = 'Addons/gitc-uplift.addon64'; Target = 'gitc-uplift.addon64'; Role = 'addon' },
+    [pscustomobject]@{ Root = $gitcRoot; Source = 'Addons/gitc-uplift.addon32'; Target = 'gitc-uplift.addon32'; Role = 'addon' },
+    [pscustomobject]@{ Root = $gitcRoot; Source = 'Addons/gitc-uplift-helper64.exe'; Target = 'gitc-uplift-helper64.exe'; Role = 'other' },
+    [pscustomobject]@{ Root = $gitcRoot; Source = 'Shaders/Uplift.fx'; Target = 'reshade-shaders/Shaders/GITC-Uplift/Uplift.fx'; Role = 'shader' },
+    [pscustomobject]@{ Root = $gitcRoot; Source = 'Shaders/UpliftMask.fx'; Target = 'reshade-shaders/Shaders/GITC-Uplift/UpliftMask.fx'; Role = 'shader' },
+    [pscustomobject]@{ Root = $dlss5Root; Source = 'nvngx_dlssnr.dll'; Target = 'GITC-Uplift/nvngx_dlssnr.dll'; Role = 'model' }
 )) {
     Copy-PackFile `
-        -SourceRoot $dlss5Root `
+        -SourceRoot $item.Root `
         -SourceRelative $item.Source `
         -TargetRelative $item.Target `
         -Role $item.Role `
@@ -375,8 +376,8 @@ $installer = Copy-PayloadOnly `
 
 Write-PackManifest `
     -Id 'dlss5.reshade-gitc' `
-    -Version '6.8.0' `
-    -DisplayName 'DLSS5 ReShade 6.8.0 + GITC Uplift' `
+    -Version '6.8.2' `
+    -DisplayName 'DLSS5 ReShade 6.8.0 + GITC Uplift 2.0.0' `
     -GpuRoutes @('Sm86', 'Sm75') `
     -Files $files `
     -Ini $null `

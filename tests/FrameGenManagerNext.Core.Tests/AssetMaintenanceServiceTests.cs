@@ -460,8 +460,9 @@ public sealed class AssetMaintenanceServiceTests
             throw new NotSupportedException();
         }
 
-        public Task<Result> SetOverlayKeyAsync(
+        public Task<Result<HotkeyWriteResult>> SetOverlayKeyAsync(
             string targetDirectory,
+            string? exePath,
             int virtualKey,
             CancellationToken cancellationToken)
         {

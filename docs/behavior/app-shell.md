@@ -24,6 +24,17 @@
 - 本地资源通过虚拟主机 `https://fgm.local` 映射到 `WebAssets/`，不允许加载远程页面。
 - 初始化日志记录配置目录、Runtime 版本和附加浏览器参数。
 
+## 日志清理
+
+- 日志页【清理日志】删除 `logs/` 下除最新文件以外的 `*.log`；最新文件是 Serilog 当前写入的 sink，始终保留。
+- 清理后返回删除数量并重新读取日志尾部；没有历史文件时提示“没有可清理的历史日志”。被占用而无法删除的文件计入失败数，不影响其他文件。
+
+## 窗口缩放
+
+- `WebView2` 是独立子窗口，会吞掉边框上的鼠标消息。`BrowserHost` 保留 6px 外边距，`WindowChrome.ResizeBorderThickness` 设为 6 DIP，让缩放命中区落在 WPF 窗口本身；窗口四个方向都可拉伸。
+- 顶栏导航在英文下使用短标签（FrameGen / DLSS5 / ANR）；空间不足时导航自身横向滚动，语言下拉固定在右侧、不参与压缩。
+- 各模式页左侧卡片显示该模式的支持显卡，并提供带 GitHub 图标的资产来源按钮；点击后通过 `updates.openPage` 交给系统浏览器打开对应仓库。
+
 ## 页面状态缓存
 
 - 页面只挂载一次：切换导航时隐藏旧页面、显示已挂载页面，不再销毁 DOM 或重新探测游戏/驱动。
@@ -39,6 +50,7 @@
 - 主机进程启动时同时设置空闲优先级（`SetPriorityClass(IDLE_PRIORITY_CLASS)`）和 EcoQoS（`SetProcessInformation(ProcessPowerThrottling)`）。Windows 11 任务管理器必须同时看到这两者才显示“效率模式”；只设 EcoQoS 不会显示。旧版 Windows 拒绝调用时忽略。
 - WebView2 默认追加 `--js-flags=--max-old-space-size=192 --disable-background-networking --disable-component-update --disable-sync --disable-domain-reliability --disable-http-cache`，给渲染器堆设上限并关闭后台服务。`--disable-http-cache` 用于本地 WebAssets：升级后不会继续加载上一版本缓存的 JS/CSS。实测不要设置 `MemoryUsageTargetLevel=Low`：在 154.x WebView2 运行时上会把大约 95 MB 的共享内存转为宿主私有工作集，任务管理器反而从约 160 MB 涨到约 260 MB。
 - 进程配置 `System.GC.ConserveMemory=7`，用少量 CPU 换取更小的托管堆。
+- `HotkeyQueueWorker` 每 30 秒重试因游戏运行或 `ReShade.ini` 被锁而排队的快捷键写入；应用退出后队列保留，下次启动继续。
 - 窗口最小化/隐藏时在暂停 WebView2 后压缩 LOH 并调用 `SetProcessWorkingSetSize(-1,-1)` 修剪工作集，把空闲页移到 standby。
 - 部署清单记录每个已写文件的最后写入时间；再次检查时大小和时间都一致就跳过哈希，避免每次打开页面重读数百 MB 的运行库（旧清单在首次检查通过后自动补写时间戳）。
 

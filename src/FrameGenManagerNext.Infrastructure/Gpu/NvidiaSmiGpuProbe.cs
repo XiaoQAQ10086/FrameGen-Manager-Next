@@ -43,7 +43,11 @@ public sealed class NvidiaSmiGpuProbe : IGpuProbe
         var executable = FindNvidiaSmi();
         if (executable is null)
         {
-            return (null, null, "nvidia-smi.exe was not found.");
+            var fallback = ReadDisplayAdapter();
+            return fallback is null
+                ? (null, null, "nvidia-smi.exe was not found.")
+                : (fallback.Value.Name, fallback.Value.Driver,
+                    "nvidia-smi.exe was not found; using the display adapter registry.");
         }
 
         try
@@ -109,6 +113,49 @@ public sealed class NvidiaSmiGpuProbe : IGpuProbe
             _logger.LogWarning(exception, "Could not run nvidia-smi");
             return (null, null, exception.Message);
         }
+    }
+
+    private static (string Name, string? Driver)? ReadDisplayAdapter()
+    {
+        try
+        {
+            using var video = Registry.LocalMachine.OpenSubKey(
+                @"SYSTEM\CurrentControlSet\Control\Video");
+            if (video is null)
+            {
+                return null;
+            }
+
+            foreach (var adapterId in video.GetSubKeyNames())
+            {
+                using var adapterRoot = video.OpenSubKey(adapterId);
+                if (adapterRoot is null)
+                {
+                    continue;
+                }
+
+                foreach (var instance in adapterRoot.GetSubKeyNames())
+                {
+                    using var adapter = adapterRoot.OpenSubKey(instance);
+                    if (adapter?.GetValue("DriverDesc") is not string description ||
+                        string.IsNullOrWhiteSpace(description) ||
+                        description.Contains("Microsoft Basic", StringComparison.OrdinalIgnoreCase))
+                    {
+                        continue;
+                    }
+
+                    var driver = adapter.GetValue("DriverVersion") as string;
+                    return (description, driver);
+                }
+            }
+        }
+        catch (Exception exception) when (
+            exception is System.Security.SecurityException or UnauthorizedAccessException or IOException)
+        {
+            // Best effort: the caller still reports that no NVIDIA GPU was found.
+        }
+
+        return null;
     }
 
     private static string? FindNvidiaSmi()

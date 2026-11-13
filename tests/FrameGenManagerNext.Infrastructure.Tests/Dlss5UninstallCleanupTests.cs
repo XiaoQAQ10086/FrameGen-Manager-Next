@@ -226,10 +226,16 @@ public sealed class Dlss5UninstallCleanupTests : IDisposable
             throw new NotSupportedException();
         }
 
-        public Task EnsureOverlayKeyAsync(
+        public Task<HotkeyWriteResult> EnsureOverlayKeyAsync(
             string targetDirectory,
+            string? exePath,
             int virtualKey,
             CancellationToken cancellationToken)
+        {
+            throw new NotSupportedException();
+        }
+
+        public Task<HotkeyFlushReport> FlushPendingAsync(CancellationToken cancellationToken)
         {
             throw new NotSupportedException();
         }

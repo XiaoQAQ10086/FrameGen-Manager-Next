@@ -1,6 +1,7 @@
 import { confirmDialog, escapeHtml as esc } from '../ui.js';
 import { componentKeys, prettyPath } from '../labels.js';
 import { createRemovedController, removedMarkup } from '../removed-modal.js';
+import { githubSource, modeSources } from '../mode-info.js';
 
 const gateKeys = {
   Supported: 'Gpu.Gate.Supported',
@@ -41,6 +42,11 @@ export default {
               <div class="kv2"><span>${t('Gpu.DriverVersion')}</span><b class="badge" data-role="driver"></b></div>
               <div class="kv2"><span>${t('SmoothMotion.MinDriver')}</span><b class="badge" data-role="min-driver">616.64</b></div>
               <p class="hint" data-role="note">${t('SmoothMotion.Status.Checking')}</p>
+            </section>
+            <section class="panel">
+              <div class="ctitle">${t('Mode.SupportedGpus')}</div>
+              <div class="chips"><span class="chip gpu-chip">${t('Mode.SmoothMotion.Gpus')}</span></div>
+              ${githubSource(t, modeSources.smoothMotion)}
             </section>
             <section class="panel">
               <div class="ctitle">${t('SmoothMotion.Notes')}</div>
@@ -106,6 +112,8 @@ export default {
           ? t('SmoothMotion.Disable')
           : t('SmoothMotion.Enable');
       const fgConflict = game.frameGenDeployed === true;
+      const smDeployed = ['Installed', 'Outdated', 'Partial', 'Conflict', 'InstalledWithoutManifest']
+        .includes(game.component);
       const antiCheat = game.antiCheat === true;
       const gate = game.gate || 'Supported';
       const gateBlocked = gate !== 'Supported';
@@ -119,6 +127,9 @@ export default {
               <div class="gname">${esc(game.name)}</div>
               <div class="badges">
                 <span class="badge ${game.component === 'Installed' ? 'ok' : (game.component === 'Partial' || game.component === 'Conflict' ? 'warn' : 'dim')}">${esc(t(componentKeys[game.component] || 'State.NotDeployed'))}</span>
+                ${smDeployed ? `<span class="badge mode">${esc(t('Mode.Badge.SmoothMotion'))}</span>` : ''}
+                ${fgConflict ? `<span class="badge mode">${esc(t('Mode.Badge.FrameGen'))}</span>` : ''}
+                ${game.anrDeployed === true ? `<span class="badge mode">${esc(t('Mode.Badge.Anr'))}</span>` : ''}
                 ${gateBlocked
                   ? `<span class="badge danger">${esc(t(gateKeys[gate] || 'Gpu.Gate.Unknown'))}</span>`
                   : `<span class="badge ${game.enabled === true ? 'ok' : 'dim'}">${esc(game.enabled === true ? t('SmoothMotion.Driver.On') : game.enabled === false ? t('SmoothMotion.Driver.Off') : t('SmoothMotion.Driver.Unknown'))}</span>`}
@@ -299,10 +310,16 @@ export default {
     };
     document.addEventListener('fgm:library-changed', onLibraryChanged);
 
+    const onPageShown = (event) => {
+      if (event.detail?.page === 'smooth-motion') load();
+    };
+    document.addEventListener('fgm:page-shown', onPageShown);
+
     await load();
     return () => {
       stopScrollFade.forEach((stop) => stop());
       document.removeEventListener('fgm:library-changed', onLibraryChanged);
+      document.removeEventListener('fgm:page-shown', onPageShown);
       root.removeEventListener('click', onClick);
     };
   },

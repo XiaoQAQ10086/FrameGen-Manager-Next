@@ -5,6 +5,7 @@ using System.Windows;
 using System.Windows.Interop;
 using System.Windows.Media;
 using FrameGenManagerNext.App.Localization;
+using FrameGenManagerNext.App.Services;
 using FrameGenManagerNext.App.Web;
 using FrameGenManagerNext.Core.Features.App;
 using FrameGenManagerNext.Core.Features.Settings;
@@ -68,6 +69,7 @@ public partial class App : Application
             {
                 services.AddFrameGenServices(paths);
                 services.AddSingleton<AppWebBridge>();
+                services.AddHostedService<HotkeyQueueWorker>();
                 services.AddSingleton<MainWindow>();
             })
             .Build();

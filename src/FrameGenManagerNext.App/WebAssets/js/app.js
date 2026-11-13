@@ -4,6 +4,7 @@ import * as ui from './ui.js';
 import framegen from './pages/framegen.js';
 import smoothMotion from './pages/smooth-motion.js';
 import dlss5 from './pages/dlss5.js';
+import anr from './pages/anr.js';
 import logs from './pages/logs.js';
 import about from './pages/about.js';
 import donate from './pages/donate.js';
@@ -15,6 +16,7 @@ const pages = {
   framegen,
   'smooth-motion': smoothMotion,
   dlss5,
+  anr,
   logs,
   about,
   donate,
@@ -213,5 +215,14 @@ async function bootstrap() {
 }
 
 document.addEventListener('contextmenu', (event) => event.preventDefault());
+document.addEventListener('click', (event) => {
+  const link = event.target.closest('[data-action="github"]');
+  if (!link) return;
+  event.preventDefault();
+  const url = link.dataset.url;
+  if (!url) return;
+  api.request('updates.openPage', { url })
+    .catch((error) => ui.toast(error.message || error.code || 'GitHub link failed', 'error'));
+});
 window.addEventListener('resize', updateIndicator);
 bootstrap();

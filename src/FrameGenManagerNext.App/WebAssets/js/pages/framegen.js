@@ -1,5 +1,6 @@
 import { escapeHtml as esc, confirmDialog } from '../ui.js';
 import { prettyPath } from '../labels.js';
+import { githubSource, modeSources } from '../mode-info.js';
 
 const launcherKeys = {
   Steam: 'Common.Steam',
@@ -59,7 +60,6 @@ export default {
     let busy = false;
     let addingGame = false;
     let current = null;
-    let unsupportedGpuShown = sessionStorage.getItem('fgm.gpuUnsupportedShown') === '1';
     const proxyOwnerKeys = {
       FrameGen: 'Proxy.Owner.FrameGen',
       Dlss5: 'Proxy.Owner.Dlss5',
@@ -96,8 +96,17 @@ export default {
             </section>
             <section class="panel">
               <div class="ctitle">${esc(t('Library.AssetsFolder'))}</div>
+              <div class="hint">${esc(t('Library.BundledAssets'))}</div>
+              <div class="path" data-role="bundled-path"></div>
+              <button class="btn wide" data-action="open-bundled" type="button">${esc(t('Library.OpenFolder'))}</button>
+              <div class="hint">${esc(t('Library.DownloadedAssets'))}</div>
               <div class="path" data-role="data-path"></div>
               <button class="btn wide" data-action="open-data" type="button">${esc(t('Library.OpenFolder'))}</button>
+            </section>
+            <section class="panel">
+              <div class="ctitle">${esc(t('Mode.SupportedGpus'))}</div>
+              <div class="chips"><span class="chip gpu-chip">${esc(t('Mode.FrameGen.Gpus'))}</span></div>
+              ${githubSource(t, modeSources.framegen)}
             </section>
           </aside>
           <section class="content">
@@ -174,7 +183,9 @@ export default {
     const deployMeta = q('[data-role="deploy-meta"]');
     const optionsRoot = q('[data-role="options"]');
     const dataPath = q('[data-role="data-path"]');
-    if (dataPath) dataPath.textContent = prettyPath(ctx.info?.bundledPacksDirectory || ctx.info?.packsDirectory || ctx.info?.dataRoot || '');
+    const bundledPath = q('[data-role="bundled-path"]');
+    if (dataPath) dataPath.textContent = prettyPath(ctx.info?.packsDirectory || ctx.info?.dataRoot || '');
+    if (bundledPath) bundledPath.textContent = prettyPath(ctx.info?.bundledPacksDirectory || ctx.info?.packsDirectory || '');
 
     function setBusy(value) {
       busy = value;
@@ -263,22 +274,6 @@ export default {
       });
     }
 
-    function checkGpuSupport() {
-      if (unsupportedGpuShown || !gpu?.gpu?.route) return;
-      const route = gpu.gpu.route;
-      if (route === 'Sm86' || route === 'Sm75' || route === 'Unknown') return;
-      unsupportedGpuShown = true;
-      sessionStorage.setItem('fgm.gpuUnsupportedShown', '1');
-      const dialog = ui.modal(`
-        <header class="modal-head"><div><h2>${esc(t('Gpu.UnsupportedTitle'))}</h2></div></header>
-        <p class="hint">${esc(t('Gpu.UnsupportedMessage'))}</p>
-        <footer class="modal-foot">
-          <span></span>
-          <button class="btn" data-gpu-ok type="button">${esc(t('Common.GotIt'))}</button>
-        </footer>`);
-      dialog.root.querySelector('[data-gpu-ok]').addEventListener('click', () => dialog.close());
-    }
-
     function renderGpu() {
       const g = gpu.gpu;
       const s = gpu.spoof;
@@ -308,7 +303,10 @@ export default {
     function cardMarkup(game, index) {
       const legacy = game.state === 'InstalledWithoutManifest';
       const restorable = ['Installed', 'Partial', 'Conflict'].includes(game.state);
+      const fgDeployed = ['Installed', 'Outdated', 'Partial', 'Conflict'].includes(game.state);
       const smConflict = game.smoothMotionOn === true;
+      const gpuGate = gpu?.frameGeneration || null;
+      const gpuBlocked = Boolean(gpuGate && gpuGate !== 'Supported');
       const xboxProtected = game.launcher === 'Xbox' && !game.renderExe;
       const occupied = (game.occupiedProxies || []).filter((item) => item.owner !== 'FrameGen');
       const primaryAction = legacy ? 'clean' : restorable ? 'restore' : 'deploy';
@@ -319,9 +317,17 @@ export default {
           : game.state === 'Outdated'
             ? t('Common.Update')
             : t('Common.Deploy');
-      const blocked = (smConflict || xboxProtected) && !restorable && !legacy;
-      const blockReason = xboxProtected ? t('Library.XboxProtected') : t('Conflict.SmoothMotionOn');
-      const blockHint = xboxProtected ? blockReason : `${t('Conflict.SmoothMotionOn')} · ${t('Conflict.SmoothMotionHint')}`;
+      const blocked = (smConflict || xboxProtected || gpuBlocked) && !restorable && !legacy;
+      const blockReason = xboxProtected
+        ? t('Library.XboxProtected')
+        : gpuBlocked
+          ? t(`Gpu.Gate.${gpuGate}`)
+          : t('Conflict.SmoothMotionOn');
+      const blockHint = xboxProtected
+        ? blockReason
+        : gpuBlocked
+          ? `${blockReason} · ${t('Gpu.FrameGenerationHint')}`
+          : `${t('Conflict.SmoothMotionOn')} · ${t('Conflict.SmoothMotionHint')}`;
       const stateText = game.state === 'Installed'
         ? (game.packVersion
             ? t('State.DeployedVersion').replace('{0}', game.packVersion)
@@ -339,6 +345,9 @@ export default {
                 <span class="badge">${esc(t(launcherKeys[game.launcher] || 'Common.Unknown'))}</span>
                 <span class="badge">${esc(apiKeys[game.api] || game.api || '未知')}</span>
                 <span class="badge ${game.state === 'Installed' ? 'ok' : (game.state === 'Partial' || game.state === 'Conflict' || legacy ? 'warn' : 'dim')}">${esc(stateText)}</span>
+                ${fgDeployed ? `<span class="badge mode">${esc(t('Mode.Badge.FrameGen'))}</span>` : ''}
+                ${game.smoothMotionOn === true ? `<span class="badge mode">${esc(t('Mode.Badge.SmoothMotion'))}</span>` : ''}
+                ${game.anrDeployed === true ? `<span class="badge mode">${esc(t('Mode.Badge.Anr'))}</span>` : ''}
                 ${smConflict ? `<span class="badge danger">${esc(t('Conflict.SmoothMotionOn'))}</span>` : ''}
                 ${occupied.map((item) => `<span class="badge warn">${esc(item.module)} · ${esc(proxyOwnerLabel(item.owner))}</span>`).join('')}
               </div>
@@ -696,7 +705,6 @@ export default {
         if (!gpuState || !root.isConnected) return;
         gpu = gpuState;
         renderGpu();
-        checkGpuSupport();
       });
 
       try {
@@ -871,8 +879,13 @@ export default {
         await api.request('settings.openHags').catch(() => {});
         return;
       }
-      if (action === 'open-data') {
+      if (action === 'open-bundled') {
         await api.request('settings.openFolder', { which: 'bundledPacks' })
+          .catch((error) => ui.toast(error.message, 'error'));
+        return;
+      }
+      if (action === 'open-data') {
+        await api.request('settings.openFolder', { which: 'packs' })
           .catch((error) => ui.toast(error.message, 'error'));
         return;
       }
@@ -1028,6 +1041,14 @@ export default {
     };
     document.addEventListener('fgm:library-changed', onLibraryChanged);
 
+    // Pages stay mounted for a few minutes. Refresh the cross-mode badges when the
+    // user returns, so a deployment made elsewhere (or restored outside the app)
+    // is reflected without waiting for the page to remount.
+    const onPageShown = (event) => {
+      if (event.detail?.page === 'framegen') load();
+    };
+    document.addEventListener('fgm:page-shown', onPageShown);
+
     const onOptionsChange = (event) => {
       if (event.target.matches('[data-option="engine"]')) syncEngine();
     };
@@ -1064,6 +1085,7 @@ export default {
       stopScrollFade.forEach((stop) => stop());
       deployModal.removeEventListener('scroll', onModalScroll);
       document.removeEventListener('fgm:library-changed', onLibraryChanged);
+      document.removeEventListener('fgm:page-shown', onPageShown);
       root.removeEventListener('click', onRootClick);
       optionsRoot.removeEventListener('change', onOptionsChange);
     };

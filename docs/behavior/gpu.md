@@ -5,8 +5,8 @@
 
 ## 读取
 
-- 名称：`nvidia-smi --query-gpu=name --format=csv,noheader` 第一行；失败时返回 `NVIDIA GPU not detected`。
-- 驱动：`nvidia-smi --query-gpu=driver_version --format=csv,noheader` 第一行；失败时为 `null`。
+- 名称：`nvidia-smi --query-gpu=name --format=csv,noheader` 第一行；`nvidia-smi` 缺失时回退读取注册表 `HKLM\SYSTEM\CurrentControlSet\Control\Video` 的 `DriverDesc`，让 AMD/Intel 机器也能显示实际显卡名称（跳过 `Microsoft Basic` 适配器）；完全取不到时返回 `NVIDIA GPU not detected`。
+- 驱动：`nvidia-smi --query-gpu=driver_version --format=csv,noheader` 第一行；回退路径读取同一注册表项的 `DriverVersion`（Windows 驱动版本号格式），仍取不到时为 `null`。
 - HAGS：`HKLM\SYSTEM\CurrentControlSet\Control\GraphicsDrivers` 的 `HwSchMode` DWORD：`2` 开启、`1` 关闭、缺失或其他值未知。
 - 不写注册表、不修改驱动配置。
 
@@ -74,6 +74,7 @@ HAGS: unknown
 
 ## 已知限制
 
-- 只读取 NVIDIA；AMD/Intel 机器在 `nvidia-smi` 缺失时显示 `NVIDIA GPU not detected` / `Unknown`，而不是 `Unsupported`。旧版也如此；后续可通过 WMI 补全。
+- 注册表回退只用于展示名称/驱动；路由仍按名称分类，AMD/Intel 得到 `Unsupported`，帧生成与 Smooth Motion 的部署入口都会被门控拒绝。
+- 多显卡/虚拟显示器环境可能返回第一个非基本显示适配器，不保证与用户期望的主卡一致。
 - 多 GPU 机器取第一行；如需选择器，后续在设置页增加。
 - HAGS 缺失时显示未知，不当作关闭。

@@ -109,6 +109,43 @@ public sealed partial class AppWebBridge
         return new { opened = true };
     }
 
+    private object? ClearLogs()
+    {
+        var directory = _paths.LogsDirectory;
+        if (!Directory.Exists(directory))
+        {
+            return new { removed = 0, failed = 0, kept = (string?)null };
+        }
+
+        // Keep the newest file: it is the active Serilog sink.
+        var files = Directory
+            .EnumerateFiles(directory, "*.log")
+            .OrderByDescending(File.GetLastWriteTimeUtc)
+            .ToList();
+        var removed = 0;
+        var failed = 0;
+        foreach (var file in files.Skip(1))
+        {
+            try
+            {
+                File.Delete(file);
+                removed++;
+            }
+            catch (Exception exception) when (
+                exception is IOException or UnauthorizedAccessException)
+            {
+                failed++;
+            }
+        }
+
+        return new
+        {
+            removed,
+            failed,
+            kept = files.Count > 0 ? Path.GetFileName(files[0]) : null,
+        };
+    }
+
     private object? OpenSettingsFolder(JsonElement payload)
     {
         var which = ReadString(payload, "which", "config");

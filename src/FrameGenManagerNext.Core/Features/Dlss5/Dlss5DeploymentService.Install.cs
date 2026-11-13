@@ -22,6 +22,26 @@ public sealed partial class Dlss5DeploymentService
             return Result<Dlss5Report>.Fail(new AppError(ErrorCode.InvalidPath, $"executable not found: {exePath}"));
         }
 
+        var existingReShade = Dlss5EnvironmentProbe.FindReShadeModules(targetDirectory);
+        if (existingReShade.Count > 1)
+        {
+            return Result<Dlss5Report>.Fail(AppError.Create(
+                ErrorCode.Conflict,
+                ("target", targetDirectory),
+                ("modules", string.Join(", ", existingReShade))));
+        }
+
+        if (existingReShade.Count == 1 &&
+            Dlss5EnvironmentProbe.Is64Bit(Path.Combine(targetDirectory, existingReShade[0])) !=
+            Dlss5EnvironmentProbe.Is64Bit(exePath))
+        {
+            return Result<Dlss5Report>.Fail(AppError.Create(
+                ErrorCode.Conflict,
+                ("target", targetDirectory),
+                ("module", existingReShade[0]),
+                ("reason", "existing ReShade entry architecture does not match the game")));
+        }
+
         var knownApi = options?.KnownApi;
         var explicitApi = knownApi is { } selectedApi && selectedApi != GraphicsApi.Unknown;
         var api = explicitApi
@@ -180,6 +200,7 @@ public sealed partial class Dlss5DeploymentService
             {
                 await _reShadeConfig.EnsureOverlayKeyAsync(
                     plan.Value.TargetDirectory,
+                    exePath,
                     overlayKey,
                     cancellationToken);
             }
@@ -251,32 +272,34 @@ public sealed partial class Dlss5DeploymentService
         return Result<string>.Ok($"ReShade ({apiArgument})");
     }
 
-    public async Task<Result> SetOverlayKeyAsync(
+    public async Task<Result<HotkeyWriteResult>> SetOverlayKeyAsync(
         string targetDirectory,
+        string? exePath,
         int virtualKey,
         CancellationToken cancellationToken)
     {
         if (string.IsNullOrWhiteSpace(targetDirectory))
         {
-            return Result.Fail(new AppError(ErrorCode.InvalidPath, "target directory is empty"));
+            return Result<HotkeyWriteResult>.Fail(new AppError(ErrorCode.InvalidPath, "target directory is empty"));
         }
 
         try
         {
-            await _reShadeConfig.EnsureOverlayKeyAsync(
+            var result = await _reShadeConfig.EnsureOverlayKeyAsync(
                 targetDirectory,
+                exePath,
                 virtualKey,
                 cancellationToken);
-            return Result.Ok();
+            return Result<HotkeyWriteResult>.Ok(result);
         }
         catch (ArgumentOutOfRangeException exception)
         {
-            return Result.Fail(new AppError(ErrorCode.InvalidArgument, exception.Message));
+            return Result<HotkeyWriteResult>.Fail(new AppError(ErrorCode.InvalidArgument, exception.Message));
         }
         catch (Exception exception) when (
             exception is IOException or UnauthorizedAccessException)
         {
-            return Result.Fail(new AppError(
+            return Result<HotkeyWriteResult>.Fail(new AppError(
                 exception is UnauthorizedAccessException ? ErrorCode.AccessDenied : ErrorCode.FileLocked,
                 exception.Message));
         }

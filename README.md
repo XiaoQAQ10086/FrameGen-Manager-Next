@@ -40,8 +40,8 @@ FrameGen Manager-Next 是[原项目 FrameGen-Manager](https://github.com/XiaoQAQ
 
 | 模式 | 支持显卡 | 游戏/系统前提 | 部署内容 | 主要冲突与限制 |
 |---|---|---|---|---|
-| 帧生成（SM86 / SM75） | NVIDIA RTX 30 / 20，驱动≥ 580.xx，建议保持最新 | 游戏支持 DLSS Frame Generation | 代理 DLL + `dlssg_sm86` 运行时 + INI | 与 Smooth Motion 互斥；与 DLSS5/ANR 抢代理；反作弊风险 |
-| Smooth Motion | NVIDIA RTX 30 / 20，驱动 ≥ 616.64 | NVIDIA 驱动 profile 可写 | 驱动 profile 开关 + `version.dll` 解锁组件 | 与帧生成互斥；内核反作弊游戏不建议 |
+| 帧生成（SM86 / SM75） | NVIDIA RTX 20 / 30，驱动≥ 580.xx，建议保持最新 | 游戏支持 DLSS Frame Generation | 代理 DLL + `dlssg_sm86` 运行时 + INI | 与 Smooth Motion 互斥；与 DLSS5/ANR 抢代理；反作弊风险 |
+| Smooth Motion | NVIDIA RTX 20 / 30，驱动 ≥ 616.64 | NVIDIA 驱动 profile 可写 | 驱动 profile 开关 + `version.dll` 解锁组件 | 与帧生成互斥；内核反作弊游戏不建议 |
 | DLSS5 / ReShade | NVIDIA RTX 20 / 30 | 游戏图形 API 可被 ReShade 接管 | ReShade + GITC Uplift + shader/模型 | 与帧生成/ANR 抢代理；32 位游戏可用；反作弊风险 |
 | ANR Full | NVIDIA RTX 20/30/40/50、GTX 16；AMD RX 5000/6000/7000/9000、Steam Deck；Intel Arc A/B | 游戏已有 DLSS Frame Generation；VC++ 2015-2022 x64 | OptiScaler full + ANR 运行时 + 代理 | 实验性；与 DLSS5/帧生成抢代理；反作弊风险 |
 | ANR Addon | 同上 | 游戏目录已有 `OptiScaler.ini` | 写入 `OptiScaler/custom/Apex Neural Rendering FG/`，修改 `[FrameGen]` | 需要有 OptiScaler；已有其他 ANR 目录会拒绝 |

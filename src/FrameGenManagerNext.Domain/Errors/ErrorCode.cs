@@ -42,4 +42,5 @@ public enum ErrorCode
     GpuSpoofFailed,
     LaunchFailed,
     LaunchUnsupported,
+    OperationTimedOut,
 }

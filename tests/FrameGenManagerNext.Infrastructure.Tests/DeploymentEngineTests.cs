@@ -44,6 +44,11 @@ public sealed class DeploymentEngineTests : IDisposable
         deployed.Value.FilesBackedUp.ShouldBe(2);
         File.ReadAllText(Path.Combine(_target, "runtime.dll")).ShouldBe("new runtime");
         File.ReadAllText(Path.Combine(_target, "config.ini")).ShouldBe("new=1");
+        var sessions = Directory.GetFiles(
+            Path.Combine(_paths.StateDirectory, "sessions"),
+            "*.json");
+        sessions.Length.ShouldBe(1);
+        File.ReadAllText(sessions[0]).ShouldContain("\"state\": \"completed\"");
 
         var inspected = await _engine.InspectAsync(plan, TestContext.Current.CancellationToken);
         inspected.IsSuccess.ShouldBeTrue(inspected.Error?.ToString());
@@ -63,6 +68,32 @@ public sealed class DeploymentEngineTests : IDisposable
 
         var afterRestore = await _engine.InspectAsync(plan, TestContext.Current.CancellationToken);
         afterRestore.Value.State.ShouldBe(DeploymentState.NotDeployed);
+    }
+
+    [Fact]
+    public async Task BadSourceHashAbortsBeforeBackup()
+    {
+        _directory.WriteFile("game/runtime.dll", "old runtime");
+        var source = _directory.WriteFile("source/runtime.dll", "new runtime");
+        var bad = new DeploymentFilePlan(
+            "runtime.dll",
+            source,
+            Content: null,
+            new string('0', 64),
+            Encoding.UTF8.GetByteCount("new runtime"),
+            "runtime");
+        var plan = BuildPlan("1.0.0", bad, ContentPlan("config.ini", "new=1"));
+
+        var deployed = await _engine.DeployAsync(
+            plan,
+            progress: null,
+            TestContext.Current.CancellationToken);
+
+        deployed.IsFailure.ShouldBeTrue();
+        deployed.Error!.Code.ShouldBe(Domain.Errors.ErrorCode.PackHashMismatch);
+        File.ReadAllText(Path.Combine(_target, "runtime.dll")).ShouldBe("old runtime");
+        (await _backups.LoadManifestAsync(Family, _target, TestContext.Current.CancellationToken))
+            .ShouldBeNull();
     }
 
     [Fact]

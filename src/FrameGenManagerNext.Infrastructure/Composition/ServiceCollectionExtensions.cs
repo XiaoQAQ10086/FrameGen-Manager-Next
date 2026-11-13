@@ -1,3 +1,4 @@
+using FrameGenManagerNext.Core.Features.Anr;
 using FrameGenManagerNext.Core.Features.App;
 using FrameGenManagerNext.Core.Features.Deployment;
 using FrameGenManagerNext.Core.Features.Diagnostics;
@@ -11,6 +12,7 @@ using FrameGenManagerNext.Core.Features.Reframework;
 using FrameGenManagerNext.Core.Features.Settings;
 using FrameGenManagerNext.Core.Features.SmoothMotion;
 using FrameGenManagerNext.Core.Features.Updates;
+using FrameGenManagerNext.Infrastructure.Anr;
 using FrameGenManagerNext.Infrastructure.Deployment;
 using FrameGenManagerNext.Infrastructure.Diagnostics;
 using FrameGenManagerNext.Infrastructure.Dlss5;
@@ -53,6 +55,9 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IGameCoverService, SteamCoverService>();
         services.AddSingleton<IGameLibraryService, GameLibraryService>();
         services.AddSingleton<IGameLauncher, GameLauncher>();
+        services.AddSingleton<IGameProcessProbe, GameProcessProbe>();
+        services.AddSingleton<IAnrPackageService, AnrPackageService>();
+        services.AddSingleton<IAnrDeploymentService, AnrDeploymentService>();
 
         services.AddSingleton<IGpuProbe, NvidiaSmiGpuProbe>();
         services.AddSingleton<IGpuService, GpuService>();
@@ -71,6 +76,7 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IGraphicsApiProbe, GraphicsApiProbeService>();
         services.AddSingleton<IProcessRunner, ProcessRunner>();
         services.AddSingleton<IReShadeOfflineInstaller, ReShadeOfflineInstaller>();
+        services.AddSingleton<HotkeyQueueStore>();
         services.AddSingleton<IReShadeConfigService, ReShadeConfigService>();
         services.AddSingleton<IDlss5DeploymentService, Dlss5DeploymentService>();
         services.AddSingleton<IReframeworkDeploymentService, ReframeworkDeploymentService>();

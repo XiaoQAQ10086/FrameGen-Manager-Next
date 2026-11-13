@@ -3,6 +3,7 @@ using System.Text.Json;
 using FrameGenManagerNext.Core.Features.Framegen;
 using FrameGenManagerNext.Core.Features.SmoothMotion;
 using FrameGenManagerNext.Domain.Deployment;
+using FrameGenManagerNext.Domain.Gpu;
 using Microsoft.Extensions.Logging;
 
 namespace FrameGenManagerNext.App.Web;
@@ -107,6 +108,11 @@ public sealed partial class AppWebBridge
                 DeploymentState.Partial or
                 DeploymentState.Conflict or
                 DeploymentState.InstalledWithoutManifest;
+            var anr = await _anr.InspectAsync(game.TargetDirectory, CancellationToken.None);
+            var anrDeployed = anr.State is
+                DeploymentState.Installed or
+                DeploymentState.Partial or
+                DeploymentState.Conflict;
 
             games.Add(new
             {
@@ -126,6 +132,7 @@ public sealed partial class AppWebBridge
                 detail = inspection.Value.Setting.Detail,
                 antiCheat = inspection.Value.AntiCheat,
                 frameGenDeployed,
+                anrDeployed,
             });
         }
 
@@ -155,6 +162,20 @@ public sealed partial class AppWebBridge
         if (game?.RenderExePath is null)
         {
             throw new BridgeException(Domain.Errors.ErrorCode.FileNotFound, "render executable not found");
+        }
+
+        var gpu = await _gpu.GetAsync(CancellationToken.None);
+        if (gpu.SmoothMotion != GpuFeatureGate.Supported)
+        {
+            var code = gpu.SmoothMotion switch
+            {
+                GpuFeatureGate.GpuNotNeeded => Domain.Errors.ErrorCode.GpuNotNeeded,
+                GpuFeatureGate.DriverTooOld => Domain.Errors.ErrorCode.DriverTooOld,
+                _ => Domain.Errors.ErrorCode.GpuUnsupported,
+            };
+            throw new BridgeException(
+                code,
+                $"smooth motion is not available for this GPU ({gpu.SmoothMotion})");
         }
 
         return await RunExclusiveAsync(async () =>

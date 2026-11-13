@@ -142,7 +142,10 @@ public sealed class Dlss5InstallStrategyTests : IDisposable
     private (string Exe, Dlss5DeploymentService Service, FakeOfflineInstaller Offline, FakeProcessRunner Process)
         CreateInstallContext(GraphicsApi api)
     {
-        var exe = _directory.WriteFile("game/game.exe", "game");
+        var gameDirectory = _directory.CreateDirectory("game");
+        var exe = Path.Combine(gameDirectory, "game.exe");
+        // The architecture guard needs a real 64-bit PE; the test host is x64.
+        File.Copy(Environment.ProcessPath!, exe);
         var payload = _directory.CreateDirectory("pack");
         var runtime = _directory.WriteFile("pack/payload.bin", "runtime");
         var setup = _directory.WriteFile("pack/setup.exe", "setup");
@@ -335,12 +338,18 @@ public sealed class Dlss5InstallStrategyTests : IDisposable
             return Task.CompletedTask;
         }
 
-        public Task EnsureOverlayKeyAsync(
+        public Task<HotkeyWriteResult> EnsureOverlayKeyAsync(
             string targetDirectory,
+            string? exePath,
             int virtualKey,
             CancellationToken cancellationToken)
         {
-            return Task.CompletedTask;
+            return Task.FromResult(new HotkeyWriteResult(Applied: true, Queued: false));
+        }
+
+        public Task<HotkeyFlushReport> FlushPendingAsync(CancellationToken cancellationToken)
+        {
+            return Task.FromResult(new HotkeyFlushReport(0, 0));
         }
     }
 }

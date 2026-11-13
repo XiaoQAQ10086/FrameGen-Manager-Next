@@ -8,6 +8,7 @@ export default {
           <div><h1>${t('Logs.Title')}</h1><p>${t('Logs.Subtitle')}</p></div>
           <div class="head-actions">
             <button class="btn" data-action="open" type="button">${t('Logs.OpenFolder')}</button>
+            <button class="btn" data-action="clear" type="button">${t('Logs.Clear')}</button>
             <button class="btn primary" data-action="export" type="button">${t('Logs.Export')}</button>
           </div>
         </header>
@@ -34,6 +35,18 @@ export default {
       if (!button) return;
       if (button.dataset.action === 'open') {
         await api.request('logs.openFolder').catch((error) => ui.toast(error.message, 'error'));
+        return;
+      }
+      if (button.dataset.action === 'clear') {
+        try {
+          const data = await api.request('logs.clear');
+          ui.toast(Number(data?.removed) > 0
+            ? t('Logs.ClearDone').replace('{0}', String(data.removed))
+            : t('Logs.ClearNone'));
+          await load();
+        } catch (error) {
+          ui.toast(error.message, 'error');
+        }
         return;
       }
       if (button.dataset.action === 'export') {

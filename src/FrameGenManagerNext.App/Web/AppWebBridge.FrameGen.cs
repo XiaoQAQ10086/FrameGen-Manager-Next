@@ -83,6 +83,21 @@ public sealed partial class AppWebBridge
 
         var options = ReadFrameGenOptions(payload);
         var target = ResolveDeploymentTarget(game, payload);
+        var gpu = await _gpu.GetAsync(CancellationToken.None);
+        if (gpu.FrameGeneration != GpuFeatureGate.Supported)
+        {
+            var code = gpu.FrameGeneration switch
+            {
+                GpuFeatureGate.GpuNotNeeded => Domain.Errors.ErrorCode.GpuNotNeeded,
+                GpuFeatureGate.DriverTooOld => Domain.Errors.ErrorCode.DriverTooOld,
+                _ => Domain.Errors.ErrorCode.GpuUnsupported,
+            };
+            throw new BridgeException(
+                code,
+                $"frame generation is not available for this GPU ({gpu.FrameGeneration})");
+        }
+
+        EnsureGameStopped(game, target.ExePath ?? game.RenderExePath);
         var occupied = await GetOccupiedProxiesAsync(target.Directory);
         var conflict = occupied.FirstOrDefault(item =>
             item.Owner != "FrameGen" &&
@@ -151,6 +166,7 @@ public sealed partial class AppWebBridge
         }
 
         var target = ResolveDeploymentTarget(game, payload);
+        EnsureGameStopped(game, target.ExePath ?? game.RenderExePath);
         var force = payload.ValueKind == JsonValueKind.Object &&
                     payload.TryGetProperty("force", out var forceValue) &&
                     forceValue.ValueKind == JsonValueKind.True;
@@ -197,6 +213,7 @@ public sealed partial class AppWebBridge
         }
 
         var target = ResolveDeploymentTarget(game, payload);
+        EnsureGameStopped(game, target.ExePath ?? game.RenderExePath);
         return await RunExclusiveAsync(async () =>
         {
             var progress = new Progress<DeploymentProgress>(update =>

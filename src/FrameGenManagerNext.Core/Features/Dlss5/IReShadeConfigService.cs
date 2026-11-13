@@ -4,8 +4,11 @@ public interface IReShadeConfigService
 {
     Task MergeSearchPathsAsync(string targetDirectory, CancellationToken cancellationToken);
 
-    Task EnsureOverlayKeyAsync(
+    Task<HotkeyWriteResult> EnsureOverlayKeyAsync(
         string targetDirectory,
+        string? exePath,
         int virtualKey,
         CancellationToken cancellationToken);
+
+    Task<HotkeyFlushReport> FlushPendingAsync(CancellationToken cancellationToken);
 }

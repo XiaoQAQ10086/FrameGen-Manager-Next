@@ -24,7 +24,7 @@
                       Title="FrameGen Manager-Next"
                       Icon="{ui:ImageIcon 'pack://application:,,,/Assets/app.png'}" />
 
-        <Grid x:Name="BrowserHost" Grid.Row="1">
+        <Grid x:Name="BrowserHost" Grid.Row="1" Margin="6,0,6,6">
             <Grid x:Name="WebViewHost">
                 <wv2:WebView2 x:Name="Browser" />
             </Grid>

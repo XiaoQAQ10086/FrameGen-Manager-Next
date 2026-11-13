@@ -137,6 +137,7 @@ public sealed partial class AppWebBridge
         {
             throw new BridgeException(Domain.Errors.ErrorCode.FileNotFound, "render executable not found");
         }
+        EnsureGameStopped(game, installExe);
         var knownApi = ReadGraphicsApi(payload);
         var selectedProxy = ReadProxyModule(payload);
         var apiModule = selectedProxy ??
@@ -208,6 +209,7 @@ public sealed partial class AppWebBridge
         {
             var result = await _dlss5.SetOverlayKeyAsync(
                 target.Directory,
+                target.ExePath ?? game.RenderExePath,
                 hotkey,
                 CancellationToken.None);
             if (result.IsFailure)
@@ -217,7 +219,12 @@ public sealed partial class AppWebBridge
                     result.Error.Diagnostic ?? "could not update ReShade overlay key");
             }
 
-            return new { updated = true, hotkey };
+            return new
+            {
+                updated = result.Value.Applied,
+                queued = result.Value.Queued,
+                hotkey,
+            };
         });
     }
 
@@ -229,6 +236,7 @@ public sealed partial class AppWebBridge
             throw new BridgeException(Domain.Errors.ErrorCode.FileNotFound, "game not found");
         }
 
+        EnsureGameStopped(game);
         return await RunExclusiveAsync(async () =>
         {
             var progress = new Progress<DeploymentProgress>(update =>
@@ -256,6 +264,7 @@ public sealed partial class AppWebBridge
             throw new BridgeException(Domain.Errors.ErrorCode.FileNotFound, "game not found");
         }
 
+        EnsureGameStopped(game);
         return await RunExclusiveAsync(async () =>
         {
             var progress = new Progress<DeploymentProgress>(update =>

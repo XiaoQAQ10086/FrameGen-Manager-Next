@@ -12,12 +12,18 @@ const invalidating = new Set([
   'games.restore',
   'framegen.deploy',
   'framegen.restore',
+  'framegen.clean',
   'sm.enable',
   'sm.disable',
   'sm.restore',
   'dlss5.install',
   'dlss5.restore',
   'dlss5.uninstall',
+  'anr.deploy',
+  'anr.restore',
+  'anr.download',
+  'anr.import',
+  'anr.update',
   'gpu.spoof.apply',
   'gpu.spoof.restore',
 ]);
@@ -82,6 +88,13 @@ export function request(command, payload = {}, timeout = 300000) {
       reject(error);
     }
   });
+
+  if (invalidating.has(command)) {
+    // A page that loads while the write is still running could cache a
+    // half-applied snapshot. Clear again when the operation settles so the
+    // post-operation refresh always hits the backend.
+    return promise.finally(() => cache.clear());
+  }
 
   if (!cacheable.has(command)) {
     return promise;

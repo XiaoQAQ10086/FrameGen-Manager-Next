@@ -199,10 +199,10 @@ function showResult(ctx, result) {
       <h3 class="asset-failed-title">${esc(ctx.t('Assets.FailedTitle'))}</h3>
       <div class="asset-failures">${failureRows}</div>
       <p class="asset-warning">${esc(ctx.t('Assets.ManualHint'))}</p>` : ''}
-    <footer class="modal-foot"><span class="muted small">${esc(ctx.t('Assets.Subtitle'))}</span>
-      <div class="foot-actions"><button class="btn primary" data-result-close type="button">${esc(ctx.t('Assets.GotIt'))}</button></div>
-    </footer>`);
-  dialog.root.classList.add('asset-modal');
+    <footer class="modal-foot"><div class="foot-actions">
+      <button class="btn primary" data-result-close type="button">${esc(ctx.t('Assets.GotIt'))}</button>
+    </div></footer>`);
+  dialog.root.classList.add('asset-modal', 'asset-result');
 
   dialog.root.querySelector('[data-result-close]').addEventListener('click', dialog.close);
   dialog.root.querySelectorAll('[data-open-failure]').forEach((button) => {

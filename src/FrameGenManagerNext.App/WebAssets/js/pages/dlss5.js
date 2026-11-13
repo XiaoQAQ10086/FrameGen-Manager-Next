@@ -1,6 +1,7 @@
 import { confirmDialog, escapeHtml as esc } from '../ui.js';
 import { apiLabel, prettyPath, stateKeys } from '../labels.js';
 import { createRemovedController, removedMarkup } from '../removed-modal.js';
+import { githubSource, modeSources } from '../mode-info.js';
 
 export default {
   async mount(root, ctx) {
@@ -25,12 +26,25 @@ export default {
             <button class="btn scan" data-action="scan" type="button">${t('Library.Scan')}</button>
           </div>
         </header>
-        <div class="wall" data-role="games">
-          <div class="tile skeleton-tile"></div>
-          <div class="tile skeleton-tile"></div>
-          <div class="tile skeleton-tile"></div>
-        </div>
-        <div class="empty hidden" data-role="empty"><p>${t('Dlss5.Empty')}</p></div>
+        <main class="layout">
+          <aside class="side">
+            <section class="panel">
+              <div class="ctitle">${t('Mode.SupportedGpus')}</div>
+              <div class="chips"><span class="chip gpu-chip">${t('Mode.Dlss5.Gpus')}</span></div>
+              ${githubSource(t, modeSources.dlss5)}
+            </section>
+          </aside>
+          <section class="content">
+            <div class="dlss-wall-scroll">
+              <div class="wall" data-role="games">
+                <div class="tile skeleton-tile"></div>
+                <div class="tile skeleton-tile"></div>
+                <div class="tile skeleton-tile"></div>
+              </div>
+              <div class="empty hidden" data-role="empty"><p>${t('Dlss5.Empty')}</p></div>
+            </div>
+          </section>
+        </main>
       </section>
       ${removedMarkup(t)}
       <div class="overlay hidden" data-role="detail">
@@ -220,12 +234,12 @@ export default {
             ? selectedTarget
             : game.targetDirectory;
           try {
-            await api.request('dlss5.setHotkey', {
+            const result = await api.request('dlss5.setHotkey', {
               id: game.id,
               target,
               hotkey: code,
             });
-            ui.toast(t('Dlss5.HotkeySaved'));
+            ui.toast(result?.queued ? t('Dlss5.HotkeyQueued') : t('Dlss5.HotkeySaved'));
           } catch (error) {
             ui.toast(ui.errorText(error, t('Dlss5.HotkeySaveFailed')), 'error');
           }

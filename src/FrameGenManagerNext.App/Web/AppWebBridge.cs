@@ -3,7 +3,9 @@ using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
+using FrameGenManagerNext.Core.Features.Anr;
 using FrameGenManagerNext.Core.Features.App;
+using FrameGenManagerNext.Core.Features.Deployment;
 using FrameGenManagerNext.Core.Features.Diagnostics;
 using FrameGenManagerNext.Core.Features.Dlss5;
 using FrameGenManagerNext.Core.Features.Framegen;
@@ -30,6 +32,9 @@ public sealed partial class AppWebBridge : IDisposable
 
     private readonly IGameLibraryService _library;
     private readonly IGameLauncher _launcher;
+    private readonly IGameProcessProbe _gameProcess;
+    private readonly IAnrPackageService _anrPackages;
+    private readonly IAnrDeploymentService _anr;
     private readonly IFrameGenDeploymentService _frameGen;
     private readonly ISmoothMotionDeploymentService _smoothMotion;
     private readonly INvApiSmoothMotion _nvapiSmoothMotion;
@@ -58,6 +63,9 @@ public sealed partial class AppWebBridge : IDisposable
     public AppWebBridge(
         IGameLibraryService library,
         IGameLauncher launcher,
+        IGameProcessProbe gameProcess,
+        IAnrPackageService anrPackages,
+        IAnrDeploymentService anr,
         IFrameGenDeploymentService frameGen,
         ISmoothMotionDeploymentService smoothMotion,
         INvApiSmoothMotion nvapiSmoothMotion,
@@ -76,6 +84,9 @@ public sealed partial class AppWebBridge : IDisposable
     {
         _library = library;
         _launcher = launcher;
+        _gameProcess = gameProcess;
+        _anrPackages = anrPackages;
+        _anr = anr;
         _frameGen = frameGen;
         _smoothMotion = smoothMotion;
         _nvapiSmoothMotion = nvapiSmoothMotion;
@@ -305,6 +316,13 @@ public sealed partial class AppWebBridge : IDisposable
             "games.forget" => await ForgetGameAsync(payload),
             "games.restore" => await RestoreGameAsync(payload),
             "games.launch" => await LaunchGameAsync(payload),
+            "anr.state" => await BuildAnrStateAsync(),
+            "anr.checkUpdate" => await CheckAnrUpdateAsync(),
+            "anr.update" => await UpdateAnrAsync(),
+            "anr.download" => await DownloadAnrAsync(payload),
+            "anr.import" => await ImportAnrAsync(),
+            "anr.deploy" => await DeployAnrAsync(payload),
+            "anr.restore" => await RestoreAnrAsync(payload),
             "games.openFolder" => await OpenGameFolderAsync(payload),
             "games.pickExecutable" => await PickGameExecutableAsync(payload),
             "assets.check" => await CheckAssetUpdatesAsync(),
@@ -326,6 +344,7 @@ public sealed partial class AppWebBridge : IDisposable
             "logs.tail" => await ReadLogsAsync(payload),
             "logs.export" => await ExportLogsAsync(),
             "logs.openFolder" => OpenLogsFolder(),
+            "logs.clear" => ClearLogs(),
             "settings.openHags" => OpenHagsSettings(),
             "settings.openFolder" => OpenSettingsFolder(payload),
             _ => throw new BridgeException(Domain.Errors.ErrorCode.InvalidArgument, $"Unknown command: {command}"),

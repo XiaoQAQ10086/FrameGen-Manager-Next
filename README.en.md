@@ -40,8 +40,8 @@ As FrameGen-Manager grew and went through long-term iteration, structural proble
 
 | Mode | GPUs | Game / system requirements | What gets deployed | Conflicts and limitations |
 |---|---|---|---|---|
-| Frame generation (SM86 / SM75) | NVIDIA RTX 30 / 20, driver ≥ 580.xx, latest recommended | The game supports DLSS Frame Generation | Proxy DLL + `dlssg_sm86` runtime + INI | Mutually exclusive with Smooth Motion; competes for proxy DLLs with DLSS5/ANR; anti-cheat risk |
-| Smooth Motion | NVIDIA RTX 30 / 20, driver ≥ 616.64 | The NVIDIA driver profile can be written | Driver profile switch + `version.dll` unlock component | Mutually exclusive with frame generation; not recommended for games with kernel anti-cheat |
+| Frame generation (SM86 / SM75) | NVIDIA RTX 20 / 30, driver ≥ 580.xx, latest recommended | The game supports DLSS Frame Generation | Proxy DLL + `dlssg_sm86` runtime + INI | Mutually exclusive with Smooth Motion; competes for proxy DLLs with DLSS5/ANR; anti-cheat risk |
+| Smooth Motion | NVIDIA RTX 20 / 30, driver ≥ 616.64 | The NVIDIA driver profile can be written | Driver profile switch + `version.dll` unlock component | Mutually exclusive with frame generation; not recommended for games with kernel anti-cheat |
 | DLSS5 / ReShade | NVIDIA RTX 20 / 30 | The game's graphics API can be hooked by ReShade | ReShade + GITC Uplift + shaders/model | Competes for proxy DLLs with frame generation/ANR; works in 32-bit games; anti-cheat risk |
 | ANR Full | NVIDIA RTX 20/30/40/50, GTX 16; AMD RX 5000/6000/7000/9000, Steam Deck; Intel Arc A/B | The game already offers DLSS Frame Generation; VC++ 2015-2022 x64 | OptiScaler full + ANR runtime + proxy | Experimental; competes for proxy DLLs with DLSS5/frame generation; anti-cheat risk |
 | ANR Addon | Same as above | The game folder already has `OptiScaler.ini` | Writes to `OptiScaler/custom/Apex Neural Rendering FG/` and changes `[FrameGen]` | Requires OptiScaler; refuses to overwrite another ANR folder |

@@ -1,4 +1,3 @@
-using System.Security.Cryptography;
 using FrameGenManagerNext.Domain.Deployment;
 using FrameGenManagerNext.Domain.Errors;
 using FrameGenManagerNext.Domain.Results;
@@ -112,37 +111,6 @@ public sealed partial class DeploymentEngine
             {
                 return Result.Fail(new AppError(ErrorCode.InvalidArgument, "content size does not match the plan"));
             }
-        }
-
-        return Result.Ok();
-    }
-
-    private static async Task<Result> VerifyPlannedFileAsync(
-        DeploymentFilePlan file,
-        CancellationToken cancellationToken)
-    {
-        if (file.SourcePath is not null)
-        {
-            var hash = await HashFileAsync(file.SourcePath, cancellationToken);
-            if (!string.Equals(hash, file.Sha256, StringComparison.OrdinalIgnoreCase))
-            {
-                return Result.Fail(AppError.Create(
-                    ErrorCode.PackHashMismatch,
-                    ("file", file.SourcePath)));
-            }
-
-            return Result.Ok();
-        }
-
-        if (file.Content is null)
-        {
-            return Result.Fail(new AppError(ErrorCode.InvalidArgument, "file has no content"));
-        }
-
-        var contentHash = Convert.ToHexString(SHA256.HashData(file.Content)).ToLowerInvariant();
-        if (!string.Equals(contentHash, file.Sha256, StringComparison.OrdinalIgnoreCase))
-        {
-            return Result.Fail(new AppError(ErrorCode.PackHashMismatch, "generated content hash mismatch"));
         }
 
         return Result.Ok();
@@ -463,17 +431,6 @@ public sealed partial class DeploymentEngine
     private static bool IsValidSha256(string? value)
     {
         return value is { Length: 64 } && value.All(Uri.IsHexDigit);
-    }
-
-    private static async Task<string> HashFileAsync(string path, CancellationToken cancellationToken)
-    {
-        await using var stream = new FileStream(
-            path,
-            FileMode.Open,
-            FileAccess.Read,
-            FileShare.ReadWrite | FileShare.Delete);
-        var hash = await SHA256.HashDataAsync(stream, cancellationToken);
-        return Convert.ToHexString(hash).ToLowerInvariant();
     }
 
     private static AppError MapIoError(Exception exception, string targetDirectory)
