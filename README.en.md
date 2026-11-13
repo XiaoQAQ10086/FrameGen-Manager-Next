@@ -11,7 +11,7 @@
 
 ## What is this
 
-One-click deployment of frame generation and DLSS5 for NVIDIA RTX 20 / 30 series GPUs.
+Built primarily for NVIDIA RTX 20 / 30 series GPUs to deploy frame generation and DLSS5. ANR frame generation adds support for GTX 16 and RTX 20–50 series, AMD RX 5000–9000 series (including Steam Deck) and Intel Arc GPUs.
 
 FrameGen Manager-Next is a rewrite of the [original FrameGen-Manager](https://github.com/XiaoQAQ10086/FrameGen-Manager), built from scratch with **C# / .NET 10 LTS**. It scans your game library, deploys frame generation and DLSS5 components into game folders, and supports reversible restore and cleanup.
 
@@ -32,20 +32,20 @@ It is **not** a frame generation renderer: frame generation itself is performed 
 |---|---|
 | ![Smooth Motion page](docs/images/smooth-motion.png) | ![DLSS5 page](docs/images/dlss5.png) |
 
-## Why the original project needed a rewrite
+## Why the original project was rewritten
 
 As FrameGen-Manager grew and went through long-term iteration, structural problems became visible: blurred module boundaries, tight coupling between UI and core logic, and drifting public contracts. These made long-term maintenance increasingly difficult.
 
-## Supported components
+## Mode comparison
 
-| Component | GPUs | Notes |
-|---|---|---|
-| Frame generation (SM86 / SM75) | RTX 30 / 20 series | Proxy DLL + `dlssg_sm86` runtime, supports DLSS and XeSS engines |
-| Smooth Motion | RTX 30 / 20 series, driver ≥ 616.64 | Driver profile switch + unlock component; games with kernel anti-cheat are rejected |
-| DLSS5 / ReShade | Depends on the game's graphics API | Offline ReShade + GITC Uplift + standard shaders |
-| GPU model spoofing | NVIDIA discrete GPUs | Requires administrator rights; takes effect after reboot |
-
-Frame generation and Smooth Motion are mutually exclusive for the same game: when one is enabled, the other shows a red conflict badge and locks its action, preventing two injectors from entering the same game process.
+| Mode | GPUs | Game / system requirements | What gets deployed | Conflicts and limitations |
+|---|---|---|---|---|
+| Frame generation (SM86 / SM75) | NVIDIA RTX 30 / 20, driver ≥ 580.xx, latest recommended | The game supports DLSS Frame Generation | Proxy DLL + `dlssg_sm86` runtime + INI | Mutually exclusive with Smooth Motion; competes for proxy DLLs with DLSS5/ANR; anti-cheat risk |
+| Smooth Motion | NVIDIA RTX 30 / 20, driver ≥ 616.64 | The NVIDIA driver profile can be written | Driver profile switch + `version.dll` unlock component | Mutually exclusive with frame generation; not recommended for games with kernel anti-cheat |
+| DLSS5 / ReShade | NVIDIA RTX 20 / 30 | The game's graphics API can be hooked by ReShade | ReShade + GITC Uplift + shaders/model | Competes for proxy DLLs with frame generation/ANR; works in 32-bit games; anti-cheat risk |
+| ANR Full | NVIDIA RTX 20/30/40/50, GTX 16; AMD RX 5000/6000/7000/9000, Steam Deck; Intel Arc A/B | The game already offers DLSS Frame Generation; VC++ 2015-2022 x64 | OptiScaler full + ANR runtime + proxy | Experimental; competes for proxy DLLs with DLSS5/frame generation; anti-cheat risk |
+| ANR Addon | Same as above | The game folder already has `OptiScaler.ini` | Writes to `OptiScaler/custom/Apex Neural Rendering FG/` and changes `[FrameGen]` | Requires OptiScaler; refuses to overwrite another ANR folder |
+| REFramework (auxiliary) | Any GPU | RE Engine games only | `dinput8.dll` + revision file | Occupies `dinput8.dll`; frame generation must avoid that proxy |
 
 ## Tech stack
 
@@ -87,6 +87,7 @@ Dependency direction: `Domain ← Core ← Infrastructure`; `App` / `Cli` refere
 - DLSS5 plugin: <https://github.com/ghostinthecamera/GITC-Uplift>
 - ReShade: <https://github.com/crosire/reshade>
 - DLSS5 model/render files for RTX 20 / 30 series were collected from the internet: <https://www.bilibili.com/video/BV1hXaA6jEDJ/?spm_id_from=333.1387.favlist.content.click&vd_source=ae80914c86306af292e3a6fe3e9444dd>
+- ANR frame generation: <https://github.com/apex-compute/ANR>
 - This is a community tool, not affiliated with NVIDIA, Intel or ReShade. No official support or warranty is provided.
 - Check the game's terms of service and anti-cheat policy before use; do not deploy injected components into games with kernel anti-cheat.
 

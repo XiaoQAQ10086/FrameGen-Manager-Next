@@ -11,7 +11,7 @@
 
 ## 这是什么
 
-一键为英伟达 20 / 30 系显卡用户部署帧生成及 DLSS5。
+主要面向英伟达 RTX 20 / 30 系显卡用户部署帧生成及 DLSS5。ANR 帧生成额外支持 GTX 16、RTX 20–50 系、AMD RX 5000–9000 系（含 Steam Deck）与 Intel Arc 显卡。
 
 FrameGen Manager-Next 是[原项目 FrameGen-Manager](https://github.com/XiaoQAQ10086/FrameGen-Manager) 的重写版，使用 **C# / .NET 10 LTS** 从零实现。它负责扫描游戏库、把帧生成和 DLSS5 组件部署到游戏目录，支持可回滚的还原与清理。
 
@@ -32,20 +32,20 @@ FrameGen Manager-Next 是[原项目 FrameGen-Manager](https://github.com/XiaoQAQ
 |---|---|
 | ![Smooth Motion 页面](docs/images/smooth-motion.png) | ![DLSS5 页面](docs/images/dlss5.png) |
 
-## 为什么需要重写原项目FrameGen-Manager
+## 为什么重写原项目FrameGen-Manager
 
 原项目 FrameGen-Manager 随着功能增加和长期迭代，旧版逐渐暴露出结构性问题：模块边界模糊、UI 与核心耦合、公共契约漂移，不利于继续长期维护
 
-## 支持的组件
+## 模式对比
 
-| 组件 | 适用显卡 | 说明 |
-|---|---|---|
-| 帧生成（SM86 / SM75） | RTX 30 / 20 系 | 代理 DLL + `dlssg_sm86` 运行时，支持 DLSS 与 XeSS 引擎 |
-| Smooth Motion | RTX 30 / 20 系，驱动 ≥ 616.64 | 驱动 profile 开关 + 解锁组件；带内核反作弊的游戏会被拒绝 |
-| DLSS5 / ReShade | 按游戏图形 API | 离线 ReShade + GITC Uplift + 标准 shader |
-| 显卡型号伪装 | NVIDIA 独显 | 需要管理员权限，重启后生效 |
-
-帧生成与 Smooth Motion 在同一个游戏上互斥：一方开启时，另一方会显示红色冲突徽章并锁定操作，避免两个注入器同时进入游戏进程
+| 模式 | 支持显卡 | 游戏/系统前提 | 部署内容 | 主要冲突与限制 |
+|---|---|---|---|---|
+| 帧生成（SM86 / SM75） | NVIDIA RTX 30 / 20，驱动≥ 580.xx，建议保持最新 | 游戏支持 DLSS Frame Generation | 代理 DLL + `dlssg_sm86` 运行时 + INI | 与 Smooth Motion 互斥；与 DLSS5/ANR 抢代理；反作弊风险 |
+| Smooth Motion | NVIDIA RTX 30 / 20，驱动 ≥ 616.64 | NVIDIA 驱动 profile 可写 | 驱动 profile 开关 + `version.dll` 解锁组件 | 与帧生成互斥；内核反作弊游戏不建议 |
+| DLSS5 / ReShade | NVIDIA RTX 20 / 30 | 游戏图形 API 可被 ReShade 接管 | ReShade + GITC Uplift + shader/模型 | 与帧生成/ANR 抢代理；32 位游戏可用；反作弊风险 |
+| ANR Full | NVIDIA RTX 20/30/40/50、GTX 16；AMD RX 5000/6000/7000/9000、Steam Deck；Intel Arc A/B | 游戏已有 DLSS Frame Generation；VC++ 2015-2022 x64 | OptiScaler full + ANR 运行时 + 代理 | 实验性；与 DLSS5/帧生成抢代理；反作弊风险 |
+| ANR Addon | 同上 | 游戏目录已有 `OptiScaler.ini` | 写入 `OptiScaler/custom/Apex Neural Rendering FG/`，修改 `[FrameGen]` | 需要有 OptiScaler；已有其他 ANR 目录会拒绝 |
+| REFramework（辅助） | 不限 GPU | 仅 RE Engine 游戏 | `dinput8.dll` + revision 文件 | 占用 `dinput8.dll`；帧生成必须避开该代理 |
 
 
 ## 技术栈
@@ -85,13 +85,14 @@ build/                                 生成资产包、校验、发布脚本
 ## 致谢与声明
 
 - 帧生成运行时、Smooth Motion 组件和 GITC Uplift 资产来自对应上游项目，版权归原作者所有，仓库不包含这些二进制资产
-- 帧生成文件来自https://github.com/sdli1995/dlssg_for_sm86
-- Smooth Motion文件来自https://github.com/pipotoufikxyz-lgtm/dlssg_for_sm86-MFG-version
-- DLSS5插件来自https://github.com/ghostinthecamera/GITC-Uplift
+- 帧生成文件来自：https://github.com/sdli1995/dlssg_for_sm86
+- Smooth Motion文件来自：https://github.com/pipotoufikxyz-lgtm/dlssg_for_sm86-MFG-version
+- DLSS5插件来自：https://github.com/ghostinthecamera/GITC-Uplift
 - Reshade：https://github.com/crosire/reshade
 - DLSS5的20和30系模型渲染文件来自互联网收集：https://www.bilibili.com/video/BV1hXaA6jEDJ/?spm_id_from=333.1387.favlist.content.click&vd_source=ae80914c86306af292e3a6fe3e9444dd
+- ANR帧生成：https://github.com/apex-compute/ANR
 - 本项目是社区工具，与 NVIDIA、Intel、ReShade 官方无关，不提供任何官方支持或担保
-- 使用前请自行确认游戏的服务条款和反作弊策略；带内核反作弊的游戏不要部署注入组件
+- 使用前请自行确认游戏的服务条款和反作弊策略；带内核反作弊的游戏不要部署注入组件。
 
 ## 反馈
 
