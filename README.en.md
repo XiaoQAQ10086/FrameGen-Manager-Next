@@ -11,7 +11,7 @@
 
 ## What is this
 
-Built primarily for NVIDIA RTX 20 / 30 series GPUs to deploy frame generation and DLSS5. ANR frame generation adds support for GTX 16 and RTX 20–50 series, AMD RX 5000–9000 series (including Steam Deck) and Intel Arc GPUs.
+Built primarily for NVIDIA RTX 20–50 series GPUs to deploy frame generation, with DLSS5 for RTX 20 / 30 series. ANR frame generation adds support for GTX 16 and RTX 20–50 series, AMD RX 5000–9000 series (including Steam Deck) and Intel Arc GPUs.
 
 FrameGen Manager-Next is a rewrite of the [original FrameGen-Manager](https://github.com/XiaoQAQ10086/FrameGen-Manager), built from scratch with **C# / .NET 10 LTS**. It scans your game library, deploys frame generation and DLSS5 components into game folders, and supports reversible restore and cleanup.
 
@@ -22,7 +22,7 @@ It is **not** a frame generation renderer: frame generation itself is performed 
 ## Features
 
 - **Game library scan**: Steam / Epic / loose game folders, with manual game adding and manual selection of the executable a game actually launches.
-- **Frame generation deployment**: deploys SM75 / SM86 runtimes for RTX 20 / 30 series GPUs, with proxy slot, optimization level, 2X/3X/4X/6X, DLSS / XeSS engine, super-resolution mode and XeSS optical-flow settings. Deployments can be restored; files modified by the user are kept and reported as conflicts.
+- **Frame generation deployment**: deploys SM75 / SM86 runtimes for RTX 20–50 series GPUs (assets 0.4.2; RTX 40/50 use the PTX kernels), with proxy slot, optimization level, 2X/3X/4X/6X, DLSS / XeSS engine, super-resolution mode and XeSS optical-flow settings. Deployments can be restored; files modified by the user are kept and reported as conflicts.
 - **Smooth Motion**: writes the Smooth Motion switch into the game's driver profile and deploys the unlock component. The previous value is recorded before writing, the component is removed when disabled, and the original value is restored on restore.
 - **DLSS5 / ReShade**: offline installation of the ReShade module, GITC Uplift components and standard shaders, with uninstall and legacy RenoDX cleanup.
 - **GPU model spoofing**: changes the GPU name recorded by the driver with administrator rights; supports applying a preset, restoring the driver name, and restoring the original value. A reboot is required.
@@ -40,7 +40,7 @@ As FrameGen-Manager grew and went through long-term iteration, structural proble
 
 | Mode | GPUs | Game / system requirements | What gets deployed | Conflicts and limitations |
 |---|---|---|---|---|
-| Frame generation (SM86 / SM75) | NVIDIA RTX 20 / 30, driver ≥ 580.xx, latest recommended | The game supports DLSS Frame Generation | Proxy DLL + `dlssg_sm86` runtime + INI | Mutually exclusive with Smooth Motion; competes for proxy DLLs with DLSS5/ANR; anti-cheat risk |
+| Frame generation (SM86 / SM75) | NVIDIA RTX 20 / 30 / 40 / 50, driver ≥ 580.xx, latest recommended (40/50 use the PTX kernels) | The game supports DLSS Frame Generation | Proxy DLL + `dlssg_sm86` runtime (0.4.2) + INI | Mutually exclusive with Smooth Motion; competes for proxy DLLs with DLSS5/ANR; anti-cheat risk |
 | Smooth Motion | NVIDIA RTX 20 / 30, driver ≥ 616.64 | The NVIDIA driver profile can be written | Driver profile switch + `version.dll` unlock component | Mutually exclusive with frame generation; not recommended for games with kernel anti-cheat |
 | DLSS5 / ReShade | NVIDIA RTX 20 / 30 | The game's graphics API can be hooked by ReShade | ReShade + GITC Uplift + shaders/model | Competes for proxy DLLs with frame generation/ANR; works in 32-bit games; anti-cheat risk |
 | ANR Full | NVIDIA RTX 20/30/40/50, GTX 16; AMD RX 5000/6000/7000/9000, Steam Deck; Intel Arc A/B | The game already offers DLSS Frame Generation; VC++ 2015-2022 x64 | OptiScaler full + ANR runtime + proxy | Experimental; competes for proxy DLLs with DLSS5/frame generation; anti-cheat risk |

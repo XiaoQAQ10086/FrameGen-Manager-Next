@@ -11,7 +11,7 @@
 
 ## 这是什么
 
-主要面向英伟达 RTX 20 / 30 系显卡用户部署帧生成及 DLSS5。ANR 帧生成额外支持 GTX 16、RTX 20–50 系、AMD RX 5000–9000 系（含 Steam Deck）与 Intel Arc 显卡。
+主要面向英伟达 RTX 20–50 系显卡用户部署帧生成，并为 RTX 20 / 30 系提供 DLSS5。ANR 帧生成额外支持 GTX 16、RTX 20–50 系、AMD RX 5000–9000 系（含 Steam Deck）与 Intel Arc 显卡。
 
 FrameGen Manager-Next 是[原项目 FrameGen-Manager](https://github.com/XiaoQAQ10086/FrameGen-Manager) 的重写版，使用 **C# / .NET 10 LTS** 从零实现。它负责扫描游戏库、把帧生成和 DLSS5 组件部署到游戏目录，支持可回滚的还原与清理。
 
@@ -22,7 +22,7 @@ FrameGen Manager-Next 是[原项目 FrameGen-Manager](https://github.com/XiaoQAQ
 ## 功能
 
 - **游戏库扫描**：Steam / Epic 散装目录，支持手动添加游戏和选择游戏实际启动的 EXE。
-- **帧生成部署**：为 RTX 20 / 30 系显卡部署 SM75 / SM86 运行时，支持代理槽、优化等级、2X/3X/4X/6X、DLSS / XeSS 引擎、超分模式和 XeSS 光流参数；部署后可还原，被用户改过的文件会保留并报告冲突。
+- **帧生成部署**：为 RTX 20–50 系显卡部署 SM75 / SM86 运行时（当前资产 0.4.2，RTX 40/50 走 PTX 内核），支持代理槽、优化等级、2X/3X/4X/6X、DLSS / XeSS 引擎、超分模式和 XeSS 光流参数；部署后可还原，被用户改过的文件会保留并报告冲突。
 - **Smooth Motion**：为游戏写入驱动 profile 的 Smooth Motion 开关并部署解锁组件；写入前记录旧值，关闭时移除组件，还原时写回原值。
 - **DLSS5 / ReShade**：离线安装 ReShade 模块、GITC Uplift 组件和标准 shader，支持卸载与旧版 RenoDX 清理。
 - **显卡型号伪装**：在管理员权限下修改驱动记录的显卡名称，支持应用、还原驱动名和恢复原始值，重启后生效。
@@ -40,7 +40,7 @@ FrameGen Manager-Next 是[原项目 FrameGen-Manager](https://github.com/XiaoQAQ
 
 | 模式 | 支持显卡 | 游戏/系统前提 | 部署内容 | 主要冲突与限制 |
 |---|---|---|---|---|
-| 帧生成（SM86 / SM75） | NVIDIA RTX 20 / 30，驱动≥ 580.xx，建议保持最新 | 游戏支持 DLSS Frame Generation | 代理 DLL + `dlssg_sm86` 运行时 + INI | 与 Smooth Motion 互斥；与 DLSS5/ANR 抢代理；反作弊风险 |
+| 帧生成（SM86 / SM75） | NVIDIA RTX 20 / 30 / 40 / 50，驱动 ≥ 580.xx，建议保持最新（40/50 走 PTX 内核） | 游戏支持 DLSS Frame Generation | 代理 DLL + `dlssg_sm86` 运行时（0.4.2） + INI | 与 Smooth Motion 互斥；与 DLSS5/ANR 抢代理；反作弊风险 |
 | Smooth Motion | NVIDIA RTX 20 / 30，驱动 ≥ 616.64 | NVIDIA 驱动 profile 可写 | 驱动 profile 开关 + `version.dll` 解锁组件 | 与帧生成互斥；内核反作弊游戏不建议 |
 | DLSS5 / ReShade | NVIDIA RTX 20 / 30 | 游戏图形 API 可被 ReShade 接管 | ReShade + GITC Uplift + shader/模型 | 与帧生成/ANR 抢代理；32 位游戏可用；反作弊风险 |
 | ANR Full | NVIDIA RTX 20/30/40/50、GTX 16；AMD RX 5000/6000/7000/9000、Steam Deck；Intel Arc A/B | 游戏已有 DLSS Frame Generation；VC++ 2015-2022 x64 | OptiScaler full + ANR 运行时 + 代理 | 实验性；与 DLSS5/帧生成抢代理；反作弊风险 |
