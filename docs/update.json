@@ -1,16 +1,16 @@
 {
-  "version": "2.2.0",
-  "notes": "【更新】\r\n1.新增ANR帧生成，支持GTX 16系列，RTX 20-50系列，A卡5000-9000系，I卡等多显卡部署帧生成。但不会内置该资产文件，可以通过软件在线获取下载，或网盘下载后导入\r\n2.DLSS5插件跟进上游GITC Uplift 2.0.0\r\n【改进】\r\n1.优化部分视觉交互\r\n【修复】\r\n1.英文语言下UI阻挡交互\r\n\r\n[Update]\r\n1. Added ANR frame generation, supporting GTX 16 series, RTX 20-50 series, AMD Radeon 5000-9000 series, Intel graphics, and other multi-GPU deployment frame generation. However, this asset file will not be built-in; it can be obtained and downloaded online through the software or imported after downloading from cloud storage.\r\n2. DLSS 5 plugin updated following upstream GITC Uplift 2.0.0.\r\n[Improvements]\r\n1. Optimized certain visual interactions.\r\n[Fix]\r\n1. UI blocks interaction in the English language",
-  "pageUrl": "https://github.com/XiaoQAQ10086/FrameGen-Manager-Next/releases/tag/v2.2.0",
+  "version": "2.3.0",
+  "notes": "本部署工具在DLSS-G帧生成下已支持RTX 20-50系显卡用户部署及使用。ANR帧生成支持GTX 16系，A卡5000-9000系，i卡全系部署与使用。Smooth Motion与DLSS5仅支持RTX 20与30系显卡用户部署及使用。\r\n\r\n【更新】\r\n1.更新内置资产文件，跟进上游帧生成0.4.2版本更新",
+  "pageUrl": "https://github.com/XiaoQAQ10086/FrameGen-Manager-Next/releases/tag/v2.3.0",
   "installer": {
-    "name": "FrameGenManagerNext-2.2.0-win-Setup.exe",
-    "size": 390234760,
-    "sha256": "1C75E2B9B6E9C71A96084D83A9A6961CBA9B6654088C7BFF23BCCBF55BDEDF69",
+    "name": "FrameGenManagerNext-2.3.0-win-Setup.exe",
+    "size": 391162247,
+    "sha256": "0C82DE80C3B03C7D6217A61C018B3B0208E043CF98F378DBA0208F1BEF2A8E69",
     "urls": [
-      "https://github.com/XiaoQAQ10086/FrameGen-Manager-Next/releases/download/v2.2.0/FrameGenManagerNext-2.2.0-win-Setup.exe",
-      "https://ghfast.top/https://github.com/XiaoQAQ10086/FrameGen-Manager-Next/releases/download/v2.2.0/FrameGenManagerNext-2.2.0-win-Setup.exe",
-      "https://gh-proxy.com/https://github.com/XiaoQAQ10086/FrameGen-Manager-Next/releases/download/v2.2.0/FrameGenManagerNext-2.2.0-win-Setup.exe",
-      "https://ghproxy.net/https://github.com/XiaoQAQ10086/FrameGen-Manager-Next/releases/download/v2.2.0/FrameGenManagerNext-2.2.0-win-Setup.exe"
+      "https://github.com/XiaoQAQ10086/FrameGen-Manager-Next/releases/download/v2.3.0/FrameGenManagerNext-2.3.0-win-Setup.exe",
+      "https://ghfast.top/https://github.com/XiaoQAQ10086/FrameGen-Manager-Next/releases/download/v2.3.0/FrameGenManagerNext-2.3.0-win-Setup.exe",
+      "https://gh-proxy.com/https://github.com/XiaoQAQ10086/FrameGen-Manager-Next/releases/download/v2.3.0/FrameGenManagerNext-2.3.0-win-Setup.exe",
+      "https://ghproxy.net/https://github.com/XiaoQAQ10086/FrameGen-Manager-Next/releases/download/v2.3.0/FrameGenManagerNext-2.3.0-win-Setup.exe"
     ]
   }
 }
