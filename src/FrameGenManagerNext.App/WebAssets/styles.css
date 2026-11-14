@@ -123,6 +123,7 @@ button, select { font: inherit; }
 .badge.state.dim { color: #445064; background: rgba(96, 107, 125, .13); border-color: rgba(96, 107, 125, .22); }
 .badge.mode { color: var(--accent); background: rgba(0, 122, 255, .1); border-color: rgba(0, 122, 255, .28); font-weight: 700; }
 .row { display: flex; align-items: center; gap: 8px; margin-top: 10px; }
+.row > span { white-space: nowrap; }
 .row select { flex: 1 1 auto; min-width: 0; }
 .row .btn { flex: 0 0 auto; }
 .hint { margin: 10px 0 0; color: var(--muted); font-size: 12px; line-height: 1.5; }

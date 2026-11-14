@@ -334,9 +334,32 @@ public sealed partial class AppWebBridge
                             proxyValue.ValueKind == JsonValueKind.String
                 ? proxyValue.GetString()
                 : null;
-            proxy = !string.IsNullOrWhiteSpace(requested)
-                ? requested
-                : ChooseAnrProxy(occupied);
+            if (!string.IsNullOrWhiteSpace(requested))
+            {
+                proxy = AnrProxyOrder.FirstOrDefault(
+                    slot => string.Equals(slot, requested, StringComparison.OrdinalIgnoreCase));
+                if (proxy is null)
+                {
+                    throw new BridgeException(
+                        Domain.Errors.ErrorCode.InvalidArgument,
+                        $"unknown proxy slot: {requested}");
+                }
+
+                var conflict = occupied.FirstOrDefault(item =>
+                    item.Owner != "ANR" &&
+                    string.Equals(item.Module, proxy, StringComparison.OrdinalIgnoreCase));
+                if (conflict is not null)
+                {
+                    throw new BridgeException(
+                        Domain.Errors.ErrorCode.Conflict,
+                        $"proxy slot {proxy} is used by {conflict.Owner}");
+                }
+            }
+            else
+            {
+                proxy = ChooseAnrProxy(occupied);
+            }
+
             if (proxy is null)
             {
                 throw new BridgeException(

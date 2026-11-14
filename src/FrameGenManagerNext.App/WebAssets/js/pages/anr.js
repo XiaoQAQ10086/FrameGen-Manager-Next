@@ -269,6 +269,61 @@ export default {
       }
     };
 
+    const proxySlots = ['dxgi.dll', 'winmm.dll', 'version.dll'];
+
+    const deployGame = async (game, proxy) => {
+      const payload = { id: game.id };
+      if (proxy) payload.proxy = proxy;
+      const ok = await run(
+        () => api.request('anr.deploy', payload, 600000),
+        t('Anr.Deploy'),
+        t('Anr.DeployedToast'),
+      );
+      if (ok) ui.libraryChanged('anr');
+    };
+
+    const openProxyDialog = (game) => {
+      if (document.querySelector('[data-role="anr-deploy-modal"]')) return;
+      const occupied = new Map(
+        (game.occupied || []).map((item) => [String(item.module).toLowerCase(), item.owner]),
+      );
+      const autoProxy = game.proxy;
+      const options = proxySlots.map((slot) => {
+        const owner = occupied.get(slot);
+        const label = owner
+          ? t('Anr.ProxyOccupied').replace('{0}', slot).replace('{1}', owner)
+          : slot;
+        return `<option value="${esc(slot)}" ${owner ? 'disabled' : ''}>${esc(label)}</option>`;
+      }).join('');
+      const dialog = ui.modal(`
+        <header class="modal-head">
+          <div><h2>${esc(t('Anr.DeployTitle'))}</h2><p class="muted">${esc(game.name)}</p></div>
+          <button class="icon-btn" data-close type="button">✕</button>
+        </header>
+        <p class="hint" title="${esc(game.targetDirectory)}">${esc(game.targetDirectory)}</p>
+        <label class="row anr-proxy-row">
+          <span>${esc(t('Anr.ProxyPick'))}</span>
+          <select data-role="anr-proxy">
+            ${autoProxy ? `<option value="">${esc(t('Anr.ProxyAuto').replace('{0}', autoProxy))}</option>` : ''}
+            ${options}
+          </select>
+        </label>
+        <p class="hint">${esc(t('Anr.ProxyHint'))}</p>
+        <footer class="modal-foot">
+          <span></span>
+          <div class="foot-actions">
+            <button class="btn ghost" data-close type="button">${esc(t('Common.Cancel'))}</button>
+            <button class="btn success" data-action="confirm-deploy" type="button">${esc(t('Anr.Deploy'))}</button>
+          </div>
+        </footer>`);
+      dialog.root.dataset.role = 'anr-deploy-modal';
+      dialog.root.querySelector('[data-action="confirm-deploy"]').addEventListener('click', async () => {
+        const selected = dialog.root.querySelector('[data-role="anr-proxy"]').value || null;
+        dialog.close();
+        await deployGame(game, selected);
+      });
+    };
+
     root.addEventListener('click', async (event) => {
       const button = event.target.closest('[data-action]');
       if (!button) return;
@@ -370,12 +425,11 @@ export default {
         return;
       }
       if (action === 'deploy') {
-        const ok = await run(
-          () => api.request('anr.deploy', { id: game.id, proxy: game.proxy }, 600000),
-          t('Anr.Deploy'),
-          t('Anr.DeployedToast'),
-        );
-        if (ok) ui.libraryChanged('anr');
+        if (state.package?.kind === 'Addon') {
+          await deployGame(game, null);
+          return;
+        }
+        openProxyDialog(game);
         return;
       }
       if (action === 'restore') {

@@ -17,6 +17,11 @@ internal static partial class StringCatalog
         Add("Anr.RequirementGame", "游戏必须已有 DLSS Frame Generation 选项；没有该选项的游戏不会生效。", "The game must already offer DLSS Frame Generation; games without it are not supported.");
         Add("Anr.RequirementRuntime", "需要 Microsoft Visual C++ 2015-2022 x64 运行库，否则 OptiScaler 不会加载。", "Microsoft Visual C++ 2015-2022 x64 runtime is required, otherwise OptiScaler will not load.");
         Add("Anr.RequirementProxy", "会占用 dxgi.dll、winmm.dll 或 version.dll 之一，可能与 DLSS5/ReShade 或现有帧生成冲突。", "Uses one of dxgi.dll, winmm.dll or version.dll and may conflict with DLSS5/ReShade or the existing frame generation.");
+        Add("Anr.DeployTitle", "部署 ANR 帧生成", "Deploy ANR frame generation");
+        Add("Anr.ProxyPick", "代理入口", "Proxy slot");
+        Add("Anr.ProxyAuto", "自动（{0}）", "Auto ({0})");
+        Add("Anr.ProxyOccupied", "{0}（已占用：{1}）", "{0} (used by {1})");
+        Add("Anr.ProxyHint", "只部署一个代理 DLL；已占用的入口不可选。", "Only one proxy DLL is deployed; occupied slots cannot be selected.");
         Add("Anr.DownloadTitle", "下载 ANR FG V.B15", "Download ANR FG V.B15");
         Add("Anr.DownloadGithub", "GitHub 官方下载", "Download from GitHub");
         Add("Anr.DownloadBaidu", "百度网盘下载", "Baidu Netdisk");
