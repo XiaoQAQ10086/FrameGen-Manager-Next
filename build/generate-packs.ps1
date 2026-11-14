@@ -11,7 +11,10 @@ if ([string]::IsNullOrWhiteSpace($RepoRoot)) {
     $RepoRoot = Split-Path -Parent $PSScriptRoot
 }
 
-$fgRoot = Join-Path $OldRoot 'apps\electron\bundled-assets'
+# dlssg_for_sm86 0.4.2 (dlssg-release-0.4.2-x64.zip,
+# sha256 492bbd0c8429af27cf74dabcd51f733c56993d0e2ccf176c503c19ef090b2133),
+# extracted here with the default version.dll and alternatives\ layout.
+$fgRoot = Join-Path $RepoRoot 'build\vendor\dlssg-0.4.2\extracted'
 $smRoot = Join-Path $OldRoot 'bundled-sm'
 $dlss5Root = Join-Path $OldRoot 'apps\electron\bundled-dlss5'
 $gitcRoot = Join-Path $RepoRoot 'build\vendor\gitc-2.0.0\extracted'
@@ -216,7 +219,7 @@ function Write-PackManifest {
         $pack['ini'] = $Ini
     }
 
-    $json = $pack | ConvertTo-Json -Depth 20
+    $json = ($pack | ConvertTo-Json -Depth 20).Replace("`r`n", "`n")
     $manifestPath = Join-Path $ManifestDir 'pack.json'
     [IO.File]::WriteAllText($manifestPath, $json, [Text.UTF8Encoding]::new($false))
     Copy-Item -LiteralPath $manifestPath -Destination (Join-Path $PayloadDir 'pack.json') -Force
@@ -247,11 +250,22 @@ Write-Host 'Generating FrameGen pack...' -ForegroundColor Cyan
 $workspace = New-PackWorkspace -Id 'framegen.sm86'
 $files = [System.Collections.Generic.List[object]]::new()
 
-foreach ($proxy in @('version.dll', 'winmm.dll', 'dbghelp.dll', 'dinput8.dll', 'dxgi.dll', 'd3d12.dll')) {
+# 0.4.2 keeps the default proxy at the package root and moves the five
+# alternatives under alternatives\; the deployed layout is unchanged.
+$proxySources = [ordered]@{
+    'version.dll' = 'version.dll'
+    'winmm.dll'   = 'alternatives/winmm.dll'
+    'dbghelp.dll' = 'alternatives/dbghelp.dll'
+    'dinput8.dll' = 'alternatives/dinput8.dll'
+    'dxgi.dll'    = 'alternatives/dxgi.dll'
+    'd3d12.dll'   = 'alternatives/d3d12.dll'
+}
+
+foreach ($entry in $proxySources.GetEnumerator()) {
     Copy-PackFile `
         -SourceRoot $fgRoot `
-        -SourceRelative $proxy `
-        -TargetRelative $proxy `
+        -SourceRelative $entry.Value `
+        -TargetRelative $entry.Key `
         -Role 'proxy' `
         -ProxySlot $true `
         -PayloadDir $workspace.PayloadDir `
@@ -275,9 +289,9 @@ $ini = New-IniBlock `
 
 Write-PackManifest `
     -Id 'framegen.sm86' `
-    -Version '0.4.1' `
-    -DisplayName 'FrameGen SM86 (assets 0.4.1, runtime 310.9.16)' `
-    -GpuRoutes @('Sm86', 'Sm75') `
+    -Version '0.4.2' `
+    -DisplayName 'FrameGen SM86 (assets 0.4.2, runtime 310.9.16)' `
+    -GpuRoutes @('Sm86', 'Sm75', 'NotNeeded') `
     -OwnedDirectories @('dlssg_sm86') `
     -Files $files `
     -Ini $ini `

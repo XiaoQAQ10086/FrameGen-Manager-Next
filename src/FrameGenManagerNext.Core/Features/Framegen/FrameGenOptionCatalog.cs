@@ -37,6 +37,7 @@ public static class FrameGenOptionCatalog
         "Coarse",
         "Middle",
         "Fine",
+        "CoarseAt4K",
     ];
 
     public static IReadOnlyList<string> XeSsHudlessValues { get; } = ["Auto", "1", "0"];

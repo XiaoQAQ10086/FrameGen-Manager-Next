@@ -26,6 +26,7 @@ public static class FrameGenIniBuilder
         "Coarse",
         "Middle",
         "Fine",
+        "CoarseAt4K",
     };
 
     private static readonly HashSet<string> XeSsHudless = new(StringComparer.OrdinalIgnoreCase)

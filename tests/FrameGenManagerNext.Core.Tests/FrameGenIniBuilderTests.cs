@@ -110,6 +110,19 @@ public sealed class FrameGenIniBuilderTests
     }
 
     [Fact]
+    public void XeSsAcceptsCoarseAt4KFlowResolution()
+    {
+        var options = new FrameGenOptions(
+            Engine: "XeSS",
+            XeSsFlowResolution: "CoarseAt4K");
+
+        var text = FrameGenIniBuilder.Build(Pack, Template, options);
+        var document = IniDocument.Parse(text);
+
+        document.GetValue("XeSSFG", "FlowResolution").ShouldBe("CoarseAt4K");
+    }
+
+    [Fact]
     public void XeSsClampsGeneratedFramesToStockMaximum()
     {
         var options = new FrameGenOptions(Engine: "XeSS", MaxGeneratedFrames: 5);

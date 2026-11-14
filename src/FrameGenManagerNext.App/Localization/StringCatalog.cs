@@ -19,7 +19,7 @@ internal static partial class StringCatalog
             "检测到 RivaTuner Statistics Server (RTSS) 正在向 WebView2 注入 DLL，浏览器进程因此崩溃。程序已尝试添加 RTSS 排除配置；如果仍失败，请以管理员身份运行一次本程序，或在 RTSS 中把 msedgewebview2.exe 加入排除列表（Application detection level = None）。",
             "RivaTuner Statistics Server (RTSS) is injecting into WebView2 and crashing the browser process. The app tried to add an RTSS exclusion; if it still fails, run the app once as administrator, or add msedgewebview2.exe as an exclusion in RTSS (Application detection level = None)."),
         ["Fallback.Detail"] = ("诊断信息：{0}", "Diagnostics: {0}"),
-        ["Nav.Library"] = ("帧生成", "FrameGen"),
+        ["Nav.Library"] = ("DLSS-G 帧生成", "DLSS-G"),
         ["Nav.Gpu"] = ("GPU 状态", "GPU"),
         ["Nav.SmoothMotion"] = ("Smooth Motion", "Smooth Motion"),
         ["Nav.Dlss5"] = ("DLSS5 / ReShade", "DLSS5"),
@@ -87,7 +87,7 @@ internal static partial class StringCatalog
         ["Conflict.SmoothMotionHint"] = ("请先在 Smooth Motion 页面关闭该游戏", "Turn it off on the Smooth Motion page first"),
         ["Conflict.FrameGenOn"] = ("冲突：已开启帧生成", "Conflict: frame generation is on"),
 
-        ["Library.Title"] = ("帧生成", "Frame generation"),
+        ["Library.Title"] = ("DLSS-G 帧生成", "DLSS-G Frame Generation"),
         ["Library.Subtitle"] = ("选择游戏后点“部署”，再调整帧生成参数。", "Pick a game, click Deploy, then adjust frame generation options."),
         ["Library.Scan"] = ("扫描游戏", "Scan games"),
         ["Library.Add"] = ("添加游戏", "Add game"),

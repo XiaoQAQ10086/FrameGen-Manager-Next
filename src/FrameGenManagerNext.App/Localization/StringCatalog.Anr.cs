@@ -28,7 +28,7 @@ internal static partial class StringCatalog
         Add("Mode.Badge.SmoothMotion", "SM", "SM");
         Add("Mode.Badge.Anr", "ANR", "ANR");
         Add("Mode.GithubSource", "GitHub 资产来源", "GitHub asset source");
-        Add("Mode.FrameGen.Gpus", "NVIDIA RTX 20 / 30 系", "NVIDIA RTX 20 / 30 series");
+        Add("Mode.FrameGen.Gpus", "NVIDIA RTX 20 / 30 / 40 / 50 系", "NVIDIA RTX 20 / 30 / 40 / 50 series");
         Add("Mode.SmoothMotion.Gpus", "NVIDIA RTX 20 / 30 系", "NVIDIA RTX 20 / 30 series");
         Add("Mode.Dlss5.Gpus", "NVIDIA RTX 20 / 30 系", "NVIDIA RTX 20 / 30 series");
         Add("Anr.StepTitle", "安装步骤", "Installation");

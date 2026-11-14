@@ -305,8 +305,6 @@ export default {
       const restorable = ['Installed', 'Partial', 'Conflict'].includes(game.state);
       const fgDeployed = ['Installed', 'Outdated', 'Partial', 'Conflict'].includes(game.state);
       const smConflict = game.smoothMotionOn === true;
-      const gpuGate = gpu?.frameGeneration || null;
-      const gpuBlocked = Boolean(gpuGate && gpuGate !== 'Supported');
       const xboxProtected = game.launcher === 'Xbox' && !game.renderExe;
       const occupied = (game.occupiedProxies || []).filter((item) => item.owner !== 'FrameGen');
       const primaryAction = legacy ? 'clean' : restorable ? 'restore' : 'deploy';
@@ -317,17 +315,13 @@ export default {
           : game.state === 'Outdated'
             ? t('Common.Update')
             : t('Common.Deploy');
-      const blocked = (smConflict || xboxProtected || gpuBlocked) && !restorable && !legacy;
+      const blocked = (smConflict || xboxProtected) && !restorable && !legacy;
       const blockReason = xboxProtected
         ? t('Library.XboxProtected')
-        : gpuBlocked
-          ? t(`Gpu.Gate.${gpuGate}`)
-          : t('Conflict.SmoothMotionOn');
+        : t('Conflict.SmoothMotionOn');
       const blockHint = xboxProtected
         ? blockReason
-        : gpuBlocked
-          ? `${blockReason} · ${t('Gpu.FrameGenerationHint')}`
-          : `${t('Conflict.SmoothMotionOn')} · ${t('Conflict.SmoothMotionHint')}`;
+        : `${t('Conflict.SmoothMotionOn')} · ${t('Conflict.SmoothMotionHint')}`;
       const stateText = game.state === 'Installed'
         ? (game.packVersion
             ? t('State.DeployedVersion').replace('{0}', game.packVersion)

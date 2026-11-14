@@ -1,5 +1,18 @@
 # Changelog
 
+## 2.3.0
+
+### Added
+
+- 帧生成资产更新至上游 0.4.2：RTX 50（Blackwell）使用专用 `.bw` 内核镜像，Cyberpunk 2077 3440×1440 实测 4X 每真实帧 6.54 → 4.68 ms；4K MV splat 优化再快 3.0–5.6%；XeSS 3X/4X 支持抖动运动矢量；`[XeSSFG] UseHudless=Auto` 现在等同 `0`。
+- XeSS 光流分辨率新增 `CoarseAt4K` 选项。
+- 帧生成支持范围扩展到 RTX 20–50 系；RTX 40/50 走 PTX 内核。移除部署界面的显卡拦截，显卡检测仍用于展示型号和驱动。
+- 顶部导航和页面标题由“帧生成”改为“DLSS-G 帧生成”，与 ANR 帧生成、DLSS5 / ReShade 区分。
+
+### Fixed
+
+- 0.4.2 代理 DLL、运行时、XeSS 内核和 INI 模板全部更新并重新校验哈希；0.4.1 部署可直接更新，沿用原备份。
+
 ## 2.2.0
 
 ### Added
