@@ -333,10 +333,13 @@ button, select { font: inherit; }
 .asset-modal { width: min(560px, 92vw); }
 .asset-modal.asset-result .modal-head { margin-bottom: 10px; padding-bottom: 0; border-bottom: 0; }
 .asset-modal.asset-result .modal-foot { margin-top: 18px; padding-top: 0; border-top: 0; justify-content: flex-end; }
-.asset-list { display: grid; gap: 8px; margin-top: 16px; }
-.asset-row { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 11px 13px; border: 1px solid var(--line); border-radius: 12px; background: rgba(96, 107, 125, 0.05); }
+.asset-list { display: grid; gap: 8px; margin-top: 16px; max-height: 52vh; overflow: auto; }
+.asset-row { display: grid; gap: 8px; padding: 11px 13px; border: 1px solid var(--line); border-radius: 12px; background: rgba(96, 107, 125, 0.05); }
+.asset-row-head { display: flex; align-items: center; justify-content: space-between; gap: 14px; }
 .asset-row span { color: var(--muted); font-size: 12.5px; }
 .asset-row b { font-size: 13px; }
+.asset-games { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.asset-games li { max-width: 100%; padding: 3px 9px; overflow: hidden; border: 1px solid var(--line); border-radius: 999px; background: rgba(96, 107, 125, 0.08); font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
 .asset-warning { margin: 14px 0 0; padding: 10px 12px; border: 1px solid rgba(178, 106, 0, 0.18); border-radius: 12px; background: rgba(194, 110, 0, 0.08); color: var(--warn); font-size: 12.5px; line-height: 1.55; }
 .asset-status { margin: 14px 0 10px; color: var(--muted); font-size: 12.5px; }
 .asset-progress { height: 6px; border-radius: 999px; overflow: hidden; background: rgba(96, 107, 125, 0.14); }

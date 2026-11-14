@@ -78,11 +78,18 @@ function hideBanner() {
 function openPrompt(ctx) {
   if (!currentReport?.totalGames || document.querySelector('[data-role="asset-prompt"]')) return;
 
-  const rows = currentReport.groups.map((group) => `
+  const rows = currentReport.groups.map((group) => {
+    const games = group.games || [];
+    const names = games.map((game) => `<li title="${esc(game.targetDirectory || '')}">${esc(game.name)}</li>`).join('');
+    return `
     <div class="asset-row">
-      <span>${esc(familyName(ctx, group.family))}</span>
-      <b>${esc(ctx.t('Assets.GameCount').replace('{0}', group.games.length))}</b>
-    </div>`).join('');
+      <div class="asset-row-head">
+        <span>${esc(familyName(ctx, group.family))}</span>
+        <b>${esc(ctx.t('Assets.GameCount').replace('{0}', games.length))}</b>
+      </div>
+      <ul class="asset-games">${names}</ul>
+    </div>`;
+  }).join('');
 
   const dialog = modal(`
     <header class="modal-head">
