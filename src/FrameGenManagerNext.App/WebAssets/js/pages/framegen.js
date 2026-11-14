@@ -780,6 +780,7 @@ export default {
         ui.toast(ui.errorText(error, t('Errors.OperationFailed')), 'error');
       } finally {
         setBusy(false);
+        ui.progressDone();
         if (afterConflict) {
           await afterConflict();
         }
