@@ -1,16 +1,16 @@
 {
-  "version": "2.3.0",
-  "notes": "本部署工具在DLSS-G帧生成下已支持RTX 20-50系显卡用户部署及使用。ANR帧生成支持GTX 16系，A卡5000-9000系，i卡全系部署与使用。Smooth Motion与DLSS5仅支持RTX 20与30系显卡用户部署及使用。\r\n\r\n【更新】\r\n1.更新内置资产文件，跟进上游帧生成0.4.2版本更新",
-  "pageUrl": "https://github.com/XiaoQAQ10086/FrameGen-Manager-Next/releases/tag/v2.3.0",
+  "version": "2.3.1",
+  "notes": "【改进】\r\n1.部署ANR帧生成时，新增部署界面让用户自行选择代理入口\r\n【修复】\r\n1.修复弹窗卡片不消失的问题",
+  "pageUrl": "https://github.com/XiaoQAQ10086/FrameGen-Manager-Next/releases/tag/v2.3.1",
   "installer": {
-    "name": "FrameGenManagerNext-2.3.0-win-Setup.exe",
-    "size": 391162247,
-    "sha256": "0C82DE80C3B03C7D6217A61C018B3B0208E043CF98F378DBA0208F1BEF2A8E69",
+    "name": "FrameGenManagerNext-2.3.1-win-Setup.exe",
+    "size": 391163551,
+    "sha256": "92185429E06A54E463A5529078FF385612519BC4EFDC568C577C4507356C4519",
     "urls": [
-      "https://github.com/XiaoQAQ10086/FrameGen-Manager-Next/releases/download/v2.3.0/FrameGenManagerNext-2.3.0-win-Setup.exe",
-      "https://ghfast.top/https://github.com/XiaoQAQ10086/FrameGen-Manager-Next/releases/download/v2.3.0/FrameGenManagerNext-2.3.0-win-Setup.exe",
-      "https://gh-proxy.com/https://github.com/XiaoQAQ10086/FrameGen-Manager-Next/releases/download/v2.3.0/FrameGenManagerNext-2.3.0-win-Setup.exe",
-      "https://ghproxy.net/https://github.com/XiaoQAQ10086/FrameGen-Manager-Next/releases/download/v2.3.0/FrameGenManagerNext-2.3.0-win-Setup.exe"
+      "https://github.com/XiaoQAQ10086/FrameGen-Manager-Next/releases/download/v2.3.1/FrameGenManagerNext-2.3.1-win-Setup.exe",
+      "https://ghfast.top/https://github.com/XiaoQAQ10086/FrameGen-Manager-Next/releases/download/v2.3.1/FrameGenManagerNext-2.3.1-win-Setup.exe",
+      "https://gh-proxy.com/https://github.com/XiaoQAQ10086/FrameGen-Manager-Next/releases/download/v2.3.1/FrameGenManagerNext-2.3.1-win-Setup.exe",
+      "https://ghproxy.net/https://github.com/XiaoQAQ10086/FrameGen-Manager-Next/releases/download/v2.3.1/FrameGenManagerNext-2.3.1-win-Setup.exe"
     ]
   }
 }
