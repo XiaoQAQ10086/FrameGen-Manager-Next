@@ -35,6 +35,13 @@
 - 顶栏导航在英文下使用短标签（FrameGen / DLSS5 / ANR）；空间不足时导航自身横向滚动，语言下拉固定在右侧、不参与压缩。
 - 各模式页左侧卡片显示该模式的支持显卡，并提供带 GitHub 图标的资产来源按钮；点击后通过 `updates.openPage` 交给系统浏览器打开对应仓库。
 
+## 第三方许可
+
+- 根目录 `licenses/` 与程序一起发布，安装包和便携版都带（`build\publish-installer.ps1`、`build\publish-portable.ps1` 各拷一次；Inno 的 `[Files]` 递归收录）。
+- `licenses\README.md` 是组件 × 许可 × 全文位置的索引；各子目录放上游原文（`dlssg_for_sm86`、`gitc_uplift`、`reshade`、`reshade_shaders`、`reframework`、`smooth_motion`）。
+- “关于”页提供“打开许可目录”，走 `settings.openFolder` 的 `which=licenses`；目录缺失时返回 `ErrorCode.FileNotFound`，不静默创建空目录。
+- 许可文本不写进游戏目录：部署只放运行所需文件，卸载不会留下我们的文档。
+
 ## 页面状态缓存
 
 - 页面只挂载一次：切换导航时隐藏旧页面、显示已挂载页面，不再销毁 DOM 或重新探测游戏/驱动。

@@ -344,6 +344,9 @@ public sealed partial class FrameGenDeploymentService : IFrameGenDeploymentServi
         var files = new List<DeploymentFilePlan>();
         foreach (var file in pack.Files)
         {
+            // The pack ships the spare proxies under alternatives\ but upstream wants exactly one
+            // proxy in the game folder ("alternatives\ is not copied normally"), so the unselected
+            // ones stay in the pack. Switching the slot later just deploys a different one.
             if (file.ProxySlot && !ReferenceEquals(file, proxy))
             {
                 continue;

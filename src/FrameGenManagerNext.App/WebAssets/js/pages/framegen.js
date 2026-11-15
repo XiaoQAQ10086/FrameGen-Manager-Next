@@ -351,9 +351,9 @@ export default {
           ${blocked ? `<div class="conflict-hint">${esc(blockHint)}</div>` : ''}
           <div class="gactions">
             <button class="btn small ${restorable || legacy ? 'danger' : 'success'}" data-action="${primaryAction}" data-id="${esc(game.id)}" type="button" ${blocked ? 'disabled' : ''} ${blocked ? `title="${esc(blockReason)}"` : ''}>${esc(primaryLabel)}</button>
-            <button class="btn small" data-action="open" data-id="${esc(game.id)}" type="button">${esc(t('Library.OpenFolder'))}</button>
             <button class="btn small launch" data-action="launch" data-id="${esc(game.id)}" type="button" ${game.launchMode === 'none' ? 'disabled' : ''} ${game.launchMode === 'none' ? `title="${esc(t('Library.LaunchUnsupported'))}"` : ''}>${esc(t('Library.Launch'))}</button>
             <span class="spacer"></span>
+            <button class="btn small icon-only" data-action="open" data-id="${esc(game.id)}" type="button" title="${esc(t('Library.OpenFolder'))}" aria-label="${esc(t('Library.OpenFolder'))}">📂</button>
             <button class="btn small danger icon-only" data-action="remove" data-id="${esc(game.id)}" type="button" title="${esc(t('Common.Remove'))}" aria-label="${esc(t('Common.Remove'))}">🗑</button>
           </div>
         </article>`;

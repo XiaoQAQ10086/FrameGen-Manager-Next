@@ -7,7 +7,7 @@
 
 - 名称：`nvidia-smi --query-gpu=name --format=csv,noheader` 第一行；`nvidia-smi` 缺失时回退读取注册表 `HKLM\SYSTEM\CurrentControlSet\Control\Video` 的 `DriverDesc`，让 AMD/Intel 机器也能显示实际显卡名称（跳过 `Microsoft Basic` 适配器）；完全取不到时返回 `NVIDIA GPU not detected`。
 - 驱动：`nvidia-smi --query-gpu=driver_version --format=csv,noheader` 第一行；回退路径读取同一注册表项的 `DriverVersion`（Windows 驱动版本号格式），仍取不到时为 `null`。
-- HAGS：`HKLM\SYSTEM\CurrentControlSet\Control\GraphicsDrivers` 的 `HwSchMode` DWORD：`2` 开启、`1` 关闭、缺失或其他值未知。
+- HAGS：优先通过 `D3DKMTQueryAdapterInfo(KMTQAITYPE_WDDM_2_7_CAPS = 70)` 读取 `D3DKMT_WDDM_2_7_CAPS.HwSchEnabled`（bit 1），这是实际生效状态；注册表 `HKLM\SYSTEM\CurrentControlSet\Control\GraphicsDrivers\HwSchMode` 只作为回退（`2` 开启、`1` 关闭；缺失表示 Windows 默认策略，不能当作关闭）。D3DKMT 查询失败时才读注册表，仍取不到则返回未知。
 - 不写注册表、不修改驱动配置。
 
 ## 检测时机

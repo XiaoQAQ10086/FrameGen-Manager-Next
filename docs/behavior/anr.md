@@ -26,6 +26,7 @@
 - 已存在非本程序的 `OptiScaler` 目录时拒绝 full 部署，提示改用 addon 包。
 - addon 部署：要求游戏目录已有 `OptiScaler.ini`（通常位于渲染 EXE 目录，`OptiDllPath=auto` 时优先 `<游戏>/OptiScaler`）；把包内 `Apex Neural Rendering FG/` 复制到 `<OptiScaler>/custom/Apex Neural Rendering FG/`，并在 `[FrameGen]` 写入 `FGInput=nvngxfg`、`FGNvngxReplacement=Apex Neural Rendering FG`，保留原文件的换行和 BOM。已存在同名 custom 目录且不是本程序部署时拒绝。
 - 所有文件通过统一部署引擎备份、写入、校验；还原时恢复代理、`OptiScaler.ini` 和 custom 目录的原有文件，删除本次 ANR 文件。
+- 还原按“用户明确要求的卸载”处理，始终以 `force: true` 调用引擎：manifest 里的文件都属于本次 ANR 部署，OptiScaler 退出时会重写 `OptiScaler.ini`，游戏/其他 Mod 也可能替换代理，这些运行时改动不得让还原停在 `Partial`。有原始备份的覆盖回原文件，没有备份的删除；只有文件被占用等真实失败才保留冲突并报告 `Partial`。
 - OptiScaler/ANR 运行时会在自有目录写入 `nr_fg-*.log`、`anr-vkloader.dll` 等文件。还原时这些清单外文件只允许在 full 的 `OptiScaler/` 或 addon 的 `custom/Apex Neural Rendering FG/` 内删除，然后重新执行一次还原，使 manifest 进入 `Restored`；用户目录中的其他遗留文件仍按冲突/遗留规则保留。
 - 版本升级不需要先卸载：打开页面会检查上游最新版本；确认后先下载并校验新包，再对已部署游戏执行原地部署（统一引擎复用原始备份、替换旧文件、清理旧版独有文件）。下载失败不会影响现有部署；单个游戏更新失败会保留原部署并单独报告。
 - 不执行官方 `install.cmd`/`install.ps1`，避免绕过 manifest 和备份。
@@ -49,6 +50,6 @@
 
 ## 测试
 
-- `Infrastructure.Tests/AnrDeploymentServiceTests.cs`：full 代理映射、备份、还原（含运行日志清理）；addon 自定义 provider、`OptiScaler.ini` 改写与还原；新版本原地覆盖并保留原始备份。
+- `Infrastructure.Tests/AnrDeploymentServiceTests.cs`：full 代理映射、备份、还原（含运行日志清理）；addon 自定义 provider、`OptiScaler.ini` 改写与还原；新版本原地覆盖并保留原始备份；游戏重写部署后的 `OptiScaler.ini` 时还原仍进入 `NotDeployed`。
 - `Infrastructure.Tests/AnrPackageServiceTests.cs`：full/addon 导入识别、无效 zip 拒绝。
 - 在线下载依赖网络，不进入单元测试；手工验收时检查包版本和 SHA-256。

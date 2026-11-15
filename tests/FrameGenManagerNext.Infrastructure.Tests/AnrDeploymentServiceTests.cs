@@ -200,6 +200,56 @@ public sealed class AnrDeploymentServiceTests : IDisposable
         File.ReadAllText(Path.Combine(target, "OptiScaler.ini")).ShouldBe("original ini");
     }
 
+    [Fact]
+    public async Task RestoreRecoversWhenTheGameRewroteTheDeployedIni()
+    {
+        var paths = new AppPaths(_directory.GetPath("data"));
+        paths.EnsureCreated();
+        var backups = new BackupStore(paths, NullLogger<BackupStore>.Instance);
+        var engine = new DeploymentEngine(paths, backups, NullLogger<DeploymentEngine>.Instance);
+        var target = _directory.CreateDirectory("rewritten-game");
+        var exe = _directory.WriteFile("rewritten-game/game.exe", "exe");
+        _directory.WriteFile("rewritten-game/OptiScaler.ini", "original ini");
+
+        var payload = _directory.CreateDirectory("anr-rewritten/payload");
+        _directory.WriteFile("anr-rewritten/payload/game/dxgi.dll", "anr proxy");
+        _directory.WriteFile("anr-rewritten/payload/game/OptiScaler.ini", "[OptiScaler]");
+        _directory.WriteFile(
+            "anr-rewritten/payload/game/OptiScaler/custom/Apex Neural Rendering FG/dlssg/nvngx_dlssg.dll",
+            "anr dlssg");
+
+        var package = new AnrPackageInfo("V.B15", payload, "anr.zip");
+        var service = new AnrDeploymentService(
+            new FakePackages(package),
+            engine,
+            NullLogger<AnrDeploymentService>.Instance);
+
+        var deployed = await service.DeployAsync(
+            target,
+            exe,
+            "dxgi.dll",
+            progress: null,
+            TestContext.Current.CancellationToken);
+        deployed.IsSuccess.ShouldBeTrue(deployed.Error?.ToString());
+
+        // OptiScaler rewrites its own config when it exits, so the deployed file no
+        // longer matches the recorded hash.
+        _directory.WriteFile("rewritten-game/OptiScaler.ini", "[OptiScaler]\nFGInput=nvngxfg\n");
+
+        var restored = await service.RestoreAsync(
+            target,
+            progress: null,
+            TestContext.Current.CancellationToken);
+
+        restored.IsSuccess.ShouldBeTrue(restored.Error?.ToString());
+        restored.Value.Conflicts.ShouldBe(0, string.Join(" | ", restored.Value.Warnings));
+        File.ReadAllText(Path.Combine(target, "OptiScaler.ini")).ShouldBe("original ini");
+        Directory.Exists(Path.Combine(target, "OptiScaler")).ShouldBeFalse();
+
+        var afterRestore = await service.InspectAsync(target, TestContext.Current.CancellationToken);
+        afterRestore.State.ShouldBe(Domain.Deployment.DeploymentState.NotDeployed);
+    }
+
     public void Dispose()
     {
         _directory.Dispose();

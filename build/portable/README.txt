@@ -9,6 +9,7 @@ FrameGen Manager-Next（便携版 / Portable）
   本目录下的 portable.flag 会让程序把数据写到 .\data\
   （配置、备份、日志、缓存都在这里）。
   不写注册表；删除整个文件夹即可卸载。
+  licenses\ 是第三方组件许可与声明，可在「关于」页一键打开，不会写进游戏目录。
 
 界面：
   帧生成（WebView2 试验版） / Smooth Motion / DLSS5 / 日志与诊断 / 设置 / 关于

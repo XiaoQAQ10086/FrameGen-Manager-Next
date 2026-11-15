@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using FrameGenManagerNext.Core.Features.Gpu;
 using FrameGenManagerNext.Domain.Gpu;
+using FrameGenManagerNext.Infrastructure.Platform;
 using Microsoft.Extensions.Logging;
 using Microsoft.Win32;
 
@@ -185,6 +186,12 @@ public sealed class NvidiaSmiGpuProbe : IGpuProbe
 
     private static bool? ReadHags()
     {
+        var live = HagsProbe.IsEnabled();
+        if (live is not null)
+        {
+            return live;
+        }
+
         try
         {
             using var key = Registry.LocalMachine.OpenSubKey(

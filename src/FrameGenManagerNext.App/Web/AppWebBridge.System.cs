@@ -149,6 +149,20 @@ public sealed partial class AppWebBridge
     private object? OpenSettingsFolder(JsonElement payload)
     {
         var which = ReadString(payload, "which", "config");
+        if (which == "licenses")
+        {
+            var licenses = Path.Combine(AppContext.BaseDirectory, "licenses");
+            if (!Directory.Exists(licenses))
+            {
+                throw new BridgeException(
+                    Domain.Errors.ErrorCode.FileNotFound,
+                    "licenses folder is missing from the installation");
+            }
+
+            OpenFolder(licenses);
+            return new { opened = true };
+        }
+
         var path = which switch
         {
             "packs" => _paths.PacksDirectory,

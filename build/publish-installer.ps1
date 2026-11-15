@@ -109,6 +109,13 @@ foreach ($packId in $packIds) {
     Copy-Item -Path (Join-Path $packPayload '*') -Destination $packTarget -Recurse -Force
 }
 
+$licensesSource = Join-Path $root 'licenses'
+if (-not (Test-Path -LiteralPath $licensesSource)) {
+    throw 'licenses folder not found. It ships third-party license texts with the build.'
+}
+
+Copy-Item -LiteralPath $licensesSource -Destination (Join-Path $staging 'licenses') -Recurse -Force
+
 # The installed app must use LocalAppData, not portable mode.
 Remove-Item -LiteralPath (Join-Path $staging 'portable.flag') -Force -ErrorAction SilentlyContinue
 Remove-Item -LiteralPath (Join-Path $staging 'data') -Recurse -Force -ErrorAction SilentlyContinue

@@ -17,6 +17,10 @@ export default {
             <div><h3>GitHub</h3><p>${info.repository}</p></div>
             <button class="btn small" data-action="open-repo" type="button">${t('About.OpenGitHub')}</button>
           </div>
+          <div class="form-row">
+            <div><h3>${t('About.Licenses')}</h3><p>${t('About.LicensesHint')}</p></div>
+            <button class="btn small" data-action="open-licenses" type="button">${t('About.OpenLicenses')}</button>
+          </div>
         </div>
         <div class="panel form-panel">
           <div class="ctitle">${t('About.Startup')}</div>
@@ -95,6 +99,9 @@ export default {
       }
       if (button.dataset.action === 'open-repo') {
         await api.request('app.openRepository').catch((error) => ui.toast(error.message, 'error'));
+      }
+      if (button.dataset.action === 'open-licenses') {
+        await api.request('settings.openFolder', { which: 'licenses' }).catch((error) => ui.toast(error.message, 'error'));
       }
     };
     root.addEventListener('click', onClick);

@@ -50,6 +50,16 @@ public sealed partial class FrameGenDeploymentService
             }
 
             candidates.Add(new CleanupCandidate(file.Target, file.Sha256));
+
+            // Upstream keeps the spare proxies in alternatives\, so a user may have copied that
+            // folder into the game directory next to the selected proxy. Recognise those files
+            // as ours as well, otherwise an unrecorded deployment could not be cleaned up.
+            if (file.ProxySlot)
+            {
+                candidates.Add(new CleanupCandidate(
+                    FrameGenProxyLayout.AlternateTarget(file.Target),
+                    file.Sha256));
+            }
         }
 
         // The old tool may have deployed a different asset version; its manifest

@@ -110,5 +110,12 @@ foreach ($packId in $packIds) {
     Copy-Item -Path (Join-Path $packPayload '*') -Destination $packTarget -Recurse -Force
 }
 
+$licensesSource = Join-Path $root 'licenses'
+if (-not (Test-Path -LiteralPath $licensesSource)) {
+    throw 'licenses folder not found. It ships third-party license texts with the build.'
+}
+
+Copy-Item -LiteralPath $licensesSource -Destination (Join-Path $destination 'licenses') -Recurse -Force
+
 Write-Host ''
 Write-Host "Portable folder: $destination" -ForegroundColor Green

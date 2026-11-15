@@ -367,26 +367,28 @@ public sealed partial class DeploymentEngine : IDeploymentEngine
         }
 
         var manifest = CreateManifest(plan, target.Value, DeploymentManifestState.Installing, records);
-        try
+        var savedManifest = await SaveManifestAsync(manifest, target.Value, cancellationToken);
+        if (savedManifest.IsFailure)
         {
-            await _backups.SaveManifestAsync(manifest, cancellationToken);
-        }
-        catch (OperationCanceledException)
-        {
-            return Result<DeploymentReport>.Fail(new AppError(ErrorCode.OperationCancelled));
-        }
-        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
-        {
-            return Result<DeploymentReport>.Fail(MapIoError(exception, target.Value));
-        }
-        catch (TimeoutException exception)
-        {
-            return Result<DeploymentReport>.Fail(AppError.Create(
-                ErrorCode.OperationTimedOut,
-                ("target", target.Value),
-                ("reason", exception.Message)));
+            return Result<DeploymentReport>.Fail(savedManifest.Error!);
         }
 
+        // Upstream ships exactly one proxy next to the game EXE and tells users to delete the old
+        // one before copying the new one: with two of them present the first one loaded by the
+        // process wins, so a switch must never leave both. Proxies are removed now, before any new
+        // file is written; non-proxy leftovers keep the old order and are swept after the write.
+        var removedProxies = await RemoveStaleProxiesAsync(
+            previous,
+            plan,
+            target.Value,
+            backupDirectory,
+            cancellationToken);
+        if (removedProxies.IsFailure)
+        {
+            return Result<DeploymentReport>.Fail(removedProxies.Error!);
+        }
+
+        var warnings = new List<string>(removedProxies.Value);
         var written = new List<DeployedFileRecord>();
         try
         {
@@ -450,7 +452,9 @@ public sealed partial class DeploymentEngine : IDeploymentEngine
                 progress?.Report(new DeploymentProgress("writing", record.RelativePath, index + 1, plan.Files.Count));
             }
 
-            var warnings = await CleanupStaleAsync(previous, plan, target.Value, backupDirectory, cancellationToken);
+            warnings.AddRange(await CleanupStaleAsync(
+                previous, plan, target.Value, backupDirectory, cancellationToken, excludeRole: ProxyRole));
+            warnings = warnings.Distinct(StringComparer.Ordinal).ToList();
             var stamped = StampTimestamps(records, target.Value);
             var installed = CreateManifest(plan, target.Value, DeploymentManifestState.Installed, stamped);
             await _backups.SaveManifestAsync(installed, cancellationToken);

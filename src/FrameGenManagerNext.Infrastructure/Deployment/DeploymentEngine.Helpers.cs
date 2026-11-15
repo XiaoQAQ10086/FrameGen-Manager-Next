@@ -8,6 +8,8 @@ namespace FrameGenManagerNext.Infrastructure.Deployment;
 
 public sealed partial class DeploymentEngine
 {
+    private const string ProxyRole = "proxy";
+
     private static Result<string> ValidateTarget(string targetDirectory)
     {
         if (string.IsNullOrWhiteSpace(targetDirectory))
@@ -121,7 +123,9 @@ public sealed partial class DeploymentEngine
         DeploymentPlan plan,
         string targetDirectory,
         string backupDirectory,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        string? role = null,
+        string? excludeRole = null)
     {
         if (previous is null ||
             previous.State is DeploymentManifestState.Restored or DeploymentManifestState.RolledBack)
@@ -143,6 +147,16 @@ public sealed partial class DeploymentEngine
         foreach (var record in previous.Files)
         {
             if (planned.Contains(record.RelativePath))
+            {
+                continue;
+            }
+
+            if (role is not null && !string.Equals(record.Role, role, StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+
+            if (excludeRole is not null && string.Equals(record.Role, excludeRole, StringComparison.OrdinalIgnoreCase))
             {
                 continue;
             }

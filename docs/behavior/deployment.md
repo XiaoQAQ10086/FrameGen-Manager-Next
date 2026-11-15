@@ -28,7 +28,10 @@ manifest 状态：`Installing → Installed / RolledBack / Partial`，还原后 
 1. 校验目标：绝对路径、目录存在、不是盘符根/Windows/Program Files 等受保护目录。
 2. 通过 `FGM_PACKS_DIR`、`<exe>/packs`、数据目录 `packs` 或仓库 `packs`/`assets/packs` 定位 pack；同名 pack 取版本最高且满足 `minAppVersion` 的一份。
 3. 校验 pack schema 和源文件大小/哈希。
-4. 选择代理槽（默认 `version.dll`），加入所有非代理文件，生成 INI。
+4. 选择代理槽（默认 `version.dll`）：只把选中的那个代理写到游戏根目录，其余代理留在 pack 里不部署，再加入所有非代理文件并生成 INI。
+   - 与上游一致：上游 `docs/INSTALL` 写明“`alternatives\` is not copied normally”，任何时候游戏目录里只放一个本程序代理；备用代理只在游戏不加载 `version.dll` 时逐个替换。
+   - 本程序把“换代理”做成交互：在「帧生成」页选另一个代理槽重新部署，**旧槽的代理在写入新文件之前就被移除**（见第 7 步），新槽随后写入根目录，游戏目录里始终只有一个。备用代理仍随 pack 分发（`packs\<packId>\alternatives\`），需要手工替换时可以从那里取，不必重新下载资产。
+   - 备用代理不进部署文件表，所以换槽不会留下 `Missing`/多余文件；用户若按上游说明把 `alternatives\` 整个拷进游戏目录，清理时也能按哈希认出这些文件。
    - 部署前若关于页开启“RE 引擎自动安装 REFramework”且检测到 RE Engine，会先安装 `reframework` pack 的 `dinput8.dll`；已有 REFramework 时跳过并弹窗说明。因此不能同时选择 `dinput8.dll` 作为帧生成代理。
    - 部署前检查目标目录里被 DLSS5/ReShade 占用的代理模块（`d3d11.dll`/`d3d12.dll`/`dxgi.dll` 等，按版本信息 ProductName=ReShade 识别）。若用户选中的槽正好被占用，界面会禁用该选项、自动切到其他槽并显示提示；后端也会返回 `Conflict`，避免覆盖 DLSS5 的代理入口。
    - 同时检查 REFramework 的 `dinput8.dll`：存在 REFramework manifest 时禁用/拒绝 `dinput8.dll` 代理槽，避免帧生成覆盖 REFramework。
@@ -40,10 +43,11 @@ manifest 状态：`Installing → Installed / RolledBack / Partial`，还原后 
    - 目标哈希等于当前 pack 或旧 manifest 记录 → 视为我们的文件，不备份。
    - 目标是外部文件 → 备份到 `backups/<family>/<targetHash>/files/<relative>`，`ExistedBefore=true`。
    - 旧 manifest 已有原始备份 → 复用原始备份，不覆盖。
-7. 写入 manifest（`Installing`）→ 临时文件写入 → 原子替换 → 校验哈希。
-8. 清理旧 manifest 中不再属于当前 pack 的文件（仅当内容仍是我们的）。
-9. 写入 manifest（`Installed`）。
-10. 任一步失败：回滚已写文件（恢复备份或删除新建文件），manifest 标记 `RolledBack`。
+7. 写入 manifest（`Installing`），随后移除旧 manifest 里不再部署的代理文件（`role=proxy`，其它角色不动）：上游要求“先删掉旧的代理，再把新的复制进去”，因为同一目录里有两个代理时，被先加载的那个会决定跑哪个版本。旧代理若原本是游戏自带文件（`ExistedBefore`），先把备份还原回去再写新代理。
+8. 临时文件写入 → 原子替换 → 校验哈希。
+9. 清理旧 manifest 中其余不再属于当前 pack 的文件（仅当内容仍是我们的；第 7 步已移走的代理此时已不存在）。
+10. 写入 manifest（`Installed`）。
+11. 任一步失败：回滚已写文件（恢复备份或删除新建文件），manifest 标记 `RolledBack`。注意第 7 步删掉的旧代理不会被回滚（我们不再持有它的源文件），此时状态为 `Partial`，重新部署即可。
 
 ## 部署前预检与会话
 
@@ -69,7 +73,7 @@ manifest 状态：`Installing → Installed / RolledBack / Partial`，还原后 
 
 目标目录有我们的文件但没有 manifest（旧工具装的、或记录已丢）时，检查结果为 `InstalledWithoutManifest`。这类部署不能“还原”（没有原件备份），只能清理：
 
-1. 候选文件来自 pack 的完整文件表（所有代理槽 + 运行库），每项带 pack 记录的 SHA-256。
+1. 候选文件来自 pack 的完整文件表（所有代理槽 + 运行库），每项带 pack 记录的 SHA-256；未选中代理的 `alternatives\<名>` 也入候选，这样用户按上游说明手工拷进去的备用代理同样能被认出（哈希相等才删）。
 2. 如果旧版工具留下的 manifest（`%APPDATA%\FrameGen-Manager\backups\*\manifest.json`，更早的 `%DLSSG-Manager%`）记录的 `game_dir` 与目标一致，只读解析其中的 `deployed_sha256`，把这些旧哈希也加入候选。这样旧资产版本部署的文件也能被确认并删除；旧备份本身不导入、不改动。
 3. 同一路径允许多个候选哈希，文件匹配其中任意一个就删除。
 4. 只有当前文件哈希仍等于某个候选哈希才删除；被用户替换过的文件保留并计入 `Conflicts`。
@@ -94,7 +98,7 @@ UI 上这类游戏显示黄色徽章：当前 pack 能匹配时是“已部署�
 
 | 选项 | 规则 |
 |---|---|
-| Proxy | 必须是 pack 中 `proxySlot=true` 的文件；只复制选中的一个 |
+| Proxy | 必须是 pack 中 `proxySlot=true` 的文件；只把选中的那个复制到游戏根目录，其余留在 pack 里不部署（上游：同一目录任何时候只放一个代理） |
 | Optimized | 0–3 |
 | MaxGeneratedFrames | `1`=2X、`2`=3X、`3`=4X、`5`=6X；`4`（5X）不是上游支持的模式。XeSS 只支持 1–3，>3 自动降为 3 |
 | Preset | A/B/C |
@@ -125,12 +129,13 @@ UI：“帧生成”页点击某个游戏的“部署”后才展开代理/优�
 
 部署弹窗：绿色“部署”按钮；不提供“取消”按钮（右上角关闭或点遮罩退出）；“还原”只有在当前游戏的部署状态可还原、且所选目标目录与部署目录一致时才启用，否则显示灰色锁定。游戏卡片的主动作在部署成功后从“部署”变为“还原”；已部署徽章显示 `已部署 资产版本：<packVersion>`。
 
-显卡检测：帧生成页仍显示当前显卡和驱动，但**不再用 GPU 路由拦截部署**。自资产 0.4.2 起上游支持 RTX 20–50 系（40/50 走 PTX 内核），`NotNeeded` 不再是阻断原因；GTX 16/AMD/Intel 不属于上游支持范围，界面不拦截但运行时不保证生效。Smooth Motion 仍保留自己的显卡门控。资产 0.4.2 的目录布局与 0.4.1 一致（`version.dll`、`dlssg_sm86.ini`、`dlssg_sm86\`），旧部署更新时沿用原备份。游戏卡片同时显示 Smooth Motion/ANR 的部署徽章；部署/还原后广播库变更，其他模式页面与重新显示的页面会刷新徽章。
+显卡检测：帧生成页仍显示当前显卡和驱动，但**不再用 GPU 路由拦截部署**。自资产 0.4.2 起上游支持 RTX 20–50 系（40/50 走 PTX 内核），`NotNeeded` 不再是阻断原因；GTX 16/AMD/Intel 不属于上游支持范围，界面不拦截但运行时不保证生效。Smooth Motion 仍保留自己的显卡门控。资产 0.4.2 的部署文件表与 0.4.1 相同（`version.dll`、`dlssg_sm86.ini`、`dlssg_sm86\`）；5 个备用代理留在 pack 的 `alternatives\` 里，按上游说明只在游戏不加载 `version.dll` 时才换，本程序通过重新部署换槽。旧部署更新时沿用原备份。游戏卡片同时显示 Smooth Motion/ANR 的部署徽章；部署/还原后广播库变更，其他模式页面与重新显示的页面会刷新徽章。
 
 ## 测试
 
 - `Infrastructure.Tests/DeploymentEngineTests.cs`：部署/检查/还原、备份、冲突、缺失、文件锁、无 manifest 识别。
 - `Core.Tests/FrameGenIniBuilderTests.cs`：默认值、非默认值、XeSS、帧数钳制、非法值。
+- `Core.Tests/FrameGenDeploymentPlanTests.cs`：只部署选中的代理，备用代理留在 pack 里不落盘；`alternatives\<名>` 仍可被识别用于清理。
 - 本机夹具：临时目录部署 8 个文件，备份 2 个原文件，还原后原文件内容恢复、运行时目录移除。
 
 ## 已知限制

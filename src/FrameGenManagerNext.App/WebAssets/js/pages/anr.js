@@ -1,4 +1,4 @@
-import { escapeHtml as esc } from '../ui.js';
+import { confirmDialog, escapeHtml as esc } from '../ui.js';
 import { createRemovedController, removedMarkup } from '../removed-modal.js';
 import { githubSource, modeSources } from '../mode-info.js';
 
@@ -203,8 +203,10 @@ export default {
           ${reason ? `<div class="hint">${esc(reason)}</div>` : ''}
           <div class="gactions">
             ${action}
-            <button class="btn small" data-action="open" data-id="${esc(game.id)}" type="button">${t('Library.OpenFolder')}</button>
             <button class="btn small launch" data-action="launch" data-id="${esc(game.id)}" type="button" ${game.launchMode === 'none' ? 'disabled' : ''} ${game.launchMode === 'none' ? `title="${esc(t('Library.LaunchUnsupported'))}"` : ''}>${t('Library.Launch')}</button>
+            <span class="spacer"></span>
+            <button class="btn small icon-only" data-action="open" data-id="${esc(game.id)}" type="button" title="${esc(t('Library.OpenFolder'))}" aria-label="${esc(t('Library.OpenFolder'))}">📂</button>
+            <button class="btn small danger icon-only" data-action="remove" data-id="${esc(game.id)}" type="button" title="${esc(t('Common.Remove'))}" aria-label="${esc(t('Common.Remove'))}">🗑</button>
           </div>
         </article>`;
     };
@@ -424,6 +426,21 @@ export default {
           .catch((error) => ui.toast(ui.errorText(error, t('Library.OpenFolder')), 'error'));
         return;
       }
+      if (action === 'remove') {
+        if (!(await confirmDialog(
+          t('Library.Dialog.RemoveTitle'),
+          t('Library.Confirm.Remove').replace('{0}', game.name),
+          t('Common.Remove')))) return;
+
+        try {
+          await api.request('games.remove', { id: game.id });
+          await load();
+          ui.libraryChanged('anr');
+        } catch (error) {
+          ui.toast(ui.errorText(error, t('Common.Remove')), 'error');
+        }
+        return;
+      }
       if (action === 'deploy') {
         if (state.package?.kind === 'Addon') {
           await deployGame(game, null);
@@ -436,9 +453,15 @@ export default {
         const ok = await run(
           () => api.request('anr.restore', { id: game.id }, 600000),
           t('Anr.Restore'),
-          t('Anr.RestoredToast'),
         );
-        if (ok) ui.libraryChanged('anr');
+        if (!ok) return;
+        const restored = state.games?.find((item) => item.id === game.id);
+        if (restored && (restored.state === 'Partial' || restored.state === 'Conflict')) {
+          ui.toast(t('Anr.RestoreIncomplete'), 'error');
+        } else {
+          ui.toast(t('Anr.RestoredToast'));
+        }
+        ui.libraryChanged('anr');
       }
     });
 

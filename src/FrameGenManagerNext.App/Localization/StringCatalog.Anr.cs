@@ -72,6 +72,7 @@ internal static partial class StringCatalog
         Add("Anr.Importing", "正在导入 ANR…", "Importing ANR…");
         Add("Anr.DeployedToast", "ANR 已部署", "ANR deployed");
         Add("Anr.RestoredToast", "ANR 已还原", "ANR restored");
+        Add("Anr.RestoreIncomplete", "部分文件被占用，ANR 没能完全还原。请关闭游戏和相关程序后重试。", "Some files were in use, so ANR was not fully removed. Close the game and any tool using it, then try again.");
         Add("Anr.UpdateAvailable", "发现 ANR 新版本 {0}（当前 {1}）。可直接更新已部署游戏，原始文件备份会保留。", "ANR {0} is available (current {1}). Deployed games can be updated in place; original backups are kept.");
         Add("Anr.UpdateNow", "更新", "Update");
         Add("Anr.UpdateLater", "稍后", "Later");
@@ -81,6 +82,7 @@ internal static partial class StringCatalog
         Add("Anr.UpdateFailedGames", "有 {0} 个游戏未能更新", "{0} game(s) could not be updated");
         Add("Anr.Empty", "没有可用的游戏。", "No games available.");
 
+        AddLicenseEntries();
     }
 
     private static void Add(string key, string chinese, string english)

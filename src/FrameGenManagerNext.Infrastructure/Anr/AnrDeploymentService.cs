@@ -133,11 +133,17 @@ public sealed partial class AnrDeploymentService : IAnrDeploymentService
         IProgress<DeploymentProgress>? progress,
         CancellationToken cancellationToken)
     {
+        // Restoring ANR is an uninstall the user asked for: every file in the
+        // manifest belongs to the deployment, so a file the game or OptiScaler
+        // rewrote at runtime (config, cache, replaced proxy) must not block it.
+        // Without force the engine leaves such files in place, keeps the manifest
+        // in Partial and the game shows "needs repair" forever.
         var first = await _engine.RestoreAsync(
             FamilyId,
             targetDirectory,
             progress,
-            cancellationToken);
+            cancellationToken,
+            force: true);
         if (first.IsFailure || first.Value.Leftovers.Count == 0)
         {
             return first;
@@ -196,7 +202,8 @@ public sealed partial class AnrDeploymentService : IAnrDeploymentService
             FamilyId,
             targetDirectory,
             progress,
-            cancellationToken);
+            cancellationToken,
+            force: true);
         return second.IsSuccess ? second : first;
     }
 

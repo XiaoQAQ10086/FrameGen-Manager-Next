@@ -503,3 +503,6 @@ build/vendor/
 
 # On-demand diagnostic tooling; never packaged or published
 build/tools/
+
+# Local agent/search index, not part of the project
+.memsearch/
