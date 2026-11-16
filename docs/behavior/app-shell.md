@@ -34,6 +34,8 @@
 - `WebView2` 是独立子窗口，会吞掉边框上的鼠标消息。`BrowserHost` 保留 6px 外边距，`WindowChrome.ResizeBorderThickness` 设为 6 DIP，让缩放命中区落在 WPF 窗口本身；窗口四个方向都可拉伸。
 - 顶栏导航在英文下使用短标签（FrameGen / DLSS5 / ANR）；空间不足时导航自身横向滚动，语言下拉固定在右侧、不参与压缩。
 - 各模式页左侧卡片显示该模式的支持显卡，并提供带 GitHub 图标的资产来源按钮；点击后通过 `updates.openPage` 交给系统浏览器打开对应仓库。
+- 游戏卡片的“打开文件夹/移除”使用内联 SVG 图标按钮（不再使用 emoji），按钮保留 `title` 与 `aria-label`；图标按钮为 30×30，位于卡片操作区右侧。
+- 键盘交互：按钮/选择框/链接有 2px accent 焦点环；弹窗打开时聚焦弹窗容器，关闭后把焦点还给触发元素；全局 toast 带 `role="status"` 和 `aria-live="polite"`；`prefers-reduced-motion` 下关闭动画和过渡。
 
 ## 第三方许可
 

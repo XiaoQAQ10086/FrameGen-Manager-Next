@@ -56,7 +56,10 @@ const context = {
 
 function updateSidebar() {
   document.querySelectorAll('.nav-item').forEach((item) => {
-    item.classList.toggle('active', item.dataset.page === state.current);
+    const active = item.dataset.page === state.current;
+    item.classList.toggle('active', active);
+    if (active) item.setAttribute('aria-current', 'page');
+    else item.removeAttribute('aria-current');
   });
   document.querySelectorAll('[data-nav-label]').forEach((element) => {
     element.textContent = i18n.t(element.dataset.navLabel);

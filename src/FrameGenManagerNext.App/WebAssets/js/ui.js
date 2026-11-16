@@ -92,9 +92,13 @@ export function autoHideScrollbar(element, idleMs = 700) {
 
 export function modal(content, options = {}) {
   const root = document.getElementById('modal-root');
+  const previousFocus = document.activeElement;
   const overlay = el('div', 'overlay');
   const card = el('section', 'modal');
   card.innerHTML = content;
+  card.setAttribute('role', 'dialog');
+  card.setAttribute('aria-modal', 'true');
+  card.tabIndex = -1;
   overlay.appendChild(card);
   root.appendChild(overlay);
 
@@ -102,6 +106,7 @@ export function modal(content, options = {}) {
     if (overlay.parentNode === null) return;
     overlay.remove();
     document.removeEventListener('keydown', onKey);
+    previousFocus?.focus?.({ preventScroll: true });
     options.onClose?.();
   };
   const onKey = (event) => {
@@ -113,6 +118,7 @@ export function modal(content, options = {}) {
   document.addEventListener('keydown', onKey);
   card.querySelectorAll('[data-close]').forEach((button) => button.addEventListener('click', close));
   options.onOpen?.(card, close);
+  card.focus({ preventScroll: true });
   return { root: card, close };
 }
 

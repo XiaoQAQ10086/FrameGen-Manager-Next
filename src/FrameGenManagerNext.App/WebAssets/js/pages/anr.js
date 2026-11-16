@@ -1,4 +1,5 @@
 import { confirmDialog, escapeHtml as esc } from '../ui.js';
+import { folderIcon, trashIcon } from '../icons.js';
 import { createRemovedController, removedMarkup } from '../removed-modal.js';
 import { githubSource, modeSources } from '../mode-info.js';
 
@@ -205,8 +206,8 @@ export default {
             ${action}
             <button class="btn small launch" data-action="launch" data-id="${esc(game.id)}" type="button" ${game.launchMode === 'none' ? 'disabled' : ''} ${game.launchMode === 'none' ? `title="${esc(t('Library.LaunchUnsupported'))}"` : ''}>${t('Library.Launch')}</button>
             <span class="spacer"></span>
-            <button class="btn small icon-only" data-action="open" data-id="${esc(game.id)}" type="button" title="${esc(t('Library.OpenFolder'))}" aria-label="${esc(t('Library.OpenFolder'))}">📂</button>
-            <button class="btn small danger icon-only" data-action="remove" data-id="${esc(game.id)}" type="button" title="${esc(t('Common.Remove'))}" aria-label="${esc(t('Common.Remove'))}">🗑</button>
+            <button class="btn small icon-only" data-action="open" data-id="${esc(game.id)}" type="button" title="${esc(t('Library.OpenFolder'))}" aria-label="${esc(t('Library.OpenFolder'))}">${folderIcon}</button>
+            <button class="btn small danger icon-only" data-action="remove" data-id="${esc(game.id)}" type="button" title="${esc(t('Common.Remove'))}" aria-label="${esc(t('Common.Remove'))}">${trashIcon}</button>
           </div>
         </article>`;
     };

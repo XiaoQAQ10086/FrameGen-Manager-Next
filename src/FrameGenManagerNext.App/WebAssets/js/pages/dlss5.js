@@ -1,4 +1,5 @@
 import { confirmDialog, escapeHtml as esc } from '../ui.js';
+import { trashIcon } from '../icons.js';
 import { apiLabel, prettyPath, stateKeys } from '../labels.js';
 import { createRemovedController, removedMarkup } from '../removed-modal.js';
 import { githubSource, modeSources } from '../mode-info.js';
@@ -93,7 +94,7 @@ export default {
             <span class="tag">${esc(t('Dlss5.GraphicsApi'))}${esc(apiLabel(game.api))}</span>
             <span class="tag ${deployed(game) ? 'ok' : ''}">${esc(deployed(game) ? t('Dlss5.Deployed') : t('Dlss5.NotDeployed'))}</span>
           </span>
-          <button class="tile-remove" data-action="remove" data-id="${esc(game.id)}" type="button" title="${esc(t('Common.Remove'))}" aria-label="${esc(t('Common.Remove'))}">🗑</button>
+          <button class="tile-remove" data-action="remove" data-id="${esc(game.id)}" type="button" title="${esc(t('Common.Remove'))}" aria-label="${esc(t('Common.Remove'))}">${trashIcon}</button>
         </div>`;
     }
 
