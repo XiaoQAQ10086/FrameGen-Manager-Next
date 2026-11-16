@@ -44,7 +44,7 @@ public sealed class GpuServiceTests
             "Test GPU",
             "1.0.0",
             GpuRoute.Unknown,
-            HardwareAcceleratedGpuScheduling: null,
+            HardwareAcceleratedGpuScheduling: GpuHagsState.Unknown,
             GpuFeatureGate.Unknown,
             GpuFeatureGate.Unknown);
     }

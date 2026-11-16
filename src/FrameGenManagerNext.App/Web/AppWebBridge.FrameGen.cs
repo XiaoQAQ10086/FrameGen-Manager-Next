@@ -23,9 +23,14 @@ public sealed partial class AppWebBridge
                 route = gpu.Route.ToString(),
                 frameGeneration = gpu.FrameGeneration.ToString(),
                 smoothMotion = gpu.SmoothMotion.ToString(),
-                hags = gpu.HardwareAcceleratedGpuScheduling is bool hags
-                    ? hags ? "on" : "off"
-                    : "unknown",
+                hags = gpu.HardwareAcceleratedGpuScheduling switch
+                {
+                    Domain.Gpu.GpuHagsState.Enabled => "on",
+                    Domain.Gpu.GpuHagsState.Disabled => "off",
+                    Domain.Gpu.GpuHagsState.PendingReboot => "pending",
+                    Domain.Gpu.GpuHagsState.Unsupported => "unsupported",
+                    _ => "unknown",
+                },
                 diagnostic = gpu.Diagnostic,
             },
             spoof = new

@@ -87,7 +87,7 @@ public sealed class SmoothMotionDeploymentServiceTests
                 "NVIDIA GeForce RTX 3070",
                 "621.01",
                 GpuRoute.Sm86,
-                HardwareAcceleratedGpuScheduling: true,
+                HardwareAcceleratedGpuScheduling: GpuHagsState.Enabled,
                 GpuFeatureGate.Supported,
                 GpuFeatureGate.Supported));
         }

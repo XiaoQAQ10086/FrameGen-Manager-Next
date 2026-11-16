@@ -46,6 +46,8 @@ const routeKeys = {
 const hagsKeys = {
   on: 'Gpu.Hags.On',
   off: 'Gpu.Hags.Off',
+  pending: 'Gpu.Hags.Pending',
+  unsupported: 'Gpu.Hags.Unsupported',
   unknown: 'Gpu.Hags.Unknown',
 };
 
@@ -278,7 +280,9 @@ export default {
     function renderGpu() {
       const g = gpu.gpu;
       const s = gpu.spoof;
-      const hagsClass = g.hags === 'on' ? 'ok' : (g.hags === 'off' ? 'warn' : 'dim');
+      const hagsClass = g.hags === 'on'
+        ? 'ok'
+        : (g.hags === 'off' || g.hags === 'pending' ? 'warn' : 'dim');
       q('[data-role="gpu"]').innerHTML = `
         <div class="ctitle">${esc(t('Gpu.SettingsTitle'))}</div>
         <div class="chips">

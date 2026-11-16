@@ -83,6 +83,7 @@ internal static partial class StringCatalog
         Add("Anr.Empty", "没有可用的游戏。", "No games available.");
 
         AddLicenseEntries();
+        AddGpuEntries();
     }
 
     private static void Add(string key, string chinese, string english)

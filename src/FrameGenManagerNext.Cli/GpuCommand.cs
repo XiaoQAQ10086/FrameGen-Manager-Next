@@ -19,11 +19,14 @@ internal static class GpuCommand
         Console.WriteLine($"Route: {gpu.Route}");
         Console.WriteLine($"FrameGeneration: {gpu.FrameGeneration}");
         Console.WriteLine($"SmoothMotion: {gpu.SmoothMotion}");
-        Console.WriteLine(
-            "HAGS: " +
-            (gpu.HardwareAcceleratedGpuScheduling is bool hags
-                ? hags ? "enabled" : "disabled"
-                : "unknown"));
+        Console.WriteLine($"HAGS: {gpu.HardwareAcceleratedGpuScheduling switch
+        {
+            GpuHagsState.Enabled => "enabled",
+            GpuHagsState.Disabled => "disabled",
+            GpuHagsState.PendingReboot => "pending reboot",
+            GpuHagsState.Unsupported => "unsupported",
+            _ => "unknown",
+        }}");
 
         if (!string.IsNullOrWhiteSpace(gpu.Diagnostic))
         {

@@ -7,7 +7,9 @@
 
 - 名称：`nvidia-smi --query-gpu=name --format=csv,noheader` 第一行；`nvidia-smi` 缺失时回退读取注册表 `HKLM\SYSTEM\CurrentControlSet\Control\Video` 的 `DriverDesc`，让 AMD/Intel 机器也能显示实际显卡名称（跳过 `Microsoft Basic` 适配器）；完全取不到时返回 `NVIDIA GPU not detected`。
 - 驱动：`nvidia-smi --query-gpu=driver_version --format=csv,noheader` 第一行；回退路径读取同一注册表项的 `DriverVersion`（Windows 驱动版本号格式），仍取不到时为 `null`。
-- HAGS：优先通过 `D3DKMTQueryAdapterInfo(KMTQAITYPE_WDDM_2_7_CAPS = 70)` 读取 `D3DKMT_WDDM_2_7_CAPS.HwSchEnabled`（bit 1），这是实际生效状态；注册表 `HKLM\SYSTEM\CurrentControlSet\Control\GraphicsDrivers\HwSchMode` 只作为回退（`2` 开启、`1` 关闭；缺失表示 Windows 默认策略，不能当作关闭）。D3DKMT 查询失败时才读注册表，仍取不到则返回未知。
+- HAGS：先枚举所有显示适配器（`D3DKMTEnumAdapters2`），对每个适配器调用 `D3DKMTQueryAdapterInfo(KMTQAITYPE_WDDM_2_7_CAPS = 70)` 读取 `HwSchSupported`（bit 0）和 `HwSchEnabled`（bit 1）；任一适配器报告已开启即视为开启。只查询主显示器 DC 会在核显/虚拟显示器上误判，因此枚举优先，枚举不可用时才回退到 `D3DKMTOpenAdapterFromHdc`。
+- 注册表 `HKLM\SYSTEM\CurrentControlSet\Control\GraphicsDrivers\HwSchMode` 与实时状态合并：实时已开启 → `Enabled`；实时未开启但注册表为 `2` → `PendingReboot`（设置已开、重启后生效）；实时未开启且注册表为 `1` → `Disabled`；实时未开启、注册表缺失时按适配器是否支持区分 `Disabled` / `Unsupported`。注册表缺失不当作关闭。
+- 日志记录 `HAGS probe: state/live/supported/registry/detail`，其中 `detail` 是各适配器的 caps 原始值，用于诊断核显/虚拟显示器/驱动差异；不写注册表、不修改驱动配置。
 - 不写注册表、不修改驱动配置。
 
 ## 检测时机
@@ -79,4 +81,5 @@ HAGS: unknown
 - 注册表回退只用于展示名称/驱动；路由仍按名称分类，AMD/Intel 得到 `Unsupported`。Smooth Motion 仍会拒绝；帧生成不再门控（上游仅支持 NVIDIA RTX 20–50，其他显卡可以尝试但运行时不保证生效）。
 - 多显卡/虚拟显示器环境可能返回第一个非基本显示适配器，不保证与用户期望的主卡一致。
 - 多 GPU 机器取第一行；如需选择器，后续在设置页增加。
-- HAGS 缺失时显示未知，不当作关闭。
+- HAGS 缺失时显示未知，不当作关闭。注册表为 `2` 但实时 caps 仍为关闭时显示“待重启生效”，而不是“已关闭”；这通常表示设置已写入但驱动尚未在本次启动中启用。
+- 多显卡机器会汇总所有适配器：任一适配器报告 HAGS 已开启即显示已开启，避免主显示器接在核显或虚拟显示器上时误报关闭。

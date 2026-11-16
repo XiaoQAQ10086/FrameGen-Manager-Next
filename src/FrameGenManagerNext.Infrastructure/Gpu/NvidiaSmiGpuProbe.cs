@@ -184,27 +184,33 @@ public sealed class NvidiaSmiGpuProbe : IGpuProbe
         return "nvidia-smi.exe";
     }
 
-    private static bool? ReadHags()
+    private GpuHagsState ReadHags()
     {
-        var live = HagsProbe.IsEnabled();
-        if (live is not null)
-        {
-            return live;
-        }
+        var live = HagsProbe.Read();
+        var registry = ReadHagsRegistryMode();
 
+        var state = GpuHagsStateClassifier.Classify(
+            live.Enabled,
+            live.Supported,
+            registry);
+
+        _logger.LogInformation(
+            "HAGS probe: state={State}; live={Live}; supported={Supported}; registry={Registry}; detail={Detail}",
+            state,
+            live.Enabled,
+            live.Supported,
+            registry,
+            live.Detail);
+        return state;
+    }
+
+    private static int? ReadHagsRegistryMode()
+    {
         try
         {
             using var key = Registry.LocalMachine.OpenSubKey(
                 @"SYSTEM\CurrentControlSet\Control\GraphicsDrivers");
-            var value = key?.GetValue("HwSchMode");
-            return value is int mode
-                ? mode switch
-                {
-                    2 => true,
-                    1 => false,
-                    _ => null,
-                }
-                : null;
+            return key?.GetValue("HwSchMode") is int mode ? mode : null;
         }
         catch (Exception exception) when (exception is UnauthorizedAccessException or IOException)
         {
