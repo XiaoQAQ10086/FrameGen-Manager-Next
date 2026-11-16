@@ -35,6 +35,9 @@ public sealed class SettingsServiceTests : IDisposable
             Theme = AppTheme.Light,
             AutoScanOnStartup = true,
             ShowCovers = false,
+            WindowWidth = 1225,
+            WindowHeight = 800,
+            WindowMaximized = true,
         };
 
         var result = await _service.SaveAsync(updated, TestContext.Current.CancellationToken);

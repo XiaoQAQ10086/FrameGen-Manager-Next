@@ -20,7 +20,10 @@ public sealed record AppSettings(
     AppTheme Theme,
     bool AutoScanOnStartup,
     bool ShowCovers,
-    bool AutoInstallReframework = true)
+    bool AutoInstallReframework = true,
+    double? WindowWidth = null,
+    double? WindowHeight = null,
+    bool WindowMaximized = false)
 {
     public static AppSettings Default { get; } = new(
         SchemaVersion: 3,

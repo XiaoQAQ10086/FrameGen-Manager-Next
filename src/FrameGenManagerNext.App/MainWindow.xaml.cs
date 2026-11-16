@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Runtime;
@@ -7,6 +8,7 @@ using System.Windows.Shell;
 using FrameGenManagerNext.App.Localization;
 using FrameGenManagerNext.App.Platform;
 using FrameGenManagerNext.App.Web;
+using FrameGenManagerNext.Core.Features.Settings;
 using FrameGenManagerNext.Infrastructure.Platform;
 using Microsoft.Extensions.Logging;
 using Microsoft.Web.WebView2.Wpf;
@@ -22,6 +24,7 @@ public partial class MainWindow : FluentWindow
     private const int MaxRecoveryAttempts = 3;
 
     private readonly AppWebBridge _bridge;
+    private readonly ISettingsService _settings;
     private readonly ILogger<MainWindow> _logger;
 
     private WebViewFailure? _lastFailure;
@@ -31,11 +34,16 @@ public partial class MainWindow : FluentWindow
     private bool _suspended;
     private bool _closing;
 
-    public MainWindow(AppWebBridge bridge, ILogger<MainWindow> logger)
+    public MainWindow(
+        AppWebBridge bridge,
+        ISettingsService settings,
+        ILogger<MainWindow> logger)
     {
         _bridge = bridge;
+        _settings = settings;
         _logger = logger;
         InitializeComponent();
+        ApplySavedWindowSize();
         LoadingTitle.Text = L.T("Startup.Title");
         LoadingText.Text = L.T("Startup.Loading");
         _bridge.Failed += OnBridgeFailed;
@@ -43,6 +51,7 @@ public partial class MainWindow : FluentWindow
         SizeChanged += OnWindowSizeChanged;
         StateChanged += OnWindowStateChanged;
         IsVisibleChanged += OnIsVisibleChanged;
+        Closing += OnWindowClosing;
         Closed += OnClosed;
     }
 
@@ -406,6 +415,59 @@ public partial class MainWindow : FluentWindow
         UpdateLoadingSize();
     }
 
+    private void ApplySavedWindowSize()
+    {
+        var settings = _settings.Load();
+        var width = settings.WindowWidth;
+        var height = settings.WindowHeight;
+        if (width is > 0 && height is > 0 &&
+            double.IsFinite(width.Value) && double.IsFinite(height.Value))
+        {
+            var maxWidth = Math.Max(MinWidth, SystemParameters.VirtualScreenWidth);
+            var maxHeight = Math.Max(MinHeight, SystemParameters.VirtualScreenHeight);
+            Width = Math.Clamp(width.Value, MinWidth, maxWidth);
+            Height = Math.Clamp(height.Value, MinHeight, maxHeight);
+        }
+
+        if (settings.WindowMaximized)
+        {
+            WindowState = WindowState.Maximized;
+        }
+    }
+
+    private void OnWindowClosing(object? sender, CancelEventArgs e)
+    {
+        var bounds = WindowState == WindowState.Normal
+            ? new Rect(Left, Top, ActualWidth, ActualHeight)
+            : RestoreBounds;
+        if (bounds.IsEmpty || bounds.Width < MinWidth || bounds.Height < MinHeight)
+        {
+            return;
+        }
+
+        var current = _settings.Load();
+        var updated = current with
+        {
+            WindowWidth = bounds.Width,
+            WindowHeight = bounds.Height,
+            WindowMaximized = WindowState == WindowState.Maximized,
+        };
+
+        try
+        {
+            var saved = Task.Run(() => _settings.SaveAsync(updated, CancellationToken.None))
+                .Wait(TimeSpan.FromSeconds(2));
+            if (!saved)
+            {
+                _logger.LogWarning("Timed out while saving window size");
+            }
+        }
+        catch (AggregateException exception)
+        {
+            _logger.LogWarning(exception, "Could not save window size");
+        }
+    }
+
     private void UpdateLoadingSize()
     {
         if (BrowserHost.ActualWidth > 0 && BrowserHost.ActualHeight > 0)
@@ -422,6 +484,7 @@ public partial class MainWindow : FluentWindow
         SizeChanged -= OnWindowSizeChanged;
         StateChanged -= OnWindowStateChanged;
         IsVisibleChanged -= OnIsVisibleChanged;
+        Closing -= OnWindowClosing;
         _bridge.Failed -= OnBridgeFailed;
     }
 }
