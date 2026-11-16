@@ -298,6 +298,14 @@ public sealed class Dlss5InstallStrategyTests : IDisposable
 
         public Result<string> Outcome { get; set; } = Result<string>.Ok("d3d11.dll");
 
+        public Task<Result<byte[]>> ExtractAsync(
+            string setupPath,
+            string exePath,
+            CancellationToken cancellationToken)
+        {
+            return Task.FromResult(Result<byte[]>.Ok("reShade-module"u8.ToArray()));
+        }
+
         public Task<Result<string>> InstallAsync(
             string setupPath,
             string targetDirectory,

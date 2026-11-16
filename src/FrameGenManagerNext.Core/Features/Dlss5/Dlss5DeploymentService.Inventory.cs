@@ -144,8 +144,10 @@ public sealed partial class Dlss5DeploymentService
         string target,
         TargetInventory inventory,
         IReadOnlyList<PackFileEntry> packFiles,
-        HashSet<string> protectedPaths)
+        HashSet<string> protectedPaths,
+        IReadOnlyList<string> preserved)
     {
+        var preservedNames = new HashSet<string>(preserved, StringComparer.OrdinalIgnoreCase);
         var remaining = new List<string>();
         var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
@@ -157,7 +159,8 @@ public sealed partial class Dlss5DeploymentService
             }
         }
 
-        if (inventory.ReShadeModule is not null)
+        if (inventory.ReShadeModule is not null &&
+            !preservedNames.Contains(inventory.ReShadeModule))
         {
             Add(inventory.ReShadeModule);
         }

@@ -9,6 +9,11 @@ namespace FrameGenManagerNext.Core.Features.Dlss5;
 /// </summary>
 public interface IReShadeOfflineInstaller
 {
+    Task<Result<byte[]>> ExtractAsync(
+        string setupPath,
+        string exePath,
+        CancellationToken cancellationToken);
+
     Task<Result<string>> InstallAsync(
         string setupPath,
         string targetDirectory,

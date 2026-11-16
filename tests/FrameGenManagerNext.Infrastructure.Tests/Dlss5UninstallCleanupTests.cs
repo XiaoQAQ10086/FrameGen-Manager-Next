@@ -194,6 +194,14 @@ public sealed class Dlss5UninstallCleanupTests : IDisposable
 
     private sealed class FakeReShadeInstaller : IReShadeOfflineInstaller
     {
+        public Task<Result<byte[]>> ExtractAsync(
+            string setupPath,
+            string exePath,
+            CancellationToken cancellationToken)
+        {
+            return Task.FromResult(Result<byte[]>.Ok("reShade-module"u8.ToArray()));
+        }
+
         public Task<Result<string>> InstallAsync(
             string setupPath,
             string targetDirectory,

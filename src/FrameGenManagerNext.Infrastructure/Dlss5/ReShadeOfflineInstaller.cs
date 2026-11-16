@@ -18,6 +18,24 @@ public sealed class ReShadeOfflineInstaller : IReShadeOfflineInstaller
     private const string ReShade64Entry = "ReShade64.dll";
     private const string ReShade32Entry = "ReShade32.dll";
 
+    public async Task<Result<byte[]>> ExtractAsync(
+        string setupPath,
+        string exePath,
+        CancellationToken cancellationToken)
+    {
+        if (!File.Exists(setupPath))
+        {
+            return Result<byte[]>.Fail(AppError.Create(
+                ErrorCode.AssetMissing,
+                ("file", setupPath)));
+        }
+
+        var entry = Is64BitExecutable(exePath) ? ReShade64Entry : ReShade32Entry;
+        return await Task.Run(
+            () => ExtractEmbeddedModule(setupPath, entry, cancellationToken),
+            cancellationToken);
+    }
+
     public async Task<Result<string>> InstallAsync(
         string setupPath,
         string targetDirectory,
@@ -33,19 +51,9 @@ public sealed class ReShadeOfflineInstaller : IReShadeOfflineInstaller
                 ("reason", "an offline ReShade module name is required")));
         }
 
-        if (!File.Exists(setupPath))
-        {
-            return Result<string>.Fail(AppError.Create(
-                ErrorCode.AssetMissing,
-                ("file", setupPath)));
-        }
-
-        var entry = Is64BitExecutable(exePath) ? ReShade64Entry : ReShade32Entry;
         progress?.Report(new DeploymentProgress("installer", "ReShade", 0, 0));
 
-        var dll = await Task.Run(
-            () => ExtractEmbeddedModule(setupPath, entry, cancellationToken),
-            cancellationToken);
+        var dll = await ExtractAsync(setupPath, exePath, cancellationToken);
         if (dll.IsFailure)
         {
             return Result<string>.Fail(dll.Error!);

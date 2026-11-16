@@ -1,7 +1,9 @@
+using System.Security.Cryptography;
 using FrameGenManagerNext.Domain.Deployment;
 using FrameGenManagerNext.Domain.Errors;
 using FrameGenManagerNext.Domain.Results;
 using FrameGenManagerNext.Domain.Safety;
+using Microsoft.Extensions.Logging;
 
 namespace FrameGenManagerNext.Core.Features.Dlss5;
 
@@ -74,6 +76,10 @@ public sealed partial class Dlss5DeploymentService
         var packFiles = await LoadPackFileEntriesAsync(cancellationToken);
         var removed = new List<string>();
         var notes = new List<string>();
+        var preserved = new List<string>();
+        var expectedModuleHash = inventory.ReShadeModule is not null
+            ? await TryGetExpectedReShadeModuleHashAsync(exePath, cancellationToken)
+            : null;
 
         var restore = await _engine.RestoreAsync(FamilyId, target, progress, cancellationToken);
         if (restore.IsFailure && restore.Error!.Code != ErrorCode.ManifestMissing)
@@ -90,20 +96,16 @@ public sealed partial class Dlss5DeploymentService
             }
         }
 
-        if (inventory.ReShadeModule is not null && !string.IsNullOrWhiteSpace(exePath) && File.Exists(exePath))
-        {
-            // Official uninstaller first (with a short cap), then direct deletion as the
-            // guarantee. The setup contacts the network for compatibility data and used
-            // to look hung; 30 s is enough for a normal run and the fallback is instant.
-            await RunOfficialUninstallerAsync(target, exePath, inventory.ReShadeModule, notes, progress, cancellationToken);
-        }
-        else if (inventory.ReShadeModule is not null)
-        {
-            notes.Add("The game executable was not available; ReShade is removed by direct deletion.");
-        }
-
         progress?.Report(new DeploymentProgress("uninstalling", "ReShade files", 0, 1));
-        DeleteCoreFiles(target, removed, notes);
+        await DeleteCoreFilesAsync(
+            target,
+            manifest,
+            protectedPaths,
+            expectedModuleHash,
+            removed,
+            preserved,
+            notes,
+            cancellationToken);
         DeleteGatheringFiles(target, removed, notes);
         DeleteKnownExtras(target, removed, notes);
         DeleteLegacyFiles(target, inventory, removed, notes);
@@ -118,7 +120,20 @@ public sealed partial class Dlss5DeploymentService
         RemoveD3D12Agility(target, removed, notes);
         PruneEmptyDirectories(target, removed);
 
-        var remaining = DescribeRemaining(target, ScanTarget(target), packFiles, protectedPaths);
+        if (preserved.Count > 0)
+        {
+            _logger.LogInformation(
+                "dlss5.uninstall preserved third-party ReShade modules target={Target} modules={Modules}",
+                target,
+                string.Join(", ", preserved));
+        }
+
+        var remaining = DescribeRemaining(
+            target,
+            ScanTarget(target),
+            packFiles,
+            protectedPaths,
+            preserved);
         if (remaining.Count == 0)
         {
             var discard = await _engine.DiscardBackupAsync(FamilyId, target, cancellationToken);
@@ -160,16 +175,28 @@ public sealed partial class Dlss5DeploymentService
             message));
     }
 
-    private static void DeleteCoreFiles(
+    private static async Task DeleteCoreFilesAsync(
         string target,
+        DeploymentManifest? manifest,
+        HashSet<string> protectedPaths,
+        string? expectedModuleHash,
         List<string> removed,
-        List<string> notes)
+        List<string> preserved,
+        List<string> notes,
+        CancellationToken cancellationToken)
     {
         foreach (var name in ReShadeModules)
         {
             var path = Path.Combine(target, name);
             if (!File.Exists(path))
             {
+                continue;
+            }
+
+            if (protectedPaths.Contains(name))
+            {
+                preserved.Add(name);
+                notes.Add($"Left {name} in place because it existed before the deployment.");
                 continue;
             }
 
@@ -180,6 +207,42 @@ public sealed partial class Dlss5DeploymentService
                 continue;
             }
 
+            var recorded = manifest?.Files.Any(record =>
+                string.Equals(record.RelativePath, name, StringComparison.OrdinalIgnoreCase)) == true;
+            if (recorded)
+            {
+                // The deployment engine owns this file. If it is still present after
+                // the restore it was modified by another program or could not be
+                // restored, so it must not be deleted here.
+                notes.Add($"Left {name} in place because its deployment state is still recorded.");
+                continue;
+            }
+
+            var currentHash = await TryHashAsync(path, cancellationToken);
+            if (!Dlss5ModuleCleanupPolicy.CanDelete(
+                    existedBefore: false,
+                    recordedInManifest: false,
+                    currentHash,
+                    expectedModuleHash))
+            {
+                if (currentHash is not null && expectedModuleHash is not null)
+                {
+                    // A verified ReShade-based module that is not our exact build
+                    // belongs to another program; keep it and do not report the
+                    // uninstall as incomplete because of it.
+                    preserved.Add(name);
+                    notes.Add($"Left {name} in place because it belongs to another ReShade-based program.");
+                }
+                else
+                {
+                    notes.Add(currentHash is null
+                        ? $"Left {name} in place because it could not be read."
+                        : $"Left {name} in place because its ReShade module could not be verified.");
+                }
+
+                continue;
+            }
+
             TryDeleteFile(path, removed, notes);
         }
 
@@ -187,6 +250,36 @@ public sealed partial class Dlss5DeploymentService
         {
             TryDeleteFile(Path.Combine(target, name), removed, notes);
         }
+    }
+
+    private async Task<string?> TryGetExpectedReShadeModuleHashAsync(
+        string? exePath,
+        CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(exePath) || !File.Exists(exePath))
+        {
+            return null;
+        }
+
+        var location = await _packs.FindAsync(PackId, cancellationToken);
+        if (location is null)
+        {
+            return null;
+        }
+
+        var installer = ResolveInstaller(location);
+        if (installer.IsFailure)
+        {
+            return null;
+        }
+
+        var module = await _reShadeInstaller.ExtractAsync(
+            installer.Value.InstallerPath,
+            exePath,
+            cancellationToken);
+        return module.IsSuccess
+            ? Convert.ToHexString(SHA256.HashData(module.Value)).ToLowerInvariant()
+            : null;
     }
 
     private static void DeleteGatheringFiles(string target, List<string> removed, List<string> notes)

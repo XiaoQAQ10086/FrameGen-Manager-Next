@@ -51,7 +51,7 @@
 
 - pack 文件状态来自部署引擎（未部署/已部署/需更新/不完整/冲突）。
 - 清单缺失但目录里仍有与当前 pack 哈希一致的文件时，状态为 `InstalledWithoutManifest`；界面允许“重新部署”或“卸载”，不会永久锁死。
-- 通过文件版本信息识别 ReShade 模块（`d3d9/d3d10/d3d11/d3d12/dxgi/opengl32.dll`，ProductName/FileDescription 含 `ReShade`），避免误删游戏自带 DLL。
+- 通过文件版本信息识别 ReShade 模块（`d3d9/d3d10/d3d11/d3d12/dxgi/opengl32.dll`，ProductName/FileDescription 含 `ReShade`）仅用于展示和状态判断；卸载删除时必须再通过“与 bundled setup 内 ReShade 模块 SHA-256 完全一致”校验，避免误删雪月等同样基于 ReShade 的第三方 DLL。
 - 同时报告旧版 DLSS5/RenoDX 残留：根目录 `renodx-dlss*.addon*`（含第三方整合包常见的 `renodx-dlss-SF-*.addon64`）或旧布局根目录 `nvngx_dlssnr.dll`；命中项写入 `legacyFiles`，详情页逐项列出，避免用户误以为是本软件部署过 ReShade。
 - 检测到旧版 DLSS5/RenoDX 时拒绝安装 GITC pack，返回 `LegacyInstallPresent`，必须先执行“清理旧版文件”。这不是按本软件的部署记录判断，而是按目录里的实际文件判断；文件可能来自其他 DLSS5 整合包或手动安装。
 
@@ -67,15 +67,16 @@
 
 1. 先调用部署引擎还原并清理清单/备份：删除仍匹配部署哈希的文件，恢复部署前已有的原文件；用户改过的文件保留并报告冲突。
 2. 读取卸载前的清单，记录 `ExistedBefore=true` 的路径。这些是游戏原有文件，后续按 pack 清理时必须跳过。
-3. 先尝试 ReShade 官方卸载器（`--state uninstall`），最多等 30 秒；超时或失败不报错，继续直接删除。直接删除是最终保证，不依赖任何网络。
-4. 删除 ReShade 模块、`ReShade.ini`、`ReShade.log`、`ReShadePreset.ini`。
-5. 删除 GITC 组件（`gitc-uplift.addon32/64`、`gitc-uplift-helper64.exe`、`GITC-Uplift/`）与已知 shader。
-6. 按当前 pack 的文件表扫描 `reshade-shaders/Shaders/**` 与 `reshade-shaders/Textures/**`：哈希匹配的残留直接删除；用户改过的文件保留并计入剩余项。此步骤覆盖“官方 setup 写入或清单已丢失”的纹理/着色器残留。
-7. 清理旧版 DLSS5/RenoDX：`renodx-dlss*.addon*`、旧布局根目录 `nvngx_dlssnr.dll`。
-8. 清理插件运行时残渣（`renodx-dlss-report*`、`renodx-dlss-*`、`ReShade.ini.renodx-dlss*`、崩溃日志、trace）。
-9. 仅当 `D3D12\` 只有 `D3D12Core.dll` 且版本信息含 Microsoft 时删除该 Agility SDK 文件。
-10. 删除空目录后重新扫描；剩余项包含仍存在的 pack 文件。只有剩余项为 0 才丢弃清单和备份。
-11. 返回 `removed` / `remaining` / `clean`；界面在 `clean=false` 时显示“卸载未完成”错误，而不是提示成功。删除是永久的，不进回收站。
+3. 不运行 ReShade 官方卸载器，也不按“版本信息含 ReShade”直接删除代理 DLL。删除前先从 bundled setup 提取当前架构的 ReShade 模块并计算 SHA-256，只有目标文件哈希与它完全一致时才删除。
+4. 哈希不一致、文件被其他程序替换、无法读取或无法验证时一律保留，并在日志/note 中记录“belongs to another ReShade-based program”。这样雪月（Snowy Moon）等同样使用 `dxgi.dll` 的 ReShade 系 mod 不会被误删。
+5. 删除 `ReShade.ini`、`ReShade.log`、`ReShadePreset.ini`。
+6. 删除 GITC 组件（`gitc-uplift.addon32/64`、`gitc-uplift-helper64.exe`、`GITC-Uplift/`）与已知 shader。
+7. 按当前 pack 的文件表扫描 `reshade-shaders/Shaders/**` 与 `reshade-shaders/Textures/**`：哈希匹配的残留直接删除；用户改过的文件保留并计入剩余项。此步骤覆盖“官方 setup 写入或清单已丢失”的纹理/着色器残留。
+8. 清理旧版 DLSS5/RenoDX：`renodx-dlss*.addon*`、旧布局根目录 `nvngx_dlssnr.dll`。
+9. 清理插件运行时残渣（`renodx-dlss-report*`、`renodx-dlss-*`、`ReShade.ini.renodx-dlss*`、崩溃日志、trace）。
+10. 仅当 `D3D12\` 只有 `D3D12Core.dll` 且版本信息含 Microsoft 时删除该 Agility SDK 文件。
+11. 删除空目录后重新扫描；剩余项包含仍存在的 pack 文件，但被判定为其他程序的代理 DLL 不计入剩余项。只有剩余项为 0 才丢弃清单和备份。
+12. 返回 `removed` / `remaining` / `clean`；界面在 `clean=false` 时显示“卸载未完成”错误，而不是提示成功。删除是永久的，不进回收站。
 
 ## 命令
 
