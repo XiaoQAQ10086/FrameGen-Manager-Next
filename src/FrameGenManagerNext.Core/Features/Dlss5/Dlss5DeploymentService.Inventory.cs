@@ -134,7 +134,7 @@ public sealed partial class Dlss5DeploymentService
             "d3d10.dll" => "d3d10",
             "d3d11.dll" => "d3d11",
             "d3d12.dll" => "d3d12",
-            "dxgi.dll" => "d3d12",
+            "dxgi.dll" => "dxgi",
             "opengl32.dll" => "opengl",
             _ => null,
         };

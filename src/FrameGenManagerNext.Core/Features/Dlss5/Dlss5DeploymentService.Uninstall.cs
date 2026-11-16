@@ -1,4 +1,3 @@
-using System.Security.Cryptography;
 using FrameGenManagerNext.Domain.Deployment;
 using FrameGenManagerNext.Domain.Errors;
 using FrameGenManagerNext.Domain.Results;
@@ -80,6 +79,32 @@ public sealed partial class Dlss5DeploymentService
         var expectedModuleHash = inventory.ReShadeModule is not null
             ? await TryGetExpectedReShadeModuleHashAsync(exePath, cancellationToken)
             : null;
+        var ownedModule = await FindOwnedModuleAsync(
+            target,
+            expectedModuleHash,
+            cancellationToken);
+
+        // The official uninstaller deletes the proxy for the selected API without
+        // checking who owns it, and also removes d3dcompiler_47.dll. Run it only
+        // when the proxy is byte-identical to the bundled ReShade module, and
+        // keep a copy of d3dcompiler_47.dll in case the game shipped its own.
+        if (ownedModule is not null && !string.IsNullOrWhiteSpace(exePath) && File.Exists(exePath))
+        {
+            var compilerPath = Path.Combine(target, "d3dcompiler_47.dll");
+            byte[]? compilerBackup = await TryReadFileAsync(compilerPath, cancellationToken);
+            await RunOfficialUninstallerAsync(
+                target,
+                exePath,
+                ownedModule,
+                notes,
+                progress,
+                cancellationToken);
+            await RestoreFileAsync(compilerPath, compilerBackup, notes, cancellationToken);
+        }
+        else if (inventory.ReShadeModule is not null)
+        {
+            notes.Add("The official ReShade uninstaller was skipped because the proxy module does not match the bundled ReShade build.");
+        }
 
         var restore = await _engine.RestoreAsync(FamilyId, target, progress, cancellationToken);
         if (restore.IsFailure && restore.Error!.Code != ErrorCode.ManifestMissing)
@@ -250,36 +275,6 @@ public sealed partial class Dlss5DeploymentService
         {
             TryDeleteFile(Path.Combine(target, name), removed, notes);
         }
-    }
-
-    private async Task<string?> TryGetExpectedReShadeModuleHashAsync(
-        string? exePath,
-        CancellationToken cancellationToken)
-    {
-        if (string.IsNullOrWhiteSpace(exePath) || !File.Exists(exePath))
-        {
-            return null;
-        }
-
-        var location = await _packs.FindAsync(PackId, cancellationToken);
-        if (location is null)
-        {
-            return null;
-        }
-
-        var installer = ResolveInstaller(location);
-        if (installer.IsFailure)
-        {
-            return null;
-        }
-
-        var module = await _reShadeInstaller.ExtractAsync(
-            installer.Value.InstallerPath,
-            exePath,
-            cancellationToken);
-        return module.IsSuccess
-            ? Convert.ToHexString(SHA256.HashData(module.Value)).ToLowerInvariant()
-            : null;
     }
 
     private static void DeleteGatheringFiles(string target, List<string> removed, List<string> notes)
