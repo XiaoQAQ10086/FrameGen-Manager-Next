@@ -1,16 +1,16 @@
 {
-  "version": "2.3.2",
-  "notes": "【更新】\r\n1.打开文件夹按钮更换图标样式\r\n\r\n【修复】\r\n1.修复ANR帧生效还原后提示需修复的问题\r\n2.修复部分用户GPU硬件加速计划显示未知的问题",
-  "pageUrl": "https://github.com/XiaoQAQ10086/FrameGen-Manager-Next/releases/tag/v2.3.2",
+  "version": "2.3.3",
+  "notes": "【改进】\r\n1.记忆上一次窗口大小\r\n\r\n【修复】\r\n1.修复部分用户在Win10系统下已开启硬件加速计划，软件内仍显示GPU硬件加速计划已关闭的问题\r\n2.尝试修复卸载DLSS5时误伤用户其他MOD文件的问题",
+  "pageUrl": "https://github.com/XiaoQAQ10086/FrameGen-Manager-Next/releases/tag/v2.3.3",
   "installer": {
-    "name": "FrameGenManagerNext-2.3.2-win-Setup.exe",
-    "size": 391179387,
-    "sha256": "0ABF97FE5CEF3325E3BE73F6EBC39806AB513E66E85831B06781CBF2DD142E6A",
+    "name": "FrameGenManagerNext-2.3.3-win-Setup.exe",
+    "size": 391196748,
+    "sha256": "27322794B57F45B0A710B848F3BC05F8AEA4DA966A6B89267ABBCC1007F3CF41",
     "urls": [
-      "https://github.com/XiaoQAQ10086/FrameGen-Manager-Next/releases/download/v2.3.2/FrameGenManagerNext-2.3.2-win-Setup.exe",
-      "https://ghfast.top/https://github.com/XiaoQAQ10086/FrameGen-Manager-Next/releases/download/v2.3.2/FrameGenManagerNext-2.3.2-win-Setup.exe",
-      "https://gh-proxy.com/https://github.com/XiaoQAQ10086/FrameGen-Manager-Next/releases/download/v2.3.2/FrameGenManagerNext-2.3.2-win-Setup.exe",
-      "https://ghproxy.net/https://github.com/XiaoQAQ10086/FrameGen-Manager-Next/releases/download/v2.3.2/FrameGenManagerNext-2.3.2-win-Setup.exe"
+      "https://github.com/XiaoQAQ10086/FrameGen-Manager-Next/releases/download/v2.3.3/FrameGenManagerNext-2.3.3-win-Setup.exe",
+      "https://ghfast.top/https://github.com/XiaoQAQ10086/FrameGen-Manager-Next/releases/download/v2.3.3/FrameGenManagerNext-2.3.3-win-Setup.exe",
+      "https://gh-proxy.com/https://github.com/XiaoQAQ10086/FrameGen-Manager-Next/releases/download/v2.3.3/FrameGenManagerNext-2.3.3-win-Setup.exe",
+      "https://ghproxy.net/https://github.com/XiaoQAQ10086/FrameGen-Manager-Next/releases/download/v2.3.3/FrameGenManagerNext-2.3.3-win-Setup.exe"
     ]
   }
 }
