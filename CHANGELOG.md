@@ -1,5 +1,11 @@
 # Changelog
 
+## 未发布
+
+### Fixed
+
+- 修复没有 NVIDIA 驱动配置的游戏（如 Banana Airways Demo）开启 Smooth Motion 后显示“组件已部署”但驱动仍是“未知/未设置”、按钮不变成“关闭”的问题：按 DRS 要求用裸文件名 + `fileInFolder` 关联 EXE，并在写入后验证该 EXE 能解析到配置；验证失败会回滚组件。
+
 ## 2.3.3
 
 ### Added

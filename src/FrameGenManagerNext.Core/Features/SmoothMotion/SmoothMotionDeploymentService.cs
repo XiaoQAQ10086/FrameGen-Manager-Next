@@ -127,10 +127,17 @@ public sealed class SmoothMotionDeploymentService : ISmoothMotionDeploymentServi
         if (!setting.Ok)
         {
             _logger.LogWarning("Smooth Motion NVAPI write failed; rolling back component files: {Message}", setting.Message);
-            await _engine.RestoreAsync(FamilyId, targetDirectory, progress: null, CancellationToken.None);
+            var rollback = await _engine.RestoreAsync(
+                FamilyId,
+                targetDirectory,
+                progress: null,
+                CancellationToken.None);
+            var diagnostic = rollback.IsFailure
+                ? $"{setting.Message} Component rollback failed: {rollback.Error!.Code}."
+                : setting.Message;
             return Result<SmoothMotionReport>.Fail(new AppError(
                 ErrorCode.NvApiCallFailed,
-                setting.Message));
+                diagnostic));
         }
 
         return Result<SmoothMotionReport>.Ok(new SmoothMotionReport(

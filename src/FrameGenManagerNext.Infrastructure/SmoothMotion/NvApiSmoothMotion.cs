@@ -185,18 +185,23 @@ public sealed class NvApiSmoothMotion : INvApiSmoothMotion
             var readBacks = targets
                 .Select(target => ReadBack(target.Name, exePath))
                 .ToList();
-            var ok = readBacks.All(readBack => readBack == value);
+            var linked = session.FindProfileForExe(exePath);
+            var linkedValue = linked is null
+                ? null
+                : session.ReadSetting(linked.Value, NvApiNative.SmoothMotionSettingId);
+            var ok = readBacks.All(readBack => readBack == value) && linkedValue == value;
             var profileList = string.Join(", ", targets.Select(target => $"'{target.Name}'"));
             var message = ok
                 ? $"Smooth Motion {(enabled ? "enabled" : "disabled")} in {profileList}."
-                : $"Read-back mismatch: expected {value}, got {string.Join(", ", readBacks.Select(readBack => readBack?.ToString(CultureInfo.InvariantCulture) ?? "none"))} ({profileList}).";
+                : $"Read-back mismatch: expected {value}, got {string.Join(", ", readBacks.Select(readBack => readBack?.ToString(CultureInfo.InvariantCulture) ?? "none"))}; executable is linked to {linkedValue?.ToString(CultureInfo.InvariantCulture) ?? "no profile"} ({profileList}).";
 
             _logger.LogInformation(
-                "Smooth Motion set game={Game} enabled={Enabled} profiles={Profiles} readBack={ReadBack}",
+                "Smooth Motion set game={Game} enabled={Enabled} profiles={Profiles} readBack={ReadBack} linked={Linked}",
                 game,
                 enabled,
                 profileList,
-                string.Join(",", readBacks.Select(readBack => readBack?.ToString(CultureInfo.InvariantCulture) ?? "none")));
+                string.Join(",", readBacks.Select(readBack => readBack?.ToString(CultureInfo.InvariantCulture) ?? "none")),
+                linkedValue?.ToString(CultureInfo.InvariantCulture) ?? "none");
 
             return new SmoothMotionChangeResult(ok, readBacks.FirstOrDefault(), targets[0].Name, message);
         }

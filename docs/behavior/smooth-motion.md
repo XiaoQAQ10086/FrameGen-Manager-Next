@@ -38,9 +38,10 @@
    - 先用 `DRS_FindApplicationByName` 定位一个；
    - 再枚举 `DRS_EnumProfiles` + `DRS_EnumApplications`，把同样列出该 EXE（完整路径、相对路径或裸文件名）的 profile 全部收集起来。NVIDIA 的配置库可能同时存在多个绑定同一 EXE 的 profile（实测 PUBG 的 `PUBG` 与 `PLAYERUNKNOWN'S BATTLEGROUNDS` 都列了 `TslGame.exe`），`DRS_FindApplicationByName` 每次返回哪一个并不稳定；只写一个会出现“工具显示成功、驱动配置里却没开”。
    - 找不到任何 profile 才创建/复用 `FrameGen Manager - <game>`，并把 EXE 挂上去；挂不上则失败，不写设置。
+   - 创建/查找 application 时，`NVDRS_APPLICATION.appName` 只能放**裸文件名**，目录必须放在 `fileInFolder`（偏移 12296）。把完整路径塞进 `appName` 会让 profile 能保存、能按名字读回，但 `DRS_FindApplicationByName` 找不到它，界面就永远显示“驱动未知/未设置”、按钮也保持“开启”。
    - 拒绝写基础/全局 profile。
 4. 第一次修改该游戏（或绑定 profile 集合变化）时，把每个 profile 的名、旧值是否存在、旧值内容写入 `backups/sm-profiles/<targetHash>.json` 的 `targets` 列表。
-5. 对每个 profile 写入 1，统一保存，**换新会话逐个读回**；只有全部读回 1 才算成功。
+5. 对每个 profile 写入 1，统一保存，**换新会话逐个读回**；同时用 `FindProfileForExe` 验证该 EXE 确实能解析到 profile 且值为 1。任一项不满足都算失败，回滚组件文件，避免出现“组件已部署但驱动未设置”。
 6. 如果 NVAPI 失败：回滚组件文件，返回 `NvApiCallFailed`。
 7. 找不到 `nvapi64.dll` → `NvApiUnavailable`。
 

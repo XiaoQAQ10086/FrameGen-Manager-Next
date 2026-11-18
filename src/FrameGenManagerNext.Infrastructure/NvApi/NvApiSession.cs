@@ -145,10 +145,17 @@ internal sealed partial class NvApiSession : IDisposable
 
     public IntPtr? FindProfileForExe(string executablePath)
     {
+        var fileName = Path.GetFileName(executablePath);
+        var profile = FindApplication(fileName, executablePath);
+        return profile ?? FindApplication(executablePath, executablePath);
+    }
+
+    private IntPtr? FindApplication(string appName, string executablePath)
+    {
         var buffer = NvApiNative.CreateApplicationBuffer(executablePath);
         try
         {
-            var result = _findApplication(_session, executablePath, out var profile, buffer);
+            var result = _findApplication(_session, appName, out var profile, buffer);
             return result == 0 && profile != IntPtr.Zero ? profile : null;
         }
         finally

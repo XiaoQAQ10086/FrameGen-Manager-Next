@@ -29,6 +29,7 @@ internal static class NvApiNative
     public const int ProfileBufferSize = 4_116;
     public const int ApplicationBufferSize = 20_492;
     public const int SettingCurrentOffset = 8_220;
+    public const int ApplicationFileInFolderOffset = 12_296;
     public const int ApplicationSlots = 32;
     public const int ApplicationVersion = 4;
 
@@ -201,8 +202,17 @@ internal static class NvApiNative
     public static IntPtr CreateApplicationBuffer(string executablePath)
     {
         var buffer = AllocateZeroed(ApplicationBufferSize);
-        WriteVersion(buffer, ApplicationBufferSize, 4);
-        WriteString(buffer, 8, 2048, executablePath);
+        WriteVersion(buffer, ApplicationBufferSize, ApplicationVersion);
+        // DRS expects the bare executable name in appName; the directory belongs
+        // in fileInFolder. A full path in appName is a common cause of a profile
+        // that can be saved but is never associated with the game executable.
+        WriteString(buffer, 8, 2048, Path.GetFileName(executablePath));
+        var directory = Path.GetDirectoryName(executablePath);
+        if (!string.IsNullOrWhiteSpace(directory))
+        {
+            WriteString(buffer, ApplicationFileInFolderOffset, 2048, directory);
+        }
+
         return buffer;
     }
 
