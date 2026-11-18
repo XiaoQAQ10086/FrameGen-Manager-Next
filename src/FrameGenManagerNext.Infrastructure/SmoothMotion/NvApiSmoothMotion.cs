@@ -88,8 +88,8 @@ public sealed class NvApiSmoothMotion : INvApiSmoothMotion
     {
         try
         {
-            var profile = session.FindProfileForExe(exePath);
-            if (profile is null || session.IsBaseProfile(profile.Value))
+            var profile = ResolveProfile(session, exePath);
+            if (profile is null)
             {
                 return new SmoothMotionSettingState(null, string.Empty, false, "No driver profile is associated with this executable.");
             }
@@ -185,7 +185,7 @@ public sealed class NvApiSmoothMotion : INvApiSmoothMotion
             var readBacks = targets
                 .Select(target => ReadBack(target.Name, exePath))
                 .ToList();
-            var linked = session.FindProfileForExe(exePath);
+            var linked = ResolveProfile(session, exePath);
             var linkedValue = linked is null
                 ? null
                 : session.ReadSetting(linked.Value, NvApiNative.SmoothMotionSettingId);
@@ -359,6 +359,29 @@ public sealed class NvApiSmoothMotion : INvApiSmoothMotion
             _logger.LogError(exception, "Could not restore Smooth Motion for {Game}", game);
             return Failure(exception.Message);
         }
+    }
+
+    private static IntPtr? ResolveProfile(NvApiSession session, string exePath)
+    {
+        var direct = session.FindProfileForExe(exePath);
+        if (direct is not null && !session.IsBaseProfile(direct.Value))
+        {
+            return direct;
+        }
+
+        // Some driver/profile combinations only expose the association through
+        // DRS_EnumApplications, not DRS_FindApplicationByName. Enabling already
+        // uses the enumeration path; state reads must use it too, otherwise the
+        // write succeeds while the card stays on "driver unknown".
+        foreach (var candidate in session.FindProfilesForExe(exePath))
+        {
+            if (!session.IsBaseProfile(candidate))
+            {
+                return candidate;
+            }
+        }
+
+        return null;
     }
 
     private static uint? ReadBack(string profileName, string exePath)

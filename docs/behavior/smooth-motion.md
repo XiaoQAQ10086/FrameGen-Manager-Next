@@ -37,6 +37,7 @@
 3. 打开 NVAPI 会话，找出**所有**绑定该 EXE 的 profile：
    - 先用 `DRS_FindApplicationByName` 定位一个；
    - 再枚举 `DRS_EnumProfiles` + `DRS_EnumApplications`，把同样列出该 EXE（完整路径、相对路径或裸文件名）的 profile 全部收集起来。NVIDIA 的配置库可能同时存在多个绑定同一 EXE 的 profile（实测 PUBG 的 `PUBG` 与 `PLAYERUNKNOWN'S BATTLEGROUNDS` 都列了 `TslGame.exe`），`DRS_FindApplicationByName` 每次返回哪一个并不稳定；只写一个会出现“工具显示成功、驱动配置里却没开”。
+   - 状态读取与开启/关闭使用同一套解析顺序：先 `DRS_FindApplicationByName`，失败后再枚举 application。只查直接接口会出现“设置已写入、卡片仍显示驱动未知”；实测 Banana Airways Demo 就是枚举能找到、直接接口找不到。
    - 找不到任何 profile 才创建/复用 `FrameGen Manager - <game>`，并把 EXE 挂上去；挂不上则失败，不写设置。
    - 创建/查找 application 时，`NVDRS_APPLICATION.appName` 只能放**裸文件名**，目录必须放在 `fileInFolder`（偏移 12296）。把完整路径塞进 `appName` 会让 profile 能保存、能按名字读回，但 `DRS_FindApplicationByName` 找不到它，界面就永远显示“驱动未知/未设置”、按钮也保持“开启”。
    - 拒绝写基础/全局 profile。
