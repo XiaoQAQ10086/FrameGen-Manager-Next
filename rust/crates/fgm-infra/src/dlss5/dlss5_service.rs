@@ -7,8 +7,7 @@ use fgm_domain::library::GraphicsApi;
 use fgm_domain::pack::{AssetPack, AssetPackStep};
 
 use crate::deployment::{
-    BackupStore, DeploymentEngine, DeploymentFile, DeploymentInspector, PackDeploymentPlanner,
-    RestoreReport,
+    DeploymentEngine, DeploymentFile, DeploymentInspector, PackDeploymentPlanner,
 };
 use crate::hashing::{FileHasher, sha256_hex};
 use crate::pack_json::PackJson;
@@ -37,16 +36,16 @@ pub struct Dlss5Service;
 
 impl Dlss5Service {
     pub const FAMILY: &'static str = "dlss5";
+    pub const PACK_ID: &'static str = "dlss5.reshade-gitc";
 
     pub fn proxy_for(api: GraphicsApi) -> Result<&'static str, AppError> {
         match api {
             GraphicsApi::Dx12 | GraphicsApi::Dx11 | GraphicsApi::Dx10 => Ok("dxgi.dll"),
             GraphicsApi::Dx9 => Ok("d3d9.dll"),
-            // ReShade's Vulkan support is a global layer, not a proxy DLL; the
-            // legacy app ran the official setup for it, which is not ported yet.
+            // Vulkan uses a global ReShade layer instead of a proxy DLL.
             GraphicsApi::Vulkan => Err(AppError::new(ErrorCode::InvalidArgument).with(
                 "reason",
-                "the Vulkan ReShade layer requires the official setup",
+                "the Vulkan ReShade layer is installed by the official setup",
             )),
             GraphicsApi::OpenGl => Ok("opengl32.dll"),
             GraphicsApi::Unknown => Err(AppError::new(ErrorCode::InvalidArgument)
@@ -70,13 +69,23 @@ impl Dlss5Service {
                 .with("files", legacy.join(",")));
         }
         ReframeworkService::install_before_deploy(game_exe, target_directory, app_version, paths)?;
-        let proxy_module = Self::proxy_for(api)?;
+        let proxy_module = if api == GraphicsApi::Vulkan {
+            None
+        } else {
+            Some(Self::proxy_for(api)?)
+        };
         let setup_source = installer_source(&pack.steps).ok_or_else(|| {
             AppError::new(ErrorCode::PackInvalid)
                 .with("reason", "the DLSS5 pack has no runInstaller step")
         })?;
         let setup_path = TargetPath::combine(pack_directory, &setup_source)?;
-        let module = ReShadeInstaller::extract_module(&setup_path, game_exe)?;
+        let module = match proxy_module {
+            Some(_) => Some(ReShadeInstaller::extract_module(&setup_path, game_exe)?),
+            None => {
+                super::dlss5_vulkan::install_vulkan_layer(&setup_path, game_exe, target_directory)?;
+                None
+            }
+        };
 
         let plan = PackDeploymentPlanner::plan(
             &pack,
@@ -87,50 +96,57 @@ impl Dlss5Service {
             Some(app_version),
         )?;
 
-        let proxy_path = TargetPath::combine(target_directory, proxy_module)?;
-        if proxy_path.is_file() && !ReShadeInstaller::is_reshade_module(&proxy_path) {
-            let module_hash = sha256_hex(&module);
-            let same_module = FileHasher::sha256_file(&proxy_path)
-                .is_ok_and(|hash| hash.eq_ignore_ascii_case(&module_hash));
-            if !same_module {
-                return Err(AppError::new(ErrorCode::Conflict)
-                    .with("path", proxy_path.display().to_string())
-                    .with("reason", "the target module belongs to another program"));
+        let mut files = plan.files;
+        if let Some(proxy_module) = proxy_module {
+            let module = module.as_deref().unwrap_or_default();
+            let proxy_path = TargetPath::combine(target_directory, proxy_module)?;
+            if proxy_path.is_file() && !ReShadeInstaller::is_reshade_module(&proxy_path) {
+                let module_hash = sha256_hex(module);
+                let same_module = FileHasher::sha256_file(&proxy_path)
+                    .is_ok_and(|hash| hash.eq_ignore_ascii_case(&module_hash));
+                if !same_module {
+                    return Err(AppError::new(ErrorCode::Conflict)
+                        .with("path", proxy_path.display().to_string())
+                        .with("reason", "the target module belongs to another program"));
+                }
             }
+            files.push(DeploymentFile {
+                relative_path: proxy_module.to_string(),
+                source: None,
+                content: Some(module.to_vec()),
+                sha256: sha256_hex(module),
+                size: module.len() as i64,
+                role: "proxy".to_string(),
+            });
+
+            let ini_path = TargetPath::combine(target_directory, "ReShade.ini")?;
+            let ini_text = if ini_path.is_file() {
+                std::fs::read_to_string(&ini_path).map_err(|error| {
+                    AppError::new(ErrorCode::FileLocked)
+                        .with("path", ini_path.display().to_string())
+                        .with("reason", error.to_string())
+                })?
+            } else {
+                ReShadeInstaller::default_ini().to_string()
+            };
+            let content = Dlss5Config::merge(&ini_text).into_bytes();
+            files.push(DeploymentFile {
+                relative_path: "ReShade.ini".to_string(),
+                source: None,
+                content: Some(content.clone()),
+                sha256: sha256_hex(&content),
+                size: content.len() as i64,
+                role: "config".to_string(),
+            });
         }
 
-        let mut files = plan.files;
-        files.push(DeploymentFile {
-            relative_path: proxy_module.to_string(),
-            source: None,
-            content: Some(module.clone()),
-            sha256: sha256_hex(&module),
-            size: module.len() as i64,
-            role: "proxy".to_string(),
-        });
-
-        let ini_path = TargetPath::combine(target_directory, "ReShade.ini")?;
-        let ini_text = if ini_path.is_file() {
-            std::fs::read_to_string(&ini_path).map_err(|error| {
-                AppError::new(ErrorCode::FileLocked)
-                    .with("path", ini_path.display().to_string())
-                    .with("reason", error.to_string())
-            })?
-        } else {
-            ReShadeInstaller::default_ini().to_string()
-        };
-        let content = Dlss5Config::merge(&ini_text).into_bytes();
-        files.push(DeploymentFile {
-            relative_path: "ReShade.ini".to_string(),
-            source: None,
-            content: Some(content.clone()),
-            sha256: sha256_hex(&content),
-            size: content.len() as i64,
-            role: "config".to_string(),
-        });
-
         let mut options = BTreeMap::new();
-        options.insert("proxySlot".to_string(), proxy_module.to_string());
+        if let Some(proxy_module) = proxy_module {
+            options.insert("proxySlot".to_string(), proxy_module.to_string());
+        }
+        options.insert("api".to_string(), api_key(api).to_string());
+        options.insert("packDir".to_string(), pack_directory.display().to_string());
+        options.insert("gameExe".to_string(), game_exe.display().to_string());
 
         let report = DeploymentEngine::apply(
             &files,
@@ -148,7 +164,7 @@ impl Dlss5Service {
 
         Ok(Dlss5Report {
             files_written: report.files_written,
-            proxy_module: proxy_module.to_string(),
+            proxy_module: proxy_module.unwrap_or("vulkan").to_string(),
         })
     }
 
@@ -167,11 +183,19 @@ impl Dlss5Service {
         let tracked_proxy_present = proxy_module.as_deref().is_some_and(|name| {
             TargetPath::combine(target_directory, name).is_ok_and(|path| path.is_file())
         });
+        let vulkan = inspection
+            .options
+            .as_ref()
+            .and_then(|options| options.get("api"))
+            .is_some_and(|api| api == "vulkan");
         let re_shade_present = tracked_proxy_present
             || PROXY_CANDIDATES.iter().any(|name| {
                 let path = target_directory.join(name);
                 path.is_file() && ReShadeInstaller::is_reshade_module(&path)
-            });
+            })
+            || (vulkan
+                && (target_directory.join("ReShade.ini").is_file()
+                    || super::dlss5_vulkan::vulkan_layer_present()));
 
         Ok(Dlss5Inspection {
             state: inspection.state,
@@ -202,37 +226,6 @@ impl Dlss5Service {
         Ok(removed)
     }
 
-    /// Removes the DLSS5 pack while keeping the ReShade proxy and INI, so a
-    /// user-installed ReShade stays usable.
-    pub fn restore_keeping_reshade(
-        target_directory: &Path,
-        paths: &AppPaths,
-    ) -> Result<RestoreReport, AppError> {
-        DeploymentEngine::restore_keeping(
-            Self::FAMILY,
-            target_directory,
-            &paths.backups(),
-            &paths.state().join("locks"),
-            &["proxy", "config"],
-        )
-    }
-
-    /// Restores everything the install wrote, including the ReShade proxy and
-    /// the default `ReShade.ini`. Files that were present before the install
-    /// are restored from backup; files changed by the user are reported as
-    /// conflicts and left untouched, so a third-party module that reused the
-    /// proxy slot is never deleted.
-    pub fn uninstall(target_directory: &Path, paths: &AppPaths) -> Result<RestoreReport, AppError> {
-        let report = DeploymentEngine::restore(
-            Self::FAMILY,
-            target_directory,
-            &paths.backups(),
-            &paths.state().join("locks"),
-        )?;
-        ReframeworkService::uninstall(target_directory, paths)?;
-        Ok(report)
-    }
-
     /// Writes `[INPUT] KeyOverlay` for an installed game. When the game is
     /// running or the INI is locked the request is queued instead of failing.
     pub fn set_hotkey(
@@ -247,69 +240,33 @@ impl Dlss5Service {
         }
         match Self::apply_hotkey_now(target_directory, virtual_key, paths) {
             Ok(()) => Ok(HotkeyOutcome::Applied),
-            Err(error) if is_locked(&error) => {
+            Err(error) if super::dlss5_lifecycle::is_locked(&error) => {
                 HotkeyQueue::enqueue(paths, target_directory, game_exe, virtual_key)?;
                 Ok(HotkeyOutcome::Queued)
             }
             Err(error) => Err(error),
         }
     }
+}
 
-    /// Retries queued hotkey writes; returns how many were applied.
-    pub fn process_hotkey_queue(paths: &AppPaths) -> Result<usize, AppError> {
-        let entries = HotkeyQueue::load(paths)?;
-        let mut remaining = Vec::new();
-        let mut applied = 0;
-        for entry in entries {
-            let exe = entry.exe_path.as_deref().map(Path::new);
-            if exe.is_some_and(crate::process::GameProcessProbe::is_running) {
-                remaining.push(entry);
-                continue;
-            }
-            match Self::apply_hotkey_now(Path::new(&entry.target_dir), entry.virtual_key, paths) {
-                Ok(()) => applied += 1,
-                Err(error) if is_locked(&error) => remaining.push(entry),
-                Err(_) => {}
-            }
-        }
-        HotkeyQueue::save(paths, &remaining)?;
-        Ok(applied)
-    }
-
-    fn apply_hotkey_now(
-        target_directory: &Path,
-        virtual_key: u32,
-        paths: &AppPaths,
-    ) -> Result<(), AppError> {
-        let store = BackupStore::new(paths.backups());
-        let Some(mut manifest) = store.load_manifest(Self::FAMILY, target_directory)? else {
-            return Err(AppError::new(ErrorCode::ManifestMissing)
-                .with("path", target_directory.display().to_string())
-                .with("family", Self::FAMILY));
-        };
-        let ini_path = TargetPath::combine(target_directory, "ReShade.ini")?;
-        Dlss5Config::set_hotkey(&ini_path, virtual_key)?;
-
-        let size = std::fs::metadata(&ini_path)
-            .map_err(|error| {
-                AppError::new(ErrorCode::FileNotFound)
-                    .with("path", ini_path.display().to_string())
-                    .with("reason", error.to_string())
-            })?
-            .len() as i64;
-        let hash = FileHasher::sha256_file(&ini_path)?;
-        for record in &mut manifest.files {
-            if record.relative_path.eq_ignore_ascii_case("ReShade.ini") {
-                record.sha256 = hash.clone();
-                record.size = size;
-            }
-        }
-        store.save_manifest(&manifest)
+fn api_key(api: GraphicsApi) -> &'static str {
+    match api {
+        GraphicsApi::Dx12 => "dx12",
+        GraphicsApi::Dx11 => "dx11",
+        GraphicsApi::Dx10 => "dx10",
+        GraphicsApi::Dx9 => "dx9",
+        GraphicsApi::Vulkan => "vulkan",
+        GraphicsApi::OpenGl => "opengl",
+        GraphicsApi::Unknown => "unknown",
     }
 }
 
-fn is_locked(error: &AppError) -> bool {
-    matches!(error.code, ErrorCode::FileLocked | ErrorCode::AccessDenied)
+pub(super) fn first_reason(error: &AppError) -> &str {
+    error
+        .context
+        .iter()
+        .find(|(key, _)| key == "reason")
+        .map_or("operation failed", |(_, value)| value.as_str())
 }
 
 fn read_hotkey(target_directory: &Path) -> Option<u32> {

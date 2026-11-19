@@ -2,8 +2,10 @@ pub mod dlss5_config;
 pub mod dlss5_hotkey_outcome;
 pub mod dlss5_hotkey_queue;
 pub mod dlss5_inspection;
+mod dlss5_lifecycle;
 pub mod dlss5_report;
 pub mod dlss5_service;
+mod dlss5_vulkan;
 pub mod reshade_installer;
 
 mod reshade_zip;

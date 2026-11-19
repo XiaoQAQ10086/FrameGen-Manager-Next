@@ -46,13 +46,8 @@ unsafe extern "system" {
     fn RegCloseKey(key: Hkey) -> i32;
 }
 
-#[link(name = "shell32")]
-unsafe extern "system" {
-    fn IsUserAnAdmin() -> i32;
-}
-
 pub(crate) fn is_admin() -> bool {
-    unsafe { IsUserAnAdmin() != 0 }
+    crate::platform::is_elevated()
 }
 
 pub(crate) fn read_string(sub_key: &str, value_name: &str) -> Option<String> {
