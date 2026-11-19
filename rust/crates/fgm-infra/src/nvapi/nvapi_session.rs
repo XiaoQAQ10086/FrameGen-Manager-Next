@@ -9,10 +9,9 @@ use super::nvapi_native::{
     ID_CREATE_PROFILE, ID_CREATE_SESSION, ID_DELETE_SETTING, ID_DESTROY_SESSION,
     ID_ENUM_APPLICATIONS, ID_ENUM_PROFILES, ID_FIND_APPLICATION, ID_FIND_PROFILE,
     ID_GET_BASE_PROFILE, ID_GET_SETTING, ID_INITIALIZE, ID_LOAD_SETTINGS, ID_PROFILE_INFO,
-    ID_SAVE_SETTINGS, ID_SET_SETTING, ID_UNLOAD, NvApiFunctions, PROFILE_NAME_OFFSET,
-    SMOOTH_MOTION_SETTING_ID, application_buffer, free_library, get_setting_value,
-    initialize_application_slots, load_nvapi, profile_buffer, profile_info_buffer, query_fn,
-    read_wide, set_setting_value, setting_buffer, wide,
+    ID_SAVE_SETTINGS, ID_SET_SETTING, ID_UNLOAD, NvApiFunctions, SMOOTH_MOTION_SETTING_ID,
+    application_buffer, free_library, get_setting_value, initialize_application_slots, load_nvapi,
+    query_fn, read_wide, set_setting_value, setting_buffer, wide,
 };
 use super::nvapi_profile::NvApiProfile;
 
@@ -22,8 +21,8 @@ use super::nvapi_profile::NvApiProfile;
 /// never called because it is not exported / not safe to use here.
 pub struct NvApiSession {
     library: *mut c_void,
-    session: *mut c_void,
-    functions: NvApiFunctions,
+    pub(super) session: *mut c_void,
+    pub(super) functions: NvApiFunctions,
 }
 
 impl NvApiSession {
@@ -242,55 +241,6 @@ impl NvApiSession {
         self.base_profile().is_ok_and(|base| base == profile)
     }
 
-    pub fn profile_name(&self, profile: NvApiProfile) -> Option<String> {
-        let mut buffer = profile_info_buffer();
-        let result = unsafe {
-            (self.functions.profile_info)(self.session, profile.as_ptr(), buffer.as_mut_ptr())
-        };
-        if result != 0 {
-            return None;
-        }
-        let name = read_wide(&buffer, PROFILE_NAME_OFFSET, 2_048);
-        (!name.is_empty()).then_some(name)
-    }
-
-    pub fn create_profile(&self, name: &str) -> Result<NvApiProfile, AppError> {
-        let mut buffer = profile_buffer(name);
-        let mut profile = ptr::null_mut();
-        let result = unsafe {
-            (self.functions.create_profile)(self.session, buffer.as_mut_ptr(), &mut profile)
-        };
-        if result != 0 || profile.is_null() {
-            return Err(call_failed("DRS_CreateProfile", result));
-        }
-        Ok(NvApiProfile::from_raw(profile))
-    }
-
-    pub fn create_application(
-        &self,
-        profile: NvApiProfile,
-        executable: &Path,
-    ) -> Result<(), AppError> {
-        let executable = absolute(executable)?;
-        let mut buffer = application_buffer(&executable);
-        let result = unsafe {
-            (self.functions.create_application)(self.session, profile.as_ptr(), buffer.as_mut_ptr())
-        };
-        if result != 0 {
-            return Err(call_failed("DRS_CreateApplication", result));
-        }
-        Ok(())
-    }
-
-    pub fn delete_setting(&self, profile: NvApiProfile, setting_id: u32) -> Result<(), AppError> {
-        let result =
-            unsafe { (self.functions.delete_setting)(self.session, profile.as_ptr(), setting_id) };
-        if result != 0 {
-            return Err(call_failed("DRS_DeleteProfileSetting", result));
-        }
-        Ok(())
-    }
-
     pub fn read_setting(
         &self,
         profile: NvApiProfile,
@@ -401,7 +351,7 @@ impl Drop for NvApiSession {
     }
 }
 
-fn absolute(path: &Path) -> Result<PathBuf, AppError> {
+pub(super) fn absolute(path: &Path) -> Result<PathBuf, AppError> {
     std::path::absolute(path).map_err(|error| {
         AppError::new(ErrorCode::InvalidPath)
             .with("path", path.display().to_string())

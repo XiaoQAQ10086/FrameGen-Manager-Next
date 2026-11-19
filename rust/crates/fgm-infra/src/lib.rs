@@ -4,6 +4,7 @@ use fgm_core::ports::Clock;
 
 pub mod deployment;
 pub mod fs;
+pub mod gpu;
 pub mod hashing;
 pub mod library;
 pub mod nvapi;

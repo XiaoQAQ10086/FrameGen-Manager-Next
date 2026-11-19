@@ -71,6 +71,13 @@ HAGS: unknown
 
 旧版对同一台机器的路由同样是 SM86；新版把 R580/616.64 闸门统一收敛到 Domain，后续部署引擎直接复用。
 
+## Rust 迁移状态（Phase 4）
+
+- `fgm-infra/src/gpu/gpu_detector.rs`：`GpuDetector::detect` 调用 `nvidia-smi --query-gpu=name,driver_version --format=csv,noheader`，5 秒超时；失败返回 `None`。
+- `GpuDetector::classify` 纯函数按名称映射 `GpuRoute`，覆盖 RTX 50/40、AMD/Intel、Quadro RTX、RTX A、RTX 30、GTX 16、RTX 2050、RTX 20、Titan RTX、Pascal 级别；驱动 `major.minor >= 616.64` 才算支持。
+- 尚未迁移：注册表回退、HAGS 实时探针、多适配器汇总、GPU 缓存/FFI/UI。
+- Rust 测试：`gpu_detector.rs` 内单元测试覆盖路由和驱动阈值。
+
 ## 测试
 
 - `Domain.Tests/GpuRouteClassifierTests.cs`

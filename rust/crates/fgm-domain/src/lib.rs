@@ -2,6 +2,7 @@
 
 pub mod deployment;
 pub mod error;
+pub mod gpu;
 pub mod ini;
 pub mod library;
 pub mod pack;
