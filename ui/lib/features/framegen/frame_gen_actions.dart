@@ -1,7 +1,8 @@
 import 'package:material_ui/material_ui.dart';
 
-import '../../bridge/deploy_options.dart';
+import '../../bridge/deploy_dialog_result.dart';
 import '../../bridge/library_game.dart';
+import '../../bridge/proxy_badge.dart';
 import '../../l10n/app_localizations.dart';
 import 'framegen_deploy_dialog.dart';
 
@@ -9,14 +10,22 @@ import 'framegen_deploy_dialog.dart';
 final class FrameGenActions {
   const FrameGenActions._();
 
-  static Future<DeployOptions?> showDeployOptions(
+  static Future<DeployDialogResult?> showDeployOptions(
     BuildContext context,
     AppLocalizations l10n,
-    LibraryGame game,
-  ) {
-    return showDialog<DeployOptions>(
+    LibraryGame game, {
+    bool deployed = false,
+    List<ProxyBadge> proxies = const <ProxyBadge>[],
+    String? coverPath,
+  }) {
+    return showDialog<DeployDialogResult>(
       context: context,
-      builder: (BuildContext context) => FrameGenDeployDialog(game: game),
+      builder: (BuildContext context) => FrameGenDeployDialog(
+        game: game,
+        deployed: deployed,
+        proxies: proxies,
+        coverPath: coverPath,
+      ),
     );
   }
 }

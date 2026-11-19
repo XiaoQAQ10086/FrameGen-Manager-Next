@@ -17,6 +17,26 @@ final class LogsBridge {
     return DiagnosticsResult.parse(reply);
   }
 
+  /// Deletes current log files; returns the removed count.
+  static Future<int?> clear() async {
+    final String? reply = await Isolate.run(() {
+      final CoreLibrary? core = CoreLibrary.tryOpen();
+      return core?.invokeJson('fgm_logs_clear_json');
+    });
+    if (reply == null) {
+      return null;
+    }
+    try {
+      final Object? decoded = jsonDecode(reply);
+      if (decoded is! Map || decoded['ok'] != true) {
+        return null;
+      }
+      return decoded['removed'] as int? ?? 0;
+    } on FormatException {
+      return null;
+    }
+  }
+
   static List<String> tail(CoreLibrary? core, {int maxLines = 500}) {
     if (core == null) {
       return const <String>[];

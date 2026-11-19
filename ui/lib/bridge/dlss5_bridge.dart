@@ -23,7 +23,12 @@ final class Dlss5Bridge {
     return Dlss5State.parse(reply);
   }
 
-  static Future<Dlss5Result> install(LibraryGame game) async {
+  static Future<Dlss5Result> install(
+    LibraryGame game, {
+    String? api,
+    String? proxy,
+    int? hotkey,
+  }) async {
     final String? exe = game.renderExe;
     if (exe == null) {
       return const Dlss5Result(ok: false, code: 'NoRenderExe');
@@ -31,7 +36,9 @@ final class Dlss5Bridge {
     final String request = jsonEncode(<String, Object?>{
       'exePath': exe,
       'targetDir': game.targetDirectory,
-      'api': game.graphicsApi,
+      'api': api ?? game.graphicsApi,
+      'proxy': proxy,
+      'hotkey': hotkey,
     });
     final String? reply = await Isolate.run(() {
       final CoreLibrary? core = CoreLibrary.tryOpen();

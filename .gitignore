@@ -509,3 +509,6 @@ build/tools/
 
 # Rust build output
 /rust/target/
+
+# Local scratch (portable test data, screenshots)
+/target/

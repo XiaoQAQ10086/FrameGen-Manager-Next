@@ -4,8 +4,7 @@ enum AppSection {
   smoothMotion,
   dlss5,
   anr,
-  gpu,
   logs,
-  settings,
   about,
+  donate,
 }

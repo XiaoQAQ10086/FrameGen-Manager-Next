@@ -8,6 +8,9 @@ final class GameModes {
     this.dlss5 = 'notDeployed',
     this.anr = 'notDeployed',
     this.smoothMotion,
+    this.framegenVersion,
+    this.framegenPackVersion,
+    this.smoothMotionComponent = 'notDeployed',
   });
 
   factory GameModes.fromJson(Map<String, Object?> json) {
@@ -17,6 +20,10 @@ final class GameModes {
       dlss5: json['dlss5'] as String? ?? 'notDeployed',
       anr: json['anr'] as String? ?? 'notDeployed',
       smoothMotion: json['smoothMotion'] as String?,
+      framegenVersion: json['framegenVersion'] as String?,
+      framegenPackVersion: json['framegenPackVersion'] as String?,
+      smoothMotionComponent:
+          json['smoothMotionComponent'] as String? ?? 'notDeployed',
     );
   }
 
@@ -25,11 +32,20 @@ final class GameModes {
   final String dlss5;
   final String anr;
   final String? smoothMotion;
+  final String? framegenVersion;
+  final String? framegenPackVersion;
+  final String smoothMotionComponent;
 
   bool get framegenDeployed => framegen != 'notDeployed';
   bool get dlss5Deployed => dlss5 != 'notDeployed';
   bool get anrDeployed => anr != 'notDeployed';
   bool get smoothMotionOn => smoothMotion == 'on';
+  bool get smoothComponentDeployed => smoothMotionComponent != 'notDeployed';
+  bool get framegenOutdated =>
+      framegen == 'outdated' ||
+      (framegenVersion != null &&
+          framegenPackVersion != null &&
+          framegenVersion != framegenPackVersion);
   bool get anyDeployed =>
       framegenDeployed || dlss5Deployed || anrDeployed || smoothMotionOn;
 

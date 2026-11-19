@@ -24,6 +24,10 @@ struct Dlss5InstallRequest {
     target_dir: String,
     api: String,
     #[serde(default)]
+    proxy: Option<String>,
+    #[serde(default)]
+    hotkey: Option<u32>,
+    #[serde(default)]
     app_version: Option<String>,
     #[serde(default)]
     data_dir: Option<String>,
@@ -51,9 +55,13 @@ pub(crate) fn dlss5_install(request: &str) -> Result<Value, AppError> {
         &paths,
         &operation.cancelled,
         Some(operation.as_ref()),
+        request.proxy.as_deref(),
     );
     super::commands_operation::finish();
     let report = result?;
+    if let Some(hotkey) = request.hotkey {
+        let _ = Dlss5Service::set_hotkey(&target_directory, hotkey, Some(&executable), &paths);
+    }
 
     Ok(json!({
         "ok": true,

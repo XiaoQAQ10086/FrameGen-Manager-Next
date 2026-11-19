@@ -1,0 +1,93 @@
+use std::path::Path;
+
+use fgm_domain::error::AppError;
+
+use super::backup_store::BackupStore;
+
+/// Which deployment family owns a proxy module in a game directory.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum ProxyOwner {
+    Framegen,
+    Dlss5,
+    Anr,
+    Reframework,
+    Other,
+}
+
+impl ProxyOwner {
+    pub fn key(self) -> &'static str {
+        match self {
+            Self::Framegen => "framegen",
+            Self::Dlss5 => "dlss5",
+            Self::Anr => "anr",
+            Self::Reframework => "reframework",
+            Self::Other => "other",
+        }
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct ProxyEntry {
+    pub module: String,
+    pub owner: ProxyOwner,
+    pub owned_by_framegen: bool,
+}
+
+const CANDIDATES: [&str; 11] = [
+    "version.dll",
+    "winmm.dll",
+    "dbghelp.dll",
+    "dinput8.dll",
+    "dxgi.dll",
+    "d3d9.dll",
+    "d3d10.dll",
+    "d3d11.dll",
+    "d3d12.dll",
+    "opengl32.dll",
+    "vulkan-1.dll",
+];
+const FAMILIES: [(&str, ProxyOwner); 4] = [
+    ("framegen.sm86", ProxyOwner::Framegen),
+    ("dlss5", ProxyOwner::Dlss5),
+    ("anr", ProxyOwner::Anr),
+    ("reframework", ProxyOwner::Reframework),
+];
+
+/// Reports occupied proxy slots and their owning deployment family.
+pub struct ProxyStatus;
+
+impl ProxyStatus {
+    pub fn inspect(
+        target_directory: &Path,
+        backups_root: &Path,
+    ) -> Result<Vec<ProxyEntry>, AppError> {
+        let store = BackupStore::new(backups_root.to_path_buf());
+        let mut owners: Vec<(String, ProxyOwner)> = Vec::new();
+        for (family, owner) in FAMILIES {
+            let Some(manifest) = store.load_manifest(family, target_directory)? else {
+                continue;
+            };
+            for record in manifest.files {
+                owners.push((record.relative_path.to_ascii_lowercase(), owner));
+            }
+        }
+
+        let mut entries = Vec::new();
+        for module in CANDIDATES {
+            if !target_directory.join(module).is_file() {
+                continue;
+            }
+            let lower = module.to_ascii_lowercase();
+            let owner = owners
+                .iter()
+                .find(|(path, _)| path == &lower)
+                .map_or(ProxyOwner::Other, |(_, owner)| *owner);
+            entries.push(ProxyEntry {
+                module: module.to_string(),
+                owner,
+                owned_by_framegen: owner == ProxyOwner::Framegen,
+            });
+        }
+        Ok(entries)
+    }
+}

@@ -84,6 +84,30 @@ fn target_override_updates_the_cached_game() {
 }
 
 #[test]
+fn removed_games_can_be_restored_or_forgotten() {
+    let root = unique_dir("library-removed");
+    fs::create_dir_all(root.join("game")).unwrap();
+    let executable = root.join("game").join("demo.exe");
+    fs::write(&executable, b"not-a-pe").unwrap();
+    let paths = AppPaths::new(root.join("data"), false).unwrap();
+    paths.ensure_created().unwrap();
+    let entry = LibraryService::add_manual(&paths, &executable).unwrap();
+
+    LibraryService::remove(&paths, &entry.id).unwrap();
+    assert!(LibraryService::list(&paths).is_empty());
+    assert_eq!(LibraryService::removed(&paths).len(), 1);
+
+    LibraryService::restore_removed(&paths, &entry.id).unwrap();
+    assert_eq!(LibraryService::list(&paths).len(), 1);
+    assert!(LibraryService::removed(&paths).is_empty());
+
+    LibraryService::remove(&paths, &entry.id).unwrap();
+    LibraryService::forget(&paths, &entry.id).unwrap();
+    assert!(LibraryService::removed(&paths).is_empty());
+    assert!(LibraryService::list(&paths).is_empty());
+}
+
+#[test]
 fn add_manual_rejects_a_missing_file() {
     let root = unique_dir("library-manual-missing");
     let paths = AppPaths::new(root.join("data"), false).unwrap();

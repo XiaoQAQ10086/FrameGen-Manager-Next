@@ -1,19 +1,21 @@
 import 'package:material_ui/material_ui.dart';
 
+import '../bridge/app_settings.dart';
 import '../bridge/core_library.dart';
+import '../bridge/settings_bridge.dart';
 import '../design/app_tokens.dart';
+import '../design/shell_background.dart';
 import '../features/about/about_page.dart';
 import '../features/anr/anr_page.dart';
 import '../features/dlss5/dlss5_page.dart';
+import '../features/donate/donate_page.dart';
 import '../features/framegen/framegen_page.dart';
-import '../features/gpu/gpu_page.dart';
 import '../features/logs/logs_page.dart';
-import '../features/settings/settings_page.dart';
 import '../features/smooth_motion/smooth_motion_page.dart';
 import '../l10n/app_localizations.dart';
 import 'app_section.dart';
 
-/// Root layout: top navigation, page host and status bar.
+/// Root layout mirroring the legacy topbar, navigation and page host.
 class AppShell extends StatefulWidget {
   const AppShell({super.key, this.core, this.onLanguageChanged});
 
@@ -26,42 +28,65 @@ class AppShell extends StatefulWidget {
 
 class _AppShellState extends State<AppShell> {
   AppSection _section = AppSection.frameGeneration;
+  late String _language = _loadLanguage();
+
+  String _loadLanguage() {
+    if (widget.core == null) {
+      return 'system';
+    }
+    return SettingsBridge.load(widget.core).language;
+  }
+
+  void _selectLanguage(String language) {
+    setState(() => _language = language);
+    if (widget.core != null) {
+      final AppSettings settings = SettingsBridge.load(widget.core);
+      SettingsBridge.save(settings.copyWith(language: language), widget.core);
+    }
+    widget.onLanguageChanged?.call(language);
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Column(
+      backgroundColor: Colors.transparent,
+      body: Stack(
         children: <Widget>[
-          _TopBar(
-            selected: _section,
-            onSelected: (AppSection section) =>
-                setState(() => _section = section),
-          ),
-          Expanded(
-            child: AnimatedSwitcher(
-              duration: const Duration(milliseconds: 180),
-              switchInCurve: Curves.easeOutCubic,
-              switchOutCurve: Curves.easeInCubic,
-              transitionBuilder: _fadeThrough,
-              child: KeyedSubtree(
-                key: ValueKey<AppSection>(_section),
-                child: switch (_section) {
-                  AppSection.frameGeneration => FrameGenPage(core: widget.core),
-                  AppSection.smoothMotion => SmoothMotionPage(core: widget.core),
-                  AppSection.dlss5 => Dlss5Page(core: widget.core),
-                  AppSection.anr => AnrPage(core: widget.core),
-                  AppSection.gpu => GpuPage(core: widget.core),
-                  AppSection.about => AboutPage(core: widget.core),
-                  AppSection.logs => LogsPage(core: widget.core),
-                  AppSection.settings => SettingsPage(
-                    core: widget.core,
-                    onLanguageChanged: widget.onLanguageChanged,
-                  ),
-                },
+          const ShellBackground(),
+          Column(
+            children: <Widget>[
+              _TopBar(
+                core: widget.core,
+                selected: _section,
+                language: _language,
+                onSelected: (AppSection section) =>
+                    setState(() => _section = section),
+                onLanguage: _selectLanguage,
               ),
-            ),
+              Expanded(
+                child: AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 260),
+                  switchInCurve: const Cubic(0.2, 0.9, 0.3, 1),
+                  switchOutCurve: Curves.easeInCubic,
+                  transitionBuilder: _fadeThrough,
+                  child: KeyedSubtree(
+                    key: ValueKey<AppSection>(_section),
+                    child: switch (_section) {
+                      AppSection.frameGeneration =>
+                        FrameGenPage(core: widget.core),
+                      AppSection.smoothMotion =>
+                        SmoothMotionPage(core: widget.core),
+                      AppSection.dlss5 => Dlss5Page(core: widget.core),
+                      AppSection.anr => AnrPage(core: widget.core),
+                      AppSection.logs => LogsPage(core: widget.core),
+                      AppSection.about => AboutPage(core: widget.core),
+                      AppSection.donate => const DonatePage(),
+                    },
+                  ),
+                ),
+              ),
+            ],
           ),
-          _StatusBar(core: widget.core),
         ],
       ),
     );
@@ -81,89 +106,103 @@ class _AppShellState extends State<AppShell> {
 }
 
 class _TopBar extends StatelessWidget {
-  const _TopBar({required this.selected, required this.onSelected});
+  const _TopBar({
+    required this.core,
+    required this.selected,
+    required this.language,
+    required this.onSelected,
+    required this.onLanguage,
+  });
 
+  final CoreLibrary? core;
   final AppSection selected;
+  final String language;
   final ValueChanged<AppSection> onSelected;
+  final ValueChanged<String> onLanguage;
 
   @override
   Widget build(BuildContext context) {
     final AppLocalizations l10n = AppLocalizations.of(context);
-
     return Container(
-      height: 72,
-      padding: const EdgeInsets.symmetric(horizontal: 24),
+      constraints: const BoxConstraints(minHeight: 56),
+      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 6),
       decoration: const BoxDecoration(
-        color: AppTokens.surface,
+        color: Color(0xB8FFFFFF),
         border: Border(bottom: BorderSide(color: AppTokens.border)),
       ),
-      child: Row(
-        children: <Widget>[
-          const _BrandMark(),
-          const SizedBox(width: 12),
-          Text(
-            l10n.appTitle,
-            style: const TextStyle(
-              color: AppTokens.textPrimary,
-              fontSize: 15,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          const SizedBox(width: 28),
-          Expanded(
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
+      child: LayoutBuilder(
+        builder: (BuildContext context, BoxConstraints constraints) {
+          final bool showTagline = constraints.maxWidth >= 1360;
+          return Row(
+            children: <Widget>[
+              ClipRRect(
+                borderRadius: BorderRadius.circular(9),
+                child: Image.asset(
+                  'assets/app.png',
+                  width: 34,
+                  height: 34,
+                  fit: BoxFit.cover,
+                ),
+              ),
+              const SizedBox(width: 10),
+              Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
-                  for (final AppSection section in AppSection.values)
-                    _NavItem(
-                      section: section,
-                      label: _sectionLabel(l10n, section),
-                      selected: section == selected,
-                      onTap: () => onSelected(section),
+                  const Text(
+                    'FrameGen Manager-Next',
+                    style: TextStyle(
+                      color: AppTokens.textPrimary,
+                      fontSize: 15,
+                      fontWeight: FontWeight.w700,
                     ),
+                  ),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: <Widget>[
+                      Text(
+                        'v${core?.version ?? '2.3.4'}',
+                        style: const TextStyle(
+                          color: AppTokens.textSecondary,
+                          fontSize: 11.5,
+                        ),
+                      ),
+                      if (showTagline) ...<Widget>[
+                        const SizedBox(width: 8),
+                        Text(
+                          l10n.appTagline,
+                          style: const TextStyle(
+                            color: AppTokens.textSecondary,
+                            fontSize: 11.5,
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
                 ],
               ),
-            ),
-          ),
-          const SizedBox(width: 16),
-        ],
-      ),
-    );
-  }
-}
-
-class _BrandMark extends StatelessWidget {
-  const _BrandMark();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 36,
-      height: 36,
-      alignment: Alignment.center,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(11),
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: <Color>[AppTokens.accent, Color(0xFF5AC8FA)],
-        ),
-        boxShadow: const <BoxShadow>[
-          BoxShadow(
-            color: Color(0x330A84FF),
-            blurRadius: 12,
-            offset: Offset(0, 4),
-          ),
-        ],
-      ),
-      child: const Text(
-        'F',
-        style: TextStyle(
-          color: Colors.white,
-          fontSize: 18,
-          fontWeight: FontWeight.w700,
-        ),
+              const SizedBox(width: 22),
+              Expanded(
+                child: SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: <Widget>[
+                      for (final AppSection section in AppSection.values)
+                        _NavItem(
+                          section: section,
+                          label: _sectionLabel(l10n, section),
+                          selected: section == selected,
+                          onTap: () => onSelected(section),
+                        ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              _LanguageSelect(language: language, onChanged: onLanguage),
+            ],
+          );
+        },
       ),
     );
   }
@@ -184,41 +223,61 @@ class _NavItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final String glyph = switch (section) {
+      AppSection.logs => '≡',
+      AppSection.about => 'ⓘ',
+      AppSection.donate => '♡',
+      _ => '',
+    };
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 2),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(10),
-        onTap: onTap,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 180),
-          curve: Curves.easeOutCubic,
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
-          decoration: BoxDecoration(
-            color: selected ? AppTokens.accentSoft : Colors.transparent,
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child: Row(
-            children: <Widget>[
-              Icon(
-                _sectionIcon(section),
-                size: 17,
-                color: selected
-                    ? AppTokens.accent
-                    : AppTokens.textSecondary,
-              ),
-              const SizedBox(width: 7),
-              Text(
-                label,
-                style: TextStyle(
-                  color: selected
-                      ? AppTokens.accent
-                      : AppTokens.textSecondary,
-                  fontSize: 13,
-                  fontWeight:
-                      selected ? FontWeight.w600 : FontWeight.w500,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(999),
+          onTap: onTap,
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 180),
+            curve: Curves.easeOutCubic,
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+            decoration: BoxDecoration(
+              color: selected ? Colors.white : Colors.transparent,
+              borderRadius: BorderRadius.circular(999),
+              boxShadow: selected
+                  ? const <BoxShadow>[
+                      BoxShadow(
+                        color: Color(0x14000000),
+                        blurRadius: 10,
+                        offset: Offset(0, 3),
+                      ),
+                    ]
+                  : null,
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: <Widget>[
+                if (glyph.isNotEmpty) ...<Widget>[
+                  Text(
+                    glyph,
+                    style: TextStyle(
+                      color: selected
+                          ? AppTokens.accent
+                          : AppTokens.textSecondary,
+                      fontSize: 14,
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                ],
+                Text(
+                  label,
+                  style: TextStyle(
+                    color: selected ? AppTokens.accent : AppTokens.textPrimary,
+                    fontSize: 13,
+                    fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
@@ -226,43 +285,52 @@ class _NavItem extends StatelessWidget {
   }
 }
 
-class _StatusBar extends StatelessWidget {
-  const _StatusBar({this.core});
+class _LanguageSelect extends StatelessWidget {
+  const _LanguageSelect({required this.language, required this.onChanged});
 
-  final CoreLibrary? core;
+  final String language;
+  final ValueChanged<String> onChanged;
 
   @override
   Widget build(BuildContext context) {
     final AppLocalizations l10n = AppLocalizations.of(context);
-    final String coreLabel = core == null
-        ? l10n.coreOffline
-        : l10n.footerCore(core!.version);
-
+    final String value = switch (language) {
+      'chineseSimplified' => 'chineseSimplified',
+      'english' => 'english',
+      _ => 'system',
+    };
     return Container(
-      height: 30,
-      padding: const EdgeInsets.symmetric(horizontal: 24),
-      decoration: const BoxDecoration(
-        color: AppTokens.surface,
-        border: Border(top: BorderSide(color: AppTokens.border)),
+      padding: const EdgeInsets.symmetric(horizontal: 10),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.8),
+        borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
+        border: Border.all(color: AppTokens.border),
       ),
-      child: Row(
-        children: <Widget>[
-          Container(
-            width: 7,
-            height: 7,
-            decoration: BoxDecoration(
-              color: core == null ? AppTokens.warning : AppTokens.success,
-              shape: BoxShape.circle,
+      child: DropdownButtonHideUnderline(
+        child: DropdownButton<String>(
+          value: value,
+          isDense: true,
+          style: const TextStyle(color: AppTokens.textPrimary, fontSize: 12),
+          items: <DropdownMenuItem<String>>[
+            DropdownMenuItem<String>(
+              value: 'system',
+              child: Text(l10n.languageSystem),
             ),
-          ),
-          const SizedBox(width: 8),
-          Text(coreLabel, style: Theme.of(context).textTheme.labelMedium),
-          const Spacer(),
-          Text(
-            l10n.footerPlatform,
-            style: Theme.of(context).textTheme.labelMedium,
-          ),
-        ],
+            DropdownMenuItem<String>(
+              value: 'chineseSimplified',
+              child: Text(l10n.languageChinese),
+            ),
+            DropdownMenuItem<String>(
+              value: 'english',
+              child: Text(l10n.languageEnglish),
+            ),
+          ],
+          onChanged: (String? selected) {
+            if (selected != null && selected != value) {
+              onChanged(selected);
+            }
+          },
+        ),
       ),
     );
   }
@@ -274,22 +342,8 @@ String _sectionLabel(AppLocalizations l10n, AppSection section) {
     AppSection.smoothMotion => l10n.navSmoothMotion,
     AppSection.dlss5 => l10n.navDlss5,
     AppSection.anr => l10n.navAnr,
-    AppSection.gpu => l10n.navGpu,
     AppSection.logs => l10n.navLogs,
-    AppSection.settings => l10n.navSettings,
     AppSection.about => l10n.navAbout,
-  };
-}
-
-IconData _sectionIcon(AppSection section) {
-  return switch (section) {
-    AppSection.frameGeneration => Icons.auto_awesome_motion,
-    AppSection.smoothMotion => Icons.motion_photos_on,
-    AppSection.dlss5 => Icons.hdr_strong,
-    AppSection.anr => Icons.memory,
-    AppSection.gpu => Icons.developer_board,
-    AppSection.logs => Icons.receipt_long,
-    AppSection.settings => Icons.tune,
-    AppSection.about => Icons.info_outline,
+    AppSection.donate => l10n.navDonate,
   };
 }

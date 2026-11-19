@@ -2,23 +2,36 @@ import 'package:material_ui/material_ui.dart';
 
 import '../../bridge/app_settings.dart';
 import '../../bridge/core_library.dart';
+import '../../bridge/deploy_dialog_result.dart';
 import '../../bridge/deploy_options.dart';
 import '../../bridge/deployment_bridge.dart';
 import '../../bridge/deployment_result.dart';
 import '../../bridge/game_modes.dart';
+import '../../bridge/gpu_bridge.dart';
+import '../../bridge/gpu_info.dart';
 import '../../bridge/library_add_result.dart';
 import '../../bridge/library_bridge.dart';
 import '../../bridge/library_game.dart';
 import '../../bridge/library_snapshot.dart';
+import '../../bridge/proxy_badge.dart';
 import '../../bridge/settings_bridge.dart';
+import '../../bridge/system_bridge.dart';
 import '../../design/app_tokens.dart';
 import '../../design/error_dialog.dart';
+import '../../design/library_list_head.dart';
+import '../../design/library_notice.dart';
 import '../../design/operation_progress_dialog.dart';
 import '../../l10n/app_localizations.dart';
+import 'assets_panel.dart';
 import 'frame_gen_actions.dart';
-import 'game_library_card.dart';
+import 'framegen_game_list.dart';
+import 'gpu_panel.dart';
+import 'mode_source_panel.dart';
+import 'remove_game_dialog.dart';
+import 'removed_games_dialog.dart';
+import 'spoof_panel.dart';
 
-/// First migrated page: mirror of the existing frame-generation workspace.
+/// Legacy frame-generation workspace: list header, sidebar and game cards.
 class FrameGenPage extends StatefulWidget {
   const FrameGenPage({super.key, this.core});
 
@@ -30,10 +43,15 @@ class FrameGenPage extends StatefulWidget {
 
 class _FrameGenPageState extends State<FrameGenPage> {
   List<LibraryGame> _games = const <LibraryGame>[];
-  Map<String, String?> _covers = const <String, String?>{};
+  List<LibraryGame> _removed = const <LibraryGame>[];
   Map<String, GameModes> _modes = const <String, GameModes>{};
+  Map<String, List<ProxyBadge>> _proxies = const <String, List<ProxyBadge>>{};
+  Map<String, String?> _covers = const <String, String?>{};
+  GpuInfo? _gpu;
   bool _showCovers = true;
-  bool _loading = false;
+  bool _scanning = false;
+  bool _adding = false;
+  bool _loaded = false;
   String? _error;
   String? _busyGameId;
 
@@ -43,29 +61,20 @@ class _FrameGenPageState extends State<FrameGenPage> {
     final LibrarySnapshot snapshot = LibraryBridge.list(widget.core);
     _games = snapshot.games;
     _error = snapshot.hasError ? snapshot.errorCode : null;
+    _loaded = true;
     final AppSettings settings = SettingsBridge.load(widget.core);
     _showCovers = settings.showCovers;
-    _loadModes();
+    _loadExtras();
     if (settings.autoScanOnStartup) {
       _scan();
-    } else {
-      _loadCovers();
     }
   }
 
-  Future<void> _loadModes() async {
+  Future<void> _loadExtras() async {
     final Map<String, GameModes> modes = await LibraryBridge.modes();
-    if (!mounted) {
-      return;
-    }
-    setState(() => _modes = modes);
-  }
-
-  Future<void> _loadCovers() async {
-    if (!_showCovers) {
-      return;
-    }
-    final List<MapEntry<String, String?>> entries = await Future.wait(
+    final LibrarySnapshot removed = await LibraryBridge.removed();
+    final GpuInfo? gpu = await GpuBridge.load(widget.core);
+    final List<MapEntry<String, String?>> covers = await Future.wait(
       _games
           .where((LibraryGame game) => game.source == 'steam')
           .map(
@@ -73,41 +82,67 @@ class _FrameGenPageState extends State<FrameGenPage> {
                 MapEntry<String, String?>(game.id, await LibraryBridge.cover(game)),
           ),
     );
+    final List<MapEntry<String, List<ProxyBadge>>> proxies = await Future.wait(
+      _games.map(
+        (LibraryGame game) async =>
+            MapEntry<String, List<ProxyBadge>>(
+              game.id,
+              await SystemBridge.proxyStatus(game),
+            ),
+      ),
+    );
     if (!mounted) {
       return;
     }
-    setState(() => _covers = Map<String, String?>.fromEntries(entries));
+    setState(() {
+      _modes = modes;
+      _removed = removed.games;
+      _gpu = gpu;
+      _covers = Map<String, String?>.fromEntries(covers);
+      _proxies = Map<String, List<ProxyBadge>>.fromEntries(proxies);
+    });
   }
 
   Future<void> _scan() async {
-    setState(() {
-      _loading = true;
-      _error = null;
-    });
+    setState(() => _scanning = true);
     final LibrarySnapshot snapshot = await LibraryBridge.scan(widget.core);
     if (!mounted) {
       return;
     }
     setState(() {
-      _loading = false;
+      _scanning = false;
       _games = snapshot.games;
       _error = snapshot.hasError ? snapshot.errorCode : null;
     });
-    await _loadCovers();
-    await _loadModes();
-  }
-
-  Future<void> _addManual() async {
-    final AppLocalizations l10n = AppLocalizations.of(context);
-    final LibraryAddResult result = await LibraryBridge.addManual();
-    if (!mounted || result.cancelled) {
+    if (snapshot.hasError) {
+      final AppLocalizations l10n = AppLocalizations.of(context);
+      await ErrorDialog.show(
+        context,
+        message: l10n.libraryLoadFailed,
+        code: snapshot.errorCode ?? 'ScanFailed',
+        detail: snapshot.errorDetail,
+      );
       return;
     }
-    if (!result.ok) {
+    await _loadExtras();
+  }
+
+  Future<void> _addGame() async {
+    final AppLocalizations l10n = AppLocalizations.of(context);
+    setState(() => _adding = true);
+    final LibraryAddResult added = await LibraryBridge.addManual();
+    if (!mounted) {
+      return;
+    }
+    setState(() => _adding = false);
+    if (added.cancelled) {
+      return;
+    }
+    if (!added.ok) {
       await ErrorDialog.show(
         context,
         message: l10n.addGameFailed,
-        code: result.code ?? 'AddGameFailed',
+        code: added.code ?? 'AddGameFailed',
       );
       return;
     }
@@ -116,33 +151,47 @@ class _FrameGenPageState extends State<FrameGenPage> {
       _games = snapshot.games;
       _error = snapshot.hasError ? snapshot.errorCode : null;
     });
-    await _loadCovers();
-    await _loadModes();
+    await _loadExtras();
   }
 
-  Future<void> _launch(LibraryGame game) async {
-    final AppLocalizations l10n = AppLocalizations.of(context);
-    final bool started = await LibraryBridge.launch(game);
-    if (mounted && !started) {
-      await ErrorDialog.show(
-        context,
-        message: l10n.launchFailed,
-        code: 'LaunchFailed',
-      );
+
+  Future<void> _openRemoved() async {
+    final LibrarySnapshot snapshot = await LibraryBridge.removed();
+    if (!mounted) {
+      return;
     }
+    setState(() => _removed = snapshot.games);
+    final bool changed = await RemovedGamesDialog.show(context, _removed);
+    if (!changed || !mounted) {
+      return;
+    }
+    final LibrarySnapshot visible = LibraryBridge.list(widget.core);
+    setState(() => _games = visible.games);
+    await _loadExtras();
   }
 
-  Future<void> _deploy(LibraryGame game) async {
+  Future<void> _openDeploy(LibraryGame game) async {
     final AppLocalizations l10n = AppLocalizations.of(context);
-    final DeployOptions? options = await FrameGenActions.showDeployOptions(
+    final String state = _modes[game.id]?.framegen ?? 'notDeployed';
+    final DeployDialogResult? choice = await FrameGenActions.showDeployOptions(
       context,
       l10n,
       game,
+      deployed: state != 'notDeployed',
+      proxies: _proxies[game.id] ?? const <ProxyBadge>[],
+      coverPath: _showCovers ? _covers[game.id] : null,
     );
-    if (options == null || !mounted) {
+    if (choice == null || !mounted) {
       return;
     }
-
+    if (choice.restore) {
+      await _restore(game);
+      return;
+    }
+    final DeployOptions? options = choice.options;
+    if (options == null) {
+      return;
+    }
     setState(() => _busyGameId = game.id);
     final DeploymentResult? result =
         await OperationProgressDialog.run<DeploymentResult>(
@@ -160,26 +209,25 @@ class _FrameGenPageState extends State<FrameGenPage> {
     if (result.code == 'OperationCancelled') {
       return;
     }
-    if (result.ok) {
-      _showResult(l10n.deployComplete);
-    } else {
+    if (!result.ok) {
       await ErrorDialog.show(
         context,
         message: l10n.deployFailed,
         code: result.code ?? 'DeployFailed',
       );
+      return;
     }
-    if (result.ok) {
-      if (options.persistExe) {
-        final LibrarySnapshot snapshot = LibraryBridge.list(widget.core);
-        setState(() {
-          _games = snapshot.games;
-          _error = snapshot.hasError ? snapshot.errorCode : null;
-        });
-        await _loadCovers();
-      }
-      await _loadModes();
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('${l10n.deployComplete} ${game.name}'),
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+    if (options.persistExe) {
+      final LibrarySnapshot snapshot = LibraryBridge.list(widget.core);
+      setState(() => _games = snapshot.games);
     }
+    await _loadExtras();
   }
 
   Future<void> _restore(LibraryGame game) async {
@@ -190,89 +238,125 @@ class _FrameGenPageState extends State<FrameGenPage> {
       return;
     }
     setState(() => _busyGameId = null);
-    if (result.ok) {
-      _showResult(
-        result.conflicts.isEmpty ? l10n.restoreComplete : l10n.restoreConflicts,
-      );
-    } else {
+    if (!result.ok) {
       await ErrorDialog.show(
         context,
         message: l10n.deployFailed,
         code: result.code ?? 'RestoreFailed',
       );
+      return;
     }
-    if (result.ok) {
-      await _loadModes();
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          result.conflicts.isEmpty
+              ? l10n.restoreComplete
+              : l10n.restoreConflicts,
+        ),
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+    await _loadExtras();
+  }
+
+  Future<void> _launch(LibraryGame game) async {
+    final AppLocalizations l10n = AppLocalizations.of(context);
+    if (!await LibraryBridge.launch(game) && mounted) {
+      await ErrorDialog.show(
+        context,
+        message: l10n.launchFailed,
+        code: 'LaunchFailed',
+      );
     }
   }
 
-  void _showResult(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message), behavior: SnackBarBehavior.floating),
-    );
+  Future<void> _remove(LibraryGame game) async {
+    final AppLocalizations l10n = AppLocalizations.of(context);
+    if (!await RemoveGameDialog.show(context, l10n, game.name) || !mounted) {
+      return;
+    }
+    if (await LibraryBridge.remove(game) && mounted) {
+      _games = LibraryBridge.list(widget.core).games;
+      setState(() {});
+      await _loadExtras();
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     final AppLocalizations l10n = AppLocalizations.of(context);
-
+    final int outdated = _modes.values
+        .where((GameModes modes) => modes.framegenOutdated)
+        .length;
     return Padding(
       padding: AppTokens.pagePadding,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: <Widget>[
-          Text(
-            l10n.navFrameGeneration,
-            style: Theme.of(context).textTheme.headlineSmall,
+          LibraryListHead(
+            title: l10n.libraryTitle,
+            status: _loaded
+                ? l10n.libraryStatusLoaded(_games.length)
+                : l10n.libraryStatusLoading,
+            removedCount: _removed.length,
+            scanning: _scanning,
+            adding: _adding,
+            onAdd: _addGame,
+            onRemoved: _openRemoved,
+            onScan: _scan,
           ),
-          const SizedBox(height: 4),
-          Text(
-            l10n.framegenSubtitle,
-            style: Theme.of(context).textTheme.bodyMedium,
+          if (_error != null) LibraryNotice(
+            message: '${l10n.libraryLoadFailed} $_error',
+            tone: AppTokens.warning,
+            background: AppTokens.warningSoft,
           ),
-          const SizedBox(height: 20),
+          if (outdated > 0)
+            LibraryNotice(
+              message: l10n.outdatedAssetNotice(outdated),
+              tone: AppTokens.accent,
+              background: AppTokens.accentSoft,
+            ),
+          const SizedBox(height: 14),
           Expanded(
             child: LayoutBuilder(
               builder: (BuildContext context, BoxConstraints constraints) {
-                final bool wide = constraints.maxWidth >= 900;
-                final Widget sidebar = Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: <Widget>[_CoreCard(core: widget.core)],
+                final bool wide = constraints.maxWidth >= 980;
+                final Widget sidebar = SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: <Widget>[
+                      GpuPanel(
+                        gpu: _gpu,
+                        onOpenHags: () => SystemBridge.openHags(),
+                      ),
+                      const SizedBox(height: AppTokens.gap),
+                      const SpoofPanel(),
+                      const SizedBox(height: AppTokens.gap),
+                      const AssetsPanel(),
+                      const SizedBox(height: AppTokens.gap),
+                      ModeSourcePanel(
+                        gpuLabel: l10n.modeGpusFramegen,
+                        sourceUrl: 'https://github.com/sdli1995/dlssg_for_sm86',
+                      ),
+                    ],
+                  ),
                 );
-                final Widget library = GameLibraryCard(
-                  l10n: l10n,
-                  games: _games,
-                  loading: _loading,
-                  error: _error,
-                  onScan: _scan,
-                  onAddManual: _addManual,
-                  onLaunch: _launch,
-                  onDeploy: _deploy,
-                  onRestore: _restore,
-                  busyGameId: _busyGameId,
-                  showCovers: _showCovers,
-                  covers: _covers,
-                  modes: _modes,
-                );
-
+                final Widget content = _content(context, l10n);
                 if (!wide) {
-                  return SingleChildScrollView(
-                    child: Column(
-                      children: <Widget>[
-                        sidebar,
-                        const SizedBox(height: AppTokens.gap),
-                        SizedBox(height: 420, child: library),
-                      ],
-                    ),
+                  return ListView(
+                    children: <Widget>[
+                      sidebar,
+                      const SizedBox(height: AppTokens.gap),
+                      SizedBox(height: 460, child: content),
+                    ],
                   );
                 }
-
                 return Row(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: <Widget>[
-                    SizedBox(width: 320, child: sidebar),
-                    const SizedBox(width: AppTokens.gap),
-                    Expanded(child: library),
+                    SizedBox(width: 340, child: sidebar),
+                    const SizedBox(width: 18),
+                    Expanded(child: content),
                   ],
                 );
               },
@@ -282,89 +366,33 @@ class _FrameGenPageState extends State<FrameGenPage> {
       ),
     );
   }
-}
 
-class _CoreCard extends StatelessWidget {
-  const _CoreCard({this.core});
-
-  final CoreLibrary? core;
-
-  @override
-  Widget build(BuildContext context) {
-    final AppLocalizations l10n = AppLocalizations.of(context);
-    final bool online = core != null;
-    final Color tone = online ? AppTokens.success : AppTokens.warning;
-    final Color soft = online ? AppTokens.successSoft : AppTokens.warningSoft;
-
-    return _Panel(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: <Widget>[
-          Row(
-            children: <Widget>[
-              Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: soft,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Icon(
-                  online ? Icons.check_circle_outline : Icons.cloud_off,
-                  color: tone,
-                  size: 21,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    Text(
-                      online ? l10n.coreConnected : l10n.coreOffline,
-                      style: Theme.of(context).textTheme.titleMedium,
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      online
-                          ? l10n.coreVersion(core!.version)
-                          : l10n.coreOfflineHint,
-                      style: Theme.of(context).textTheme.bodyMedium,
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          if (online) ...<Widget>[
-            const SizedBox(height: 16),
-            Text(
-              l10n.framegenCoreHint,
-              style: Theme.of(context).textTheme.bodyMedium,
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-}
-
-class _Panel extends StatelessWidget {
-  const _Panel({required this.child});
-
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: AppTokens.surface,
-        borderRadius: BorderRadius.circular(AppTokens.radiusLarge),
-        border: Border.all(color: AppTokens.border),
-        boxShadow: AppTokens.panelShadow,
-      ),
-      child: child,
+  Widget _content(BuildContext context, AppLocalizations l10n) {
+    return FrameGenGameList(
+      games: _games,
+      modes: _modes,
+      proxies: _proxies,
+      covers: _covers,
+      showCovers: _showCovers,
+      busyGameId: _busyGameId,
+      scanning: _scanning,
+      onScan: _scan,
+      onPrimary: (LibraryGame game) {
+        final String state = _modes[game.id]?.framegen ?? 'notDeployed';
+        final bool restore =
+            state == 'installed' ||
+            state == 'partial' ||
+            state == 'conflict';
+        if (restore) {
+          _restore(game);
+        } else {
+          _openDeploy(game);
+        }
+      },
+      onLaunch: _launch,
+      onOpenFolder: (LibraryGame game) =>
+          SystemBridge.openPath(game.targetDirectory),
+      onRemove: _remove,
     );
   }
 }

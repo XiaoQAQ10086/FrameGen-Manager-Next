@@ -8,6 +8,7 @@ pub mod deployment_report;
 pub mod deployment_summary;
 pub mod pack_plan;
 pub mod pack_planner;
+pub mod proxy_status;
 pub mod restore_report;
 
 mod deployment_restore;
@@ -24,4 +25,5 @@ pub use deployment_report::DeploymentReport;
 pub use deployment_summary::DeploymentSummary;
 pub use pack_plan::PackPlan;
 pub use pack_planner::PackDeploymentPlanner;
+pub use proxy_status::{ProxyEntry, ProxyOwner, ProxyStatus};
 pub use restore_report::RestoreReport;

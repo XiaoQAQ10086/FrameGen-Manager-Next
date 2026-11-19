@@ -1,18 +1,18 @@
 # Flutter 外壳
 
-本规格描述 Rust + Flutter 版本的外壳。旧版 [app-shell.md](app-shell.md) 仍是 2.x 的行为对照；本文件只覆盖新壳已实现的部分。
+本规格描述 Rust + Flutter 版本的外壳。旧版 [app-shell.md](app-shell.md) 是 2.x 的行为对照；本文件覆盖新壳已实现的全部页面与交互。
 
 ## 范围
 
-- 顶栏导航：帧生成、平滑运动、DLSS5、ANR、显卡、日志、设置、关于。
-- 帧生成页：核心状态卡 + 游戏库（扫描、部署、还原）；不再显示迁移进度占位。
-- 平滑运动页：每局游戏开关、组件部署状态、驱动配置结果。
-- DLSS5 页：部署状态、ReShade/旧版残留标签、安装/更新/卸载。
-- ANR 页：导入 zip、在线下载最新包、部署/还原。
-- 显卡页：驱动版本、Smooth Motion 支持与路由。
-- 日志页：操作日志尾部与复制；设置页：语言、自动扫描、封面、REFramework。
-- 关于页：版本信息 + 更新检查/下载/安装（安装版）与发布页入口。
-- 底部状态栏：核心连接状态、平台标识。
+- 顶栏：应用图标、名称、版本、标语、7 个导航项（帧生成、平滑运动、DLSS5、ANR、日志、关于、打赏赞助）与语言下拉。
+- 帧生成页：左侧显卡 / 顶号 / 资产 / 模式来源面板；右侧游戏库列表头与游戏卡片（部署、启动、打开目录、移除）。
+- 平滑运动页：兼容性面板、来源与说明、每局游戏开关与组件状态。
+- DLSS5 页：封面墙、详情弹窗（图形 API、代理槽、快捷键）、安装 / 卸载。
+- ANR 页：资产包面板（在线下载 / 导入 zip / 网盘）、来源、要求说明、每局部署与还原。
+- 日志页：打开日志目录、清空、导出诊断；可选中的日志正文。
+- 关于页：版本与更新检查、GitHub / 许可证入口、启动扫描与 RE Engine 开关、反馈说明。
+- 打赏赞助页：微信 / 支付宝二维码与说明。
+- 不再显示旧版迁移阶段徽章、核心连接状态或底部状态栏。
 - 错误统一用“操作失败”对话框：本地化文案 + 错误码 + 可选详情 + “复制诊断”（错误码、详情、系统版本、核心版本、最近 80 行日志）。
 - 部署 / DLSS5 安装 / ANR 部署与下载 / 更新下载显示模态进度对话框（文件数或字节数）；可取消的操作用 `fgm_operation_cancel_json`，取消后按 `OperationCancelled` 静默结束。
 - 中英文运行时切换；所有文案来自 ARB。
@@ -24,55 +24,55 @@
 |---|---|---|---|
 | SHELL-001 | 设置了 `FGM_FFI_DLL` | 优先加载该路径 | `tool/ffi_smoke.dart`（门禁） |
 | SHELL-002 | 未设置环境变量 | 依次尝试 exe 目录、开发目录下的 `rust/target/{release,debug}/fgm_ffi.dll` | 手动/门禁 |
-| SHELL-003 | 所有候选都失败 | 壳正常启动，状态栏和核心卡显示未加载，不抛异常 | `app_smoke_test.dart` |
-| SHELL-004 | 加载成功 | 显示 `fgm_version()` 返回的版本 | `ffi_smoke.dart` |
+| SHELL-003 | 所有候选都失败 | 壳正常启动，不抛异常；页面显示空库，不出现“核心未加载”状态条 | `app_smoke_test.dart` |
+| SHELL-004 | 加载成功 | 关于页显示 `fgm_version()` 返回的版本 | `ffi_smoke.dart` |
 | SHELL-005 | 查询未知部署阶段 | FFI 返回空指针，Dart 侧返回 `null` | `ffi_smoke.dart` |
-| SHELL-006 | 打开帧生成页 | 读取缓存游戏库并显示游戏行；不自动扫描 | `app_smoke_test.dart` |
+| SHELL-006 | 打开帧生成页 | 读取缓存游戏库并显示卡片；不自动扫描 | `app_smoke_test.dart` |
 | SHELL-007 | 点击“扫描游戏” | 在 isolate 中调用 `fgm_library_scan_json`，完成后刷新列表 | 手动/真机 |
-| SHELL-008 | FFI 返回错误信封 | 卡片显示本地化错误 + 错误码，不崩溃 | 手动 |
-| SHELL-009 | 点击游戏“部署” | 确认框 → isolate 调用 `fgm_deploy_json` → 完成/失败 SnackBar | 手动/真机 |
-| SHELL-010 | 点击游戏“还原” | isolate 调用 `fgm_restore_json`；有冲突时提示 | 手动/真机 |
+| SHELL-008 | FFI 返回错误信封 | 弹窗显示本地化错误 + 错误码，可复制诊断 | 手动 |
+| SHELL-009 | 点击游戏“部署” | 部署弹窗（代理槽 / 引擎 / 帧数 / 优化 / 预设 / 超分）→ 进度 → 完成/失败 | 手动/真机 |
+| SHELL-010 | 点击游戏“还原” | isolate 调用 `fgm_restore_json`；用户改过的文件报告冲突 | 手动/真机 |
 | SHELL-011 | 自动定位 pack | `FGM_PACKS_DIR` → exe/packs → 数据目录/packs → 仓库 packs → assets/packs | `PackLocator` 单测 |
+| SHELL-012 | 打开“已移除游戏” | 显示已移出库的游戏，可“恢复”或“忘记” | 手动 |
+| SHELL-013 | 点击“打开显卡设置” | 调用 `fgm_open_hags_json`，仅允许 `ms-settings:` 白名单 | `process_launcher` 单测 |
+| SHELL-014 | 切换 GPU 顶号 | 应用后提示重启；`fgm_gpu_spoof_apply_json` / `restore` | 手动/真机 |
+| SHELL-015 | 显卡信息为空 | 平滑运动页保留上次成功读取的 GPU，避免误判“无法识别显卡” | 手动 |
 
 FFI 只暴露稳定键和一次性 JSON DTO，不返回用户文案（见 ADR-0014）：
 
-- `fgm_version() -> *const c_char`
-- `fgm_operation_phase_name(u32) -> *const c_char`
-- `fgm_library_scan_json() -> *mut c_char`
-- `fgm_library_list_json() -> *mut c_char`
-- `fgm_deploy_json(*const u8, usize) -> *mut c_char`
-- `fgm_restore_json(*const u8, usize) -> *mut c_char`
-- `fgm_inspect_json(*const u8, usize) -> *mut c_char`
-- `fgm_sm_inspect_many_json(*const u8, usize) -> *mut c_char`
-- `fgm_sm_enable_json(*const u8, usize) -> *mut c_char`
-- `fgm_sm_disable_json(*const u8, usize) -> *mut c_char`
-- `fgm_sm_restore_json(*const u8, usize) -> *mut c_char`
-- `fgm_settings_get_json() -> *mut c_char`
-- `fgm_settings_set_json(*const u8, usize) -> *mut c_char`
-- `fgm_gpu_json() -> *mut c_char`
-- `fgm_logs_tail_json(*const u8, usize) -> *mut c_char`
-- `fgm_dlss5_install_json` / `fgm_dlss5_inspect_json` / `fgm_dlss5_set_hotkey_json` / `fgm_dlss5_uninstall_json`
-- `fgm_anr_current_json` / `fgm_anr_import_json` / `fgm_anr_download_json` / `fgm_anr_deploy_json` / `fgm_anr_restore_json`
-- `fgm_update_check_json` / `fgm_update_download_json` / `fgm_update_install_json` / `fgm_update_open_json`
-- `fgm_alloc(usize) -> *mut u8` / `fgm_free_bytes(*mut u8, usize)`
-- `fgm_string_free(*mut c_char)`
+- 基础：`fgm_version`、`fgm_alloc`、`fgm_free_bytes`、`fgm_string_free`、`fgm_operation_phase_name`
+- 库：`fgm_library_scan_json`、`fgm_library_list_json`、`fgm_library_removed_json`、`fgm_library_remove_json`、`fgm_library_restore_removed_json`、`fgm_library_forget_json`、`fgm_library_add_manual_json`、`fgm_pick_executable_json`、`fgm_cover_json`
+- 游戏：`fgm_game_modes_json`、`fgm_inspect_json`、`fgm_launch_game_json`、`fgm_deploy_json`、`fgm_restore_json`、`fgm_proxy_status_json`
+- 平滑运动：`fgm_sm_inspect_json`、`fgm_sm_inspect_many_json`、`fgm_sm_enable_json`、`fgm_sm_disable_json`、`fgm_sm_restore_json`
+- DLSS5：`fgm_dlss5_install_json`、`fgm_dlss5_inspect_json`、`fgm_dlss5_restore_json`、`fgm_dlss5_uninstall_json`、`fgm_dlss5_set_hotkey_json`、`fgm_dlss5_clean_legacy_json`、`fgm_dlss5_process_hotkey_queue_json`
+- ANR：`fgm_anr_current_json`、`fgm_anr_import_json`、`fgm_anr_download_json`、`fgm_anr_deploy_json`、`fgm_anr_restore_json`
+- 显卡：`fgm_gpu_json`、`fgm_gpu_spoof_inspect_json`、`fgm_gpu_spoof_apply_json`、`fgm_gpu_spoof_restore_json`
+- 系统：`fgm_paths_json`、`fgm_open_folder_json`、`fgm_open_path_json`、`fgm_open_hags_json`、`fgm_restart_computer_json`
+- 设置与日志：`fgm_settings_get_json`、`fgm_settings_set_json`、`fgm_logs_tail_json`、`fgm_logs_clear_json`、`fgm_diagnostics_export_json`
+- 更新：`fgm_update_check_json`、`fgm_update_download_json`、`fgm_update_install_json`、`fgm_update_open_json`
+- 窗口：`fgm_window_restore_json`、`fgm_window_save_json`
+- 操作控制：`fgm_operation_progress_json`、`fgm_operation_cancel_json`
 - 阶段键：`planned`、`backingUp`、`writing`、`verifying`、`installed`、`rolledBack`、`partial`。
 - 游戏库信封：`{"ok":true,"games":[...]}` 或 `{"ok":false,"code":"...","context":[...]}`。
 - 部署/还原信封包含 `state`、文件计数、`warnings`/`conflicts`。
+- `fgm_paths_json` 返回数据目录、pack 目录、内置 pack 目录、许可证、日志、仓库与网盘链接；ANR 云地址来自设置。
+- `fgm_game_modes_json` 返回帧生成版本与 pack 版本、平滑运动组件、DLSS5 状态，供卡片徽章使用。
+
+## 布局
+
+- 默认窗口 1280×850，标题 `FrameGen Manager-Next`；图标取 `ui/assets/app.png`。
+- 渐变背景 `#F3F6FB → #EEF2F8`，面板白底、圆角 16、描边 `#DDE4EE`、阴影 `0 12px 34px rgba(24,39,75,.10)`。
+- 顶栏高 56：左侧图标 + 名称 + 版本胶囊 + 标语（窗口宽度 < 1360 时隐藏标语），右侧导航与语言下拉；当前项为白色胶囊 + 强调色文字。
+- 页面外边距 22×20；帧生成 / 平滑运动 / ANR 使用 340px 左栏 + 右侧列表，宽度 < 980 时改为纵向滚动。
+- 游戏卡片：52×70 缩略图、名称、来源、状态胶囊、底部操作按钮；列表头包含标题、状态、添加、已移除、扫描。
+- DLSS5 使用 168px 封面墙；ANR 使用与帧生成相同的卡片样式。
+- 页面切换使用 180ms 淡入，不做持续动画或高开销模糊层。
 
 ## 本地化
 
-- 源文件：`ui/lib/l10n/app_en.arb`、`app_zh.arb`。
-- 生成文件不提交。
+- 源文件：`ui/lib/l10n/app_en.arb`、`app_zh.arb`；生成文件不提交。
 - Rust Core/Domain 不返回中文或英文句子；错误只返回 `ErrorCode` 和结构化字段。
-
-## 布局与动效
-
-- 默认窗口 1280×850，标题 `FrameGen Manager-Next`。
-- 顶栏高度 72，导航在空间不足时横向滚动。
-- 页面切换使用 180ms 淡入 + 2% 垂直位移。
-- 选中导航使用浅蓝胶囊；不使用持续动画或高开销模糊层。
-- 宽度低于 900 时，帧生成页改为纵向滚动布局。
+- 平台键（`dx12`、`vulkan` 等）在 UI 侧统一大写渲染。
 
 ## 构建集成
 
@@ -82,7 +82,6 @@ FFI 只暴露稳定键和一次性 JSON DTO，不返回用户文案（见 ADR-00
 
 ## 不做 / 已知限制
 
-- 手动添加游戏、封面加载、启动游戏、跨模式状态徽章尚未接入。
-- 窗口尺寸由 `fgm_window_restore_json` / `fgm_window_save_json` 持久化到 `config/window.json`；启动后重试等待窗口可见，运行中每 5 秒保存一次，最小化时不覆盖记录。位置交给 Windows（`SWP_NOMOVE`），避免保存的坐标在换显示器或分辨率变化后把窗口放到屏幕外。
-- DLSS5 快捷键录制界面、更新下载进度/取消、启动时静默更新检查尚未接入。
+- WeGame 扫描按用户决定不做。
+- 窗口位置交给 Windows（`SWP_NOMOVE`），避免保存坐标在换显示器后把窗口放到屏幕外；运行中每 5 秒保存一次，最小化时不覆盖记录。
 - 不使用第三方状态管理、HTTP 或数据库包。

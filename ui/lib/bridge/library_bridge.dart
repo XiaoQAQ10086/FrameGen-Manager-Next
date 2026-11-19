@@ -29,6 +29,33 @@ final class LibraryBridge {
     return _parse(reply);
   }
 
+  /// Removed games that are hidden from the visible library.
+  static Future<LibrarySnapshot> removed() async {
+    final String? reply = await Isolate.run(() {
+      final CoreLibrary? core = CoreLibrary.tryOpen();
+      return core?.invokeJson('fgm_library_removed_json');
+    });
+    return _parse(reply);
+  }
+
+  static Future<bool> remove(LibraryGame game) =>
+      _mutate('fgm_library_remove_json', game.id);
+
+  static Future<bool> restoreRemoved(LibraryGame game) =>
+      _mutate('fgm_library_restore_removed_json', game.id);
+
+  static Future<bool> forget(LibraryGame game) =>
+      _mutate('fgm_library_forget_json', game.id);
+
+  static Future<bool> _mutate(String symbol, String gameId) async {
+    final String request = jsonEncode(<String, Object?>{'gameId': gameId});
+    final String? reply = await Isolate.run(() {
+      final CoreLibrary? core = CoreLibrary.tryOpen();
+      return core?.invokeRequestJson(symbol, request);
+    });
+    return _ok(reply);
+  }
+
   /// Opens the native executable picker and returns its path.
   static Future<String?> pickExecutable() async {
     final String? reply = await Isolate.run(() {

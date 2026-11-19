@@ -20,4 +20,9 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  assets:
+    - assets/app.png
+    - assets/github.png
+    - assets/wechat.png
+    - assets/alipay.jpg
   generate: true

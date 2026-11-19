@@ -40,6 +40,59 @@ impl ProcessLauncher {
             .map_err(|error| spawn_error(executable, error))
     }
 
+    /// Opens a folder in Explorer.
+    pub fn open_folder(path: &Path) -> Result<(), AppError> {
+        if !path.exists() {
+            return Err(
+                AppError::new(ErrorCode::FileNotFound).with("path", path.display().to_string())
+            );
+        }
+        Command::new("explorer.exe")
+            .arg(path)
+            .stdin(std::process::Stdio::null())
+            .stdout(std::process::Stdio::null())
+            .stderr(std::process::Stdio::null())
+            .spawn()
+            .map(|_| ())
+            .map_err(|error| spawn_error(path, error))
+    }
+
+    /// Opens an `ms-settings:` page.
+    pub fn open_settings_page(uri: &str) -> Result<(), AppError> {
+        if !uri.starts_with("ms-settings:")
+            || uri.chars().any(char::is_control)
+            || uri.contains('"')
+            || uri.contains(' ')
+        {
+            return Err(AppError::new(ErrorCode::InvalidArgument).with("url", uri.to_string()));
+        }
+        Command::new("cmd.exe")
+            .args(["/C", "start", ""])
+            .arg(uri)
+            .stdin(std::process::Stdio::null())
+            .stdout(std::process::Stdio::null())
+            .stderr(std::process::Stdio::null())
+            .spawn()
+            .map(|_| ())
+            .map_err(|error| {
+                AppError::new(ErrorCode::Internal)
+                    .with("url", uri.to_string())
+                    .with("reason", error.to_string())
+            })
+    }
+
+    /// Requests a restart with a short delay so the UI can show a toast first.
+    pub fn restart_computer() -> Result<(), AppError> {
+        Command::new("shutdown.exe")
+            .args(["/r", "/t", "5", "/c", "FrameGen Manager-Next"])
+            .stdin(std::process::Stdio::null())
+            .stdout(std::process::Stdio::null())
+            .stderr(std::process::Stdio::null())
+            .spawn()
+            .map(|_| ())
+            .map_err(|error| AppError::new(ErrorCode::Internal).with("reason", error.to_string()))
+    }
+
     /// Opens a registered protocol handler such as `steam://`.
     pub fn open_protocol(url: &str) -> Result<(), AppError> {
         let trimmed = url.trim();

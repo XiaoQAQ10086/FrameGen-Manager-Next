@@ -106,7 +106,8 @@ Steam junk 跳过（精确名称）：`steamworks common redistributables`、`st
 - 部署弹窗可“选择启动 EXE”：选择结果写入 `targetOverrides`，同时更新该游戏的渲染 EXE 与目标目录，重新扫描后仍生效（`LibraryService::set_target_override` / `apply_overrides`）。
 - `fgm-ffi/src/commands_library.rs::game_modes` 同时返回 Smooth Motion 状态（批量 NVAPI），游戏行显示“平滑运动”徽章。
 - `fgm-infra/src/library/xbox_game_scanner.rs`：扫描每个盘符的 `XboxGames` 子目录；识别 `Content`、`MicrosoftGame.config`、`AppxManifest.xml`；在 `Content` 或游戏根目录选择渲染 EXE，目标目录取 EXE 所在目录；受 ACL 限制无法读取的目录直接跳过。`LibraryScanner` 的顺序为 Steam → Epic → Xbox → 散装。
-- 尚未迁移：WeGame 扫描、Epic 封面、移除游戏/忽略列表 UI。
+- 移除/忽略：`list` 只返回可见游戏，扫描保留被忽略条目；`removed` 列出已移除，`restore_removed` 恢复，`forget` 清掉条目但不删游戏文件与备份。FFI 对应 `fgm_library_removed_json` / `fgm_library_restore_removed_json` / `fgm_library_forget_json`，UI 在列表头“已移除”弹窗中操作。
+- 不迁移：WeGame 扫描（用户明确放弃）、Epic 封面（无合法来源）。
 
 ## 真实机器对照（2026-10-29）
 

@@ -5,7 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:material_ui/material_ui.dart';
 
 void main() {
-  testWidgets('renders the shell in English', (WidgetTester tester) async {
+  testWidgets('renders the legacy shell in English', (WidgetTester tester) async {
     tester.view.physicalSize = const Size(1280, 850);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);
@@ -17,11 +17,13 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('FrameGen Manager-Next'), findsOneWidget);
-    expect(find.text('Rust core not loaded'), findsWidgets);
-    expect(find.text('Game library'), findsOneWidget);
+    expect(find.text('DLSS-G Frame Generation'), findsOneWidget);
+    expect(find.text('Add game'), findsOneWidget);
+    expect(find.text('Scan games'), findsWidgets);
+    expect(find.textContaining('Rust core'), findsNothing);
   });
 
-  testWidgets('renders the shell in Chinese', (WidgetTester tester) async {
+  testWidgets('renders the legacy shell in Chinese', (WidgetTester tester) async {
     tester.view.physicalSize = const Size(1280, 850);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);
@@ -32,7 +34,8 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('游戏库'), findsOneWidget);
-    expect(find.text('Rust 核心未加载'), findsWidgets);
+    expect(find.text('DLSS-G 帧生成'), findsWidgets);
+    expect(find.text('添加游戏'), findsOneWidget);
+    expect(find.textContaining('Rust 核心'), findsNothing);
   });
 }

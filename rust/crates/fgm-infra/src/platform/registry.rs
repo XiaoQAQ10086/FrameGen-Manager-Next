@@ -5,6 +5,7 @@ pub(crate) const HKEY_CURRENT_USER: usize = 0x8000_0001;
 pub(crate) const HKEY_LOCAL_MACHINE: usize = 0x8000_0002;
 
 const RRF_RT_REG_SZ: u32 = 0x0000_0002;
+const RRF_RT_REG_DWORD: u32 = 0x0000_0010;
 
 #[link(name = "advapi32")]
 unsafe extern "system" {
@@ -62,6 +63,25 @@ pub(crate) fn read_string(root: usize, subkey: &str, value: &str) -> Option<Stri
         .unwrap_or(buffer.len());
     let text = String::from_utf16_lossy(&buffer[..end]);
     (!text.is_empty()).then_some(text)
+}
+
+pub(crate) fn read_dword(root: usize, subkey: &str, value: &str) -> Option<u32> {
+    let subkey = wide(subkey);
+    let value = wide(value);
+    let mut data = 0_u32;
+    let mut size = 4_u32;
+    let result = unsafe {
+        RegGetValueW(
+            root as *mut c_void,
+            subkey.as_ptr(),
+            value.as_ptr(),
+            RRF_RT_REG_DWORD,
+            ptr::null_mut(),
+            (&mut data as *mut u32).cast(),
+            &mut size,
+        )
+    };
+    (result == 0).then_some(data)
 }
 
 fn wide(value: &str) -> Vec<u16> {

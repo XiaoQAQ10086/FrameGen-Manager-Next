@@ -75,8 +75,11 @@ HAGS: unknown
 
 - `fgm-infra/src/gpu/gpu_detector.rs`：`GpuDetector::detect` 调用 `nvidia-smi --query-gpu=name,driver_version --format=csv,noheader`，5 秒超时；失败返回 `None`。
 - `GpuDetector::classify` 纯函数按名称映射 `GpuRoute`，覆盖 RTX 50/40、AMD/Intel、Quadro RTX、RTX A、RTX 30、GTX 16、RTX 2050、RTX 20、Titan RTX、Pascal 级别；驱动 `major.minor >= 616.64` 才算支持。
-- 尚未迁移：注册表回退、HAGS 实时探针、多适配器汇总、GPU 缓存/FFI/UI。
-- Rust 测试：`gpu_detector.rs` 内单元测试覆盖路由和驱动阈值。
+- `fgm-infra/src/gpu/hags.rs`：`HagsProbe::read` 走 D3DKMT 实时 caps，失败时用 `HwSchMode` 注册表分类；`GpuDetector` 把结果并入 `GpuInfo.hags`。
+- FFI：`fgm_gpu_json` 返回 `hags`（`enabled`/`disabled`/`pendingReboot`/`unknown`）、`hagsDetail`、`driverName`；`fgm_open_hags_json` 打开 `ms-settings:display-advancedgraphics`。
+- Flutter：帧生成页左侧显卡面板显示驱动、路由与 HAGS 状态，右侧提供“打开显卡设置”；状态为 `pendingReboot` 时提示重启。
+- 该机器 2026-10-29 记录中的 `HAGS: unknown` 已由实时探针补齐（实测“已开启”）。
+- Rust 测试：`gpu_detector.rs` 内单元测试覆盖路由和驱动阈值；`hags.rs` 覆盖 caps/注册表分类。
 
 ## 测试
 

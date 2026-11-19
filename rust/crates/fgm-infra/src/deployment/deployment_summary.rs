@@ -10,6 +10,18 @@ use super::backup_store::BackupStore;
 pub struct DeploymentSummary;
 
 impl DeploymentSummary {
+    /// Pack version recorded in the manifest, when one exists.
+    pub fn version(
+        family: &str,
+        target_directory: &Path,
+        backups_root: &Path,
+    ) -> Result<Option<String>, AppError> {
+        let store = BackupStore::new(backups_root.to_path_buf());
+        Ok(store
+            .load_manifest(family, target_directory)?
+            .map(|manifest| manifest.pack_version))
+    }
+
     pub fn state(
         family: &str,
         target_directory: &Path,

@@ -61,6 +61,7 @@ impl Fixture {
             &self.paths(),
             &std::sync::atomic::AtomicBool::new(false),
             None,
+            None,
         )
     }
 

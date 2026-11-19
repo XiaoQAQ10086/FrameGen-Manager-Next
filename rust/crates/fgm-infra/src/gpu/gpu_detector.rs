@@ -7,6 +7,7 @@ use fgm_domain::gpu::GpuRoute;
 use crate::process::ProcessRunner;
 
 use super::gpu_info::GpuInfo;
+use super::hags::HagsProbe;
 
 /// Detects NVIDIA GPU name, driver version and Smooth Motion route.
 pub struct GpuDetector;
@@ -69,6 +70,7 @@ impl GpuDetector {
             driver_version: driver_version.to_string(),
             route,
             driver_supported: driver_at_least(driver_version, 616, 64),
+            hags: HagsProbe::read(),
         }
     }
 

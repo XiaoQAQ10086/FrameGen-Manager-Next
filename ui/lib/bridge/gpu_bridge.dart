@@ -8,9 +8,12 @@ import 'gpu_info.dart';
 final class GpuBridge {
   const GpuBridge._();
 
+  static GpuInfo? _last;
+
+  /// Loads GPU info, falling back to the last successful probe.
   static Future<GpuInfo?> load(CoreLibrary? core) async {
     if (core == null) {
-      return null;
+      return _last;
     }
     final String? reply = await Isolate.run(() {
       final CoreLibrary? local = CoreLibrary.tryOpen();
@@ -26,11 +29,12 @@ final class GpuBridge {
       }
       final Object? gpu = decoded['gpu'];
       if (gpu is Map) {
-        return GpuInfo.fromJson(Map<String, Object?>.from(gpu));
+        _last = GpuInfo.fromJson(Map<String, Object?>.from(gpu));
+        return _last;
       }
     } on FormatException {
-      return null;
+      return _last;
     }
-    return null;
+    return _last;
   }
 }

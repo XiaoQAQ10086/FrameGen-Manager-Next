@@ -31,19 +31,55 @@ impl LibraryService {
 
         let scanned = LibraryScanner::scan(&DriveRoots::roots());
         cache.schema_version = 1;
-        let mut games = merge(manual, scanned, &cache.ignored_ids);
+        let mut games = merge(manual, scanned);
         apply_overrides(&mut games, &cache.target_overrides);
         cache.games = games;
         store.save(&cache)?;
-        Ok(cache.games)
+        Ok(visible(&cache))
     }
 
     pub fn list(paths: &AppPaths) -> Vec<GameEntry> {
         let store = Self::store(paths);
-        store
-            .load()
-            .unwrap_or_else(|_| LibraryCache::default())
+        visible(&store.load().unwrap_or_else(|_| LibraryCache::default()))
+    }
+
+    /// Games the user removed from the library but whose records are kept.
+    pub fn removed(paths: &AppPaths) -> Vec<GameEntry> {
+        let store = Self::store(paths);
+        let cache = store.load().unwrap_or_else(|_| LibraryCache::default());
+        cache
             .games
+            .into_iter()
+            .filter(|game| cache.ignored_ids.contains(&game.id))
+            .collect()
+    }
+
+    pub fn remove(paths: &AppPaths, game_id: &str) -> Result<(), AppError> {
+        let store = Self::store(paths);
+        let mut cache = store.load()?;
+        if !cache.games.iter().any(|game| game.id == game_id) {
+            return Err(AppError::new(ErrorCode::FileNotFound).with("gameId", game_id.to_string()));
+        }
+        if !cache.ignored_ids.iter().any(|id| id == game_id) {
+            cache.ignored_ids.push(game_id.to_string());
+        }
+        store.save(&cache)
+    }
+
+    pub fn restore_removed(paths: &AppPaths, game_id: &str) -> Result<(), AppError> {
+        let store = Self::store(paths);
+        let mut cache = store.load()?;
+        cache.ignored_ids.retain(|id| id != game_id);
+        store.save(&cache)
+    }
+
+    pub fn forget(paths: &AppPaths, game_id: &str) -> Result<(), AppError> {
+        let store = Self::store(paths);
+        let mut cache = store.load()?;
+        cache.games.retain(|game| game.id != game_id);
+        cache.ignored_ids.retain(|id| id != game_id);
+        cache.target_overrides.remove(game_id);
+        store.save(&cache)
     }
 
     pub fn add_manual(paths: &AppPaths, executable: &Path) -> Result<GameEntry, AppError> {
@@ -211,16 +247,18 @@ fn apply_overrides(
     }
 }
 
-fn merge(
-    manual: Vec<GameEntry>,
-    scanned: Vec<GameEntry>,
-    ignored_ids: &[String],
-) -> Vec<GameEntry> {
+fn visible(cache: &LibraryCache) -> Vec<GameEntry> {
+    cache
+        .games
+        .iter()
+        .filter(|game| !cache.ignored_ids.contains(&game.id))
+        .cloned()
+        .collect()
+}
+
+fn merge(manual: Vec<GameEntry>, scanned: Vec<GameEntry>) -> Vec<GameEntry> {
     let mut games = manual;
     for game in scanned {
-        if ignored_ids.contains(&game.id) {
-            continue;
-        }
         let key = path_key(&game.install_directory);
         if games
             .iter()
@@ -275,13 +313,10 @@ mod tests {
             ..scanned.clone()
         };
 
-        let merged = merge(
-            vec![manual.clone()],
-            vec![scanned, ignored.clone()],
-            &[ignored.id],
-        );
+        let merged = merge(vec![manual.clone()], vec![scanned, ignored.clone()]);
 
-        assert_eq!(merged.len(), 1);
+        assert_eq!(merged.len(), 2);
         assert_eq!(merged[0], manual);
+        assert_eq!(merged[1].id, "loose-ignored");
     }
 }

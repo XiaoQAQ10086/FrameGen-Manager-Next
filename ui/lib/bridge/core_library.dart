@@ -5,28 +5,11 @@ import 'core_candidates.dart';
 import 'ffi_string.dart';
 
 part 'core_library_requests.dart';
+part 'core_library_typedefs.dart';
 
-typedef _VersionNative = Pointer<Int8> Function();
-typedef _VersionDart = Pointer<Int8> Function();
-typedef _PhaseNameNative = Pointer<Int8> Function(Uint32);
-typedef _PhaseNameDart = Pointer<Int8> Function(int);
-typedef _JsonNative = Pointer<Int8> Function();
-typedef _JsonDart = Pointer<Int8> Function();
-typedef _StringFreeNative = Void Function(Pointer<Int8>);
-typedef _StringFreeDart = void Function(Pointer<Int8>);
-typedef _AllocNative = Pointer<Uint8> Function(IntPtr);
-typedef _AllocDart = Pointer<Uint8> Function(int);
-typedef _FreeBytesNative = Void Function(Pointer<Uint8>, IntPtr);
-typedef _FreeBytesDart = void Function(Pointer<Uint8>, int);
-typedef _RequestNative = Pointer<Int8> Function(Pointer<Uint8>, IntPtr);
-typedef _RequestDart = Pointer<Int8> Function(Pointer<Uint8>, int);
-
-/// Thin loader around the `fgm-ffi` cdylib.
-///
-/// The UI never reaches into Rust internals: it only reads the version, phase
-/// keys and JSON DTOs exposed by the C ABI.
 final class CoreLibrary {
   CoreLibrary._(
+    this.library,
     this._version,
     this._phaseName,
     this._libraryScan,
@@ -76,6 +59,8 @@ final class CoreLibrary {
     this._freeBytes,
   );
 
+  /// Loaded cdylib, used for late bindings that are not declared above.
+  final DynamicLibrary library;
   final _VersionDart _version;
   final _PhaseNameDart _phaseName;
   final _JsonDart _libraryScan;
@@ -135,6 +120,7 @@ final class CoreLibrary {
       try {
         final DynamicLibrary library = DynamicLibrary.open(candidate);
         return CoreLibrary._(
+          library,
           library.lookupFunction<_VersionNative, _VersionDart>('fgm_version'),
           library.lookupFunction<_PhaseNameNative, _PhaseNameDart>(
             'fgm_operation_phase_name',
@@ -395,5 +381,16 @@ final class CoreLibrary {
 
   String? _json(_JsonDart function) =>
       _jsonString(function, _stringFree);
+
+  /// Invokes a no-argument JSON export that is not part of the typed surface.
+  String? invokeJson(String symbol) => _json(
+    library.lookupFunction<_JsonNative, _JsonDart>(symbol),
+  );
+
+  /// Invokes a request/JSON export that is not part of the typed surface.
+  String? invokeRequestJson(String symbol, String request) => _request(
+    library.lookupFunction<_RequestNative, _RequestDart>(symbol),
+    request,
+  );
 
 }

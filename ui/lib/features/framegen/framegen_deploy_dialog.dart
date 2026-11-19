@@ -1,20 +1,31 @@
 import 'package:material_ui/material_ui.dart';
 
+import '../../bridge/deploy_dialog_result.dart';
 import '../../bridge/deploy_options.dart';
 import '../../bridge/library_bridge.dart';
 import '../../bridge/library_game.dart';
+import '../../bridge/proxy_badge.dart';
 import '../../design/app_tokens.dart';
+import '../../design/legacy_pill.dart';
 import '../../l10n/app_localizations.dart';
+import 'deploy_dialog_header.dart';
+import 'deploy_options_form.dart';
 
-/// Deploy panel: proxy slot and INI overrides for one game.
+/// Legacy frame-generation deploy modal.
 class FrameGenDeployDialog extends StatefulWidget {
   const FrameGenDeployDialog({
     super.key,
     required this.game,
+    this.deployed = false,
+    this.proxies = const <ProxyBadge>[],
+    this.coverPath,
     this.initial = const DeployOptions(),
   });
 
   final LibraryGame game;
+  final bool deployed;
+  final List<ProxyBadge> proxies;
+  final String? coverPath;
   final DeployOptions initial;
 
   @override
@@ -22,23 +33,6 @@ class FrameGenDeployDialog extends StatefulWidget {
 }
 
 class _FrameGenDeployDialogState extends State<FrameGenDeployDialog> {
-  static const List<String> _proxies = <String>[
-    'version.dll',
-    'winmm.dll',
-    'dbghelp.dll',
-    'dinput8.dll',
-    'dxgi.dll',
-    'd3d12.dll',
-  ];
-  static const List<String> _presets = <String>['A', 'B', 'C'];
-  static const List<String> _srModes = <String>[
-    'Off',
-    'M-INT8',
-    'L-INT8',
-    'M-FP16',
-    'L-FP16',
-  ];
-
   late DeployOptions _options = widget.initial;
   late String? _gameExe = widget.game.renderExe;
   bool _exeChanged = false;
@@ -59,192 +53,146 @@ class _FrameGenDeployDialogState extends State<FrameGenDeployDialog> {
   @override
   Widget build(BuildContext context) {
     final AppLocalizations l10n = AppLocalizations.of(context);
-    final bool xeSS = _options.engine == 'XeSS';
-
-    return AlertDialog(
-      title: Text(l10n.deployConfirmTitle),
-      content: SizedBox(
-        width: 420,
-        child: SingleChildScrollView(
+    return Dialog(
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 580, maxHeight: 660),
+        child: Padding(
+          padding: const EdgeInsets.all(22),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: <Widget>[
-              Text(
-                l10n.deployConfirmBody(widget.game.name),
-                style: Theme.of(context).textTheme.bodyMedium,
+              DeployDialogHeader(
+                game: widget.game,
+                coverPath: widget.coverPath,
+                onClose: () => Navigator.pop(context),
               ),
-              const SizedBox(height: 16),
-              Text(
-                l10n.optionGameExe,
-                style: Theme.of(context).textTheme.labelMedium,
+              const SizedBox(height: 14),
+              Flexible(
+                child: SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: <Widget>[
+                      _targetRow(context, l10n),
+                      const SizedBox(height: 8),
+                      Row(
+                        children: <Widget>[
+                          Text(
+                            l10n.deployGraphicsApi,
+                            style: const TextStyle(
+                              color: AppTokens.textSecondary,
+                              fontSize: 12.5,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          LegacyPill(label: widget.game.graphicsApi),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      Text(
+                        l10n.deployConfirmBody(widget.game.name),
+                        style: Theme.of(context).textTheme.bodyMedium,
+                      ),
+                      const SizedBox(height: 14),
+                      DeployOptionsForm(
+                        options: _options,
+                        proxies: widget.proxies,
+                        onChanged: _update,
+                      ),
+                    ],
+                  ),
+                ),
               ),
-              const SizedBox(height: 4),
+              const SizedBox(height: 14),
               Row(
                 children: <Widget>[
-                  Expanded(
-                    child: Text(
-                      _gameExe ?? '—',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: Theme.of(context).textTheme.bodySmall,
+                  Text(
+                    l10n.deployCloseGameHint,
+                    style: const TextStyle(
+                      color: AppTokens.textSecondary,
+                      fontSize: 12,
                     ),
                   ),
+                  const Spacer(),
                   TextButton(
-                    onPressed: _pickExe,
-                    child: Text(l10n.chooseExe),
+                    onPressed: widget.deployed
+                        ? () => Navigator.pop(
+                            context,
+                            const DeployDialogResult.restore(),
+                          )
+                        : null,
+                    child: Text(l10n.restore),
+                  ),
+                  const SizedBox(width: 8),
+                  FilledButton(
+                    onPressed: () => Navigator.pop(
+                      context,
+                      DeployDialogResult.deploy(
+                        _options.copyWith(
+                          gameExe: _gameExe,
+                          persistExe: _exeChanged,
+                        ),
+                      ),
+                    ),
+                    style: FilledButton.styleFrom(
+                      backgroundColor: AppTokens.success,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 12,
+                      ),
+                    ),
+                    child: Text(l10n.deploy),
                   ),
                 ],
-              ),
-              const SizedBox(height: 8),
-              _Dropdown<String>(
-                label: l10n.optionProxySlot,
-                value: _options.proxySlot,
-                values: _proxies,
-                onChanged: (String value) =>
-                    _update(_options.copyWith(proxySlot: value)),
-              ),
-              const SizedBox(height: 12),
-              _Dropdown<String>(
-                label: l10n.optionEngine,
-                value: _options.engine,
-                values: const <String>['DLSS', 'XeSS'],
-                onChanged: (String value) {
-                  final int frames = value == 'XeSS' && _options.maxGeneratedFrames > 3
-                      ? 3
-                      : _options.maxGeneratedFrames;
-                  _update(
-                    _options.copyWith(engine: value, maxGeneratedFrames: frames),
-                  );
-                },
-              ),
-              const SizedBox(height: 12),
-              _Dropdown<int>(
-                label: l10n.optionFrames,
-                value: _options.maxGeneratedFrames,
-                values: <int>[for (var i = 1; i <= (xeSS ? 3 : 5); i++) i],
-                onChanged: (int value) =>
-                    _update(_options.copyWith(maxGeneratedFrames: value)),
-              ),
-              const SizedBox(height: 12),
-              _Dropdown<int>(
-                label: l10n.optionOptimized,
-                value: _options.optimized,
-                values: const <int>[0, 1, 2, 3],
-                labelFor: (int value) => _tierLabel(l10n, value),
-                onChanged: (int value) =>
-                    _update(_options.copyWith(optimized: value)),
-              ),
-              const SizedBox(height: 12),
-              _Dropdown<String>(
-                label: l10n.optionPreset,
-                value: _options.preset,
-                values: _presets,
-                onChanged: (String value) =>
-                    _update(_options.copyWith(preset: value)),
-              ),
-              if (xeSS) ...<Widget>[
-                const SizedBox(height: 12),
-                _Dropdown<String>(
-                  label: l10n.optionFlowResolution,
-                  value: _options.xeSSFlowResolution,
-                  values: const <String>[
-                    'Coarse',
-                    'Middle',
-                    'Fine',
-                    'CoarseAt4K',
-                  ],
-                  onChanged: (String value) =>
-                      _update(_options.copyWith(xeSSFlowResolution: value)),
-                ),
-                const SizedBox(height: 12),
-                _Dropdown<String>(
-                  label: l10n.optionUseHudless,
-                  value: _options.xeSSUseHudless,
-                  values: const <String>['Auto', '1', '0'],
-                  onChanged: (String value) =>
-                      _update(_options.copyWith(xeSSUseHudless: value)),
-                ),
-              ],
-              const SizedBox(height: 12),
-              _Dropdown<String>(
-                label: l10n.optionSuperResolution,
-                value: _options.superResolution,
-                values: _srModes,
-                labelFor: (String value) =>
-                    value == 'Off' ? l10n.optionOff : value,
-                onChanged: (String value) =>
-                    _update(_options.copyWith(superResolution: value)),
               ),
             ],
           ),
         ),
       ),
-      actions: <Widget>[
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: Text(l10n.cancel),
-        ),
-        FilledButton(
-          onPressed: () => Navigator.pop(
-            context,
-            _options.copyWith(gameExe: _gameExe, persistExe: _exeChanged),
-          ),
-          child: Text(l10n.deploy),
-        ),
-      ],
     );
   }
-}
 
-String _tierLabel(AppLocalizations l10n, int value) {
-  return switch (value) {
-    0 => l10n.optimizedTier0,
-    1 => l10n.optimizedTier1,
-    2 => l10n.optimizedTier2,
-    _ => l10n.optimizedTier3,
-  };
-}
-
-class _Dropdown<T> extends StatelessWidget {
-  const _Dropdown({
-    required this.label,
-    required this.value,
-    required this.values,
-    required this.onChanged,
-    this.labelFor,
-  });
-
-  final String label;
-  final T value;
-  final List<T> values;
-  final ValueChanged<T> onChanged;
-  final String Function(T value)? labelFor;
-
-  @override
-  Widget build(BuildContext context) {
-    return DropdownButtonFormField<T>(
-      initialValue: value,
-      decoration: InputDecoration(
-        labelText: label,
-        isDense: true,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppTokens.radiusMedium),
-        ),
-      ),
-      items: values
-          .map(
-            (T item) => DropdownMenuItem<T>(
-              value: item,
-              child: Text(labelFor?.call(item) ?? '$item'),
+  Widget _targetRow(BuildContext context, AppLocalizations l10n) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: <Widget>[
+        Row(
+          children: <Widget>[
+            Text(
+              l10n.deployTargetLabel,
+              style: const TextStyle(
+                color: AppTokens.textSecondary,
+                fontSize: 12.5,
+              ),
             ),
-          )
-          .toList(growable: false),
-      onChanged: (T? selected) {
-        if (selected != null) {
-          onChanged(selected);
-        }
-      },
+            const Spacer(),
+            TextButton(
+              onPressed: _pickExe,
+              child: Text(l10n.deployChooseExe),
+            ),
+          ],
+        ),
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+          decoration: BoxDecoration(
+            color: AppTokens.surfaceMuted,
+            borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
+            border: Border.all(color: AppTokens.border),
+          ),
+          child: Text(
+            _gameExe ?? widget.game.targetDirectory,
+            style: const TextStyle(
+              color: AppTokens.textPrimary,
+              fontFamily: 'Consolas',
+              fontSize: 12,
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

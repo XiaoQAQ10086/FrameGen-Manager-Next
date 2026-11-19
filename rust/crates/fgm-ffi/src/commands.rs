@@ -253,9 +253,20 @@ pub(crate) fn gpu() -> Result<Value, AppError> {
             "driverVersion": info.driver_version,
             "route": info.route,
             "driverSupported": info.driver_supported,
+            "hags": hags_key(info.hags),
         })
     });
     Ok(json!({ "ok": true, "gpu": value }))
+}
+
+fn hags_key(state: fgm_infra::gpu::HagsState) -> &'static str {
+    match state {
+        fgm_infra::gpu::HagsState::Unknown => "unknown",
+        fgm_infra::gpu::HagsState::Disabled => "off",
+        fgm_infra::gpu::HagsState::Enabled => "on",
+        fgm_infra::gpu::HagsState::PendingReboot => "pending",
+        fgm_infra::gpu::HagsState::Unsupported => "unsupported",
+    }
 }
 
 #[derive(Deserialize)]

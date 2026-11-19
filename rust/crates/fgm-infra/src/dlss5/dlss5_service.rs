@@ -65,6 +65,7 @@ impl Dlss5Service {
         paths: &AppPaths,
         cancelled: &AtomicBool,
         progress: Option<&dyn DeploymentProgress>,
+        proxy_override: Option<&str>,
     ) -> Result<Dlss5Report, AppError> {
         let pack = PackJson::load(&pack_directory.join("pack.json"))?;
         let legacy = legacy_residue(target_directory);
@@ -75,9 +76,20 @@ impl Dlss5Service {
         }
         ReframeworkService::install_before_deploy(game_exe, target_directory, app_version, paths)?;
         let proxy_module = if api == GraphicsApi::Vulkan {
+            if proxy_override.is_some_and(|proxy| !proxy.trim().is_empty()) {
+                return Err(AppError::new(ErrorCode::InvalidArgument)
+                    .with("reason", "Vulkan does not use a proxy DLL"));
+            }
             None
         } else {
-            Some(Self::proxy_for(api)?)
+            let expected = Self::proxy_for(api)?;
+            let chosen = proxy_override.unwrap_or(expected);
+            if !proxy_allowed(api, chosen) {
+                return Err(
+                    AppError::new(ErrorCode::InvalidArgument).with("proxy", chosen.to_string())
+                );
+            }
+            Some(chosen)
         };
         let setup_source = installer_source(&pack.steps).ok_or_else(|| {
             AppError::new(ErrorCode::PackInvalid)
@@ -252,6 +264,17 @@ impl Dlss5Service {
             }
             Err(error) => Err(error),
         }
+    }
+}
+
+fn proxy_allowed(api: GraphicsApi, proxy: &str) -> bool {
+    match api {
+        GraphicsApi::Dx12 => proxy == "dxgi.dll" || proxy == "d3d12.dll",
+        GraphicsApi::Dx11 => proxy == "dxgi.dll" || proxy == "d3d11.dll",
+        GraphicsApi::Dx10 => proxy == "dxgi.dll" || proxy == "d3d10.dll",
+        GraphicsApi::Dx9 => proxy == "d3d9.dll",
+        GraphicsApi::OpenGl => proxy == "opengl32.dll",
+        GraphicsApi::Vulkan | GraphicsApi::Unknown => false,
     }
 }
 

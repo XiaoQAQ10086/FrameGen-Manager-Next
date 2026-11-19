@@ -109,6 +109,7 @@ fn run_install(args: &[String]) -> i32 {
         &paths,
         &std::sync::atomic::AtomicBool::new(false),
         None,
+        None,
     ) {
         Ok(report) => {
             println!(

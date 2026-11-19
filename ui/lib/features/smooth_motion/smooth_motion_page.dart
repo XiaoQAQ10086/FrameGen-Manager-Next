@@ -1,16 +1,28 @@
 import 'package:material_ui/material_ui.dart';
 
 import '../../bridge/core_library.dart';
+import '../../bridge/game_modes.dart';
+import '../../bridge/gpu_bridge.dart';
+import '../../bridge/gpu_info.dart';
+import '../../bridge/library_add_result.dart';
 import '../../bridge/library_bridge.dart';
 import '../../bridge/library_game.dart';
 import '../../bridge/library_snapshot.dart';
 import '../../bridge/smooth_motion_bridge.dart';
 import '../../bridge/smooth_motion_status.dart';
+import '../../bridge/system_bridge.dart';
 import '../../design/app_tokens.dart';
 import '../../design/error_dialog.dart';
+import '../../design/legacy_panel.dart';
+import '../../design/library_list_head.dart';
 import '../../l10n/app_localizations.dart';
+import '../framegen/mode_source_panel.dart';
+import '../framegen/remove_game_dialog.dart';
+import '../framegen/removed_games_dialog.dart';
+import 'sm_compatibility_panel.dart';
+import 'sm_game_card.dart';
 
-/// Smooth Motion page: driver toggle and component restore per game.
+/// Legacy Smooth Motion workspace.
 class SmoothMotionPage extends StatefulWidget {
   const SmoothMotionPage({super.key, this.core});
 
@@ -22,52 +34,125 @@ class SmoothMotionPage extends StatefulWidget {
 
 class _SmoothMotionPageState extends State<SmoothMotionPage> {
   List<LibraryGame> _games = const <LibraryGame>[];
+  List<LibraryGame> _removed = const <LibraryGame>[];
+  Map<String, GameModes> _modes = const <String, GameModes>{};
   Map<String, SmoothMotionStatus> _statuses =
       const <String, SmoothMotionStatus>{};
+  Map<String, String?> _covers = const <String, String?>{};
+  GpuInfo? _gpu;
+  bool _scanning = false;
+  bool _adding = false;
+  bool _loaded = false;
   String? _busyGameId;
-  bool _loading = true;
 
   @override
   void initState() {
     super.initState();
-    _load();
+    final LibrarySnapshot snapshot = LibraryBridge.list(widget.core);
+    _games = snapshot.games;
+    _loaded = true;
+    _loadExtras();
   }
 
-  Future<void> _load() async {
-    setState(() => _loading = true);
-    final LibrarySnapshot snapshot = LibraryBridge.list(widget.core);
-    if (!mounted) {
-      return;
-    }
-    setState(() {
-      _games = snapshot.games;
-      _loading = snapshot.games.isNotEmpty;
-    });
-    if (_games.isEmpty) {
-      return;
-    }
-
+  Future<void> _loadExtras() async {
+    final Map<String, GameModes> modes = await LibraryBridge.modes();
+    final LibrarySnapshot removed = await LibraryBridge.removed();
+    final GpuInfo? gpu = await GpuBridge.load(widget.core);
     final Map<String, SmoothMotionStatus> statuses =
         await SmoothMotionBridge.inspectMany(_games);
+    final List<MapEntry<String, String?>> covers = await Future.wait(
+      _games
+          .where((LibraryGame game) => game.source == 'steam')
+          .map(
+            (LibraryGame game) async =>
+                MapEntry<String, String?>(game.id, await LibraryBridge.cover(game)),
+          ),
+    );
     if (!mounted) {
       return;
     }
     setState(() {
+      _modes = modes;
+      _removed = removed.games;
+      _gpu = gpu;
       _statuses = statuses;
-      _loading = false;
+      _covers = Map<String, String?>.fromEntries(covers);
     });
   }
 
-  Future<void> _toggle(LibraryGame game, bool enabled) async {
+  Future<void> _scan() async {
+    setState(() => _scanning = true);
+    final LibrarySnapshot snapshot = await LibraryBridge.scan(widget.core);
+    if (!mounted) {
+      return;
+    }
+    setState(() {
+      _scanning = false;
+      _games = snapshot.games;
+    });
+    if (snapshot.hasError) {
+      final AppLocalizations l10n = AppLocalizations.of(context);
+      await ErrorDialog.show(
+        context,
+        message: l10n.libraryLoadFailed,
+        code: snapshot.errorCode ?? 'ScanFailed',
+        detail: snapshot.errorDetail,
+      );
+      return;
+    }
+    await _loadExtras();
+  }
+
+  Future<void> _addGame() async {
+    final AppLocalizations l10n = AppLocalizations.of(context);
+    setState(() => _adding = true);
+    final LibraryAddResult added = await LibraryBridge.addManual();
+    if (!mounted) {
+      return;
+    }
+    setState(() => _adding = false);
+    if (added.cancelled) {
+      return;
+    }
+    if (!added.ok) {
+      await ErrorDialog.show(
+        context,
+        message: l10n.addGameFailed,
+        code: added.code ?? 'AddGameFailed',
+      );
+      return;
+    }
+    final LibrarySnapshot snapshot = LibraryBridge.list(widget.core);
+    setState(() => _games = snapshot.games);
+    await _loadExtras();
+  }
+
+  Future<void> _openRemoved() async {
+    final LibrarySnapshot snapshot = await LibraryBridge.removed();
+    if (!mounted) {
+      return;
+    }
+    final bool changed = await RemovedGamesDialog.show(context, snapshot.games);
+    if (!changed || !mounted) {
+      return;
+    }
+    _games = LibraryBridge.list(widget.core).games;
+    setState(() {});
+    await _loadExtras();
+  }
+
+  Future<void> _toggle(LibraryGame game) async {
+    final SmoothMotionStatus current =
+        _statuses[game.id] ?? const SmoothMotionStatus();
+    final bool enabled = current.enabled == true;
     setState(() => _busyGameId = game.id);
     final SmoothMotionStatus status = enabled
-        ? await SmoothMotionBridge.enable(game)
-        : await SmoothMotionBridge.disable(game);
+        ? await SmoothMotionBridge.disable(game)
+        : await SmoothMotionBridge.enable(game);
     if (!mounted) {
       return;
     }
     setState(() => _busyGameId = null);
-
     final AppLocalizations l10n = AppLocalizations.of(context);
     if (status.code != null) {
       await ErrorDialog.show(
@@ -84,228 +169,143 @@ class _SmoothMotionPageState extends State<SmoothMotionPage> {
         game.id: status,
       };
     });
+    await _loadExtras();
   }
 
-  Future<void> _restore(LibraryGame game) async {
-    setState(() => _busyGameId = game.id);
-    final SmoothMotionStatus status = await SmoothMotionBridge.restore(game);
-    if (!mounted) {
-      return;
-    }
-    setState(() => _busyGameId = null);
-
+  Future<void> _launch(LibraryGame game) async {
     final AppLocalizations l10n = AppLocalizations.of(context);
-    if (status.code != null) {
+    if (!await LibraryBridge.launch(game) && mounted) {
       await ErrorDialog.show(
         context,
-        message: l10n.smOperationFailed,
-        code: status.code!,
-        detail: status.detail,
+        message: l10n.launchFailed,
+        code: 'LaunchFailed',
       );
-      return;
     }
-    setState(() {
-      _statuses = <String, SmoothMotionStatus>{
-        ..._statuses,
-        game.id: status,
-      };
-    });
-    _show(l10n.smRestoreDone);
   }
 
-  void _show(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message), behavior: SnackBarBehavior.floating),
-    );
+  Future<void> _remove(LibraryGame game) async {
+    final AppLocalizations l10n = AppLocalizations.of(context);
+    if (!await RemoveGameDialog.show(context, l10n, game.name) || !mounted) {
+      return;
+    }
+    if (await LibraryBridge.remove(game) && mounted) {
+      _games = LibraryBridge.list(widget.core).games;
+      setState(() {});
+      await _loadExtras();
+    }
+  }
+
+  bool _compatible(GpuInfo? gpu) {
+    if (gpu == null) {
+      return false;
+    }
+    final String route = gpu.route.toLowerCase();
+    return gpu.driverSupported &&
+        (route.contains('sm86') || route.contains('sm75'));
   }
 
   @override
   Widget build(BuildContext context) {
     final AppLocalizations l10n = AppLocalizations.of(context);
-
+    final bool compatible = _compatible(_gpu);
     return Padding(
       padding: AppTokens.pagePadding,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: <Widget>[
-          Row(
-            children: <Widget>[
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    Text(
-                      l10n.navSmoothMotion,
-                      style: Theme.of(context).textTheme.headlineSmall,
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      l10n.smSubtitle,
-                      style: Theme.of(context).textTheme.bodyMedium,
-                    ),
-                  ],
-                ),
-              ),
-              IconButton(
-                onPressed: _loading ? null : _load,
-                icon: const Icon(Icons.refresh),
-                tooltip: l10n.scanGames,
-              ),
-            ],
+          LibraryListHead(
+            title: l10n.navSmoothMotion,
+            status: _loaded
+                ? l10n.smChecked(_games.length)
+                : l10n.libraryStatusLoading,
+            removedCount: _removed.length,
+            scanning: _scanning,
+            adding: _adding,
+            onAdd: _addGame,
+            onRemoved: _openRemoved,
+            onScan: _scan,
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: AppTokens.gap),
           Expanded(
-            child: Container(
-              decoration: BoxDecoration(
-                color: AppTokens.surface,
-                borderRadius: BorderRadius.circular(AppTokens.radiusLarge),
-                border: Border.all(color: AppTokens.border),
-                boxShadow: AppTokens.panelShadow,
-              ),
-              child: _loading
-                  ? const Center(child: CircularProgressIndicator())
-                  : _games.isEmpty
-                  ? _empty(context, l10n)
-                  : ListView.separated(
-                      padding: const EdgeInsets.symmetric(vertical: 6),
-                      itemCount: _games.length,
-                      separatorBuilder: (BuildContext context, int index) =>
-                          const Divider(height: 1, indent: 22, endIndent: 22),
-                      itemBuilder: (BuildContext context, int index) {
-                        final LibraryGame game = _games[index];
-                        final SmoothMotionStatus status =
-                            _statuses[game.id] ?? const SmoothMotionStatus();
-                        return _SmRow(
-                          game: game,
-                          status: status,
-                          busy: _busyGameId == game.id,
-                          l10n: l10n,
-                          onChanged: (bool value) => _toggle(game, value),
-                          onRestore: () => _restore(game),
-                        );
-                      },
-                    ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _empty(BuildContext context, AppLocalizations l10n) {
-    return Center(
-      child: Text(
-        l10n.gameLibraryEmpty,
-        style: Theme.of(context).textTheme.bodyMedium,
-      ),
-    );
-  }
-}
-
-class _SmRow extends StatelessWidget {
-  const _SmRow({
-    required this.game,
-    required this.status,
-    required this.busy,
-    required this.l10n,
-    required this.onChanged,
-    required this.onRestore,
-  });
-
-  final LibraryGame game;
-  final SmoothMotionStatus status;
-  final bool busy;
-  final AppLocalizations l10n;
-  final ValueChanged<bool> onChanged;
-  final VoidCallback onRestore;
-
-  @override
-  Widget build(BuildContext context) {
-    final bool hasExe = game.renderExe != null;
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 10),
-      child: Row(
-        children: <Widget>[
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: <Widget>[
-                Text(
-                  game.name,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    color: AppTokens.textPrimary,
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
+            child: LayoutBuilder(
+              builder: (BuildContext context, BoxConstraints constraints) {
+                final bool wide = constraints.maxWidth >= 980;
+                final Widget sidebar = SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: <Widget>[
+                      SmCompatibilityPanel(gpu: _gpu),
+                      const SizedBox(height: AppTokens.gap),
+                      ModeSourcePanel(
+                        gpuLabel: l10n.modeGpusSmDlss5,
+                        sourceUrl:
+                            'https://github.com/pipotoufikxyz-lgtm/dlssg_for_sm86-MFG-version',
+                      ),
+                      const SizedBox(height: AppTokens.gap),
+                      LegacyPanel(
+                        title: l10n.smNotesTitle,
+                        child: Text(
+                          l10n.smNotesBody,
+                          style: const TextStyle(
+                            color: AppTokens.textSecondary,
+                            fontSize: 12,
+                            height: 1.5,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  hasExe ? game.targetDirectory : l10n.smNoExe,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: Theme.of(context).textTheme.labelMedium,
-                ),
-              ],
+                );
+                final Widget content = _content(l10n, compatible);
+                if (!wide) {
+                  return ListView(
+                    children: <Widget>[
+                      sidebar,
+                      const SizedBox(height: AppTokens.gap),
+                      SizedBox(height: 460, child: content),
+                    ],
+                  );
+                }
+                return Row(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: <Widget>[
+                    SizedBox(width: 340, child: sidebar),
+                    const SizedBox(width: 18),
+                    Expanded(child: content),
+                  ],
+                );
+              },
             ),
-          ),
-          _StateChip(status: status, l10n: l10n),
-          const SizedBox(width: 6),
-          if (busy)
-            const SizedBox(
-              width: 22,
-              height: 22,
-              child: CircularProgressIndicator(strokeWidth: 2),
-            )
-          else
-            Switch(
-              value: status.enabled ?? false,
-              onChanged: hasExe ? onChanged : null,
-            ),
-          IconButton(
-            onPressed: hasExe && !busy ? onRestore : null,
-            icon: const Icon(Icons.restore, size: 18),
-            tooltip: l10n.restore,
-            padding: EdgeInsets.zero,
-            constraints: const BoxConstraints.tightFor(width: 30, height: 30),
-            color: AppTokens.textSecondary,
           ),
         ],
       ),
     );
   }
-}
 
-class _StateChip extends StatelessWidget {
-  const _StateChip({required this.status, required this.l10n});
-
-  final SmoothMotionStatus status;
-  final AppLocalizations l10n;
-
-  @override
-  Widget build(BuildContext context) {
-    final (String label, Color foreground, Color background) =
-        switch (status.enabled) {
-          true => (l10n.smOn, AppTokens.success, AppTokens.successSoft),
-          false => (l10n.smOff, AppTokens.textSecondary, AppTokens.surfaceMuted),
-          null => (l10n.smUnknown, AppTokens.warning, AppTokens.warningSoft),
-        };
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-      decoration: BoxDecoration(
-        color: background,
-        borderRadius: BorderRadius.circular(999),
-      ),
-      child: Text(
-        label,
-        style: TextStyle(
-          color: foreground,
-          fontSize: 10,
-          fontWeight: FontWeight.w600,
-        ),
-      ),
+  Widget _content(AppLocalizations l10n, bool compatible) {
+    if (_games.isEmpty) {
+      return Center(child: Text(l10n.gameLibraryEmpty));
+    }
+    return ListView.separated(
+      padding: const EdgeInsets.only(right: 4, bottom: 4),
+      itemCount: _games.length,
+      separatorBuilder: (BuildContext context, int index) =>
+          const SizedBox(height: 12),
+      itemBuilder: (BuildContext context, int index) {
+        final LibraryGame game = _games[index];
+        return SmGameCard(
+          game: game,
+          status: _statuses[game.id] ?? const SmoothMotionStatus(),
+          modes: _modes[game.id],
+          coverPath: _covers[game.id],
+          busy: _busyGameId == game.id,
+          compatible: compatible,
+          onPrimary: () => _toggle(game),
+          onLaunch: () => _launch(game),
+          onOpenFolder: () => SystemBridge.openPath(game.targetDirectory),
+          onRemove: () => _remove(game),
+        );
+      },
     );
   }
 }

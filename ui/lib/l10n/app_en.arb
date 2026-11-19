@@ -1,10 +1,17 @@
 {
   "@@locale": "en",
   "appTitle": "FrameGen Manager-Next",
-  "navFrameGeneration": "Frame generation",
+  "navFrameGeneration": "DLSS-G",
   "navSmoothMotion": "Smooth Motion",
   "navDlss5": "DLSS5",
   "navAnr": "ANR",
+  "navDonate": "Support",
+  "appTagline": "One-click frame generation and DLSS5 for RTX 20/30 series",
+  "donateTitle": "Support",
+  "donateSubtitle": "If this tool helps you, you are welcome to buy the author a coffee.",
+  "donateWechat": "WeChat Pay",
+  "donateAlipay": "Alipay",
+  "donateNote": "Your support keeps this project going (≧◡≦) ♡",
   "navGpu": "GPU",
   "navLogs": "Logs",
   "navSettings": "Settings",
@@ -22,9 +29,37 @@
   "coreOfflineHint": "Build fgm-ffi to enable the native bridge.",
   "framegenSubtitle": "Deploy or restore frame generation for each game.",
   "framegenCoreHint": "Scan the library, then deploy or restore per game. A running game is detected before anything is written.",
+  "libraryTitle": "DLSS-G Frame Generation",
   "gameLibraryTitle": "Game library",
   "gameLibraryEmpty": "No games yet. Scan to discover installed games.",
+  "libraryStatusLoading": "Loading game library cache...",
+  "libraryStatusLoaded": "Loaded {count} games",
+  "outdatedAssetNotice": "{count} game(s) use an older bundled asset pack. Choose Update to upgrade; original file backups are kept.",
   "smSubtitle": "Turn Smooth Motion on per game and manage its driver profile.",
+  "smChecked": "Checked {count} games",
+  "smCompatibilityTitle": "Smooth Motion compatibility",
+  "smReady": "Ready",
+  "smNotApplicable": "Not applicable",
+  "smGpuLabel": "GPU",
+  "smMinimum": "Minimum",
+  "smDriverOk": "The driver meets the tool requirements; deployment is available.",
+  "smDriverTooOld": "Installed driver {current}; Smooth Motion requires {min} or newer. Update the NVIDIA driver first.",
+  "smUnknownGate": "The GPU or driver version could not be identified.",
+  "smNotesTitle": "Notes",
+  "smNotesBody": "Enable or disable driver-level Smooth Motion and deploy the matching unlock component.",
+  "smComponentDeployed": "Component deployed",
+  "smComponentOutdated": "Component update available",
+  "smComponentPartial": "Component incomplete",
+  "smComponentConflict": "File conflict",
+  "smComponentPresent": "Component present",
+  "smComponentNotDeployed": "Not deployed",
+  "smDriverOn": "Driver on",
+  "smDriverOff": "Driver off",
+  "smDriverUnknown": "Driver unknown/not set",
+  "smFrameGenConflict": "Conflict: frame generation is on",
+  "smEnable": "Enable",
+  "smDisable": "Disable",
+  "smUpdate": "Update",
   "scanGames": "Scan games",
   "addGame": "Add game",
   "addGameFailed": "Could not add the game.",
@@ -41,11 +76,45 @@
   },
   "libraryLoadFailed": "Could not load the game library.",
   "deploy": "Deploy",
+  "update": "Update",
+  "clean": "Clean",
+  "frameGenStateInstalled": "Deployed",
+  "frameGenStateOutdated": "Update available",
+  "frameGenStatePartial": "Incomplete",
+  "frameGenStateConflict": "File conflict",
+  "frameGenStateNoManifest": "Deployed (no record)",
+  "frameGenStateNotDeployed": "Not deployed",
+  "modeFrameGen": "FrameGen",
+  "modeSm": "SM",
+  "modeAnr": "ANR",
+  "smConflict": "Conflict: Smooth Motion is on",
+  "proxyOwnerFramegen": "Frame generation",
+  "proxyOwnerDlss5": "DLSS5",
+  "proxyOwnerAnr": "ANR",
+  "proxyOwnerReframework": "REFramework",
+  "proxyOwnerOther": "Another mod",
+  "removeGame": "Remove game",
+  "removedTitle": "Removed games",
+  "removedHint": "These games are hidden from the library and can be restored.",
+  "removedEmpty": "No removed games.",
+  "removedCount": "Removed games ({count})",
+  "restoreGame": "Restore",
+  "deleteRecord": "Delete record",
+  "deleteRecordConfirm": "Delete the library record for {game}? Game files are not touched.",
+  "removeGameConfirm": "Remove {game} from the library? The game files and backups are kept.",
+  "gameFolderMissing": "Game folder not found",
   "restore": "Restore",
   "cancel": "Cancel",
   "deployConfirmTitle": "Deploy frame generation",
   "deployConfirmBody": "Deploy frame generation components to {game}?",
-  "optionProxySlot": "Proxy DLL",
+  "optionProxySlot": "Proxy entry",
+  "deployTargetLabel": "Deployment target",
+  "deployChooseExe": "Choose the actual launch EXE...",
+  "deployGraphicsApi": "Graphics API",
+  "deployCloseGameHint": "Close the game before deploying",
+  "deployProxyNote": "Occupied proxy entries: {list}; skipped automatically.",
+  "deployXeSSNote": "Optimization level and the DLSS-G preset only apply to the DLSS engine; XeSS uses its flow-resolution and HUD-less settings.",
+  "deployVersion": "Version {version}",
   "optionGameExe": "Game executable",
   "chooseExe": "Choose...",
   "optionEngine": "Frame engine",
@@ -56,10 +125,10 @@
   "optionFlowResolution": "XeSS optical flow",
   "optionUseHudless": "XeSS HUD-less input",
   "optionOff": "Off",
-  "optimizedTier0": "0 · stock",
-  "optimizedTier1": "1 · bit-identical",
-  "optimizedTier2": "2 · fast",
-  "optimizedTier3": "3 · fastest",
+  "optimizedTier0": "0 · Stock kernels, no acceleration",
+  "optimizedTier1": "1 · Accelerated, bit-identical to official",
+  "optimizedTier2": "2 · Faster, slightly lossy kernels",
+  "optimizedTier3": "3 · Fastest, all lossy",
   "@deployConfirmBody": {
     "placeholders": {
       "game": {
@@ -106,6 +175,32 @@
   "gpuUnsupported": "Smooth Motion not supported",
   "gpuMissing": "NVIDIA GPU not detected",
   "gpuSpoofTitle": "GPU name spoofing",
+  "gpuPanelTitle": "GPU driver & system settings",
+  "gpuDriverVersionLabel": "Driver version",
+  "gpuHagsLabel": "Hardware-accelerated GPU scheduling",
+  "gpuOpenHags": "Open settings",
+  "gpuHagsOn": "Enabled",
+  "gpuHagsOff": "Disabled",
+  "gpuHagsPending": "Restart required",
+  "gpuHagsUnsupported": "Unsupported",
+  "gpuHagsUnknown": "Unknown",
+  "gpuSpoofCurrent": "Current",
+  "gpuSpoofDriverRecord": "Driver record",
+  "gpuSpoofAdminWarning": "Administrator rights are required. Restart the computer after changing the name.",
+  "gpuSpoofRestartTitle": "Restart required",
+  "gpuSpoofRestartBody": "The new GPU name is applied after a restart.",
+  "gpuSpoofRestartNow": "Restart now",
+  "gpuSpoofRestartLater": "Restart later",
+  "assetsFolderTitle": "Assets folder",
+  "assetsBundled": "Bundled assets",
+  "assetsDownloaded": "Downloaded assets",
+  "openFolder": "Open folder",
+  "modeSourceTitle": "Deployable GPUs & asset sources",
+  "modeSourceLink": "GitHub asset source",
+  "modeGpusFramegen": "NVIDIA RTX 20 / 30 / 40 / 50 series",
+  "modeGpusSmDlss5": "NVIDIA RTX 20 / 30 series",
+  "modeGpusAmd": "AMD Radeon RX 5000 / 6000 / 7000 / 9000 series, Steam Deck",
+  "modeGpusIntel": "Intel Arc A / B series",
   "gpuSpoofWarning": "Only for games that gate options by GPU model. The name no longer matches the hardware ID, kernel anti-cheat may flag it, and driver updates can reset it. A restart is needed before Windows shows the new name.",
   "gpuSpoofNeedsAdmin": "Administrator rights are required. Restart this app as administrator to change the adapter name.",
   "gpuSpoofAdminChip": "Admin required",
@@ -136,6 +231,23 @@
   "gpuSpoofRestored": "Adapter name restored.",
   "gpuSpoofFailed": "GPU name operation failed.",
   "aboutDescription": "Windows frame generation deployment manager.",
+  "aboutSoftwareVersion": "Software version",
+  "aboutCheckUpdates": "Check for updates",
+  "aboutQuark": "Quark Drive",
+  "aboutGithub": "GitHub",
+  "aboutOpenRepo": "Open GitHub repository",
+  "aboutLicenses": "Third-party licenses",
+  "aboutLicensesHint": "Every component, origin and full license is in the licenses folder.",
+  "aboutOpenLicenses": "Open licenses folder",
+  "aboutStartup": "Startup",
+  "aboutStartupScan": "Scan the game library once at every launch",
+  "aboutStartupScanHint": "When off, use the Scan button on the frame generation page.",
+  "aboutReEngine": "RE Engine",
+  "aboutReEngineInstall": "Automatically install REFramework for RE Engine games",
+  "aboutReEngineHint": "REFramework is installed automatically for detected RE Engine games. Turn this off to skip it.",
+  "aboutFeedback": "Feedback",
+  "aboutFeedbackBody": "If you run into problems or have suggestions, join our Tencent QQ groups. QQ group: 1125445047, QQ group 2: 181592939.",
+  "updateModalLater": "Later",
   "updateTitle": "Updates",
   "updateCheck": "Check for updates",
   "updateChecking": "Checking...",
@@ -164,6 +276,22 @@
   "updateOpenPage": "Release page",
   "updateNotes": "Release notes",
   "dlss5Install": "Install DLSS5",
+  "dlss5Checked": "Checked {count} games",
+  "dlss5EmptyWall": "The library is empty. Scan games first, then come back to install DLSS5.",
+  "dlss5Deployed": "DLSS5 deployed",
+  "dlss5ApiLabel": "Graphics API: {api}",
+  "dlss5NotDeployed": "DLSS5 not deployed",
+  "dlss5LegacyRibbon": "Legacy DLSS5/RenoDX",
+  "dlss5LegacyHint": "Detected legacy files: {files}. Clean them before installing.",
+  "dlss5CleanFirst": "Clean legacy files first",
+  "dlss5DetailSubtitle": "Installs ReShade plus the GITC Uplift model/addon/shaders. GITC 2.0 starts NR off each session; enable it in the ReShade panel. RTX 20/30 only.",
+  "dlss5VulkanHint": "The Vulkan layer requires the online ReShade setup; other APIs install offline.",
+  "dlss5ProxyAuto": "Auto ({proxy})",
+  "dlss5ApiAuto": "{api} (auto)",
+  "dlss5OverlayKey": "ReShade overlay key",
+  "dlss5RecordHotkey": "Record shortcut",
+  "dlss5DeployAgain": "Deploy again",
+  "dlss5HotkeyQueuedShort": "Key queued",
   "dlss5ConfirmBody": "Install DLSS5 and ReShade for {game}?",
   "@dlss5ConfirmBody": {
     "placeholders": {
@@ -266,6 +394,12 @@
     }
   },
   "logsEmpty": "No log entries yet.",
+  "logsSubtitle": "Reads the end of the current log; open the folder for everything.",
+  "logsOpenFolder": "Open log folder",
+  "logsClear": "Clear logs",
+  "logsReading": "Reading logs...",
+  "logsCleared": "Cleared {count} old log file(s).",
+  "logsNothingCleared": "No old logs to clear.",
   "diagnosticsExport": "Export diagnostics",
   "diagnosticsSaved": "Diagnostics saved to {path}",
   "@diagnosticsSaved": {
@@ -280,6 +414,7 @@
   "anrImport": "Import ANR package",
   "anrDownload": "Download latest",
   "anrNoPackage": "No ANR package imported.",
+  "anrPackageReady": "Ready",
   "anrReady": "ANR {version} ({kind})",
   "@anrReady": {
     "placeholders": {
@@ -301,6 +436,101 @@
     }
   },
   "anrRestored": "ANR restored.",
+  "anrExperimental": "Experimental",
+  "anrChecked": "Checked {count} games",
+  "anrPackageTitle": "ANR package",
+  "anrReady": "Ready",
+  "anrNotDownloaded": "Not downloaded",
+  "anrPackageVersion": "Version: {version}",
+  "anrPackageAddon": " · Addon (requires OptiScaler)",
+  "anrPackageMissing": "ANR package not detected. Download it online or import an ANR zip first.",
+  "anrCurrentGpu": "Current GPU: {name} · {driver}",
+  "anrDownloadOnline": "Download online",
+  "anrImportZip": "Import ANR zip",
+  "anrBaidu": "Baidu Netdisk",
+  "anrQuark": "Quark Drive",
+  "anrRequirementsTitle": "Requirements",
+  "anrRequirement1": "The game must already have DLSS Frame Generation.",
+  "anrRequirement2": "Microsoft Visual C++ 2015–2022 x64 runtime is required.",
+  "anrRequirement3": "Uses one of dxgi.dll, winmm.dll or version.dll, so it can conflict with DLSS5/ReShade or frame generation.",
+  "anrStateDeployed": "Deployed",
+  "anrStateNeedsRepair": "Needs repair",
+  "anrStateNotDeployed": "Not deployed",
+  "anrProxy": "Proxy: {proxy}",
+  "anrRenderExeMissing": "Render EXE not found",
+  "anrPackageNeeded": "Download or import ANR first",
+  "anrOptiScalerNeeded": "This game needs OptiScaler; use the addon package.",
+  "anrProxySlotsBusy": "All three proxy slots are occupied.",
+  "anrOptiScalerIniMissing": "Addon packages need an OptiScaler.ini in the game folder.",
+  "@libraryStatusLoaded": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@outdatedAssetNotice": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@removeGameConfirm": {
+    "placeholders": {
+      "game": {
+        "type": "String"
+      }
+    }
+  },
+  "@deployProxyNote": {
+    "placeholders": {
+      "list": {
+        "type": "String"
+      }
+    }
+  },
+  "@smDriverTooOld": {
+    "placeholders": {
+      "current": {
+        "type": "String"
+      },
+      "min": {
+        "type": "String"
+      }
+    }
+  },
+  "@anrChecked": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@anrPackageVersion": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "@anrCurrentGpu": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "driver": {
+        "type": "String"
+      }
+    }
+  },
+  "@anrProxy": {
+    "placeholders": {
+      "proxy": {
+        "type": "String"
+      }
+    }
+  },
   "sourceSteam": "Steam",
   "sourceEpic": "Epic",
   "sourceLoose": "Loose",

@@ -18,15 +18,16 @@ abstract final class AppTheme {
       useMaterial3: true,
       colorScheme: scheme,
       scaffoldBackgroundColor: AppTokens.background,
-      fontFamily: 'Segoe UI',
+      fontFamily: 'Microsoft YaHei UI',
+      fontFamilyFallback: const <String>['Microsoft YaHei', 'Segoe UI'],
       dividerColor: AppTokens.border,
       splashFactory: InkSparkle.splashFactory,
       textTheme: const TextTheme(
         headlineSmall: TextStyle(
           color: AppTokens.textPrimary,
-          fontSize: 24,
-          fontWeight: FontWeight.w600,
-          letterSpacing: -0.4,
+          fontSize: 20,
+          fontWeight: FontWeight.w700,
+          letterSpacing: 0.2,
         ),
         titleMedium: TextStyle(
           color: AppTokens.textPrimary,
@@ -35,8 +36,8 @@ abstract final class AppTheme {
         ),
         bodyMedium: TextStyle(
           color: AppTokens.textSecondary,
-          fontSize: 13,
-          height: 1.45,
+          fontSize: 14,
+          height: 1.5,
         ),
         labelMedium: TextStyle(
           color: AppTokens.textSecondary,
