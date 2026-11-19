@@ -66,6 +66,7 @@ fn inspection_reply(inspection: &GpuSpoofInspection) -> Value {
             .map(|(index, adapter)| adapter_json(index, adapter))
             .collect::<Vec<Value>>(),
         "presets": inspection.presets,
+        "liveName": inspection.live_name,
         "applied": inspection.applied.as_ref().map(|manifest| json!({
             "appliedName": manifest.applied_name,
             "originalDeviceDesc": manifest.original_device_desc,

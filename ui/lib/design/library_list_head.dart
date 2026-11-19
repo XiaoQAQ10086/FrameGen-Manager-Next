@@ -66,23 +66,31 @@ class LibraryListHead extends StatelessWidget {
           runSpacing: 8,
           crossAxisAlignment: WrapCrossAlignment.center,
           children: <Widget>[
-            OutlinedButton(
-              onPressed: scanning || adding ? null : onAdd,
-              child: Text(l10n.addGame),
-            ),
-            OutlinedButton(
-              onPressed: onRemoved,
-              child: Text(
-                removedCount > 0
-                    ? '${l10n.removedTitle} ($removedCount)'
-                    : l10n.removedTitle,
+            SizedBox(
+              height: 38,
+              child: OutlinedButton(
+                onPressed: scanning || adding ? null : onAdd,
+                style: LegacyButtonStyles.headingAction,
+                child: Text(l10n.addGame),
               ),
             ),
             SizedBox(
-              height: 36,
+              height: 38,
+              child: OutlinedButton(
+                onPressed: onRemoved,
+                style: LegacyButtonStyles.headingAction,
+                child: Text(
+                  removedCount > 0
+                      ? '${l10n.removedTitle} ($removedCount)'
+                      : l10n.removedTitle,
+                ),
+              ),
+            ),
+            SizedBox(
+              height: 38,
               child: FilledButton(
                 onPressed: scanning ? null : onScan,
-                style: LegacyButtonStyles.scan,
+                style: LegacyButtonStyles.headingScan,
                 child: scanning
                     ? const SizedBox(
                         width: 16,

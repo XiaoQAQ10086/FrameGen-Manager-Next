@@ -147,7 +147,11 @@ class _SpoofPanelState extends State<SpoofPanel> {
         children: <Widget>[
           _ValueRow(
             label: l10n.gpuSpoofCurrent,
-            value: state?.appliedName ?? adapter?.displayName ?? '-',
+            value:
+                state?.appliedName ??
+                state?.liveName ??
+                adapter?.displayName ??
+                '-',
           ),
           _ValueRow(
             label: l10n.gpuSpoofDriverRecord,
@@ -200,7 +204,8 @@ class _ValueRow extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
-          Expanded(
+          SizedBox(
+            width: 64,
             child: Text(
               label,
               style: const TextStyle(
@@ -210,11 +215,15 @@ class _ValueRow extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 8),
-          LegacyPill(
-            label: value,
-            foreground: AppTokens.textPrimary,
-            background: AppTokens.surfaceMuted,
-            maxWidth: 170,
+          Expanded(
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: LegacyPill(
+                label: value,
+                foreground: AppTokens.textPrimary,
+                background: AppTokens.surfaceMuted,
+              ),
+            ),
           ),
         ],
       ),

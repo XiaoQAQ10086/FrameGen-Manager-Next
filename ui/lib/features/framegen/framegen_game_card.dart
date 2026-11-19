@@ -210,6 +210,7 @@ class FrameGenGameCard extends StatelessWidget {
                   LegacyButtonStyles.standard,
                 ),
               ),
+              const SizedBox(width: 6),
               IconButton(
                 onPressed: onRemove,
                 icon: const Icon(Icons.delete_outline),

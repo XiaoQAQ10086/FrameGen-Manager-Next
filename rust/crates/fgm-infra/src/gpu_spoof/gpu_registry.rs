@@ -87,6 +87,29 @@ pub(crate) fn read_string(sub_key: &str, value_name: &str) -> Option<String> {
     Some(utf16z(&buffer))
 }
 
+pub(crate) fn read_dword(sub_key: &str, value_name: &str) -> Option<u32> {
+    let key = open(sub_key, KEY_READ)?;
+    let name = wide(value_name);
+    let mut kind = 0_u32;
+    let mut data = 0_u32;
+    let mut length = 4_u32;
+    let status = unsafe {
+        RegQueryValueExW(
+            key,
+            name.as_ptr(),
+            std::ptr::null_mut(),
+            &mut kind,
+            (&mut data as *mut u32).cast(),
+            &mut length,
+        )
+    };
+    unsafe { RegCloseKey(key) };
+    if status != 0 || length != 4 {
+        return None;
+    }
+    Some(data)
+}
+
 pub(crate) fn write_string(sub_key: &str, value_name: &str, value: &str) -> Result<(), String> {
     let key = open(sub_key, KEY_WRITE)
         .ok_or_else(|| "could not open the registry key for writing".to_string())?;

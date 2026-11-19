@@ -33,6 +33,7 @@ class ModeSourcePanel extends StatelessWidget {
             children: <Widget>[
               LegacyPill(
                 label: gpuLabel,
+                fontSize: 11,
                 foreground: AppTokens.textPrimary,
                 background: AppTokens.accentSoft,
                 border: AppTokens.accent.withValues(alpha: 0.2),
@@ -40,6 +41,7 @@ class ModeSourcePanel extends StatelessWidget {
               for (final String chip in extraChips)
                 LegacyPill(
                   label: chip,
+                  fontSize: 11,
                   foreground: AppTokens.textPrimary,
                   background: AppTokens.accentSoft,
                   border: AppTokens.accent.withValues(alpha: 0.2),

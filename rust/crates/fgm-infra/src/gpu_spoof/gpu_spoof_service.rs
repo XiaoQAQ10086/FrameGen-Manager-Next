@@ -8,7 +8,9 @@ use crate::fs::AtomicFile;
 use crate::paths::AppPaths;
 
 use super::display_adapter::DisplayAdapter;
-use super::gpu_registry::{display_name, is_admin, read_string, sub_keys, write_string};
+use super::gpu_registry::{
+    display_name, is_admin, read_dword, read_string, sub_keys, write_string,
+};
 use super::gpu_spoof_manifest::GpuSpoofManifest;
 
 const CLASS_ROOT: &str =
@@ -40,6 +42,8 @@ pub struct GpuSpoofInspection {
     pub adapters: Vec<DisplayAdapter>,
     pub presets: Vec<String>,
     pub applied: Option<GpuSpoofManifest>,
+    /// Name reported by the running driver, not the (possibly stale) registry.
+    pub live_name: Option<String>,
 }
 
 /// Registry-backed GPU name spoofing. Every write is backed up first.
@@ -52,6 +56,7 @@ impl GpuSpoofService {
             adapters: enumerate()?,
             presets: PRESETS.iter().map(|name| (*name).to_string()).collect(),
             applied: load_manifest(paths)?,
+            live_name: crate::gpu::GpuDetector::detect().map(|gpu| gpu.name),
         })
     }
 
@@ -158,6 +163,11 @@ pub(crate) fn enumerate() -> Result<Vec<DisplayAdapter>, AppError> {
             if !class_guid.eq_ignore_ascii_case(DISPLAY_CLASS_GUID)
                 || !service.eq_ignore_ascii_case("nvlddmkm")
             {
+                continue;
+            }
+            // `CSConfigFlags = 1` marks a phantom adapter left behind by an old
+            // driver or a device that is no longer present.
+            if read_dword(&instance_path, "CSConfigFlags") == Some(1) {
                 continue;
             }
             let Some(device_desc) = read_string(&instance_path, "DeviceDesc") else {

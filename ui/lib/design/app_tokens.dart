@@ -8,7 +8,7 @@ abstract final class AppTokens {
   static const Color surfaceSolid = Colors.white;
   static const Color surfaceMuted = Color(0xFFF8FAFC);
   static const Color border = Color(0xFFDDE4EE);
-  static const Color cardBorder = Color(0xC7FFFFFF);
+  static const Color cardBorder = Color(0xFFDCE5F2);
   static const Color textPrimary = Color(0xFF172033);
   static const Color textSecondary = Color(0xFF606B7D);
   static const Color accent = Color(0xFF007AFF);
@@ -38,6 +38,10 @@ abstract final class AppTokens {
       offset: Offset(0, 12),
     ),
   ];
+  static const List<BoxShadow> cardShadow = <BoxShadow>[
+    BoxShadow(color: Color(0x1418274B), blurRadius: 22, offset: Offset(0, 8)),
+    BoxShadow(color: Color(0x0A18274B), blurRadius: 3, offset: Offset(0, 1)),
+  ];
   static const List<BoxShadow> strongShadow = <BoxShadow>[
     BoxShadow(
       color: Color(0x33181E3C),
@@ -49,13 +53,14 @@ abstract final class AppTokens {
   static const BoxDecoration panelDecoration = BoxDecoration(
     color: surfaceSolid,
     borderRadius: BorderRadius.all(Radius.circular(radius)),
-    border: Border.fromBorderSide(BorderSide(color: border)),
+    border: Border.fromBorderSide(BorderSide(color: cardBorder)),
+    boxShadow: cardShadow,
   );
 
   static const BoxDecoration cardDecoration = BoxDecoration(
-    color: surface,
+    color: surfaceSolid,
     borderRadius: BorderRadius.all(Radius.circular(radius)),
     border: Border.fromBorderSide(BorderSide(color: cardBorder)),
-    boxShadow: panelShadow,
+    boxShadow: cardShadow,
   );
 }

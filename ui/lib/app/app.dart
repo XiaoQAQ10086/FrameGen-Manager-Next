@@ -44,6 +44,7 @@ class _FgmAppState extends State<FgmApp> {
       debugShowCheckedModeBanner: false,
       locale: _locale,
       theme: AppTheme.light,
+      themeMode: ThemeMode.light,
       localizationsDelegates: const <LocalizationsDelegate<dynamic>>[
         AppLocalizations.delegate,
         ...GlobalMaterialLocalizations.delegates,

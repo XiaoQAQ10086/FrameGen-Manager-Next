@@ -9,15 +9,15 @@ import 'app_tokens.dart';
 /// a slightly brighter face on hover.
 abstract final class LegacyButtonStyles {
   static const Color _ink = Color(0xFF26344A);
-  static const Color _border = Color(0x3314233C);
   static const Color _shadow = Color(0x24101828);
 
   /// Default `.btn`: light gradient face with a dark label.
   static ButtonStyle get standard => _style(
-    top: const Color(0xFFFFFFFF),
-    bottom: const Color(0xFFEEF3FA),
-    border: _border,
+    top: const Color(0xFFF4F9FF),
+    bottom: const Color(0xFFD4E2F3),
+    border: const Color(0xFFA6BCD8),
     foreground: _ink,
+    shadow: const Color(0x33101828),
   );
 
   /// `.btn.primary`: blue gradient for confirm actions.
@@ -97,11 +97,26 @@ abstract final class LegacyButtonStyles {
     iconSize: const WidgetStatePropertyAll<double>(18),
   );
 
+  /// List-head actions share one width so the three buttons line up.
+  static ButtonStyle get headingAction => standard.copyWith(
+    minimumSize: const WidgetStatePropertyAll<Size>(Size(116, 38)),
+    padding: const WidgetStatePropertyAll<EdgeInsetsGeometry>(
+      EdgeInsets.symmetric(horizontal: 16),
+    ),
+  );
+
+  static ButtonStyle get headingScan => scan.copyWith(
+    minimumSize: const WidgetStatePropertyAll<Size>(Size(116, 38)),
+    padding: const WidgetStatePropertyAll<EdgeInsetsGeometry>(
+      EdgeInsets.symmetric(horizontal: 16),
+    ),
+  );
+
   /// Compact `.btn.small` used inside game cards (27px tall, radius 9).
   static ButtonStyle compact(ButtonStyle base) => base.copyWith(
-    minimumSize: const WidgetStatePropertyAll<Size>(Size(84, 32)),
+    minimumSize: const WidgetStatePropertyAll<Size>(Size(88, 34)),
     padding: const WidgetStatePropertyAll<EdgeInsetsGeometry>(
-      EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+      EdgeInsets.symmetric(horizontal: 16, vertical: 7),
     ),
     textStyle: WidgetStatePropertyAll<TextStyle>(
       _textStyle(_foregroundOf(base), 12.5),
@@ -114,8 +129,8 @@ abstract final class LegacyButtonStyles {
 
   /// `.btn.small.icon-only`: 30x30 gradient square for card actions.
   static ButtonStyle compactIcon(ButtonStyle base) => base.copyWith(
-    minimumSize: const WidgetStatePropertyAll<Size>(Size.square(32)),
-    maximumSize: const WidgetStatePropertyAll<Size>(Size.square(32)),
+    minimumSize: const WidgetStatePropertyAll<Size>(Size.square(34)),
+    maximumSize: const WidgetStatePropertyAll<Size>(Size.square(34)),
     padding: const WidgetStatePropertyAll<EdgeInsetsGeometry>(EdgeInsets.zero),
     iconSize: const WidgetStatePropertyAll<double>(16),
     shape: WidgetStatePropertyAll<OutlinedBorder>(
@@ -156,11 +171,15 @@ abstract final class LegacyButtonStyles {
             : foreground,
       ),
       side: WidgetStateProperty.resolveWith<BorderSide>(
-        (Set<WidgetState> states) => BorderSide(
-          color: states.contains(WidgetState.disabled)
-              ? border.withValues(alpha: 0.45)
-              : border,
-        ),
+        (Set<WidgetState> states) {
+          if (states.contains(WidgetState.disabled)) {
+            return BorderSide(color: border.withValues(alpha: 0.45));
+          }
+          if (states.contains(WidgetState.hovered)) {
+            return const BorderSide(color: Color(0x8C007AFF));
+          }
+          return BorderSide(color: border);
+        },
       ),
       shadowColor: WidgetStatePropertyAll<Color>(shadow ?? _shadow),
       surfaceTintColor: const WidgetStatePropertyAll<Color>(
@@ -173,9 +192,9 @@ abstract final class LegacyButtonStyles {
         }
         return s.contains(WidgetState.hovered) ? elevation + 3 : elevation;
       }),
-      minimumSize: const WidgetStatePropertyAll<Size>(Size(0, 36)),
+      minimumSize: const WidgetStatePropertyAll<Size>(Size(0, 38)),
       padding: const WidgetStatePropertyAll<EdgeInsetsGeometry>(
-        EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        EdgeInsets.symmetric(horizontal: 18, vertical: 9),
       ),
       textStyle: WidgetStatePropertyAll<TextStyle>(
         _textStyle(foreground, 13),

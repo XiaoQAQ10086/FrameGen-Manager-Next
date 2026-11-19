@@ -35,6 +35,7 @@ final class GpuSpoofState {
     required this.presets,
     this.appliedName,
     this.originalName,
+    this.liveName,
     this.errorCode,
   });
 
@@ -70,6 +71,7 @@ final class GpuSpoofState {
         originalName: applied is Map
             ? _displayName(applied['originalDeviceDesc'] as String? ?? '')
             : null,
+        liveName: decoded['liveName'] as String?,
       );
     } on FormatException {
       return GpuSpoofState.failure('InvalidReply');
@@ -81,6 +83,9 @@ final class GpuSpoofState {
   final List<String> presets;
   final String? appliedName;
   final String? originalName;
+
+  /// Name reported by the running driver; ignores stale registry entries.
+  final String? liveName;
   final String? errorCode;
 
   bool get hasBackup => appliedName != null;

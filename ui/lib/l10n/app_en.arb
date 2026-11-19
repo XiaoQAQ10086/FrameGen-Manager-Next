@@ -174,7 +174,7 @@
   "gpuSupported": "Smooth Motion supported",
   "gpuUnsupported": "Smooth Motion not supported",
   "gpuMissing": "NVIDIA GPU not detected",
-  "gpuSpoofTitle": "GPU name spoofing",
+  "gpuSpoofTitle": "GPU model spoofing",
   "gpuPanelTitle": "GPU driver & system settings",
   "gpuDriverVersionLabel": "Driver version",
   "gpuHagsLabel": "Hardware-accelerated GPU scheduling",
