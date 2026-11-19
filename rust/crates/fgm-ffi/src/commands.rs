@@ -165,7 +165,7 @@ pub(crate) fn inspect(request: &str) -> Result<Value, AppError> {
     }))
 }
 
-fn parse<T: for<'de> Deserialize<'de>>(request: &str) -> Result<T, AppError> {
+pub(crate) fn parse<T: for<'de> Deserialize<'de>>(request: &str) -> Result<T, AppError> {
     serde_json::from_str(request).map_err(|error| {
         AppError::new(ErrorCode::InvalidArgument).with("reason", error.to_string())
     })
@@ -179,14 +179,14 @@ fn pack_directory(explicit: Option<&str>, pack_id: &str) -> Result<PathBuf, AppE
         .ok_or_else(|| AppError::new(ErrorCode::PackNotFound).with("packId", pack_id))
 }
 
-fn data_paths(directory: Option<&str>) -> Result<AppPaths, AppError> {
+pub(crate) fn data_paths(directory: Option<&str>) -> Result<AppPaths, AppError> {
     match directory {
         Some(directory) => AppPaths::new(Path::new(directory), false),
         None => AppPaths::create_default(None),
     }
 }
 
-fn absolute(path: &Path) -> Result<PathBuf, AppError> {
+pub(crate) fn absolute(path: &Path) -> Result<PathBuf, AppError> {
     std::path::absolute(path).map_err(|error| {
         AppError::new(ErrorCode::InvalidPath)
             .with("path", path.display().to_string())
@@ -197,6 +197,7 @@ fn absolute(path: &Path) -> Result<PathBuf, AppError> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::commands_sm::sm_inspect_many;
     use fgm_infra::hashing::FileHasher;
     use std::fs;
     use std::time::{SystemTime, UNIX_EPOCH};
@@ -266,6 +267,15 @@ mod tests {
         assert!(!target.join("version.dll").exists());
 
         let _ = fs::remove_dir_all(root);
+    }
+
+    #[test]
+    fn sm_inspect_many_is_read_only() {
+        let exe = std::env::current_exe().unwrap();
+        let request = json!({ "exePaths": [exe] }).to_string();
+        let value = sm_inspect_many(&request).unwrap();
+        assert_eq!(value["ok"], true);
+        assert_eq!(value["states"].as_array().unwrap().len(), 1);
     }
 
     fn unique_dir(name: &str) -> PathBuf {

@@ -7,6 +7,7 @@ pub enum ErrorCode {
     FileNotFound,
     FileLocked,
     GameRunning,
+    GpuUnsupported,
     AccessDenied,
     Conflict,
     ManifestMissing,

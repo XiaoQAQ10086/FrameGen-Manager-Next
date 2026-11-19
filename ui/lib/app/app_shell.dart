@@ -3,6 +3,7 @@ import 'package:material_ui/material_ui.dart';
 import '../bridge/core_library.dart';
 import '../design/app_tokens.dart';
 import '../features/framegen/framegen_page.dart';
+import '../features/smooth_motion/smooth_motion_page.dart';
 import '../l10n/app_localizations.dart';
 import 'app_section.dart';
 
@@ -37,9 +38,11 @@ class _AppShellState extends State<AppShell> {
               transitionBuilder: _fadeThrough,
               child: KeyedSubtree(
                 key: ValueKey<AppSection>(_section),
-                child: _section == AppSection.frameGeneration
-                    ? FrameGenPage(core: widget.core)
-                    : _PlaceholderPage(section: _section),
+                child: switch (_section) {
+                  AppSection.frameGeneration => FrameGenPage(core: widget.core),
+                  AppSection.smoothMotion => SmoothMotionPage(core: widget.core),
+                  _ => _PlaceholderPage(section: _section),
+                },
               ),
             ),
           ),

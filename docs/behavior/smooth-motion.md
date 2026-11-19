@@ -87,9 +87,15 @@
   - `SmoothMotionService::inspect`：解析所有绑定 profile，读取 `0xB0D384C0`。
   - `SmoothMotionService::set`：无 profile 时创建 `FrameGen Manager - <exe>` 并挂 application；写入后保存、换新会话按 profile 名和 EXE 链接读回。
   - `SmoothMotionService::restore`：按记录写回旧值或删除设置，换会话复核后删除记录。
-- 尚未迁移：组件文件部署/回滚、反作弊/帧生成互斥、驱动版本门控、GPU 路由选择、FFI/UI 接线。
+  - `SmoothMotionComponents`：按 GPU 路由选择 `smooth-motion.rtx30` / `rtx20`，通过统一部署引擎写组件；目标已有帧生成 manifest 时返回 `Conflict`；还原走同一引擎。
+  - `SmoothMotionFacade::enable`：驱动版本不支持直接拒绝；先部署组件，再写 NVAPI；NVAPI 失败时回滚组件文件。
+  - `SmoothMotionFacade::disable`：先把设置写 0，再还原组件；`restore` 先恢复旧 profile 值，再还原组件。
+- `fgm-infra/src/gpu/gpu_detector.rs`：`nvidia-smi` 提供名称/驱动，`GpuDetector::classify` 提供路由和 `driver_supported`。
+- FFI：`fgm_sm_inspect_many_json`、`fgm_sm_enable_json`、`fgm_sm_disable_json`、`fgm_sm_restore_json`。
+- Flutter：Smooth Motion 页批量读取状态，逐游戏开关和还原；失败显示 SnackBar。
+- 尚未迁移：反作弊目录提示、BattlEye/EAC 误判规则、旧版无 manifest 的组件清理、真实游戏回归。
 - 真机验证（RTX 3070）：会话可打开，基础 profile 的 Smooth Motion 设置为 `Some(0)`；对测试 EXE 的枚举查找返回 0 个 profile，无崩溃。
-- 测试：`rust/crates/fgm-infra/tests/nvapi_session.rs`、`smooth_motion.rs`。
+- 测试：`rust/crates/fgm-infra/tests/nvapi_session.rs`、`smooth_motion.rs`、`smooth_motion_components.rs`。
 
 ## 命令
 

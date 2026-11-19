@@ -30,6 +30,10 @@ final class CoreLibrary {
     this._deploy,
     this._restore,
     this._inspect,
+    this._smInspectMany,
+    this._smEnable,
+    this._smDisable,
+    this._smRestore,
     this._stringFree,
     this._alloc,
     this._freeBytes,
@@ -42,6 +46,10 @@ final class CoreLibrary {
   final _RequestDart _deploy;
   final _RequestDart _restore;
   final _RequestDart _inspect;
+  final _RequestDart _smInspectMany;
+  final _RequestDart _smEnable;
+  final _RequestDart _smDisable;
+  final _RequestDart _smRestore;
   final _StringFreeDart _stringFree;
   final _AllocDart _alloc;
   final _FreeBytesDart _freeBytes;
@@ -70,6 +78,18 @@ final class CoreLibrary {
           ),
           library.lookupFunction<_RequestNative, _RequestDart>(
             'fgm_inspect_json',
+          ),
+          library.lookupFunction<_RequestNative, _RequestDart>(
+            'fgm_sm_inspect_many_json',
+          ),
+          library.lookupFunction<_RequestNative, _RequestDart>(
+            'fgm_sm_enable_json',
+          ),
+          library.lookupFunction<_RequestNative, _RequestDart>(
+            'fgm_sm_disable_json',
+          ),
+          library.lookupFunction<_RequestNative, _RequestDart>(
+            'fgm_sm_restore_json',
           ),
           library.lookupFunction<_StringFreeNative, _StringFreeDart>(
             'fgm_string_free',
@@ -108,6 +128,15 @@ final class CoreLibrary {
   String? restoreJson(String request) => _request(_restore, request);
 
   String? inspectJson(String request) => _request(_inspect, request);
+
+  String? smInspectManyJson(String request) =>
+      _request(_smInspectMany, request);
+
+  String? smEnableJson(String request) => _request(_smEnable, request);
+
+  String? smDisableJson(String request) => _request(_smDisable, request);
+
+  String? smRestoreJson(String request) => _request(_smRestore, request);
 
   String? _request(_RequestDart function, String request) {
     final List<int> bytes = utf8.encode(request);

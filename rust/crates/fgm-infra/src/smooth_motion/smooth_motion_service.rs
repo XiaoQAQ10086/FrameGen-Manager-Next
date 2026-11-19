@@ -26,30 +26,26 @@ impl SmoothMotionService {
                 };
             }
         };
+        inspect_with(&session, executable)
+    }
 
-        match targets_for(&session, executable) {
-            Ok(targets) if !targets.is_empty() => {
-                let enabled = session
-                    .read_smooth_motion(targets[0].0)
-                    .ok()
-                    .flatten()
-                    .map(|value| value != 0);
-                SmoothMotionState {
-                    enabled,
-                    profile_names: targets.iter().map(|target| target.1.clone()).collect(),
-                    ours: targets[0].1.starts_with(PROFILE_PREFIX),
-                    detail: None,
-                }
+    pub fn inspect_many(executables: &[std::path::PathBuf]) -> Vec<SmoothMotionState> {
+        let session = match NvApiSession::open() {
+            Ok(session) => session,
+            Err(error) => {
+                return executables
+                    .iter()
+                    .map(|_| SmoothMotionState {
+                        detail: Some(format!("{:?}", error.code)),
+                        ..SmoothMotionState::default()
+                    })
+                    .collect();
             }
-            Ok(_) => SmoothMotionState {
-                detail: Some("no driver profile is associated with this executable".to_string()),
-                ..SmoothMotionState::default()
-            },
-            Err(error) => SmoothMotionState {
-                detail: Some(first_reason(&error).to_string()),
-                ..SmoothMotionState::default()
-            },
-        }
+        };
+        executables
+            .iter()
+            .map(|executable| inspect_with(&session, executable))
+            .collect()
     }
 
     pub fn set(
@@ -156,6 +152,32 @@ impl SmoothMotionService {
                 .collect(),
             detail: format!("restored {game}"),
         })
+    }
+}
+
+fn inspect_with(session: &NvApiSession, executable: &Path) -> SmoothMotionState {
+    match targets_for(session, executable) {
+        Ok(targets) if !targets.is_empty() => {
+            let enabled = session
+                .read_smooth_motion(targets[0].0)
+                .ok()
+                .flatten()
+                .map(|value| value != 0);
+            SmoothMotionState {
+                enabled,
+                profile_names: targets.iter().map(|target| target.1.clone()).collect(),
+                ours: targets[0].1.starts_with(PROFILE_PREFIX),
+                detail: None,
+            }
+        }
+        Ok(_) => SmoothMotionState {
+            detail: Some("no driver profile is associated with this executable".to_string()),
+            ..SmoothMotionState::default()
+        },
+        Err(error) => SmoothMotionState {
+            detail: Some(first_reason(&error).to_string()),
+            ..SmoothMotionState::default()
+        },
     }
 }
 

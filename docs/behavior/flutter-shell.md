@@ -35,6 +35,10 @@ FFI 只暴露稳定键和一次性 JSON DTO，不返回用户文案（见 ADR-00
 - `fgm_deploy_json(*const u8, usize) -> *mut c_char`
 - `fgm_restore_json(*const u8, usize) -> *mut c_char`
 - `fgm_inspect_json(*const u8, usize) -> *mut c_char`
+- `fgm_sm_inspect_many_json(*const u8, usize) -> *mut c_char`
+- `fgm_sm_enable_json(*const u8, usize) -> *mut c_char`
+- `fgm_sm_disable_json(*const u8, usize) -> *mut c_char`
+- `fgm_sm_restore_json(*const u8, usize) -> *mut c_char`
 - `fgm_alloc(usize) -> *mut u8` / `fgm_free_bytes(*mut u8, usize)`
 - `fgm_string_free(*mut c_char)`
 - 阶段键：`planned`、`backingUp`、`writing`、`verifying`、`installed`、`rolledBack`、`partial`。

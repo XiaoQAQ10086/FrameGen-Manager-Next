@@ -12,6 +12,7 @@ use fgm_infra::platform::DriveRoots;
 use serde_json::{Value, json};
 
 mod commands;
+mod commands_sm;
 
 static VERSION: LazyLock<Vec<u8>> = LazyLock::new(|| {
     let mut bytes = fgm_domain::version::VERSION.as_bytes().to_vec();
@@ -83,6 +84,36 @@ pub extern "C" fn fgm_restore_json(request: *const u8, length: usize) -> *mut c_
 #[unsafe(no_mangle)]
 pub extern "C" fn fgm_inspect_json(request: *const u8, length: usize) -> *mut c_char {
     execute_request(request, length, commands::inspect)
+}
+
+/// Inspects Smooth Motion for an executable.
+#[unsafe(no_mangle)]
+pub extern "C" fn fgm_sm_inspect_json(request: *const u8, length: usize) -> *mut c_char {
+    execute_request(request, length, commands_sm::sm_inspect)
+}
+
+/// Inspects Smooth Motion for a batch of executables.
+#[unsafe(no_mangle)]
+pub extern "C" fn fgm_sm_inspect_many_json(request: *const u8, length: usize) -> *mut c_char {
+    execute_request(request, length, commands_sm::sm_inspect_many)
+}
+
+/// Enables Smooth Motion (components + driver setting).
+#[unsafe(no_mangle)]
+pub extern "C" fn fgm_sm_enable_json(request: *const u8, length: usize) -> *mut c_char {
+    execute_request(request, length, commands_sm::sm_enable)
+}
+
+/// Disables Smooth Motion (driver setting + component restore).
+#[unsafe(no_mangle)]
+pub extern "C" fn fgm_sm_disable_json(request: *const u8, length: usize) -> *mut c_char {
+    execute_request(request, length, commands_sm::sm_disable)
+}
+
+/// Restores Smooth Motion driver values and component files.
+#[unsafe(no_mangle)]
+pub extern "C" fn fgm_sm_restore_json(request: *const u8, length: usize) -> *mut c_char {
+    execute_request(request, length, commands_sm::sm_restore)
 }
 
 /// Allocates `size` bytes for a request buffer. Free with `fgm_free_bytes`.
