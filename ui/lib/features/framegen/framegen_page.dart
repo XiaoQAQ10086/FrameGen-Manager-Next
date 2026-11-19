@@ -3,9 +3,11 @@ import 'package:material_ui/material_ui.dart';
 import '../../bridge/core_library.dart';
 import '../../bridge/deployment_bridge.dart';
 import '../../bridge/deployment_result.dart';
+import '../../bridge/library_add_result.dart';
 import '../../bridge/library_bridge.dart';
 import '../../bridge/library_game.dart';
 import '../../bridge/library_snapshot.dart';
+import '../../bridge/settings_bridge.dart';
 import '../../design/app_tokens.dart';
 import '../../l10n/app_localizations.dart';
 import 'frame_gen_actions.dart';
@@ -23,6 +25,8 @@ class FrameGenPage extends StatefulWidget {
 
 class _FrameGenPageState extends State<FrameGenPage> {
   List<LibraryGame> _games = const <LibraryGame>[];
+  Map<String, String?> _covers = const <String, String?>{};
+  bool _showCovers = true;
   bool _loading = false;
   String? _error;
   String? _busyGameId;
@@ -33,6 +37,26 @@ class _FrameGenPageState extends State<FrameGenPage> {
     final LibrarySnapshot snapshot = LibraryBridge.list(widget.core);
     _games = snapshot.games;
     _error = snapshot.hasError ? snapshot.errorCode : null;
+    _showCovers = SettingsBridge.load(widget.core).showCovers;
+    _loadCovers();
+  }
+
+  Future<void> _loadCovers() async {
+    if (!_showCovers) {
+      return;
+    }
+    final List<MapEntry<String, String?>> entries = await Future.wait(
+      _games
+          .where((LibraryGame game) => game.source == 'steam')
+          .map(
+            (LibraryGame game) async =>
+                MapEntry<String, String?>(game.id, await LibraryBridge.cover(game)),
+          ),
+    );
+    if (!mounted) {
+      return;
+    }
+    setState(() => _covers = Map<String, String?>.fromEntries(entries));
   }
 
   Future<void> _scan() async {
@@ -49,6 +73,33 @@ class _FrameGenPageState extends State<FrameGenPage> {
       _games = snapshot.games;
       _error = snapshot.hasError ? snapshot.errorCode : null;
     });
+    await _loadCovers();
+  }
+
+  Future<void> _addManual() async {
+    final AppLocalizations l10n = AppLocalizations.of(context);
+    final LibraryAddResult result = await LibraryBridge.addManual();
+    if (!mounted || result.cancelled) {
+      return;
+    }
+    if (!result.ok) {
+      _showResult('${l10n.addGameFailed} ${result.code}');
+      return;
+    }
+    final LibrarySnapshot snapshot = LibraryBridge.list(widget.core);
+    setState(() {
+      _games = snapshot.games;
+      _error = snapshot.hasError ? snapshot.errorCode : null;
+    });
+    await _loadCovers();
+  }
+
+  Future<void> _launch(LibraryGame game) async {
+    final AppLocalizations l10n = AppLocalizations.of(context);
+    final bool started = await LibraryBridge.launch(game);
+    if (mounted && !started) {
+      _showResult(l10n.launchFailed);
+    }
   }
 
   Future<void> _deploy(LibraryGame game) async {
@@ -123,9 +174,13 @@ class _FrameGenPageState extends State<FrameGenPage> {
                   loading: _loading,
                   error: _error,
                   onScan: _scan,
+                  onAddManual: _addManual,
+                  onLaunch: _launch,
                   onDeploy: _deploy,
                   onRestore: _restore,
                   busyGameId: _busyGameId,
+                  showCovers: _showCovers,
+                  covers: _covers,
                 );
 
                 if (!wide) {

@@ -8,6 +8,8 @@ final class LibraryGame {
     required this.targetDirectory,
     required this.graphicsApi,
     this.renderExe,
+    this.appId,
+    this.isManual = false,
   });
 
   factory LibraryGame.fromJson(Map<String, Object?> json) {
@@ -19,6 +21,8 @@ final class LibraryGame {
       targetDirectory: json['targetDirectory'] as String? ?? '',
       graphicsApi: json['graphicsApi'] as String? ?? 'unknown',
       renderExe: json['renderExe'] as String?,
+      appId: json['appId'] as String?,
+      isManual: json['isManual'] == true,
     );
   }
 
@@ -29,4 +33,9 @@ final class LibraryGame {
   final String targetDirectory;
   final String graphicsApi;
   final String? renderExe;
+  final String? appId;
+  final bool isManual;
+
+  /// Xbox games launch through the Xbox app; the card disables the button.
+  bool get canLaunch => source != 'xbox';
 }

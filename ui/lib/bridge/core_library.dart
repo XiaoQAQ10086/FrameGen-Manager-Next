@@ -27,6 +27,9 @@ final class CoreLibrary {
     this._phaseName,
     this._libraryScan,
     this._libraryList,
+    this._libraryAddManual,
+    this._launchGame,
+    this._cover,
     this._deploy,
     this._restore,
     this._inspect,
@@ -59,6 +62,9 @@ final class CoreLibrary {
   final _PhaseNameDart _phaseName;
   final _JsonDart _libraryScan;
   final _JsonDart _libraryList;
+  final _RequestDart _libraryAddManual;
+  final _RequestDart _launchGame;
+  final _RequestDart _cover;
   final _RequestDart _deploy;
   final _RequestDart _restore;
   final _RequestDart _inspect;
@@ -101,6 +107,15 @@ final class CoreLibrary {
           ),
           library.lookupFunction<_JsonNative, _JsonDart>(
             'fgm_library_list_json',
+          ),
+          library.lookupFunction<_RequestNative, _RequestDart>(
+            'fgm_library_add_manual_json',
+          ),
+          library.lookupFunction<_RequestNative, _RequestDart>(
+            'fgm_launch_game_json',
+          ),
+          library.lookupFunction<_RequestNative, _RequestDart>(
+            'fgm_cover_json',
           ),
           library.lookupFunction<_RequestNative, _RequestDart>(
             'fgm_deploy_json',
@@ -200,6 +215,13 @@ final class CoreLibrary {
 
   /// Reads the cached library and returns the JSON reply.
   String? listLibraryJson() => _json(_libraryList);
+
+  String? libraryAddManualJson(String request) =>
+      _request(_libraryAddManual, request);
+
+  String? launchGameJson(String request) => _request(_launchGame, request);
+
+  String? coverJson(String request) => _request(_cover, request);
 
   String? deployJson(String request) => _request(_deploy, request);
 

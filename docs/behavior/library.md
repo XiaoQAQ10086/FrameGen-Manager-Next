@@ -97,10 +97,13 @@ Steam junk 跳过（精确名称）：`steamworks common redistributables`、`st
 - `fgm-infra/src/library/steam_locator.rs`：HKCU/HKLM Steam 路径 + Program Files 回退。
 - `fgm-infra/src/library/epic_locator.rs`：`%ProgramData%\Epic\EpicGamesLauncher\Data\Manifests`。
 - `fgm-infra/src/library/library_scanner.rs`：聚合 Steam → Epic → 散装，按安装目录大小写不敏感去重。
+- `fgm-infra/src/library/library_service.rs`：扫描时保留手动条目（手动优先，按安装目录去重）、丢弃 `ignoredIds`、写回缓存；`add_manual` 用文件选择器结果建条目（名称优先 PE `ProductName`，否则文件名；id 为路径哈希），同一目录重复添加会替换旧条目；`launch` 从缓存按 id 取游戏，Steam/Epic 走协议，散装/手动/WeGame 直接启动渲染 EXE，Xbox 返回不支持。
+- `fgm-infra/src/library/cover_service.rs`：Steam 封面按 appid 下载到 `cache/covers/<appid>.jpg`，失败时删除半成品并返回空；Epic 暂无封面来源。
 - `fgm-infra/src/platform/drive_roots.rs`：固定/可移动盘符枚举。
+- `fgm-ffi/src/commands_library.rs`：`fgm_library_add_manual_json`（无路径时打开原生选择器，取消返回 `cancelled`）、`fgm_launch_game_json`、`fgm_cover_json`。
 - CLI：`fgm-next library scan [--root <dir>]...`、`fgm-next library list`。
-- 测试：`pe_imports.rs`、`render_exe.rs`、`graphics_api.rs`、`library_cache.rs`、`steam_scanner.rs`、`epic_scanner.rs`、`library_scanner.rs`。
-- 尚未迁移：WeGame/Xbox 扫描、封面。
+- 测试：`pe_imports.rs`、`render_exe.rs`、`graphics_api.rs`、`library_cache.rs`、`steam_scanner.rs`、`epic_scanner.rs`、`library_scanner.rs`、`tests/library_service.rs`（手动添加、去重、缺失文件）。
+- 尚未迁移：WeGame/Xbox 扫描、Epic 封面、移除游戏/忽略列表 UI、部署弹窗手动覆盖渲染 EXE。
 
 ## 真实机器对照（2026-10-29）
 

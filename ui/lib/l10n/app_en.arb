@@ -26,6 +26,10 @@
   "gameLibraryEmpty": "No games yet. Scan to discover installed games.",
   "smSubtitle": "Turn Smooth Motion on per game and manage its driver profile.",
   "scanGames": "Scan games",
+  "addGame": "Add game",
+  "addGameFailed": "Could not add the game.",
+  "launchGame": "Launch game",
+  "launchFailed": "Could not launch the game.",
   "scanningGames": "Scanning...",
   "gamesCount": "{count} games",
   "@gamesCount": {

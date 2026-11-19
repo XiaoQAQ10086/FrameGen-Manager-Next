@@ -6,14 +6,14 @@ use std::sync::LazyLock;
 
 use fgm_core::operation::OperationPhase;
 use fgm_domain::error::{AppError, ErrorCode};
-use fgm_infra::library::{LibraryCache, LibraryScanner, LibraryStore};
+use fgm_infra::library::LibraryService;
 use fgm_infra::paths::AppPaths;
-use fgm_infra::platform::DriveRoots;
 use serde_json::{Value, json};
 
 mod commands;
 mod commands_anr;
 mod commands_dlss5;
+mod commands_library;
 mod commands_sm;
 mod commands_update;
 
@@ -69,6 +69,24 @@ pub extern "C" fn fgm_library_list_json() -> *mut c_char {
         Ok(games) => json!({ "ok": true, "games": games }),
         Err(error) => error_json(&error),
     })
+}
+
+/// Adds a manually selected executable to the library.
+#[unsafe(no_mangle)]
+pub extern "C" fn fgm_library_add_manual_json(request: *const u8, length: usize) -> *mut c_char {
+    execute_request(request, length, commands_library::add_manual)
+}
+
+/// Launches a library game through its launcher or render executable.
+#[unsafe(no_mangle)]
+pub extern "C" fn fgm_launch_game_json(request: *const u8, length: usize) -> *mut c_char {
+    execute_request(request, length, commands_library::launch)
+}
+
+/// Returns the cached cover path for a Steam game, downloading it on demand.
+#[unsafe(no_mangle)]
+pub extern "C" fn fgm_cover_json(request: *const u8, length: usize) -> *mut c_char {
+    execute_request(request, length, commands_library::cover)
 }
 
 /// Returns GPU name, driver version and route.
@@ -279,22 +297,12 @@ pub unsafe extern "C" fn fgm_string_free(value: *mut c_char) {
 fn scan_library() -> Result<Vec<fgm_domain::library::GameEntry>, AppError> {
     let paths = AppPaths::create_default(None)?;
     paths.ensure_created()?;
-    let roots = DriveRoots::roots();
-    let games = LibraryScanner::scan(&roots);
-
-    let store = LibraryStore::new(paths.library().join("library.json"));
-    let mut cache = store.load()?;
-    cache.schema_version = 1;
-    cache.games = games;
-    store.save(&cache)?;
-    Ok(cache.games)
+    LibraryService::scan(&paths)
 }
 
 fn list_library() -> Result<Vec<fgm_domain::library::GameEntry>, AppError> {
     let paths = AppPaths::create_default(None)?;
-    let store = LibraryStore::new(paths.library().join("library.json"));
-    let cache = store.load().unwrap_or_else(|_| LibraryCache::default());
-    Ok(cache.games)
+    Ok(LibraryService::list(&paths))
 }
 
 fn execute(action: impl FnOnce() -> Value) -> *mut c_char {

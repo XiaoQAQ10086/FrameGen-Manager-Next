@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:isolate';
 
 import 'core_library.dart';
+import 'library_add_result.dart';
 import 'library_game.dart';
 import 'library_snapshot.dart';
 
@@ -25,6 +26,61 @@ final class LibraryBridge {
       return local?.scanLibraryJson();
     });
     return _parse(reply);
+  }
+
+  /// Opens the native executable picker and stores the selection.
+  static Future<LibraryAddResult> addManual() async {
+    final String? reply = await Isolate.run(() {
+      final CoreLibrary? core = CoreLibrary.tryOpen();
+      return core?.libraryAddManualJson('{}');
+    });
+    return LibraryAddResult.parse(reply);
+  }
+
+  /// Starts the game through Steam/Epic or its render executable.
+  static Future<bool> launch(LibraryGame game) async {
+    final String request = jsonEncode(<String, Object?>{'gameId': game.id});
+    final String? reply = await Isolate.run(() {
+      final CoreLibrary? core = CoreLibrary.tryOpen();
+      return core?.launchGameJson(request);
+    });
+    return _ok(reply);
+  }
+
+  /// Returns the local cover path, downloading it on first use.
+  static Future<String?> cover(LibraryGame game) async {
+    if (game.source != 'steam') {
+      return null;
+    }
+    final String request = jsonEncode(<String, Object?>{'gameId': game.id});
+    final String? reply = await Isolate.run(() {
+      final CoreLibrary? core = CoreLibrary.tryOpen();
+      return core?.coverJson(request);
+    });
+    if (reply == null) {
+      return null;
+    }
+    try {
+      final Object? decoded = jsonDecode(reply);
+      if (decoded is! Map || decoded['ok'] != true) {
+        return null;
+      }
+      return decoded['path'] as String?;
+    } on FormatException {
+      return null;
+    }
+  }
+
+  static bool _ok(String? reply) {
+    if (reply == null) {
+      return false;
+    }
+    try {
+      final Object? decoded = jsonDecode(reply);
+      return decoded is Map && decoded['ok'] == true;
+    } on FormatException {
+      return false;
+    }
   }
 
   static LibrarySnapshot _parse(String? reply) {

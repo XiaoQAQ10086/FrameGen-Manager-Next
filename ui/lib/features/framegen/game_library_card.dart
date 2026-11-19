@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:material_ui/material_ui.dart';
 
 import '../../bridge/library_game.dart';
@@ -13,9 +15,13 @@ class GameLibraryCard extends StatelessWidget {
     required this.loading,
     required this.error,
     required this.onScan,
+    required this.onAddManual,
+    required this.onLaunch,
     required this.onDeploy,
     required this.onRestore,
     this.busyGameId,
+    this.showCovers = true,
+    this.covers = const <String, String?>{},
   });
 
   final AppLocalizations l10n;
@@ -23,9 +29,13 @@ class GameLibraryCard extends StatelessWidget {
   final bool loading;
   final String? error;
   final Future<void> Function() onScan;
+  final Future<void> Function() onAddManual;
+  final Future<void> Function(LibraryGame game) onLaunch;
   final Future<void> Function(LibraryGame game) onDeploy;
   final Future<void> Function(LibraryGame game) onRestore;
   final String? busyGameId;
+  final bool showCovers;
+  final Map<String, String?> covers;
 
   @override
   Widget build(BuildContext context) {
@@ -66,12 +76,18 @@ class GameLibraryCard extends StatelessWidget {
                         l10n.scanningGames,
                         style: Theme.of(context).textTheme.labelMedium,
                       )
-                    else
+                    else ...<Widget>[
+                      TextButton.icon(
+                        onPressed: onAddManual,
+                        icon: const Icon(Icons.add, size: 16),
+                        label: Text(l10n.addGame),
+                      ),
                       TextButton.icon(
                         onPressed: onScan,
                         icon: const Icon(Icons.refresh, size: 16),
                         label: Text(l10n.scanGames),
                       ),
+                    ],
                   ],
                 ),
               ],
@@ -144,10 +160,21 @@ class GameLibraryCard extends StatelessWidget {
                 style: Theme.of(context).textTheme.bodyMedium,
               ),
               const SizedBox(height: 12),
-              FilledButton.icon(
-                onPressed: onScan,
-                icon: const Icon(Icons.search, size: 16),
-                label: Text(l10n.scanGames),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: <Widget>[
+                  FilledButton.icon(
+                    onPressed: onScan,
+                    icon: const Icon(Icons.search, size: 16),
+                    label: Text(l10n.scanGames),
+                  ),
+                  const SizedBox(width: 8),
+                  OutlinedButton.icon(
+                    onPressed: onAddManual,
+                    icon: const Icon(Icons.add, size: 16),
+                    label: Text(l10n.addGame),
+                  ),
+                ],
               ),
             ],
           ),
@@ -164,6 +191,8 @@ class GameLibraryCard extends StatelessWidget {
         game: games[index],
         l10n: l10n,
         busy: busyGameId == games[index].id,
+        coverPath: showCovers ? covers[games[index].id] : null,
+        onLaunch: onLaunch,
         onDeploy: onDeploy,
         onRestore: onRestore,
       ),
@@ -176,6 +205,8 @@ class _GameRow extends StatelessWidget {
     required this.game,
     required this.l10n,
     required this.busy,
+    required this.coverPath,
+    required this.onLaunch,
     required this.onDeploy,
     required this.onRestore,
   });
@@ -183,6 +214,8 @@ class _GameRow extends StatelessWidget {
   final LibraryGame game;
   final AppLocalizations l10n;
   final bool busy;
+  final String? coverPath;
+  final Future<void> Function(LibraryGame game) onLaunch;
   final Future<void> Function(LibraryGame game) onDeploy;
   final Future<void> Function(LibraryGame game) onRestore;
 
@@ -192,19 +225,7 @@ class _GameRow extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 12),
       child: Row(
         children: <Widget>[
-          Container(
-            width: 36,
-            height: 36,
-            decoration: BoxDecoration(
-              color: AppTokens.accentSoft,
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: const Icon(
-              Icons.sports_esports,
-              size: 18,
-              color: AppTokens.accent,
-            ),
-          ),
+          _Cover(game: game, path: coverPath),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
@@ -243,6 +264,11 @@ class _GameRow extends StatelessWidget {
             )
           else ...<Widget>[
             _RowAction(
+              icon: Icons.play_arrow,
+              tooltip: l10n.launchGame,
+              onPressed: game.canLaunch ? () => onLaunch(game) : null,
+            ),
+            _RowAction(
               icon: Icons.system_update_alt,
               tooltip: l10n.deploy,
               onPressed: () => onDeploy(game),
@@ -268,7 +294,7 @@ class _RowAction extends StatelessWidget {
 
   final IconData icon;
   final String tooltip;
-  final VoidCallback onPressed;
+  final VoidCallback? onPressed;
 
   @override
   Widget build(BuildContext context) {
@@ -329,4 +355,43 @@ String _apiLabel(String api) {
     'opengl' => 'OpenGL',
     _ => 'Unknown',
   };
+}
+
+class _Cover extends StatelessWidget {
+  const _Cover({required this.game, required this.path});
+
+  final LibraryGame game;
+  final String? path;
+
+  @override
+  Widget build(BuildContext context) {
+    final Widget placeholder = Container(
+      width: 36,
+      height: 36,
+      decoration: BoxDecoration(
+        color: AppTokens.accentSoft,
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: const Icon(
+        Icons.sports_esports,
+        size: 18,
+        color: AppTokens.accent,
+      ),
+    );
+    final String? cover = path;
+    if (cover == null || cover.isEmpty) {
+      return placeholder;
+    }
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(10),
+      child: Image.file(
+        File(cover),
+        width: 36,
+        height: 36,
+        fit: BoxFit.cover,
+        errorBuilder: (BuildContext context, Object error, StackTrace? stack) =>
+            placeholder,
+      ),
+    );
+  }
 }
