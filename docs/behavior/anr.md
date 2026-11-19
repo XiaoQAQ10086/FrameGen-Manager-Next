@@ -2,6 +2,20 @@
 
 来源：[apex-compute/ANR](https://github.com/apex-compute/ANR)。ANR FG 目前是 Beta，主程序源码未公开；本项目只负责下载/导入、代理选择、备份和还原，不修改 ANR 自身文件。
 
+## Rust 迁移状态（Phase 4）
+
+- `fgm-infra/src/archive/zip_archive.rs`：通用非 ZIP64 解压，SafePath 防路径穿越，stored/deflate。
+- `fgm-infra/src/anr/anr_package_service.rs`：
+  - 导入 zip，识别 full（`game/dxgi.dll` + `game/OptiScaler.ini`）或 addon（`Apex Neural Rendering FG/dlssg/nvngx_dlssg.dll`）。
+  - 读取 `nr_fg_package.json` 的 `version`；缓存到 `packs/anr-fg/<version>/payload/`，写 `current.json`。
+- `fgm-infra/src/anr/anr_deployment_service.rs`：
+  - full：按 `dxgi.dll` → `winmm.dll` → `version.dll` 选空闲代理，`dxgi.dll` 改名为代理槽，其余文件保持布局。
+  - addon：要求已有 `OptiScaler.ini`；写入 `OptiScaler/custom/Apex Neural Rendering FG/` 并设置 `FGInput=nvngxfg`、`FGNvngxReplacement=Apex Neural Rendering FG`。
+  - 游戏运行中返回 `GameRunning`；全部走统一部署引擎备份/写入/校验。
+  - 还原后清理本次 addon 的 custom 目录；有冲突时不清理。
+- 尚未迁移：在线下载/导入 UI、版本检查、addon 已有自定义 provider 冲突的完整判定、OptiScaler 运行时日志清理、跨模式徽章/启动游戏。
+- 测试：`tests/anr_package.rs`、`tests/anr_deployment.rs`、`tests/zip_archive.rs`。
+
 ## 支持范围
 
 - NVIDIA RTX 20/30/40/50、GTX 16；AMD RX 5000/6000/7000/9000、Steam Deck；Intel Arc A/B。
