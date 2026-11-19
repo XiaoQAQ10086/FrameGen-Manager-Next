@@ -1,3 +1,4 @@
+use std::fmt::Write as _;
 use std::fs::File;
 use std::io::Read;
 use std::path::Path;
@@ -25,13 +26,20 @@ impl FileHasher {
         }
 
         let digest = hasher.finalize();
-        let mut hex = String::with_capacity(digest.len() * 2);
-        for byte in digest {
-            use std::fmt::Write as _;
-            write!(&mut hex, "{byte:02x}").expect("writing to a String cannot fail");
-        }
-        Ok(hex)
+        Ok(hex(digest))
     }
+}
+
+pub(crate) fn sha256_hex(bytes: &[u8]) -> String {
+    hex(Sha256::digest(bytes))
+}
+
+fn hex(digest: impl IntoIterator<Item = u8>) -> String {
+    let mut value = String::new();
+    for byte in digest {
+        write!(&mut value, "{byte:02x}").expect("writing to a String cannot fail");
+    }
+    value
 }
 
 fn io_error(path: &Path, error: std::io::Error) -> AppError {
