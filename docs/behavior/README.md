@@ -29,6 +29,7 @@
 | 设置 / 封面 | `ui/settings.js`、`ui/app.js` | `Infrastructure/Settings` + `Infrastructure/Library`；Rust `fgm-infra/src/settings` | [已实现（设置，不含封面）](settings.md) |
 | 更新 | `update.rs`、`apps/electron/main.js` | Velopack + `Core/Features/Packs` | [已实现](updates.md) |
 | 网络下载 | reqwest（旧版） | `fgm-infra/src/net`（WinHTTP） | [已实现（基础下载）](network.md) |
+| 便携版 / 安装包 | Inno 6.7.4 | `build/publish-portable-next.ps1`、`installer-next.iss` | [已实现（本地构建）](packaging.md) |
 | 诊断包 | `sidecar::diagnostics_export`、`ui/settings.js` | `Core/Features/Diagnostics` | [已实现](diagnostics.md) |
 | 操作日志 | Serilog 文件 sink | `fgm-infra/src/logging` | [已实现](logging.md) |
 | 路径安全 | `util.rs::safe_join`、sidecar `checked_dir` | `Domain/Safety`；Rust `fgm-domain` + `fgm-infra` | [已实现](path-safety.md) |
