@@ -1,4 +1,5 @@
-use std::path::Path;
+use std::collections::BTreeSet;
+use std::path::{Path, PathBuf};
 
 use fgm_domain::deployment::DeploymentManifestState;
 use fgm_domain::error::{AppError, ErrorCode};
@@ -40,6 +41,7 @@ impl super::deployment_engine::DeploymentEngine {
 
         let backup_directory = store.directory(family, target_directory)?;
         let mut report = RestoreReport::default();
+        let mut touched_directories: BTreeSet<PathBuf> = BTreeSet::new();
         let kept: Vec<_> = manifest
             .files
             .iter()
@@ -88,6 +90,9 @@ impl super::deployment_engine::DeploymentEngine {
                 } else {
                     std::fs::remove_file(&target).map_err(|error| io_error(&target, error))?;
                     report.removed_files += 1;
+                }
+                if let Some(parent) = target.parent() {
+                    touched_directories.insert(parent.to_path_buf());
                 }
                 continue;
             }
@@ -143,7 +148,38 @@ impl super::deployment_engine::DeploymentEngine {
             }
         }
 
+        if report.conflicts.is_empty() {
+            prune_empty_directories(target_directory, &touched_directories);
+        }
+
         Ok(report)
+    }
+}
+
+fn prune_empty_directories(target_root: &Path, directories: &BTreeSet<PathBuf>) {
+    let mut ordered: Vec<&PathBuf> = directories.iter().collect();
+    ordered.sort_by_key(|path| std::cmp::Reverse(path.components().count()));
+    for directory in ordered {
+        let Ok(relative) = directory.strip_prefix(target_root) else {
+            continue;
+        };
+        if relative.as_os_str().is_empty() {
+            continue;
+        }
+        let mut current = Some(directory.as_path());
+        while let Some(path) = current {
+            if path == target_root {
+                break;
+            }
+            if !path.exists() {
+                current = path.parent();
+                continue;
+            }
+            if std::fs::remove_dir(path).is_err() {
+                break;
+            }
+            current = path.parent();
+        }
     }
 }
 
