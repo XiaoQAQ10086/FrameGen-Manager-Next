@@ -89,8 +89,13 @@ Steam junk 跳过（精确名称）：`steamworks common redistributables`、`st
 - `fgm-infra/src/library/library_cache.rs` / `library_store.rs`：`library.json` 缓存。
   - 字段：`schemaVersion`、`games`、`ignoredIds`、`targetOverrides`。
   - 缺失返回默认；损坏重命名为 `library.json.bad` 后从空库开始；写入走原子替换。
-- 测试：`rust/crates/fgm-infra/tests/pe_imports.rs`、`render_exe.rs`、`graphics_api.rs`、`library_cache.rs`。
-- 尚未迁移：Steam/Epic/WeGame/Xbox 启动器扫描、封面。
+- `fgm-infra/src/library/steam_game_scanner.rs`：Steam 库扫描。
+  - 解析 `libraryfolders.vdf` 的 `path`，兼容数字键和转义反斜杠。
+  - 解析 `appmanifest_*.acf` 的 `appid/name/installdir`。
+  - 跳过指定 junk 名称、`steam linux runtime ` 前缀和 `proton <数字>`。
+- `fgm-infra/src/library/epic_game_scanner.rs`：Epic `.item` 清单扫描；`bIsApplication=false` 跳过。
+- 测试：`pe_imports.rs`、`render_exe.rs`、`graphics_api.rs`、`library_cache.rs`、`steam_scanner.rs`、`epic_scanner.rs`。
+- 尚未迁移：Steam 安装目录定位、WeGame/Xbox 扫描、封面。
 
 ## 真实机器对照（2026-10-29）
 
