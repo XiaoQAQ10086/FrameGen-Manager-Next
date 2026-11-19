@@ -3,15 +3,17 @@ import 'package:material_ui/material_ui.dart';
 import '../bridge/core_library.dart';
 import '../design/app_tokens.dart';
 import '../features/framegen/framegen_page.dart';
+import '../features/settings/settings_page.dart';
 import '../features/smooth_motion/smooth_motion_page.dart';
 import '../l10n/app_localizations.dart';
 import 'app_section.dart';
 
 /// Root layout: top navigation, page host and status bar.
 class AppShell extends StatefulWidget {
-  const AppShell({super.key, this.core});
+  const AppShell({super.key, this.core, this.onLanguageChanged});
 
   final CoreLibrary? core;
+  final ValueChanged<String>? onLanguageChanged;
 
   @override
   State<AppShell> createState() => _AppShellState();
@@ -41,6 +43,10 @@ class _AppShellState extends State<AppShell> {
                 child: switch (_section) {
                   AppSection.frameGeneration => FrameGenPage(core: widget.core),
                   AppSection.smoothMotion => SmoothMotionPage(core: widget.core),
+                  AppSection.settings => SettingsPage(
+                    core: widget.core,
+                    onLanguageChanged: widget.onLanguageChanged,
+                  ),
                   _ => _PlaceholderPage(section: _section),
                 },
               ),

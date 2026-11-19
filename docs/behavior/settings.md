@@ -3,6 +3,16 @@
 来源：旧版 `ui/settings.js`、`ui/app.js` 的封面/设置部分。
 新实现：`Domain/Settings`、`Infrastructure/Settings`、`Infrastructure/Library/SteamCoverService.cs`。
 
+## Rust 迁移状态（Phase 4）
+
+- `fgm-infra/src/settings/`：`AppSettings`、`AppLanguage`、`SettingsStore`。
+  - 读取 `config/app.json`；缺失返回默认；损坏隔离为 `app.json.bad`；写入原子替换。
+  - 默认 `schemaVersion=3`、`language=system`、`theme=light`、`autoScanOnStartup=false`、`showCovers=true`、`autoInstallReframework=true`。
+- FFI：`fgm_settings_get_json`、`fgm_settings_set_json`。
+- Flutter：设置页语言下拉 + 三个开关；语言切换立即更新 `MaterialApp.locale`，其余设置立即保存。
+- 尚未迁移：旧 schema 迁移、封面、系统语言检测细节、设置页的 GPU/日志入口。
+- 测试：`rust/crates/fgm-infra/tests/settings_store.rs`。
+
 ## 设置文件
 
 - 位置：`<数据目录>\config\app.json`。

@@ -26,7 +26,7 @@
 | DLSS5 / ReShade | `dlss5.rs`、`ui/dlss5.js` | `Core/Features/Dlss5` + `Infrastructure/Processes` | [已实现（安装/还原/卸载）](dlss5.md) |
 | GPU / 驱动闸门 | `gpu.rs`、`scan.rs::classify_gpu`、`ui/settings.js` | `Domain/Gpu` + `Infrastructure/Gpu`；Rust `fgm-infra/src/gpu` | [已实现](gpu.md) |
 | 显卡名称伪装 | `gpu.rs::apply/restore/run_elevated` | `Infrastructure/Gpu` + `FrameGenManagerNext.Elevated` | [已实现](gpu-spoof.md) |
-| 设置 / 封面 | `ui/settings.js`、`ui/app.js` | `Infrastructure/Settings` + `Infrastructure/Library` | [已实现](settings.md) |
+| 设置 / 封面 | `ui/settings.js`、`ui/app.js` | `Infrastructure/Settings` + `Infrastructure/Library`；Rust `fgm-infra/src/settings` | [已实现（设置，不含封面）](settings.md) |
 | 更新 | `update.rs`、`apps/electron/main.js` | Velopack + `Core/Features/Packs` | [已实现](updates.md) |
 | 诊断包 | `sidecar::diagnostics_export`、`ui/settings.js` | `Core/Features/Diagnostics` | [已实现](diagnostics.md) |
 | 路径安全 | `util.rs::safe_join`、sidecar `checked_dir` | `Domain/Safety`；Rust `fgm-domain` + `fgm-infra` | [已实现](path-safety.md) |

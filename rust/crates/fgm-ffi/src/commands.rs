@@ -194,6 +194,22 @@ pub(crate) fn absolute(path: &Path) -> Result<PathBuf, AppError> {
     })
 }
 
+pub(crate) fn settings_get() -> Result<Value, AppError> {
+    let paths = AppPaths::create_default(None)?;
+    let store = fgm_infra::settings::SettingsStore::new(paths.config().join("app.json"));
+    let settings = store.load()?;
+    Ok(json!({ "ok": true, "settings": settings }))
+}
+
+pub(crate) fn settings_set(request: &str) -> Result<Value, AppError> {
+    let settings: fgm_infra::settings::AppSettings = parse(request)?;
+    let paths = AppPaths::create_default(None)?;
+    paths.ensure_created()?;
+    let store = fgm_infra::settings::SettingsStore::new(paths.config().join("app.json"));
+    store.save(&settings)?;
+    Ok(json!({ "ok": true, "settings": settings }))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

@@ -68,6 +68,21 @@ pub extern "C" fn fgm_library_list_json() -> *mut c_char {
     })
 }
 
+/// Returns the current app settings.
+#[unsafe(no_mangle)]
+pub extern "C" fn fgm_settings_get_json() -> *mut c_char {
+    execute(|| match commands::settings_get() {
+        Ok(value) => value,
+        Err(error) => error_json(&error),
+    })
+}
+
+/// Replaces the app settings with a UTF-8 JSON object.
+#[unsafe(no_mangle)]
+pub extern "C" fn fgm_settings_set_json(request: *const u8, length: usize) -> *mut c_char {
+    execute_request(request, length, commands::settings_set)
+}
+
 /// Deploys a pack. `request` is a UTF-8 JSON object; returns a JSON envelope.
 #[unsafe(no_mangle)]
 pub extern "C" fn fgm_deploy_json(request: *const u8, length: usize) -> *mut c_char {

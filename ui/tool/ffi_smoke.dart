@@ -45,4 +45,12 @@ void main() {
   } else {
     stdout.writeln('inspect error envelope ok');
   }
+
+  final String? settingsReply = core.settingsGetJson();
+  if (settingsReply == null || !settingsReply.contains('"ok":true')) {
+    stderr.writeln('unexpected settings reply: $settingsReply');
+    exitCode = 1;
+  } else {
+    stdout.writeln('settings reply ok');
+  }
 }
