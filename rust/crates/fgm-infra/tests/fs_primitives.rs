@@ -46,6 +46,25 @@ fn atomic_write_creates_and_replaces() {
 }
 
 #[test]
+fn atomic_copy_preserves_bytes_and_leaves_no_temp_files() {
+    let dir = TestDir::new("fs-copy");
+    let source = dir.path().join("source.bin");
+    let destination = dir.path().join("nested").join("destination.bin");
+    let contents: Vec<u8> = (0..1024 * 1024).map(|value| (value % 251) as u8).collect();
+    fs::write(&source, &contents).unwrap();
+
+    AtomicFile::copy(&source, &destination).unwrap();
+
+    assert_eq!(fs::read(&destination).unwrap(), contents);
+    let leftovers = fs::read_dir(destination.parent().unwrap())
+        .unwrap()
+        .filter_map(Result::ok)
+        .filter(|entry| entry.file_name().to_string_lossy().ends_with(".tmp"))
+        .count();
+    assert_eq!(leftovers, 0);
+}
+
+#[test]
 fn target_lock_is_exclusive_and_releases_on_drop() {
     let dir = TestDir::new("fs-lock");
     let lock_dir = dir.path().join("locks");

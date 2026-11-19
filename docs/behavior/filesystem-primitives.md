@@ -23,6 +23,8 @@ Rust 实现：`rust/crates/fgm-infra/src/fs/`。
 | FSATOM-003 | 写完 | `flush` + `sync_all` 后 `rename` 覆盖目标 | `FileLocked` / `Internal` |
 | FSATOM-004 | 任一步失败 | 删除临时文件，不留下半写文件 | — |
 | FSATOM-005 | Windows 共享冲突（错误 32/33） | 映射为 `FileLocked` | `FileLocked` |
+| FSATOM-006 | `copy` 源不是普通文件 | 不创建目标，返回 `FileNotFound` | `FileNotFound` |
+| FSATOM-007 | `copy` 成功 | 流式复制到临时文件，再原子替换目标；不整文件读入内存 | — |
 
 不保证目录项持久化（不调用父目录 fsync）；这是 Windows 桌面应用的取舍。
 

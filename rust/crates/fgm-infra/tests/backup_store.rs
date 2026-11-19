@@ -4,6 +4,7 @@ use std::path::{Path, PathBuf};
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use fgm_domain::deployment::{DeployedFileRecord, DeploymentManifest, DeploymentManifestState};
+use fgm_domain::error::ErrorCode;
 use fgm_infra::deployment::BackupStore;
 
 #[test]
@@ -92,6 +93,43 @@ fn backup_file_path_stays_under_the_backup_directory() {
             .backup_file_path(&backup_directory, "../escape.dll")
             .is_err()
     );
+}
+
+#[test]
+fn stores_and_restores_a_backup_file() {
+    let dir = TestDir::new("backup-file");
+    let store = BackupStore::new(dir.path().join("backups"));
+    let backup_directory = dir.path().join("backups").join("framegen.sm86").join("key");
+    let source = dir.path().join("game").join("version.dll");
+    let target = dir.path().join("game").join("version.dll");
+    fs::create_dir_all(source.parent().unwrap()).unwrap();
+    fs::write(&source, b"original").unwrap();
+
+    let backup = store
+        .store_file(&backup_directory, "version.dll", &source)
+        .unwrap();
+    assert_eq!(fs::read(&backup).unwrap(), b"original");
+
+    fs::write(&target, b"deployed").unwrap();
+    store
+        .restore_file(&backup_directory, "version.dll", &target)
+        .unwrap();
+    assert_eq!(fs::read(&target).unwrap(), b"original");
+}
+
+#[test]
+fn restoring_a_missing_backup_is_an_error() {
+    let dir = TestDir::new("backup-file-missing");
+    let store = BackupStore::new(dir.path().join("backups"));
+    let backup_directory = dir.path().join("backups").join("framegen.sm86").join("key");
+    let target = dir.path().join("game").join("version.dll");
+    fs::create_dir_all(target.parent().unwrap()).unwrap();
+
+    let error = store
+        .restore_file(&backup_directory, "version.dll", &target)
+        .unwrap_err();
+
+    assert_eq!(error.code, ErrorCode::FileNotFound);
 }
 
 fn sample_manifest(target: PathBuf) -> DeploymentManifest {

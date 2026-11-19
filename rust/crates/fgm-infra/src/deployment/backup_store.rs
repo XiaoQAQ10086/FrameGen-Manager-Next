@@ -88,6 +88,34 @@ impl BackupStore {
     ) -> Result<PathBuf, AppError> {
         TargetPath::combine(backup_directory, relative_path)
     }
+
+    /// Copies a target file into the backup directory using an atomic replace.
+    pub fn store_file(
+        &self,
+        backup_directory: &Path,
+        relative_path: &str,
+        source: &Path,
+    ) -> Result<PathBuf, AppError> {
+        let destination = self.backup_file_path(backup_directory, relative_path)?;
+        AtomicFile::copy(source, &destination)?;
+        Ok(destination)
+    }
+
+    /// Restores a backed-up file over its target using an atomic replace.
+    pub fn restore_file(
+        &self,
+        backup_directory: &Path,
+        relative_path: &str,
+        target: &Path,
+    ) -> Result<(), AppError> {
+        let source = self.backup_file_path(backup_directory, relative_path)?;
+        if !source.is_file() {
+            return Err(AppError::new(ErrorCode::FileNotFound)
+                .with("path", source.display().to_string())
+                .with("reason", "backup file is missing"));
+        }
+        AtomicFile::copy(&source, target)
+    }
 }
 
 fn quarantine(path: &Path) -> Option<PathBuf> {

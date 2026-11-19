@@ -1,4 +1,4 @@
-use std::fs::OpenOptions;
+use std::fs::{File, OpenOptions};
 use std::io::Write;
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicU64, Ordering};
@@ -12,12 +12,7 @@ pub struct AtomicFile;
 
 impl AtomicFile {
     pub fn write(path: &Path, contents: &[u8]) -> Result<(), AppError> {
-        let parent = path.parent().ok_or_else(|| {
-            AppError::new(ErrorCode::InvalidPath)
-                .with("path", path.display().to_string())
-                .with("reason", "path has no parent directory")
-        })?;
-
+        let parent = parent_directory(path)?;
         std::fs::create_dir_all(parent).map_err(|error| io_error(parent, error))?;
 
         let temp = temp_path(path);
@@ -33,6 +28,37 @@ impl AtomicFile {
     pub fn write_text(path: &Path, contents: &str) -> Result<(), AppError> {
         Self::write(path, contents.as_bytes())
     }
+
+    /// Copies a file through a sibling temp file and an atomic rename.
+    pub fn copy(source: &Path, destination: &Path) -> Result<(), AppError> {
+        let mut input = File::open(source).map_err(|error| io_error(source, error))?;
+        if !source.is_file() {
+            return Err(AppError::new(ErrorCode::FileNotFound)
+                .with("path", source.display().to_string())
+                .with("reason", "source is not a file"));
+        }
+
+        let parent = parent_directory(destination)?;
+        std::fs::create_dir_all(parent).map_err(|error| io_error(parent, error))?;
+
+        let temp = temp_path(destination);
+        let result = copy_temp(&mut input, &temp).and_then(|()| {
+            std::fs::rename(&temp, destination).map_err(|error| io_error(destination, error))
+        });
+
+        if result.is_err() {
+            let _ = std::fs::remove_file(&temp);
+        }
+        result
+    }
+}
+
+fn parent_directory(path: &Path) -> Result<&Path, AppError> {
+    path.parent().ok_or_else(|| {
+        AppError::new(ErrorCode::InvalidPath)
+            .with("path", path.display().to_string())
+            .with("reason", "path has no parent directory")
+    })
 }
 
 fn write_temp(path: &Path, contents: &[u8]) -> Result<(), AppError> {
@@ -45,6 +71,17 @@ fn write_temp(path: &Path, contents: &[u8]) -> Result<(), AppError> {
     file.write_all(contents)
         .map_err(|error| io_error(path, error))?;
     file.sync_all().map_err(|error| io_error(path, error))
+}
+
+fn copy_temp(input: &mut File, path: &Path) -> Result<(), AppError> {
+    let mut output = OpenOptions::new()
+        .write(true)
+        .create_new(true)
+        .open(path)
+        .map_err(|error| io_error(path, error))?;
+
+    std::io::copy(input, &mut output).map_err(|error| io_error(path, error))?;
+    output.sync_all().map_err(|error| io_error(path, error))
 }
 
 fn temp_path(path: &Path) -> PathBuf {

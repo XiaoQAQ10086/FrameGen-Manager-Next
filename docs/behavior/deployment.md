@@ -32,6 +32,7 @@ manifest 状态：`Installing → Installed / RolledBack / Partial`，还原后 
   - family 非法时用 `unknown`；key 由目标绝对路径生成
   - 损坏 manifest 移到 `manifest.json.bad`，按“无 manifest”处理
   - 保存走同目录临时文件 + 原子替换
+  - `store_file` / `restore_file` 流式复制并原子替换，不整文件读入内存
   - 备份内相对路径只允许通过 `TargetPath::combine`
 - `fgm-infra/src/fs/`：`AtomicFile`、`DeploymentKey`、`TargetLock`（见 [filesystem-primitives.md](filesystem-primitives.md)）
 - `fgm-infra/src/process/game_process_probe.rs`：部署/还原前的游戏进程检测
