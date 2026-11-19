@@ -67,15 +67,23 @@ Steam junk 跳过（精确名称）：`steamworks common redistributables`、`st
 
 `dxgi.dll` 单独存在不算证据；但目录名（如 Witcher 3 的 `x64_dx12`）可作为导入表之后的补充证据。`Unknown` 不阻断扫描，DLSS5 详情页会使用用户选中的 API。
 
-## Rust 迁移状态（Phase 2）
+## Rust 迁移状态（Phase 3）
 
 - `fgm-infra/src/pe/pe_imports.rs`：读取 PE32/PE32+ 的 Import 与 Delay Import 表。
   - 支持最多 96 个 section、4096 个 descriptor、模块名最多 512 字节。
   - RVA 只在 section 覆盖范围内换算；越界读取返回 `ErrorCode.InvalidPe`，不 panic。
   - 模块名按大小写不敏感去重，保留原始大小写。
   - 无效 PE 返回 `InvalidPe`；调用方按“没有导入证据”处理，不阻断游戏扫描。
-- 测试：`rust/crates/fgm-infra/tests/pe_imports.rs`，使用合成 PE32 覆盖普通导入、延迟导入、空导入和截断输入。
-- 上述 API 优先级（文件名 token、DXVK 包装器、runtime DLL）尚未迁移，属于 Phase 3 游戏库。
+- `fgm-infra/src/library/render_exe_selector.rs`：渲染 EXE 选择。
+  - 深度 ≤5、最多 30,000 条目、不跟随 reparse point。
+  - 跳过 `_CommonRedist`、`DirectX`、`vcredist`、`EasyAntiCheat`、`Engine` 等目录。
+  - 文件名排除、`-win64-shipping`/`-win32-shipping`、`Binaries/Win64`、安装目录名和文件大小评分。
+  - 最高分 ≤0 返回 `None`，不猜。
+- `fgm-infra/src/library/graphics_api_detector.rs`：图形 API 检测。
+  - 优先级：Vulkan wrapper DLL → EXE 文件名 token → PE 导入 → 同目录 runtime DLL → 引擎 DLL 导入 → `Unknown`。
+  - 支持 DX12/Vulkan/DX11/DX10/DX9/OpenGL。
+- 测试：`rust/crates/fgm-infra/tests/pe_imports.rs`、`render_exe.rs`、`graphics_api.rs`。
+- 尚未迁移：启动器扫描（Steam/Epic/WeGame/Xbox/散装）、library.json 缓存、封面。
 
 ## 真实机器对照（2026-10-29）
 
