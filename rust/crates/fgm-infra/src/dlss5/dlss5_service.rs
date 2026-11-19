@@ -61,6 +61,12 @@ impl Dlss5Service {
         paths: &AppPaths,
     ) -> Result<Dlss5Report, AppError> {
         let pack = PackJson::load(&pack_directory.join("pack.json"))?;
+        let legacy = legacy_residue(target_directory);
+        if !legacy.is_empty() {
+            return Err(AppError::new(ErrorCode::Conflict)
+                .with("reason", "legacy DLSS5/RenoDX files must be cleaned first")
+                .with("files", legacy.join(",")));
+        }
         ReframeworkService::install_before_deploy(game_exe, target_directory, app_version, paths)?;
         let proxy_module = Self::proxy_for(api)?;
         let setup_source = installer_source(&pack.steps).ok_or_else(|| {
@@ -170,6 +176,23 @@ impl Dlss5Service {
             legacy_files: legacy_residue(target_directory),
             details: inspection.details,
         })
+    }
+
+    /// Deletes legacy RenoDX/DLSS5 files that this app never deployed.
+    pub fn clean_legacy(target_directory: &Path) -> Result<usize, AppError> {
+        let mut removed = 0;
+        for name in legacy_residue(target_directory) {
+            let path = TargetPath::combine(target_directory, &name)?;
+            if path.is_file() {
+                std::fs::remove_file(&path).map_err(|error| {
+                    AppError::new(ErrorCode::AccessDenied)
+                        .with("path", path.display().to_string())
+                        .with("reason", error.to_string())
+                })?;
+                removed += 1;
+            }
+        }
+        Ok(removed)
     }
 
     /// Restores everything the install wrote, including the ReShade proxy and

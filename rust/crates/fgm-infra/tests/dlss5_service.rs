@@ -89,6 +89,33 @@ fn uninstall_keeps_a_reshade_ini_that_predates_the_install() {
 }
 
 #[test]
+fn install_refuses_while_legacy_files_exist() {
+    let fixture = Fixture::new("dlss5-legacy-refuse");
+    fs::write(fixture.target.join("renodx-dlss-SF-1.addon64"), b"legacy").unwrap();
+
+    let error = fixture.install().unwrap_err();
+
+    assert_eq!(error.code, ErrorCode::Conflict);
+    assert!(!fixture.target.join("shader.fx").exists());
+    assert!(fixture.target.join("renodx-dlss-SF-1.addon64").exists());
+}
+
+#[test]
+fn clean_legacy_removes_only_known_residue() {
+    let fixture = Fixture::new("dlss5-legacy-clean");
+    fs::write(fixture.target.join("renodx-dlss-SF-1.addon64"), b"legacy").unwrap();
+    fs::write(fixture.target.join("nvngx_dlssnr.dll"), b"legacy").unwrap();
+    fs::write(fixture.target.join("keep.dll"), b"keep").unwrap();
+
+    let removed = Dlss5Service::clean_legacy(&fixture.target).unwrap();
+
+    assert_eq!(removed, 2);
+    assert!(!fixture.target.join("renodx-dlss-SF-1.addon64").exists());
+    assert!(!fixture.target.join("nvngx_dlssnr.dll").exists());
+    assert!(fixture.target.join("keep.dll").exists());
+}
+
+#[test]
 fn inspect_reports_state_proxy_and_legacy_residue() {
     let fixture = Fixture::new("dlss5-inspect");
     let paths = fixture.paths();
@@ -102,13 +129,14 @@ fn inspect_reports_state_proxy_and_legacy_residue() {
     fs::write(fixture.target.join("renodx-dlss-SF-1.addon64"), b"legacy").unwrap();
     let legacy = Dlss5Service::inspect(&fixture.target, Some(&pack), &paths).unwrap();
     assert_eq!(legacy.legacy_files, vec!["renodx-dlss-SF-1.addon64"]);
+    assert_eq!(Dlss5Service::clean_legacy(&fixture.target).unwrap(), 1);
 
     fixture.install().unwrap();
     let after = Dlss5Service::inspect(&fixture.target, Some(&pack), &paths).unwrap();
     assert_eq!(after.state, DeploymentState::Installed);
     assert_eq!(after.proxy_module.as_deref(), Some("dxgi.dll"));
     assert!(after.re_shade_present);
-    assert_eq!(after.legacy_files, vec!["renodx-dlss-SF-1.addon64"]);
+    assert!(after.legacy_files.is_empty());
 
     fixture.uninstall().unwrap();
     let removed = Dlss5Service::inspect(&fixture.target, Some(&pack), &paths).unwrap();

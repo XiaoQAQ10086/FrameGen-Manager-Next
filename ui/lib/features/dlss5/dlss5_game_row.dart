@@ -14,6 +14,7 @@ class Dlss5GameRow extends StatelessWidget {
     required this.busy,
     required this.onInstall,
     required this.onHotkey,
+    required this.onCleanLegacy,
     required this.onUninstall,
   });
 
@@ -22,6 +23,7 @@ class Dlss5GameRow extends StatelessWidget {
   final bool busy;
   final VoidCallback onInstall;
   final VoidCallback onHotkey;
+  final VoidCallback onCleanLegacy;
   final VoidCallback onUninstall;
 
   @override
@@ -79,6 +81,13 @@ class Dlss5GameRow extends StatelessWidget {
               child: CircularProgressIndicator(strokeWidth: 2),
             )
           else ...<Widget>[
+            if (current?.hasLegacyResidue == true)
+              IconButton(
+                onPressed: onCleanLegacy,
+                icon: const Icon(Icons.cleaning_services_outlined, size: 18),
+                tooltip: l10n.dlss5CleanLegacy,
+                color: AppTokens.warning,
+              ),
             IconButton(
               onPressed: game.renderExe == null ? null : onInstall,
               icon: const Icon(Icons.system_update_alt, size: 18),

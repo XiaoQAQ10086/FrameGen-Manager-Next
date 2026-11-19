@@ -190,6 +190,12 @@ pub extern "C" fn fgm_dlss5_inspect_json(request: *const u8, length: usize) -> *
     execute_request(request, length, commands_dlss5::dlss5_inspect)
 }
 
+/// Deletes legacy RenoDX/DLSS5 files from a game directory.
+#[unsafe(no_mangle)]
+pub extern "C" fn fgm_dlss5_clean_legacy_json(request: *const u8, length: usize) -> *mut c_char {
+    execute_request(request, length, commands_dlss5::dlss5_clean_legacy)
+}
+
 /// Sets the ReShade overlay hotkey for an installed DLSS5 game.
 #[unsafe(no_mangle)]
 pub extern "C" fn fgm_dlss5_set_hotkey_json(request: *const u8, length: usize) -> *mut c_char {

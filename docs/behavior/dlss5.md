@@ -20,7 +20,8 @@
 - `fgm-ffi/src/commands_dlss5.rs`：`fgm_dlss5_install_json`、`fgm_dlss5_inspect_json`、`fgm_dlss5_set_hotkey_json`、`fgm_dlss5_uninstall_json`；卸载返回 `restored`/`removed`/`conflicts`/`warnings`；inspect 在没有显式 pack 时静默尝试本地 `dlss5.reshade-gitc`，缺 pack 也照样报告清单状态；inspect 同时返回当前 `hotkeyVk`。
 - `fgm-cli/src/dlss5.rs`：`dlss5 install|inspect|uninstall|hotkey`；`install` 未给 `--api` 时用 `GraphicsApiDetector` 自动判定。
 - Flutter：DLSS5 页每局游戏显示状态标签（未安装/已安装/需更新/不完整/冲突/无清单）、ReShade 标签、旧版残留提示，并提供安装、更新、快捷键、卸载按钮；操作后自动刷新状态。快捷键按钮打开录制对话框（Esc 取消），把 USB HID 映射为 Windows 虚拟键后调用 `fgm_dlss5_set_hotkey_json`，成功后刷新显示当前键。卸载有冲突时按数量提示，不误报成功。
-- 尚未迁移：GITC 选项/INI 的其余项（`StartEnabled` 默认值切换）、`hotkey-queue`（游戏运行/INI 被锁时延迟重试；当前直接写入失败即报错）、Vulkan 回退到官方 setup、“还原保留 ReShade”与“卸载全部移除”的区分、旧版残留的一键清理与安装拦截（`LegacyInstallPresent`）。
+- 旧版残留：`Dlss5Service::clean_legacy` 删除根目录 `renodx-dlss*` 与旧布局 `nvngx_dlssnr.dll`（只删这两类，其他文件不动）；存在残留时 `install` 返回 `Conflict` 并要求先清理，界面在残留标签旁显示“清理旧版文件”按钮与确认框。
+- 尚未迁移：GITC 选项/INI 的其余项（`StartEnabled` 默认值切换）、`hotkey-queue`（游戏运行/INI 被锁时延迟重试；当前直接写入失败即报错）、Vulkan 回退到官方 setup、“还原保留 ReShade”与“卸载全部移除”的区分。
 - 测试：`reshade_zip.rs` 内 stored/deflate 提取测试；`tests/reshade_installer.rs` 安装与冲突测试；`tests/dlss5_service.rs` 覆盖安装、代理冲突回滚、卸载删除代理/INI、用户修改文件保留、部署前已有 `ReShade.ini` 保留、inspect 状态/代理/ReShade/旧版残留。
 
 ## 前置条件
@@ -73,7 +74,7 @@
 - 清单缺失但目录里仍有与当前 pack 哈希一致的文件时，状态为 `InstalledWithoutManifest`；界面允许“重新部署”或“卸载”，不会永久锁死。
 - 通过文件版本信息识别 ReShade 模块（`d3d9/d3d10/d3d11/d3d12/dxgi/opengl32.dll`，ProductName/FileDescription 含 `ReShade`）仅用于展示和状态判断；卸载删除时必须再通过“与 bundled setup 内 ReShade 模块 SHA-256 完全一致”校验，避免误删雪月等同样基于 ReShade 的第三方 DLL。
 - 同时报告旧版 DLSS5/RenoDX 残留：根目录 `renodx-dlss*.addon*`（含第三方整合包常见的 `renodx-dlss-SF-*.addon64`）或旧布局根目录 `nvngx_dlssnr.dll`；命中项写入 `legacyFiles`，界面显示数量并可在悬浮提示中逐项查看，避免用户误以为是本软件部署过 ReShade。
-- 旧版规则“检测到旧版 DLSS5/RenoDX 时拒绝安装 GITC pack（`LegacyInstallPresent`）”尚未在 Rust 实现：当前只提示不拦截，尚未提供一键清理。
+- 检测到旧版 DLSS5/RenoDX 时拒绝安装 GITC pack（`Conflict`，上下文带 `files`），必须先执行“清理旧版文件”。这是按目录里的实际文件判断，不依赖本软件的部署记录。
 
 ## 还原 / 卸载（Rust 实现）
 
@@ -99,7 +100,7 @@
 
 ## 旧版“彻底卸载”参考
 
-保留旧版规则作为后续补齐残留清理的对照（当前 Rust 未实现这些步骤）：卸载前记录 `ExistedBefore=true` 的路径；从 bundled setup 提取 ReShade 模块并做 SHA-256 校验；只有“版本信息含 ReShade 且哈希一致”的代理才运行官方卸载器；官方卸载器失败或被跳过后删除仍通过哈希校验的模块，哈希不一致的一律保留；还原清单文件；删除 `ReShade.ini`/`ReShade.log`/`ReShadePreset.ini`；按 pack 文件表清理 GITC 组件、shader/纹理残留（哈希匹配才删）；清理旧版 RenoDX（`renodx-dlss*.addon*`、根目录 `nvngx_dlssnr.dll`）与运行时残渣；仅在 `D3D12\` 只有 Microsoft 版 `D3D12Core.dll` 时删除该文件；最后返回 `removed`/`remaining`/`clean`，`clean=false` 时界面显示失败而不是成功。
+保留旧版规则作为后续补齐的对照。Rust 目前只实现旧版 RenoDX 残留的一键清理；以下官方卸载器与未跟踪残留步骤仍未实现：卸载前记录 `ExistedBefore=true` 的路径；从 bundled setup 提取 ReShade 模块并做 SHA-256 校验；只有“版本信息含 ReShade 且哈希一致”的代理才运行官方卸载器；官方卸载器失败或被跳过后删除仍通过哈希校验的模块，哈希不一致的一律保留；还原清单文件；删除 `ReShade.ini`/`ReShade.log`/`ReShadePreset.ini`；按 pack 文件表清理 GITC 组件、shader/纹理残留（哈希匹配才删）；清理旧版 RenoDX（`renodx-dlss*.addon*`、根目录 `nvngx_dlssnr.dll`）与运行时残渣；仅在 `D3D12\` 只有 Microsoft 版 `D3D12Core.dll` 时删除该文件；最后返回 `removed`/`remaining`/`clean`，`clean=false` 时界面显示失败而不是成功。
 
 ## 命令
 

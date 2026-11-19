@@ -96,6 +96,19 @@ pub(crate) fn dlss5_inspect(request: &str) -> Result<Value, AppError> {
 
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]
+struct Dlss5CleanRequest {
+    target_dir: String,
+}
+
+pub(crate) fn dlss5_clean_legacy(request: &str) -> Result<Value, AppError> {
+    let request: Dlss5CleanRequest = parse(request)?;
+    let target_directory = absolute(Path::new(&request.target_dir))?;
+    let removed = Dlss5Service::clean_legacy(&target_directory)?;
+    Ok(json!({ "ok": true, "removed": removed }))
+}
+
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
 struct Dlss5HotkeyRequest {
     target_dir: String,
     virtual_key: u32,

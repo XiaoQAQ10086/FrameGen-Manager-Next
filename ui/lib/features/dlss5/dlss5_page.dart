@@ -153,6 +153,42 @@ class _Dlss5PageState extends State<Dlss5Page> {
     );
   }
 
+  Future<void> _cleanLegacy(LibraryGame game) async {
+    final AppLocalizations l10n = AppLocalizations.of(context);
+    final bool? confirmed = await showDialog<bool>(
+      context: context,
+      builder: (BuildContext context) => AlertDialog(
+        title: Text(l10n.dlss5CleanLegacy),
+        content: Text(l10n.dlss5CleanConfirm(game.name)),
+        actions: <Widget>[
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text(l10n.cancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: Text(l10n.dlss5CleanLegacy),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) {
+      return;
+    }
+    final int? removed = await Dlss5Bridge.cleanLegacy(game);
+    if (!mounted) {
+      return;
+    }
+    _notify(
+      removed == null
+          ? l10n.dlss5CleanFailed
+          : l10n.dlss5Cleaned(removed),
+    );
+    if (removed != null) {
+      await _refreshState(game);
+    }
+  }
+
   Future<void> _recordHotkey(LibraryGame game) async {
     final AppLocalizations l10n = AppLocalizations.of(context);
     final int? virtualKey = await showDialog<int>(
@@ -217,6 +253,7 @@ class _Dlss5PageState extends State<Dlss5Page> {
                           busy: _busyGameId == game.id,
                           onInstall: () => _install(game),
                           onHotkey: () => _recordHotkey(game),
+                          onCleanLegacy: () => _cleanLegacy(game),
                           onUninstall: () => _uninstall(game),
                         );
                       },

@@ -171,6 +171,24 @@
   "dlss5StateUnknown": "Unknown",
   "dlss5ReShadePresent": "ReShade present",
   "dlss5Hotkey": "Overlay hotkey",
+  "dlss5CleanLegacy": "Clean legacy files",
+  "dlss5CleanConfirm": "Delete old DLSS5/RenoDX files in {game}? This cannot be undone.",
+  "@dlss5CleanConfirm": {
+    "placeholders": {
+      "game": {
+        "type": "String"
+      }
+    }
+  },
+  "dlss5Cleaned": "Removed {count} legacy files.",
+  "@dlss5Cleaned": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "dlss5CleanFailed": "Could not clean the legacy files.",
   "dlss5HotkeyHint": "Press the key to bind. Esc cancels.",
   "dlss5HotkeySaved": "Hotkey saved ({key}).",
   "@dlss5HotkeySaved": {

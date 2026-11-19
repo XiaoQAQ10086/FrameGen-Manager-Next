@@ -42,6 +42,29 @@ final class Dlss5Bridge {
     return Dlss5Result.parse(reply);
   }
 
+  /// Deletes legacy RenoDX/DLSS5 files; returns the removed file count.
+  static Future<int?> cleanLegacy(LibraryGame game) async {
+    final String request = jsonEncode(<String, Object?>{
+      'targetDir': game.targetDirectory,
+    });
+    final String? reply = await Isolate.run(() {
+      final CoreLibrary? core = CoreLibrary.tryOpen();
+      return core?.dlss5CleanLegacyJson(request);
+    });
+    if (reply == null) {
+      return null;
+    }
+    try {
+      final Object? decoded = jsonDecode(reply);
+      if (decoded is! Map || decoded['ok'] != true) {
+        return null;
+      }
+      return decoded['removed'] as int? ?? 0;
+    } on FormatException {
+      return null;
+    }
+  }
+
   /// Writes `[INPUT] KeyOverlay` for an installed game.
   static Future<bool> setHotkey(LibraryGame game, int virtualKey) async {
     final String request = jsonEncode(<String, Object?>{
