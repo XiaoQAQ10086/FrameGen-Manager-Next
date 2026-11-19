@@ -40,6 +40,11 @@ try {
 finally { Pop-Location }
 
 Write-Host "==> staging portable build" -ForegroundColor Cyan
+$preservedState = $null
+if (Test-Path (Join-Path $stage "userdata")) {
+    $preservedState = Join-Path ([IO.Path]::GetTempPath()) ("fgm-userdata-" + [guid]::NewGuid().ToString("N"))
+    Copy-Item (Join-Path $stage "userdata") $preservedState -Recurse -Force
+}
 if (Test-Path $OutputDirectory) {
     Remove-Item $OutputDirectory -Recurse -Force
 }
@@ -65,6 +70,12 @@ New-Item -ItemType Directory -Path (Join-Path $stage "data") -Force | Out-Null
 
 Write-Host "==> creating zip" -ForegroundColor Cyan
 Compress-Archive -Path (Join-Path $stage "*") -DestinationPath $zipPath -CompressionLevel Optimal -Force
+
+# Keep the fixed test folder's cache across rebuilds; the zip stays clean.
+if ($null -ne $preservedState -and (Test-Path $preservedState)) {
+    Copy-Item $preservedState (Join-Path $stage "userdata") -Recurse -Force
+    Remove-Item $preservedState -Recurse -Force
+}
 
 Write-Host ""
 Write-Host "Portable folder: $stage" -ForegroundColor Green

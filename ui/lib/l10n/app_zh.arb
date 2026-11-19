@@ -164,7 +164,7 @@
   "modeSourceLink": "GitHub 资产来源",
   "modeGpusFramegen": "NVIDIA RTX 20 / 30 / 40 / 50 系",
   "modeGpusSmDlss5": "NVIDIA RTX 20 / 30 系",
-  "modeGpusAmd": "AMD Radeon RX 5000 / 6000 / 7000 / 9000 系，Steam Deck",
+  "modeGpusAmd": "AMD RX 5000–9000 系、Steam Deck",
   "modeGpusIntel": "Intel Arc A / B 系",
   "gpuSpoofWarning": "仅用于按显卡型号限制选项的游戏。名称与硬件 ID 不再一致，内核反作弊可能判定异常，驱动更新也可能重置；需要重启后才会在系统界面显示新名称。",
   "gpuSpoofNeedsAdmin": "需要管理员权限。请以管理员身份重新启动本程序后再修改显卡型号。",

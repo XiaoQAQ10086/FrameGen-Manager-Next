@@ -11,7 +11,7 @@ Rust 实现：`rust/crates/fgm-infra/src/paths/app_paths.rs`。
 | 优先级 | 条件 | 根目录 | portable |
 |---|---|---|---|
 | 1 | `FGM_DATA_DIR` 非空 | 该路径 | false |
-| 2 | 程序目录存在 `portable.flag` | `<程序目录>\data` | true |
+| 2 | 程序目录存在 `portable.flag` | `<程序目录>\userdata` | true |
 | 3 | 默认 | `%LOCALAPPDATA%\FrameGen-Manager-Next` | false |
 
 - 程序目录默认取当前 exe 的父目录；测试或 CLI 可显式传入。
@@ -43,8 +43,9 @@ Rust 实现：`rust/crates/fgm-infra/src/paths/app_paths.rs`。
 
 - 不做旧版数据迁移；新目录与 2.x 可并存。
 - 不读取便携版注册表标记；只认 `portable.flag`。
+- 便携版状态放在 `userdata`，与 Flutter 引擎的 `data/flutter_assets` 分开；旧版把状态写在 `data` 下，启动时一次性把 `config`/`library`/`logs`/`state`/`cache`/`backups` 迁移到 `userdata`，引擎资源不动。
 - 不自动清理旧目录。
 
 ## 测试
 
-- 单元测试在 `app_paths.rs` 内：覆盖 override、portable marker、LocalAppData 默认和目录创建。
+- 单元测试在 `app_paths.rs` 内：覆盖 override、portable marker、LocalAppData 默认、目录创建，以及旧 `data` 状态迁移到 `userdata`。

@@ -16,6 +16,8 @@ import '../../design/legacy_dialog.dart';
 import '../../design/legacy_panel.dart';
 import '../../design/operation_progress_dialog.dart';
 import '../../l10n/app_localizations.dart';
+import 'about_link_row.dart';
+import 'about_switch_row.dart';
 
 /// Legacy About page: version, startup, RE Engine and feedback panels.
 class AboutPage extends StatefulWidget {
@@ -184,21 +186,24 @@ class _AboutPageState extends State<AboutPage> {
     final String version = widget.core?.version ?? '2.3.4';
     return SingleChildScrollView(
       padding: AppTokens.pagePadding,
-      child: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 760),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: <Widget>[
-              Text(
-                l10n.navAbout,
-                style: const TextStyle(
-                  color: AppTokens.textPrimary,
-                  fontSize: 28,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-              const SizedBox(height: 18),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: <Widget>[
+          Text(
+            l10n.navAbout,
+            style: const TextStyle(
+              color: AppTokens.textPrimary,
+              fontSize: 28,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(height: 18),
+          Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 760),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: <Widget>[
               LegacyPanel(
                 title: l10n.aboutSoftwareVersion,
                 child: Column(
@@ -242,7 +247,7 @@ class _AboutPageState extends State<AboutPage> {
                       ],
                     ),
                     const SizedBox(height: 14),
-                    _LinkRow(
+                    AboutLinkRow(
                       label: l10n.aboutGithub,
                       value: _paths.repository,
                       action: l10n.aboutOpenRepo,
@@ -250,7 +255,7 @@ class _AboutPageState extends State<AboutPage> {
                           SystemBridge.openUrl(_paths.repository),
                     ),
                     const SizedBox(height: 10),
-                    _LinkRow(
+                    AboutLinkRow(
                       label: l10n.aboutLicenses,
                       value: l10n.aboutLicensesHint,
                       action: l10n.aboutOpenLicenses,
@@ -263,7 +268,7 @@ class _AboutPageState extends State<AboutPage> {
               const SizedBox(height: 14),
               LegacyPanel(
                 title: l10n.aboutStartup,
-                child: _SwitchRow(
+                child: AboutSwitchRow(
                   title: l10n.aboutStartupScan,
                   hint: l10n.aboutStartupScanHint,
                   value: _settings.autoScanOnStartup,
@@ -274,7 +279,7 @@ class _AboutPageState extends State<AboutPage> {
               const SizedBox(height: 14),
               LegacyPanel(
                 title: l10n.aboutReEngine,
-                child: _SwitchRow(
+                child: AboutSwitchRow(
                   title: l10n.aboutReEngineInstall,
                   hint: l10n.aboutReEngineHint,
                   value: _settings.autoInstallReframework,
@@ -283,117 +288,23 @@ class _AboutPageState extends State<AboutPage> {
                 ),
               ),
               const SizedBox(height: 14),
-              LegacyPanel(
-                title: l10n.aboutFeedback,
-                child: Text(
-                  l10n.aboutFeedbackBody,
-                  style: const TextStyle(
-                    color: AppTokens.textSecondary,
-                    fontSize: 13,
-                    height: 1.6,
+                  LegacyPanel(
+                    title: l10n.aboutFeedback,
+                    child: Text(
+                      l10n.aboutFeedbackBody,
+                      style: const TextStyle(
+                        color: AppTokens.textSecondary,
+                        fontSize: 13,
+                        height: 1.6,
+                      ),
+                    ),
                   ),
-                ),
+                ],
               ),
-            ],
+            ),
           ),
-        ),
+        ],
       ),
-    );
-  }
-}
-
-class _LinkRow extends StatelessWidget {
-  const _LinkRow({
-    required this.label,
-    required this.value,
-    required this.action,
-    required this.onPressed,
-  });
-
-  final String label;
-  final String value;
-  final String action;
-  final VoidCallback onPressed;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: <Widget>[
-        SizedBox(
-          width: 130,
-          child: Text(
-            label,
-            style: const TextStyle(
-              color: AppTokens.textSecondary,
-              fontSize: 12.5,
-            ),
-          ),
-        ),
-        Expanded(
-          child: Text(
-            value,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-            style: const TextStyle(
-              color: AppTokens.textPrimary,
-              fontSize: 12,
-              height: 1.45,
-            ),
-          ),
-        ),
-        const SizedBox(width: 8),
-        TextButton(onPressed: onPressed, child: Text(action)),
-      ],
-    );
-  }
-}
-
-class _SwitchRow extends StatelessWidget {
-  const _SwitchRow({
-    required this.title,
-    required this.hint,
-    required this.value,
-    required this.onChanged,
-  });
-
-  final String title;
-  final String hint;
-  final bool value;
-  final ValueChanged<bool> onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: <Widget>[
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: <Widget>[
-              Text(
-                title,
-                style: const TextStyle(
-                  color: AppTokens.textPrimary,
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                hint,
-                style: const TextStyle(
-                  color: AppTokens.textSecondary,
-                  fontSize: 11.5,
-                  height: 1.45,
-                ),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(width: 12),
-        Switch(value: value, onChanged: onChanged),
-      ],
     );
   }
 }

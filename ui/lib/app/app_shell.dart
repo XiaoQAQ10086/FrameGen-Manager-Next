@@ -265,9 +265,14 @@ class _NavItem extends StatelessWidget {
               boxShadow: selected
                   ? const <BoxShadow>[
                       BoxShadow(
-                        color: Color(0x14000000),
-                        blurRadius: 10,
-                        offset: Offset(0, 3),
+                        color: Color(0x1A18274B),
+                        blurRadius: 8,
+                        offset: Offset(0, 2),
+                      ),
+                      BoxShadow(
+                        color: Color(0x0F18274B),
+                        blurRadius: 2,
+                        offset: Offset(0, 1),
                       ),
                     ]
                   : null,
@@ -276,24 +281,28 @@ class _NavItem extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: <Widget>[
                 if (glyph.isNotEmpty) ...<Widget>[
-                  Text(
-                    glyph,
+                  AnimatedDefaultTextStyle(
+                    duration: const Duration(milliseconds: 180),
+                    curve: Curves.easeOutCubic,
                     style: TextStyle(
                       color: selected
                           ? AppTokens.accent
                           : AppTokens.textSecondary,
                       fontSize: 14,
                     ),
+                    child: Text(glyph),
                   ),
                   const SizedBox(width: 4),
                 ],
-                Text(
-                  label,
+                AnimatedDefaultTextStyle(
+                  duration: const Duration(milliseconds: 180),
+                  curve: Curves.easeOutCubic,
                   style: TextStyle(
                     color: selected ? AppTokens.accent : AppTokens.textPrimary,
                     fontSize: 13,
                     fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
                   ),
+                  child: Text(label),
                 ),
               ],
             ),

@@ -58,11 +58,8 @@ class LegacySelect<T> extends StatelessWidget {
                     borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
                     onTap: _active ? () => _open(context) : null,
                     child: Container(
+                      width: double.infinity,
                       height: dense ? 31 : 34,
-                      padding: EdgeInsets.only(
-                        left: dense ? 10 : 11,
-                        right: dense ? 9 : 11,
-                      ),
                       decoration: BoxDecoration(
                         gradient: const LinearGradient(
                           begin: Alignment.topCenter,
@@ -84,12 +81,17 @@ class LegacySelect<T> extends StatelessWidget {
                           ),
                         ],
                       ),
-                      child: Row(
+                      child: Stack(
+                        alignment: Alignment.center,
                         children: <Widget>[
-                          Expanded(
+                          Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 28,
+                            ),
                             child: Text(
                               text,
                               maxLines: 1,
+                              textAlign: TextAlign.center,
                               overflow: TextOverflow.ellipsis,
                               style: TextStyle(
                                 color: AppTokens.textPrimary,
@@ -97,11 +99,13 @@ class LegacySelect<T> extends StatelessWidget {
                               ),
                             ),
                           ),
-                          const SizedBox(width: 6),
-                          const Icon(
-                            Icons.keyboard_arrow_down_rounded,
-                            size: 17,
-                            color: AppTokens.textSecondary,
+                          const Positioned(
+                            right: 9,
+                            child: Icon(
+                              Icons.keyboard_arrow_down_rounded,
+                              size: 17,
+                              color: AppTokens.textSecondary,
+                            ),
                           ),
                         ],
                       ),
@@ -147,33 +151,40 @@ class LegacySelect<T> extends StatelessWidget {
         for (final T item in items)
           PopupMenuItem<T>(
             value: item,
-            height: 34,
-            padding: const EdgeInsets.symmetric(horizontal: 8),
-            child: Row(
-              children: <Widget>[
-                Expanded(
-                  child: Text(
-                    labelFor(item),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      color: item == value
-                          ? AppTokens.accent
-                          : AppTokens.textPrimary,
-                      fontSize: 12.5,
-                      fontWeight: item == value
-                          ? FontWeight.w700
-                          : FontWeight.w500,
-                    ),
-                  ),
+            height: 38,
+            padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+            child: Container(
+              width: double.infinity,
+              alignment: Alignment.center,
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              decoration: item == value
+                  ? BoxDecoration(
+                      color: const Color(0xFFEAF3FF),
+                      borderRadius: BorderRadius.circular(8),
+                      boxShadow: const <BoxShadow>[
+                        BoxShadow(
+                          color: Color(0x14007AFF),
+                          blurRadius: 6,
+                          offset: Offset(0, 2),
+                        ),
+                      ],
+                    )
+                  : null,
+              child: Text(
+                labelFor(item),
+                maxLines: 1,
+                textAlign: TextAlign.center,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  color: item == value
+                      ? AppTokens.accent
+                      : AppTokens.textPrimary,
+                  fontSize: 12.5,
+                  fontWeight: item == value
+                      ? FontWeight.w700
+                      : FontWeight.w500,
                 ),
-                if (item == value)
-                  const Icon(
-                    Icons.check_rounded,
-                    size: 15,
-                    color: AppTokens.accent,
-                  ),
-              ],
+              ),
             ),
           ),
       ],

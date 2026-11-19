@@ -19,14 +19,7 @@ const ENUM_ROOT: &str = r"SYSTEM\CurrentControlSet\Enum\PCI";
 const DISPLAY_CLASS_GUID: &str = "{4d36e968-e325-11ce-bfc1-08002be10318}";
 
 /// Whitelisted adapter names; only these may be written.
-pub const PRESETS: [&str; 6] = [
-    "NVIDIA GeForce RTX 5090",
-    "NVIDIA GeForce RTX 5080",
-    "NVIDIA GeForce RTX 5070 Ti",
-    "NVIDIA GeForce RTX 5070",
-    "NVIDIA GeForce RTX 5060 Ti",
-    "NVIDIA GeForce RTX 5060",
-];
+pub const PRESETS: [&str; 2] = ["NVIDIA GeForce RTX 5090", "NVIDIA GeForce RTX 5060"];
 
 #[derive(Clone, Copy, Debug, Deserialize, Serialize, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]

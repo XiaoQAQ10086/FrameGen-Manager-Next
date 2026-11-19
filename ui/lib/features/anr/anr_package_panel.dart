@@ -157,32 +157,39 @@ class _AnrPackagePanelState extends State<AnrPackagePanel> {
             ),
           ),
           const SizedBox(height: 10),
-          FilledButton(
+          FilledButton.icon(
             onPressed: _downloading || _importing ? null : _download,
             style: LegacyButtonStyles.tall(LegacyButtonStyles.primary),
-            child: Text(
+            icon: const Icon(Icons.cloud_download_outlined, size: 18),
+            label: Text(
               _downloading ? l10n.operationDownloading : l10n.anrDownload,
             ),
           ),
-          const SizedBox(height: 6),
-          OutlinedButton(
+          const SizedBox(height: 8),
+          OutlinedButton.icon(
             onPressed: _downloading || _importing ? null : _import,
             style: LegacyButtonStyles.tall(LegacyButtonStyles.standard),
-            child: Text(l10n.anrImportZip),
+            icon: const Icon(Icons.folder_zip_outlined, size: 18),
+            label: Text(l10n.anrImportZip),
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: 8),
           Row(
             children: <Widget>[
               Expanded(
-                child: TextButton(
+                child: OutlinedButton.icon(
                   onPressed: () => SystemBridge.openUrl(_paths.anrBaiduUrl),
-                  child: Text(l10n.anrBaidu),
+                  style: LegacyButtonStyles.standard,
+                  icon: const Icon(Icons.cloud_outlined, size: 16),
+                  label: Text(l10n.anrBaidu),
                 ),
               ),
+              const SizedBox(width: 8),
               Expanded(
-                child: TextButton(
+                child: OutlinedButton.icon(
                   onPressed: () => SystemBridge.openUrl(_paths.anrQuarkUrl),
-                  child: Text(l10n.anrQuark),
+                  style: LegacyButtonStyles.standard,
+                  icon: const Icon(Icons.cloud_outlined, size: 16),
+                  label: Text(l10n.anrQuark),
                 ),
               ),
             ],

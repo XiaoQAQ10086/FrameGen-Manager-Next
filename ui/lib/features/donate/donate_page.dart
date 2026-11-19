@@ -27,8 +27,8 @@ class DonatePage extends StatelessWidget {
           const SizedBox(height: 22),
           Wrap(
             alignment: WrapAlignment.center,
-            spacing: 22,
-            runSpacing: 18,
+            spacing: 28,
+            runSpacing: 22,
             children: <Widget>[
               _QrCard(image: 'assets/wechat.png', label: l10n.donateWechat),
               _QrCard(image: 'assets/alipay.jpg', label: l10n.donateAlipay),
@@ -58,8 +58,8 @@ class _QrCard extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: <Widget>[
         Container(
-          width: 240,
-          padding: const EdgeInsets.all(10),
+          width: 300,
+          padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
             color: AppTokens.surfaceSolid,
             borderRadius: BorderRadius.circular(AppTokens.radius),

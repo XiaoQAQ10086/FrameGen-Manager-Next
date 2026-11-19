@@ -199,7 +199,7 @@
   "modeSourceLink": "GitHub asset source",
   "modeGpusFramegen": "NVIDIA RTX 20 / 30 / 40 / 50 series",
   "modeGpusSmDlss5": "NVIDIA RTX 20 / 30 series",
-  "modeGpusAmd": "AMD Radeon RX 5000 / 6000 / 7000 / 9000 series, Steam Deck",
+  "modeGpusAmd": "AMD RX 5000–9000 series, Steam Deck",
   "modeGpusIntel": "Intel Arc A / B series",
   "gpuSpoofWarning": "Only for games that gate options by GPU model. The name no longer matches the hardware ID, kernel anti-cheat may flag it, and driver updates can reset it. A restart is needed before Windows shows the new name.",
   "gpuSpoofNeedsAdmin": "Administrator rights are required. Restart this app as administrator to change the adapter name.",

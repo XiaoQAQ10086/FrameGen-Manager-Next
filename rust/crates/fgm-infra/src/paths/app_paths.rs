@@ -12,7 +12,7 @@ pub struct AppPaths {
 impl AppPaths {
     pub const DATA_DIR_ENV: &'static str = "FGM_DATA_DIR";
     pub const PORTABLE_MARKER: &'static str = "portable.flag";
-    pub const PORTABLE_DATA_DIR: &'static str = "data";
+    pub const PORTABLE_DATA_DIR: &'static str = "userdata";
     pub const APP_DATA_DIR: &'static str = "FrameGen-Manager-Next";
 
     pub fn new(root: impl Into<PathBuf>, portable: bool) -> Result<Self, AppError> {
@@ -66,13 +66,35 @@ impl AppPaths {
         }
 
         if application_directory.join(Self::PORTABLE_MARKER).is_file() {
-            return Self::new(application_directory.join(Self::PORTABLE_DATA_DIR), true);
+            let root = application_directory.join(Self::PORTABLE_DATA_DIR);
+            Self::migrate_portable_state(application_directory, &root);
+            return Self::new(root, true);
         }
 
         let local_app_data = local_app_data.ok_or_else(|| {
             AppError::new(ErrorCode::InvalidPath).with("reason", "LOCALAPPDATA is not set")
         })?;
         Self::new(local_app_data.join(Self::APP_DATA_DIR), false)
+    }
+
+    /// Older portable builds kept state inside Flutter's `data` asset folder.
+    /// Move the known state directories into `userdata` once, leaving the
+    /// engine's own files untouched.
+    fn migrate_portable_state(application_directory: &Path, target: &Path) {
+        let legacy = application_directory.join("data");
+        if legacy == target || !legacy.is_dir() {
+            return;
+        }
+        for name in ["config", "library", "logs", "state", "cache", "backups"] {
+            let from = legacy.join(name);
+            let to = target.join(name);
+            if from.is_dir() && !to.exists() {
+                if std::fs::create_dir_all(target).is_err() {
+                    return;
+                }
+                let _ = std::fs::rename(&from, &to);
+            }
+        }
     }
 
     pub fn root(&self) -> &Path {
@@ -170,7 +192,7 @@ mod tests {
     }
 
     #[test]
-    fn portable_marker_selects_data_subdirectory() {
+    fn portable_marker_selects_userdata_subdirectory() {
         let dir = TestDir::new("paths-portable");
         std::fs::write(dir.path().join(AppPaths::PORTABLE_MARKER), b"").unwrap();
 
@@ -182,6 +204,26 @@ mod tests {
             dir.path().join(AppPaths::PORTABLE_DATA_DIR).as_path()
         );
         assert!(paths.is_portable());
+    }
+
+    #[test]
+    fn portable_state_moves_out_of_the_asset_folder() {
+        let dir = TestDir::new("paths-portable-migrate");
+        std::fs::write(dir.path().join(AppPaths::PORTABLE_MARKER), b"").unwrap();
+        let legacy = dir.path().join("data");
+        std::fs::create_dir_all(legacy.join("library")).unwrap();
+        std::fs::create_dir_all(legacy.join("flutter_assets")).unwrap();
+        std::fs::write(legacy.join("library").join("library.json"), b"{}").unwrap();
+
+        let paths =
+            AppPaths::resolve_default(None, dir.path(), Some(dir.path().join("local"))).unwrap();
+
+        assert_eq!(
+            paths.root(),
+            dir.path().join(AppPaths::PORTABLE_DATA_DIR).as_path()
+        );
+        assert!(paths.root().join("library").join("library.json").is_file());
+        assert!(legacy.join("flutter_assets").is_dir());
     }
 
     #[test]
