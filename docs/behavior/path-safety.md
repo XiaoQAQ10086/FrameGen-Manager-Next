@@ -7,8 +7,11 @@
 Rust 迁移：
 
 - `rust/crates/fgm-domain/src/safety/safe_path.rs` 已实现 SAFE-001 ~ SAFE-011（纯字符串校验，无文件系统访问）。
-- SAFE-012 ~ SAFE-014 需要根目录和系统目录信息，留在 Phase 2 的 `fgm-infra`。
-- Rust 测试：`rust/crates/fgm-domain/tests/safe_path.rs`。
+- `rust/crates/fgm-infra/src/paths/target_path.rs` 已实现 SAFE-012 ~ SAFE-014：
+  - `TargetPath::combine` 拒绝相对根、组合后逃逸根目录；
+  - 通过 `canonicalize` + 最近存在祖先解析 junction/符号链接，逃逸时返回 `UnsafePath`；
+  - `is_protected_system_directory` 拒绝盘符根、`%SystemRoot%`、`System32` 和 Program Files 根目录本身。
+- Rust 测试：`rust/crates/fgm-domain/tests/safe_path.rs`、`rust/crates/fgm-infra/tests/target_path.rs`。
 
 ## 输入
 

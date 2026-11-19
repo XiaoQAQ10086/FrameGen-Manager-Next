@@ -29,7 +29,8 @@
 | 设置 / 封面 | `ui/settings.js`、`ui/app.js` | `Infrastructure/Settings` + `Infrastructure/Library` | [已实现](settings.md) |
 | 更新 | `update.rs`、`apps/electron/main.js` | Velopack + `Core/Features/Packs` | [已实现](updates.md) |
 | 诊断包 | `sidecar::diagnostics_export`、`ui/settings.js` | `Core/Features/Diagnostics` | [已实现](diagnostics.md) |
-| 路径安全 | `util.rs::safe_join`、sidecar `checked_dir` | `Domain/Safety` | [已实现](path-safety.md) |
+| 路径安全 | `util.rs::safe_join`、sidecar `checked_dir` | `Domain/Safety`；Rust `fgm-domain` + `fgm-infra` | [已实现](path-safety.md) |
+| 应用数据目录 | `Infrastructure/Paths/AppPaths.cs` | `fgm-infra/src/paths` | [已实现](app-paths.md) |
 | 错误码 | `err.rs` 的关键词规则 | `Domain/Errors` | 已实现（枚举 + 上下文） |
 | 资产包 schema/payload | 旧版 `deploy.rs` / `sm.rs` / `dlss5.rs` 的文件表 | `Domain/Packs`、`Infrastructure/Packs`；Rust Phase 1 | [已实现](asset-pack.md) |
 | 内置资产升级 | 旧版升级时自动清理部署 | `Infrastructure/Deployment` + `Infrastructure/Packs` | [已实现](pack-upgrades.md) |
