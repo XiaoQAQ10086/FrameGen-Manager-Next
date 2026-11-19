@@ -53,6 +53,8 @@ final class CoreLibrary {
     this._updateInstall,
     this._updateOpen,
     this._gpu,
+    this._windowRestore,
+    this._windowSave,
     this._stringFree,
     this._alloc,
     this._freeBytes,
@@ -88,6 +90,8 @@ final class CoreLibrary {
   final _RequestDart _updateInstall;
   final _RequestDart _updateOpen;
   final _JsonDart _gpu;
+  final _JsonDart _windowRestore;
+  final _JsonDart _windowSave;
   final _StringFreeDart _stringFree;
   final _AllocDart _alloc;
   final _FreeBytesDart _freeBytes;
@@ -184,6 +188,12 @@ final class CoreLibrary {
             'fgm_update_open_json',
           ),
           library.lookupFunction<_JsonNative, _JsonDart>('fgm_gpu_json'),
+          library.lookupFunction<_JsonNative, _JsonDart>(
+            'fgm_window_restore_json',
+          ),
+          library.lookupFunction<_JsonNative, _JsonDart>(
+            'fgm_window_save_json',
+          ),
           library.lookupFunction<_StringFreeNative, _StringFreeDart>(
             'fgm_string_free',
           ),
@@ -273,6 +283,12 @@ final class CoreLibrary {
   String? updateOpenJson(String request) => _request(_updateOpen, request);
 
   String? gpuJson() => _json(_gpu);
+
+  /// Applies the saved window bounds; no-op when none were stored.
+  String? windowRestoreJson() => _json(_windowRestore);
+
+  /// Persists the current window bounds.
+  String? windowSaveJson() => _json(_windowSave);
 
   String? _request(_RequestDart function, String request) {
     final List<int> bytes = utf8.encode(request);

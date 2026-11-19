@@ -16,6 +16,7 @@ mod commands_dlss5;
 mod commands_library;
 mod commands_sm;
 mod commands_update;
+mod commands_window;
 
 static VERSION: LazyLock<Vec<u8>> = LazyLock::new(|| {
     let mut bytes = fgm_domain::version::VERSION.as_bytes().to_vec();

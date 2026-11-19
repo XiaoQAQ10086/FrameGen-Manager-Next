@@ -31,6 +31,8 @@ Rust 实现：`rust/crates/fgm-infra/src/paths/app_paths.rs`。
 | `cache()` | `<root>\cache` |
 | `state()` | `<root>\state` |
 
+`config/window.json` 保存主窗口位置与尺寸（`x/y/width/height/maximized`），由 `WindowStateService` 读写；不在其中保存其他业务状态。
+
 `update_staging()` 固定在 `%TEMP%\FrameGen-Manager-Next\updates`，不进入数据目录，因为安装包是一次性文件。
 
 ## 创建

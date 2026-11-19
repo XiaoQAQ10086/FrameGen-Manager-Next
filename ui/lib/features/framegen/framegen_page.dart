@@ -1,5 +1,6 @@
 import 'package:material_ui/material_ui.dart';
 
+import '../../bridge/app_settings.dart';
 import '../../bridge/core_library.dart';
 import '../../bridge/deployment_bridge.dart';
 import '../../bridge/deployment_result.dart';
@@ -37,8 +38,13 @@ class _FrameGenPageState extends State<FrameGenPage> {
     final LibrarySnapshot snapshot = LibraryBridge.list(widget.core);
     _games = snapshot.games;
     _error = snapshot.hasError ? snapshot.errorCode : null;
-    _showCovers = SettingsBridge.load(widget.core).showCovers;
-    _loadCovers();
+    final AppSettings settings = SettingsBridge.load(widget.core);
+    _showCovers = settings.showCovers;
+    if (settings.autoScanOnStartup) {
+      _scan();
+    } else {
+      _loadCovers();
+    }
   }
 
   Future<void> _loadCovers() async {
