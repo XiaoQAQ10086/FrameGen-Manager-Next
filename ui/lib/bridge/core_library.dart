@@ -10,6 +10,12 @@ typedef _JsonNative = Pointer<Int8> Function();
 typedef _JsonDart = Pointer<Int8> Function();
 typedef _StringFreeNative = Void Function(Pointer<Int8>);
 typedef _StringFreeDart = void Function(Pointer<Int8>);
+typedef _AllocNative = Pointer<Uint8> Function(IntPtr);
+typedef _AllocDart = Pointer<Uint8> Function(int);
+typedef _FreeBytesNative = Void Function(Pointer<Uint8>, IntPtr);
+typedef _FreeBytesDart = void Function(Pointer<Uint8>, int);
+typedef _RequestNative = Pointer<Int8> Function(Pointer<Uint8>, IntPtr);
+typedef _RequestDart = Pointer<Int8> Function(Pointer<Uint8>, int);
 
 /// Thin loader around the `fgm-ffi` cdylib.
 ///
@@ -21,14 +27,24 @@ final class CoreLibrary {
     this._phaseName,
     this._libraryScan,
     this._libraryList,
+    this._deploy,
+    this._restore,
+    this._inspect,
     this._stringFree,
+    this._alloc,
+    this._freeBytes,
   );
 
   final _VersionDart _version;
   final _PhaseNameDart _phaseName;
   final _JsonDart _libraryScan;
   final _JsonDart _libraryList;
+  final _RequestDart _deploy;
+  final _RequestDart _restore;
+  final _RequestDart _inspect;
   final _StringFreeDart _stringFree;
+  final _AllocDart _alloc;
+  final _FreeBytesDart _freeBytes;
 
   /// Loads the native library, or returns null when it has not been built yet.
   static CoreLibrary? tryOpen() {
@@ -46,8 +62,21 @@ final class CoreLibrary {
           library.lookupFunction<_JsonNative, _JsonDart>(
             'fgm_library_list_json',
           ),
+          library.lookupFunction<_RequestNative, _RequestDart>(
+            'fgm_deploy_json',
+          ),
+          library.lookupFunction<_RequestNative, _RequestDart>(
+            'fgm_restore_json',
+          ),
+          library.lookupFunction<_RequestNative, _RequestDart>(
+            'fgm_inspect_json',
+          ),
           library.lookupFunction<_StringFreeNative, _StringFreeDart>(
             'fgm_string_free',
+          ),
+          library.lookupFunction<_AllocNative, _AllocDart>('fgm_alloc'),
+          library.lookupFunction<_FreeBytesNative, _FreeBytesDart>(
+            'fgm_free_bytes',
           ),
         );
       } on Object {
@@ -73,6 +102,34 @@ final class CoreLibrary {
 
   /// Reads the cached library and returns the JSON reply.
   String? listLibraryJson() => _json(_libraryList);
+
+  String? deployJson(String request) => _request(_deploy, request);
+
+  String? restoreJson(String request) => _request(_restore, request);
+
+  String? inspectJson(String request) => _request(_inspect, request);
+
+  String? _request(_RequestDart function, String request) {
+    final List<int> bytes = utf8.encode(request);
+    final Pointer<Uint8> buffer = _alloc(bytes.length);
+    if (buffer.address == 0) {
+      return null;
+    }
+    try {
+      buffer.asTypedList(bytes.length).setAll(0, bytes);
+      final Pointer<Int8> pointer = function(buffer, bytes.length);
+      if (pointer.address == 0) {
+        return null;
+      }
+      try {
+        return _readCString(pointer);
+      } finally {
+        _stringFree(pointer);
+      }
+    } finally {
+      _freeBytes(buffer, bytes.length);
+    }
+  }
 
   String? _json(_JsonDart function) {
     final Pointer<Int8> pointer = function();

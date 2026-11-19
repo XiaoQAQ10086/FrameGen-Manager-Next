@@ -11,4 +11,5 @@ crate-type = ["cdylib", "rlib"]
 fgm-core.workspace = true
 fgm-domain.workspace = true
 fgm-infra.workspace = true
+serde.workspace = true
 serde_json.workspace = true

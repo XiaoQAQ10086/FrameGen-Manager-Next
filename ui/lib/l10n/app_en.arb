@@ -44,6 +44,22 @@
     }
   },
   "libraryLoadFailed": "Could not load the game library.",
+  "deploy": "Deploy",
+  "restore": "Restore",
+  "cancel": "Cancel",
+  "deployConfirmTitle": "Deploy frame generation",
+  "deployConfirmBody": "Deploy frame generation components to {game}?",
+  "@deployConfirmBody": {
+    "placeholders": {
+      "game": {
+        "type": "String"
+      }
+    }
+  },
+  "deployComplete": "Deployment complete.",
+  "deployFailed": "Deployment failed.",
+  "restoreComplete": "Restore complete.",
+  "restoreConflicts": "Restore finished with conflicts.",
   "sourceSteam": "Steam",
   "sourceEpic": "Epic",
   "sourceLoose": "Loose",

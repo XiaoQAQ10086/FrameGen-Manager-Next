@@ -22,6 +22,9 @@
 | SHELL-006 | 打开帧生成页 | 读取缓存游戏库并显示游戏行；不自动扫描 | `app_smoke_test.dart` |
 | SHELL-007 | 点击“扫描游戏” | 在 isolate 中调用 `fgm_library_scan_json`，完成后刷新列表 | 手动/真机 |
 | SHELL-008 | FFI 返回错误信封 | 卡片显示本地化错误 + 错误码，不崩溃 | 手动 |
+| SHELL-009 | 点击游戏“部署” | 确认框 → isolate 调用 `fgm_deploy_json` → 完成/失败 SnackBar | 手动/真机 |
+| SHELL-010 | 点击游戏“还原” | isolate 调用 `fgm_restore_json`；有冲突时提示 | 手动/真机 |
+| SHELL-011 | 自动定位 pack | `FGM_PACKS_DIR` → exe/packs → 数据目录/packs → 仓库 packs → assets/packs | `PackLocator` 单测 |
 
 FFI 只暴露稳定键和一次性 JSON DTO，不返回用户文案（见 ADR-0014）：
 
@@ -29,9 +32,14 @@ FFI 只暴露稳定键和一次性 JSON DTO，不返回用户文案（见 ADR-00
 - `fgm_operation_phase_name(u32) -> *const c_char`
 - `fgm_library_scan_json() -> *mut c_char`
 - `fgm_library_list_json() -> *mut c_char`
+- `fgm_deploy_json(*const u8, usize) -> *mut c_char`
+- `fgm_restore_json(*const u8, usize) -> *mut c_char`
+- `fgm_inspect_json(*const u8, usize) -> *mut c_char`
+- `fgm_alloc(usize) -> *mut u8` / `fgm_free_bytes(*mut u8, usize)`
 - `fgm_string_free(*mut c_char)`
 - 阶段键：`planned`、`backingUp`、`writing`、`verifying`、`installed`、`rolledBack`、`partial`。
 - 游戏库信封：`{"ok":true,"games":[...]}` 或 `{"ok":false,"code":"...","context":[...]}`。
+- 部署/还原信封包含 `state`、文件计数、`warnings`/`conflicts`。
 
 ## 本地化
 

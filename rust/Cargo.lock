@@ -82,6 +82,7 @@ dependencies = [
  "fgm-core",
  "fgm-domain",
  "fgm-infra",
+ "serde",
  "serde_json",
 ]
 

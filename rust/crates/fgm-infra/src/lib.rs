@@ -9,6 +9,7 @@ pub mod library;
 pub mod nvapi;
 pub mod pack_json;
 pub mod pack_payload;
+pub mod packs;
 pub mod paths;
 pub mod pe;
 pub mod platform;

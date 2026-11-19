@@ -37,4 +37,12 @@ void main() {
   } else {
     stdout.writeln('library reply ok, games=${(decoded['games'] as List).length}');
   }
+
+  final String? inspectReply = core.inspectJson('{}');
+  if (inspectReply == null || !inspectReply.contains('"ok":false')) {
+    stderr.writeln('unexpected inspect reply: $inspectReply');
+    exitCode = 1;
+  } else {
+    stdout.writeln('inspect error envelope ok');
+  }
 }

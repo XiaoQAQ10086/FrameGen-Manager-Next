@@ -1,11 +1,14 @@
 import 'package:material_ui/material_ui.dart';
 
 import '../../bridge/core_library.dart';
+import '../../bridge/deployment_bridge.dart';
+import '../../bridge/deployment_result.dart';
 import '../../bridge/library_bridge.dart';
 import '../../bridge/library_game.dart';
 import '../../bridge/library_snapshot.dart';
 import '../../design/app_tokens.dart';
 import '../../l10n/app_localizations.dart';
+import 'frame_gen_actions.dart';
 import 'game_library_card.dart';
 
 /// First migrated page: mirror of the existing frame-generation workspace.
@@ -22,6 +25,7 @@ class _FrameGenPageState extends State<FrameGenPage> {
   List<LibraryGame> _games = const <LibraryGame>[];
   bool _loading = false;
   String? _error;
+  String? _busyGameId;
 
   @override
   void initState() {
@@ -45,6 +49,45 @@ class _FrameGenPageState extends State<FrameGenPage> {
       _games = snapshot.games;
       _error = snapshot.hasError ? snapshot.errorCode : null;
     });
+  }
+
+  Future<void> _deploy(LibraryGame game) async {
+    final AppLocalizations l10n = AppLocalizations.of(context);
+    if (!await FrameGenActions.confirmDeploy(context, l10n, game) || !mounted) {
+      return;
+    }
+
+    setState(() => _busyGameId = game.id);
+    final DeploymentResult result = await DeploymentBridge.deploy(game: game);
+    if (!mounted) {
+      return;
+    }
+    setState(() => _busyGameId = null);
+    _showResult(
+      result.ok ? l10n.deployComplete : '${l10n.deployFailed} ${result.code}',
+    );
+  }
+
+  Future<void> _restore(LibraryGame game) async {
+    final AppLocalizations l10n = AppLocalizations.of(context);
+    setState(() => _busyGameId = game.id);
+    final DeploymentResult result = await DeploymentBridge.restore(game: game);
+    if (!mounted) {
+      return;
+    }
+    setState(() => _busyGameId = null);
+    final String message = result.ok
+        ? (result.conflicts.isEmpty
+              ? l10n.restoreComplete
+              : l10n.restoreConflicts)
+        : '${l10n.deployFailed} ${result.code}';
+    _showResult(message);
+  }
+
+  void _showResult(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message), behavior: SnackBarBehavior.floating),
+    );
   }
 
   @override
@@ -96,6 +139,9 @@ class _FrameGenPageState extends State<FrameGenPage> {
                   loading: _loading,
                   error: _error,
                   onScan: _scan,
+                  onDeploy: _deploy,
+                  onRestore: _restore,
+                  busyGameId: _busyGameId,
                 );
 
                 if (!wide) {

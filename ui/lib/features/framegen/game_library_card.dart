@@ -13,6 +13,9 @@ class GameLibraryCard extends StatelessWidget {
     required this.loading,
     required this.error,
     required this.onScan,
+    required this.onDeploy,
+    required this.onRestore,
+    this.busyGameId,
   });
 
   final AppLocalizations l10n;
@@ -20,6 +23,9 @@ class GameLibraryCard extends StatelessWidget {
   final bool loading;
   final String? error;
   final Future<void> Function() onScan;
+  final Future<void> Function(LibraryGame game) onDeploy;
+  final Future<void> Function(LibraryGame game) onRestore;
+  final String? busyGameId;
 
   @override
   Widget build(BuildContext context) {
@@ -155,17 +161,31 @@ class GameLibraryCard extends StatelessWidget {
       itemCount: games.length,
       separatorBuilder: (BuildContext context, int index) =>
           const Divider(height: 1, indent: 22, endIndent: 22),
-      itemBuilder: (BuildContext context, int index) =>
-          _GameRow(game: games[index], l10n: l10n),
+      itemBuilder: (BuildContext context, int index) => _GameRow(
+        game: games[index],
+        l10n: l10n,
+        busy: busyGameId == games[index].id,
+        onDeploy: onDeploy,
+        onRestore: onRestore,
+      ),
     );
   }
 }
 
 class _GameRow extends StatelessWidget {
-  const _GameRow({required this.game, required this.l10n});
+  const _GameRow({
+    required this.game,
+    required this.l10n,
+    required this.busy,
+    required this.onDeploy,
+    required this.onRestore,
+  });
 
   final LibraryGame game;
   final AppLocalizations l10n;
+  final bool busy;
+  final Future<void> Function(LibraryGame game) onDeploy;
+  final Future<void> Function(LibraryGame game) onRestore;
 
   @override
   Widget build(BuildContext context) {
@@ -215,8 +235,51 @@ class _GameRow extends StatelessWidget {
           _MiniChip(label: _sourceLabel(l10n, game.source)),
           const SizedBox(width: 6),
           _MiniChip(label: _apiLabel(game.graphicsApi)),
+          const SizedBox(width: 4),
+          if (busy)
+            const SizedBox(
+              width: 18,
+              height: 18,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            )
+          else ...<Widget>[
+            _RowAction(
+              icon: Icons.system_update_alt,
+              tooltip: l10n.deploy,
+              onPressed: () => onDeploy(game),
+            ),
+            _RowAction(
+              icon: Icons.restore,
+              tooltip: l10n.restore,
+              onPressed: () => onRestore(game),
+            ),
+          ],
         ],
       ),
+    );
+  }
+}
+
+class _RowAction extends StatelessWidget {
+  const _RowAction({
+    required this.icon,
+    required this.tooltip,
+    required this.onPressed,
+  });
+
+  final IconData icon;
+  final String tooltip;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return IconButton(
+      icon: Icon(icon, size: 18),
+      tooltip: tooltip,
+      onPressed: onPressed,
+      padding: EdgeInsets.zero,
+      constraints: const BoxConstraints.tightFor(width: 30, height: 30),
+      color: AppTokens.textSecondary,
     );
   }
 }

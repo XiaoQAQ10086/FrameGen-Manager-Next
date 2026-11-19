@@ -5,11 +5,13 @@ use std::panic::{AssertUnwindSafe, catch_unwind};
 use std::sync::LazyLock;
 
 use fgm_core::operation::OperationPhase;
-use fgm_domain::error::AppError;
+use fgm_domain::error::{AppError, ErrorCode};
 use fgm_infra::library::{LibraryCache, LibraryScanner, LibraryStore};
 use fgm_infra::paths::AppPaths;
 use fgm_infra::platform::DriveRoots;
 use serde_json::{Value, json};
+
+mod commands;
 
 static VERSION: LazyLock<Vec<u8>> = LazyLock::new(|| {
     let mut bytes = fgm_domain::version::VERSION.as_bytes().to_vec();
@@ -65,6 +67,50 @@ pub extern "C" fn fgm_library_list_json() -> *mut c_char {
     })
 }
 
+/// Deploys a pack. `request` is a UTF-8 JSON object; returns a JSON envelope.
+#[unsafe(no_mangle)]
+pub extern "C" fn fgm_deploy_json(request: *const u8, length: usize) -> *mut c_char {
+    execute_request(request, length, commands::deploy)
+}
+
+/// Restores a deployment. `request` is a UTF-8 JSON object; returns a JSON envelope.
+#[unsafe(no_mangle)]
+pub extern "C" fn fgm_restore_json(request: *const u8, length: usize) -> *mut c_char {
+    execute_request(request, length, commands::restore)
+}
+
+/// Inspects a deployment. `request` is a UTF-8 JSON object; returns a JSON envelope.
+#[unsafe(no_mangle)]
+pub extern "C" fn fgm_inspect_json(request: *const u8, length: usize) -> *mut c_char {
+    execute_request(request, length, commands::inspect)
+}
+
+/// Allocates `size` bytes for a request buffer. Free with `fgm_free_bytes`.
+#[unsafe(no_mangle)]
+pub extern "C" fn fgm_alloc(size: usize) -> *mut u8 {
+    if size == 0 {
+        return std::ptr::null_mut();
+    }
+    let Ok(layout) = std::alloc::Layout::from_size_align(size, 1) else {
+        return std::ptr::null_mut();
+    };
+    unsafe { std::alloc::alloc(layout) }
+}
+
+/// Frees a buffer returned by `fgm_alloc`.
+///
+/// # Safety
+/// `pointer` and `size` must come from the matching `fgm_alloc` call.
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn fgm_free_bytes(pointer: *mut u8, size: usize) {
+    if pointer.is_null() || size == 0 {
+        return;
+    }
+    if let Ok(layout) = std::alloc::Layout::from_size_align(size, 1) {
+        unsafe { std::alloc::dealloc(pointer, layout) };
+    }
+}
+
 /// Frees a string returned by an `fgm_*_json` function.
 ///
 /// # Safety
@@ -109,6 +155,37 @@ fn execute(action: impl FnOnce() -> Value) -> *mut c_char {
         })
     });
     to_c_string(value.to_string())
+}
+
+fn execute_request(
+    request: *const u8,
+    length: usize,
+    action: fn(&str) -> Result<Value, AppError>,
+) -> *mut c_char {
+    execute(|| {
+        let request = match unsafe { read_request(request, length) } {
+            Ok(request) => request,
+            Err(error) => return error_json(&error),
+        };
+        match action(&request) {
+            Ok(value) => value,
+            Err(error) => error_json(&error),
+        }
+    })
+}
+
+unsafe fn read_request(pointer: *const u8, length: usize) -> Result<String, AppError> {
+    if pointer.is_null() || length == 0 {
+        return Err(
+            AppError::new(ErrorCode::InvalidArgument).with("reason", "request buffer is empty")
+        );
+    }
+    let bytes = unsafe { std::slice::from_raw_parts(pointer, length) };
+    std::str::from_utf8(bytes)
+        .map(ToString::to_string)
+        .map_err(|error| {
+            AppError::new(ErrorCode::InvalidArgument).with("reason", error.to_string())
+        })
 }
 
 fn error_json(error: &AppError) -> Value {
