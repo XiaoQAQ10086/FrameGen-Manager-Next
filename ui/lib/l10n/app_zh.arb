@@ -66,6 +66,7 @@
   "logsEmpty": "暂无日志。",
   "copy": "复制",
   "anrImport": "导入 ANR 压缩包",
+  "anrDownload": "在线下载",
   "anrNoPackage": "尚未导入 ANR 组件。",
   "anrReady": "ANR {version}（{kind}）",
   "anrImported": "ANR 组件已导入。",

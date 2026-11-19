@@ -90,3 +90,22 @@ pub(crate) fn anr_restore(request: &str) -> Result<Value, AppError> {
     AnrDeploymentService::restore(&target, &paths)?;
     Ok(json!({ "ok": true }))
 }
+
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct AnrDownloadRequest {
+    #[serde(default)]
+    data_dir: Option<String>,
+}
+
+pub(crate) fn anr_download(request: &str) -> Result<Value, AppError> {
+    let request: AnrDownloadRequest = parse(request)?;
+    let paths = data_paths(request.data_dir.as_deref())?;
+    paths.ensure_created()?;
+    let info = fgm_infra::anr::AnrOnlineService::download_latest(
+        paths.root(),
+        &std::sync::atomic::AtomicBool::new(false),
+        |_| {},
+    )?;
+    Ok(json!({ "ok": true, "package": info }))
+}

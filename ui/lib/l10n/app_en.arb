@@ -115,6 +115,7 @@
   "logsEmpty": "No log entries yet.",
   "copy": "Copy",
   "anrImport": "Import ANR package",
+  "anrDownload": "Download latest",
   "anrNoPackage": "No ANR package imported.",
   "anrReady": "ANR {version} ({kind})",
   "@anrReady": {

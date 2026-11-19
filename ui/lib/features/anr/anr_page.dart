@@ -25,6 +25,7 @@ class _AnrPageState extends State<AnrPage> {
   AnrPackage? _package;
   String? _busyGameId;
   bool _importing = false;
+  bool _downloading = false;
 
   @override
   void initState() {
@@ -50,6 +51,22 @@ class _AnrPageState extends State<AnrPage> {
     if (result.cancelled) {
       return;
     }
+    _show(result.ok ? l10n.anrImported : '${l10n.deployFailed} ${result.code}');
+  }
+
+  Future<void> _download() async {
+    setState(() => _downloading = true);
+    final AnrResult result = await AnrBridge.downloadLatest(widget.core);
+    if (!mounted) {
+      return;
+    }
+    setState(() {
+      _downloading = false;
+      if (result.package != null) {
+        _package = result.package;
+      }
+    });
+    final AppLocalizations l10n = AppLocalizations.of(context);
     _show(result.ok ? l10n.anrImported : '${l10n.deployFailed} ${result.code}');
   }
 
@@ -106,8 +123,20 @@ class _AnrPageState extends State<AnrPage> {
                   style: Theme.of(context).textTheme.headlineSmall,
                 ),
               ),
+              OutlinedButton.icon(
+                onPressed: _downloading || _importing ? null : _download,
+                icon: _downloading
+                    ? const SizedBox(
+                        width: 14,
+                        height: 14,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(Icons.cloud_download, size: 16),
+                label: Text(l10n.anrDownload),
+              ),
+              const SizedBox(width: 8),
               FilledButton.icon(
-                onPressed: _importing ? null : _import,
+                onPressed: _downloading || _importing ? null : _import,
                 icon: _importing
                     ? const SizedBox(
                         width: 14,

@@ -169,6 +169,12 @@ pub extern "C" fn fgm_anr_import_json(request: *const u8, length: usize) -> *mut
     execute_request(request, length, commands_anr::anr_import)
 }
 
+/// Downloads the latest ANR full package and imports it.
+#[unsafe(no_mangle)]
+pub extern "C" fn fgm_anr_download_json(request: *const u8, length: usize) -> *mut c_char {
+    execute_request(request, length, commands_anr::anr_download)
+}
+
 /// Deploys the imported ANR package to a game directory.
 #[unsafe(no_mangle)]
 pub extern "C" fn fgm_anr_deploy_json(request: *const u8, length: usize) -> *mut c_char {

@@ -44,6 +44,17 @@ final class AnrBridge {
     return AnrResult.parse(reply);
   }
 
+  static Future<AnrResult> downloadLatest(CoreLibrary? core) async {
+    if (core == null) {
+      return const AnrResult(ok: false, code: 'CoreUnavailable');
+    }
+    final String? reply = await Isolate.run(() {
+      final CoreLibrary? local = CoreLibrary.tryOpen();
+      return local?.anrDownloadJson('{}');
+    });
+    return AnrResult.parse(reply);
+  }
+
   static Future<AnrResult> deploy(LibraryGame game) async {
     final String? exe = game.renderExe;
     if (exe == null) {
