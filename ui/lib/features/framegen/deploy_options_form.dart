@@ -3,6 +3,7 @@ import 'package:material_ui/material_ui.dart';
 import '../../bridge/deploy_options.dart';
 import '../../bridge/proxy_badge.dart';
 import '../../design/app_tokens.dart';
+import '../../design/legacy_select.dart';
 import '../../l10n/app_localizations.dart';
 
 /// Option grid inside the deploy modal.
@@ -189,30 +190,13 @@ class DeployOptionsForm extends StatelessWidget {
         : (available.isEmpty ? value : available.first);
     return SizedBox(
       width: width,
-      child: DropdownButtonFormField<T>(
-        initialValue: selected,
-        isDense: true,
-        decoration: InputDecoration(
-          labelText: label,
-          isDense: true,
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
-          ),
-        ),
-        items: available
-            .map(
-              (T item) => DropdownMenuItem<T>(
-                value: item,
-                child: Text(
-                  labelFor?.call(item) ?? '$item',
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(fontSize: 12.5),
-                ),
-              ),
-            )
-            .toList(growable: false),
-        onChanged: (T? next) {
-          if (next != null) {
+      child: LegacySelect<T>(
+        label: label,
+        value: selected,
+        items: available,
+        labelFor: labelFor ?? (T item) => '$item',
+        onChanged: (T next) {
+          if (next != selected) {
             onChanged(next);
           }
         },

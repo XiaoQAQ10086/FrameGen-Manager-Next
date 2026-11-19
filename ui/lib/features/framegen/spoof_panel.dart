@@ -7,6 +7,7 @@ import '../../design/app_tokens.dart';
 import '../../design/error_dialog.dart';
 import '../../design/legacy_panel.dart';
 import '../../design/legacy_pill.dart';
+import '../../design/legacy_select.dart';
 import '../../l10n/app_localizations.dart';
 
 /// Sidebar card: rename the adapter in the driver record.
@@ -162,29 +163,12 @@ class _SpoofPanelState extends State<SpoofPanel> {
             ),
           ),
           const SizedBox(height: 10),
-          DropdownButtonFormField<String>(
-            initialValue: _preset,
-            isDense: true,
-            decoration: InputDecoration(
-              labelText: l10n.gpuSpoofTarget,
-              isDense: true,
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
-              ),
-            ),
-            items: (state?.presets ?? const <String>[])
-                .map(
-                  (String preset) => DropdownMenuItem<String>(
-                    value: preset,
-                    child: Text(preset, style: const TextStyle(fontSize: 12.5)),
-                  ),
-                )
-                .toList(growable: false),
-            onChanged: (String? value) {
-              if (value != null) {
-                setState(() => _preset = value);
-              }
-            },
+          LegacySelect<String>(
+            label: l10n.gpuSpoofTarget,
+            value: _preset,
+            items: state?.presets ?? const <String>[],
+            labelFor: (String preset) => preset,
+            onChanged: (String preset) => setState(() => _preset = preset),
           ),
           const SizedBox(height: 10),
           FilledButton(

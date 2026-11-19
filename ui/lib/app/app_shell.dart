@@ -4,6 +4,7 @@ import '../bridge/app_settings.dart';
 import '../bridge/core_library.dart';
 import '../bridge/settings_bridge.dart';
 import '../design/app_tokens.dart';
+import '../design/legacy_select.dart';
 import '../design/shell_background.dart';
 import '../features/about/about_page.dart';
 import '../features/anr/anr_page.dart';
@@ -183,23 +184,37 @@ class _TopBar extends StatelessWidget {
               ),
               const SizedBox(width: 22),
               Expanded(
-                child: SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: Row(
-                    children: <Widget>[
-                      for (final AppSection section in AppSection.values)
-                        _NavItem(
-                          section: section,
-                          label: _sectionLabel(l10n, section),
-                          selected: section == selected,
-                          onTap: () => onSelected(section),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: <Widget>[
+                    Flexible(
+                      child: SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: <Widget>[
+                            for (final AppSection section in AppSection.values)
+                              _NavItem(
+                                section: section,
+                                label: _sectionLabel(l10n, section),
+                                selected: section == selected,
+                                onTap: () => onSelected(section),
+                              ),
+                          ],
                         ),
-                    ],
-                  ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
               const SizedBox(width: 12),
-              _LanguageSelect(language: language, onChanged: onLanguage),
+              SizedBox(
+                width: 104,
+                child: _LanguageSelect(
+                  language: language,
+                  onChanged: onLanguage,
+                ),
+              ),
             ],
           );
         },
@@ -299,39 +314,20 @@ class _LanguageSelect extends StatelessWidget {
       'english' => 'english',
       _ => 'system',
     };
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.8),
-        borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
-        border: Border.all(color: AppTokens.border),
-      ),
-      child: DropdownButtonHideUnderline(
-        child: DropdownButton<String>(
-          value: value,
-          isDense: true,
-          style: const TextStyle(color: AppTokens.textPrimary, fontSize: 12),
-          items: <DropdownMenuItem<String>>[
-            DropdownMenuItem<String>(
-              value: 'system',
-              child: Text(l10n.languageSystem),
-            ),
-            DropdownMenuItem<String>(
-              value: 'chineseSimplified',
-              child: Text(l10n.languageChinese),
-            ),
-            DropdownMenuItem<String>(
-              value: 'english',
-              child: Text(l10n.languageEnglish),
-            ),
-          ],
-          onChanged: (String? selected) {
-            if (selected != null && selected != value) {
-              onChanged(selected);
-            }
-          },
-        ),
-      ),
+    return LegacySelect<String>(
+      value: value,
+      dense: true,
+      items: const <String>['system', 'chineseSimplified', 'english'],
+      labelFor: (String item) => switch (item) {
+        'chineseSimplified' => l10n.languageChinese,
+        'english' => l10n.languageEnglish,
+        _ => l10n.languageSystem,
+      },
+      onChanged: (String selected) {
+        if (selected != value) {
+          onChanged(selected);
+        }
+      },
     );
   }
 }

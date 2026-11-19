@@ -7,6 +7,7 @@ import '../../bridge/game_modes.dart';
 import '../../bridge/library_game.dart';
 import '../../bridge/proxy_badge.dart';
 import '../../design/app_tokens.dart';
+import '../../design/legacy_button_styles.dart';
 import '../../design/legacy_pill.dart';
 import '../../l10n/app_localizations.dart';
 
@@ -152,30 +153,14 @@ class AnrGameCard extends StatelessWidget {
               else if (deployed)
                 FilledButton(
                   onPressed: onRestore,
-                  style: FilledButton.styleFrom(
-                    backgroundColor: AppTokens.danger,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 18,
-                      vertical: 12,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
-                    ),
-                  ),
+                  style: LegacyButtonStyles.compact(LegacyButtonStyles.danger),
                   child: Text(l10n.restore),
                 )
               else if (package != null)
                 FilledButton(
                   onPressed: canDeploy ? onDeploy : null,
-                  style: FilledButton.styleFrom(
-                    backgroundColor: AppTokens.success,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 18,
-                      vertical: 12,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
-                    ),
+                  style: LegacyButtonStyles.compact(
+                    LegacyButtonStyles.success,
                   ),
                   child: Text(l10n.deploy),
                 )
@@ -192,35 +177,26 @@ class AnrGameCard extends StatelessWidget {
                 onPressed: game.canLaunch ? onLaunch : null,
                 icon: const Icon(Icons.play_arrow, size: 16),
                 label: Text(l10n.launchGame),
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: AppTokens.textPrimary,
-                  backgroundColor: AppTokens.launchYellow.withValues(
-                    alpha: 0.22,
-                  ),
-                  side: BorderSide(
-                    color: AppTokens.launchYellow.withValues(alpha: 0.6),
-                  ),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 12,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
-                  ),
+                style: LegacyButtonStyles.compact(
+                  LegacyButtonStyles.launch,
                 ),
               ),
               const Spacer(),
               IconButton(
                 onPressed: onOpenFolder,
-                icon: const Icon(Icons.folder_outlined, size: 18),
+                icon: const Icon(Icons.folder_outlined),
                 tooltip: l10n.openFolder,
-                color: AppTokens.textSecondary,
+                style: LegacyButtonStyles.compactIcon(
+                  LegacyButtonStyles.standard,
+                ),
               ),
               IconButton(
                 onPressed: onRemove,
-                icon: const Icon(Icons.delete_outline, size: 18),
+                icon: const Icon(Icons.delete_outline),
                 tooltip: l10n.removeGame,
-                color: AppTokens.textSecondary,
+                style: LegacyButtonStyles.compactIcon(
+                  LegacyButtonStyles.danger,
+                ),
               ),
             ],
           ),

@@ -11,6 +11,7 @@ import '../../bridge/update_bridge.dart';
 import '../../bridge/update_info.dart';
 import '../../design/app_tokens.dart';
 import '../../design/error_dialog.dart';
+import '../../design/legacy_button_styles.dart';
 import '../../design/legacy_panel.dart';
 import '../../design/operation_progress_dialog.dart';
 import '../../l10n/app_localizations.dart';
@@ -225,9 +226,7 @@ class _AboutPageState extends State<AboutPage> {
                       children: <Widget>[
                         FilledButton(
                           onPressed: _checking ? null : _checkUpdates,
-                          style: FilledButton.styleFrom(
-                            backgroundColor: AppTokens.scanGreen,
-                          ),
+                          style: LegacyButtonStyles.scan,
                           child: Text(
                             _checking
                                 ? l10n.updateChecking

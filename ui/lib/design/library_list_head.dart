@@ -2,6 +2,7 @@ import 'package:material_ui/material_ui.dart';
 
 import '../l10n/app_localizations.dart';
 import 'app_tokens.dart';
+import 'legacy_button_styles.dart';
 
 class LibraryListHead extends StatelessWidget {
   const LibraryListHead({
@@ -81,10 +82,7 @@ class LibraryListHead extends StatelessWidget {
               height: 36,
               child: FilledButton(
                 onPressed: scanning ? null : onScan,
-                style: FilledButton.styleFrom(
-                  backgroundColor: AppTokens.scanGreen,
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                ),
+                style: LegacyButtonStyles.scan,
                 child: scanning
                     ? const SizedBox(
                         width: 16,

@@ -9,6 +9,7 @@ import '../../bridge/proxy_badge.dart';
 import '../../bridge/system_bridge.dart';
 import '../../design/app_tokens.dart';
 import '../../design/error_dialog.dart';
+import '../../design/legacy_button_styles.dart';
 import '../../design/operation_progress_dialog.dart';
 import '../../l10n/app_localizations.dart';
 import 'dlss5_detail_form.dart';
@@ -352,13 +353,7 @@ class _Dlss5DetailDialogState extends State<Dlss5DetailDialog> {
                     onPressed: _busy || _legacy || _state.state == 'installed'
                         ? null
                         : _install,
-                    style: FilledButton.styleFrom(
-                      backgroundColor: AppTokens.success,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 20,
-                        vertical: 12,
-                      ),
-                    ),
+                    style: LegacyButtonStyles.success,
                     child: Text(_installLabel(l10n)),
                   ),
                 ],

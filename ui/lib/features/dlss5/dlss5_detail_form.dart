@@ -4,6 +4,7 @@ import '../../bridge/dlss5_state.dart';
 import '../../bridge/library_game.dart';
 import '../../design/app_tokens.dart';
 import '../../design/legacy_pill.dart';
+import '../../design/legacy_select.dart';
 import '../../l10n/app_localizations.dart';
 import 'dlss5_hotkey.dart';
 
@@ -118,6 +119,7 @@ class Dlss5DetailForm extends StatelessWidget {
         ],
         const SizedBox(height: 12),
         Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
             Expanded(
               child: _field(
@@ -204,35 +206,13 @@ class Dlss5DetailForm extends StatelessWidget {
     required ValueChanged<String> onChanged,
     required String Function(String value) labelFor,
   }) {
-    return DropdownButtonFormField<String>(
-      initialValue: values.contains(value) ? value : values.first,
-      isDense: true,
-      decoration: InputDecoration(
-        labelText: label,
-        isDense: true,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
-        ),
-      ),
-      items: values
-          .map(
-            (String item) => DropdownMenuItem<String>(
-              value: item,
-              child: Text(
-                labelFor(item),
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(fontSize: 12.5),
-              ),
-            ),
-          )
-          .toList(growable: false),
-      onChanged: busy
-          ? null
-          : (String? selected) {
-              if (selected != null) {
-                onChanged(selected);
-              }
-            },
+    return LegacySelect<String>(
+      label: label,
+      value: values.contains(value) ? value : values.first,
+      items: values,
+      labelFor: labelFor,
+      enabled: !busy,
+      onChanged: onChanged,
     );
   }
 

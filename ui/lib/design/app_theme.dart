@@ -1,6 +1,7 @@
 import 'package:material_ui/material_ui.dart';
 
 import 'app_tokens.dart';
+import 'legacy_button_styles.dart';
 
 /// Light Material 3 theme for the desktop shell.
 abstract final class AppTheme {
@@ -22,6 +23,35 @@ abstract final class AppTheme {
       fontFamilyFallback: const <String>['Microsoft YaHei', 'Segoe UI'],
       dividerColor: AppTokens.border,
       splashFactory: InkSparkle.splashFactory,
+      filledButtonTheme: FilledButtonThemeData(
+        style: LegacyButtonStyles.primary,
+      ),
+      outlinedButtonTheme: OutlinedButtonThemeData(
+        style: LegacyButtonStyles.standard,
+      ),
+      textButtonTheme: TextButtonThemeData(
+        style: LegacyButtonStyles.ghost,
+      ),
+      iconButtonTheme: IconButtonThemeData(
+        style: LegacyButtonStyles.iconButton,
+      ),
+      popupMenuTheme: PopupMenuThemeData(
+        color: const Color(0xFFFDFDFE),
+        surfaceTintColor: Colors.transparent,
+        elevation: 12,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppTokens.radiusMedium),
+          side: const BorderSide(color: Color(0x1F14233C)),
+        ),
+      ),
+      dialogTheme: DialogThemeData(
+        backgroundColor: Colors.white,
+        surfaceTintColor: Colors.transparent,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+          side: const BorderSide(color: Color(0x1F14233C)),
+        ),
+      ),
       textTheme: const TextTheme(
         headlineSmall: TextStyle(
           color: AppTokens.textPrimary,

@@ -6,6 +6,7 @@ import '../../bridge/library_bridge.dart';
 import '../../bridge/library_game.dart';
 import '../../bridge/proxy_badge.dart';
 import '../../design/app_tokens.dart';
+import '../../design/legacy_button_styles.dart';
 import '../../design/legacy_pill.dart';
 import '../../l10n/app_localizations.dart';
 import 'deploy_dialog_header.dart';
@@ -54,8 +55,11 @@ class _FrameGenDeployDialogState extends State<FrameGenDeployDialog> {
   Widget build(BuildContext context) {
     final AppLocalizations l10n = AppLocalizations.of(context);
     return Dialog(
+      backgroundColor: Colors.white,
+      surfaceTintColor: Colors.transparent,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(20),
+        side: const BorderSide(color: Color(0x1F14233C)),
       ),
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 580, maxHeight: 660),
@@ -137,13 +141,7 @@ class _FrameGenDeployDialogState extends State<FrameGenDeployDialog> {
                         ),
                       ),
                     ),
-                    style: FilledButton.styleFrom(
-                      backgroundColor: AppTokens.success,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 20,
-                        vertical: 12,
-                      ),
-                    ),
+                    style: LegacyButtonStyles.success,
                     child: Text(l10n.deploy),
                   ),
                 ],
@@ -177,11 +175,17 @@ class _FrameGenDeployDialogState extends State<FrameGenDeployDialog> {
         ),
         Container(
           width: double.infinity,
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+          height: 34,
+          alignment: Alignment.centerLeft,
+          padding: const EdgeInsets.symmetric(horizontal: 11),
           decoration: BoxDecoration(
-            color: AppTokens.surfaceMuted,
+            gradient: const LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: <Color>[Color(0xFFFFFFFF), Color(0xFFF4F7FB)],
+            ),
             borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
-            border: Border.all(color: AppTokens.border),
+            border: Border.all(color: const Color(0x2E14233C)),
           ),
           child: Text(
             _gameExe ?? widget.game.targetDirectory,
