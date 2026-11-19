@@ -99,26 +99,14 @@ class _FrameGenPageState extends State<FrameGenPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: <Widget>[
-          Row(
-            children: <Widget>[
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    Text(
-                      l10n.navFrameGeneration,
-                      style: Theme.of(context).textTheme.headlineSmall,
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      l10n.rewriteTitle,
-                      style: Theme.of(context).textTheme.bodyMedium,
-                    ),
-                  ],
-                ),
-              ),
-              _PhaseChip(label: l10n.phaseBadge),
-            ],
+          Text(
+            l10n.navFrameGeneration,
+            style: Theme.of(context).textTheme.headlineSmall,
+          ),
+          const SizedBox(height: 4),
+          Text(
+            l10n.framegenSubtitle,
+            style: Theme.of(context).textTheme.bodyMedium,
           ),
           const SizedBox(height: 20),
           Expanded(
@@ -127,11 +115,7 @@ class _FrameGenPageState extends State<FrameGenPage> {
                 final bool wide = constraints.maxWidth >= 900;
                 final Widget sidebar = Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: <Widget>[
-                    _CoreCard(core: widget.core),
-                    const SizedBox(height: AppTokens.gap),
-                    _MigrationCard(l10n: l10n),
-                  ],
+                  children: <Widget>[_CoreCard(core: widget.core)],
                 );
                 final Widget library = GameLibraryCard(
                   l10n: l10n,
@@ -228,88 +212,10 @@ class _CoreCard extends StatelessWidget {
           if (online) ...<Widget>[
             const SizedBox(height: 16),
             Text(
-              l10n.rewriteBody,
+              l10n.framegenCoreHint,
               style: Theme.of(context).textTheme.bodyMedium,
             ),
           ],
-        ],
-      ),
-    );
-  }
-}
-
-class _MigrationCard extends StatelessWidget {
-  const _MigrationCard({required this.l10n});
-
-  final AppLocalizations l10n;
-
-  @override
-  Widget build(BuildContext context) {
-    return _Panel(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: <Widget>[
-          Text(
-            l10n.migrationTitle,
-            style: Theme.of(context).textTheme.titleMedium,
-          ),
-          const SizedBox(height: 14),
-          _MigrationRow(
-            label: l10n.migrationDomain,
-            status: l10n.statusDone,
-            tone: _ChipTone.success,
-          ),
-          _MigrationRow(
-            label: l10n.migrationCore,
-            status: l10n.statusNext,
-            tone: _ChipTone.accent,
-          ),
-          _MigrationRow(
-            label: l10n.migrationInfra,
-            status: l10n.statusNext,
-            tone: _ChipTone.accent,
-          ),
-          _MigrationRow(
-            label: l10n.migrationUi,
-            status: l10n.statusDone,
-            tone: _ChipTone.success,
-            last: true,
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _MigrationRow extends StatelessWidget {
-  const _MigrationRow({
-    required this.label,
-    required this.status,
-    required this.tone,
-    this.last = false,
-  });
-
-  final String label;
-  final String status;
-  final _ChipTone tone;
-  final bool last;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.only(bottom: last ? 0 : 10),
-      child: Row(
-        children: <Widget>[
-          Expanded(
-            child: Text(
-              label,
-              style: const TextStyle(
-                color: AppTokens.textPrimary,
-                fontSize: 13,
-              ),
-            ),
-          ),
-          _Chip(label: status, tone: tone),
         ],
       ),
     );
@@ -332,65 +238,6 @@ class _Panel extends StatelessWidget {
         boxShadow: AppTokens.panelShadow,
       ),
       child: child,
-    );
-  }
-}
-
-class _PhaseChip extends StatelessWidget {
-  const _PhaseChip({required this.label});
-
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-      decoration: BoxDecoration(
-        color: AppTokens.accentSoft,
-        borderRadius: BorderRadius.circular(999),
-      ),
-      child: Text(
-        label,
-        style: const TextStyle(
-          color: AppTokens.accent,
-          fontSize: 11,
-          fontWeight: FontWeight.w600,
-        ),
-      ),
-    );
-  }
-}
-
-enum _ChipTone { accent, success, neutral }
-
-class _Chip extends StatelessWidget {
-  const _Chip({required this.label, required this.tone});
-
-  final String label;
-  final _ChipTone tone;
-
-  @override
-  Widget build(BuildContext context) {
-    final (Color foreground, Color background) = switch (tone) {
-      _ChipTone.accent => (AppTokens.accent, AppTokens.accentSoft),
-      _ChipTone.success => (AppTokens.success, AppTokens.successSoft),
-      _ChipTone.neutral => (AppTokens.textSecondary, AppTokens.surfaceMuted),
-    };
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
-      decoration: BoxDecoration(
-        color: background,
-        borderRadius: BorderRadius.circular(999),
-      ),
-      child: Text(
-        label,
-        style: TextStyle(
-          color: foreground,
-          fontSize: 11,
-          fontWeight: FontWeight.w600,
-        ),
-      ),
     );
   }
 }

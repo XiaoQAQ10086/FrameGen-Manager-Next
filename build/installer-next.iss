@@ -23,12 +23,20 @@ ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
 UseSetupLdr=x64
 CloseApplications=yes
+AppMutex=Local\FrameGenManagerNext.App
+ShowLanguageDialog=no
+LanguageDetectionMethod=uilanguage
 
 [Languages]
 Name: "english"; MessagesFile: "compiler:Default.isl"
+Name: "chinesesimplified"; MessagesFile: "Languages\ChineseSimplified.isl"
 
 [Files]
 Source: "..\artifacts\portable-next\FrameGen-Manager-Next\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs; Excludes: "portable.flag,data\*"
+
+[UninstallDelete]
+Type: filesandordirs; Name: "{localappdata}\FrameGen-Manager-Next"
+Type: filesandordirs; Name: "{tmp}\FrameGen-Manager-Next"
 
 [Icons]
 Name: "{group}\{#AppName}"; Filename: "{app}\{#AppExeName}"

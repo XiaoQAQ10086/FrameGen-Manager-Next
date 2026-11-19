@@ -20,19 +20,11 @@
     }
   },
   "coreOfflineHint": "Build fgm-ffi to enable the native bridge.",
-  "rewriteTitle": "Rewrite in progress",
-  "rewriteBody": "This is the Rust + Flutter foundation. Features move over module by module while the current release stays available.",
+  "framegenSubtitle": "Deploy or restore frame generation for each game.",
+  "framegenCoreHint": "Scan the library, then deploy or restore per game. A running game is detected before anything is written.",
   "gameLibraryTitle": "Game library",
   "gameLibraryEmpty": "No games yet. Scan to discover installed games.",
-  "migrationTitle": "Migration status",
-  "migrationDomain": "Domain and rules",
-  "migrationCore": "Core use cases",
-  "migrationInfra": "Windows platform layer",
-  "migrationUi": "Flutter shell",
-  "statusDone": "Done",
-  "statusNext": "Next",
-  "statusPlanned": "Planned",
-  "sectionPending": "This module is scheduled for a later phase.",
+  "smSubtitle": "Turn Smooth Motion on per game and manage its driver profile.",
   "scanGames": "Scan games",
   "scanningGames": "Scanning...",
   "gamesCount": "{count} games",
@@ -95,6 +87,33 @@
   "gpuUnsupported": "Smooth Motion not supported",
   "gpuMissing": "NVIDIA GPU not detected",
   "aboutDescription": "Windows frame generation deployment manager.",
+  "updateTitle": "Updates",
+  "updateCheck": "Check for updates",
+  "updateChecking": "Checking...",
+  "updateAvailable": "Version {version} is available.",
+  "@updateAvailable": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "updateLatest": "You are on the latest version.",
+  "updateFailed": "Update check failed ({code}).",
+  "@updateFailed": {
+    "placeholders": {
+      "code": {
+        "type": "String"
+      }
+    }
+  },
+  "updateDownload": "Download update",
+  "updateDownloading": "Downloading...",
+  "updateDownloaded": "Update downloaded.",
+  "updateInstall": "Install and restart",
+  "updatePortableHint": "Portable build: run the downloaded setup manually to replace this folder.",
+  "updateOpenPage": "Release page",
+  "updateNotes": "Release notes",
   "dlss5Install": "Install DLSS5",
   "dlss5ConfirmBody": "Install DLSS5 and ReShade for {game}?",
   "@dlss5ConfirmBody": {
@@ -179,8 +198,6 @@
   "sourceManual": "Manual",
   "sourceWeGame": "WeGame",
   "sourceXbox": "Xbox",
-  "phaseBadge": "Phase 0",
-  "phaseLibraryBadge": "Phase 3",
   "footerCore": "Rust core {version}",
   "@footerCore": {
     "placeholders": {

@@ -45,6 +45,10 @@ final class CoreLibrary {
     this._anrDownload,
     this._anrDeploy,
     this._anrRestore,
+    this._updateCheck,
+    this._updateDownload,
+    this._updateInstall,
+    this._updateOpen,
     this._gpu,
     this._stringFree,
     this._alloc,
@@ -73,6 +77,10 @@ final class CoreLibrary {
   final _RequestDart _anrDownload;
   final _RequestDart _anrDeploy;
   final _RequestDart _anrRestore;
+  final _JsonDart _updateCheck;
+  final _JsonDart _updateDownload;
+  final _RequestDart _updateInstall;
+  final _RequestDart _updateOpen;
   final _JsonDart _gpu;
   final _StringFreeDart _stringFree;
   final _AllocDart _alloc;
@@ -148,6 +156,18 @@ final class CoreLibrary {
           library.lookupFunction<_RequestNative, _RequestDart>(
             'fgm_anr_restore_json',
           ),
+          library.lookupFunction<_JsonNative, _JsonDart>(
+            'fgm_update_check_json',
+          ),
+          library.lookupFunction<_JsonNative, _JsonDart>(
+            'fgm_update_download_json',
+          ),
+          library.lookupFunction<_RequestNative, _RequestDart>(
+            'fgm_update_install_json',
+          ),
+          library.lookupFunction<_RequestNative, _RequestDart>(
+            'fgm_update_open_json',
+          ),
           library.lookupFunction<_JsonNative, _JsonDart>('fgm_gpu_json'),
           library.lookupFunction<_StringFreeNative, _StringFreeDart>(
             'fgm_string_free',
@@ -221,6 +241,14 @@ final class CoreLibrary {
   String? anrDeployJson(String request) => _request(_anrDeploy, request);
 
   String? anrRestoreJson(String request) => _request(_anrRestore, request);
+
+  String? updateCheckJson() => _json(_updateCheck);
+
+  String? updateDownloadJson() => _json(_updateDownload);
+
+  String? updateInstallJson(String request) => _request(_updateInstall, request);
+
+  String? updateOpenJson(String request) => _request(_updateOpen, request);
 
   String? gpuJson() => _json(_gpu);
 

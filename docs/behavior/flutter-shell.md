@@ -1,11 +1,17 @@
-# Flutter 外壳（Phase 0）
+# Flutter 外壳
 
-本规格描述重构初期可运行的 Flutter 壳。旧版 [app-shell.md](app-shell.md) 仍是 2.x 的行为对照；本文件只覆盖新壳已实现的部分。
+本规格描述 Rust + Flutter 版本的外壳。旧版 [app-shell.md](app-shell.md) 仍是 2.x 的行为对照；本文件只覆盖新壳已实现的部分。
 
 ## 范围
 
 - 顶栏导航：帧生成、平滑运动、DLSS5、ANR、显卡、日志、设置、关于。
-- 帧生成页：核心状态卡、迁移进度卡、空游戏库占位。
+- 帧生成页：核心状态卡 + 游戏库（扫描、部署、还原）；不再显示迁移进度占位。
+- 平滑运动页：每局游戏开关、组件部署状态、驱动配置结果。
+- DLSS5 页：部署状态、ReShade/旧版残留标签、安装/更新/卸载。
+- ANR 页：导入 zip、在线下载最新包、部署/还原。
+- 显卡页：驱动版本、Smooth Motion 支持与路由。
+- 日志页：操作日志尾部与复制；设置页：语言、自动扫描、封面、REFramework。
+- 关于页：版本信息 + 更新检查/下载/安装（安装版）与发布页入口。
 - 底部状态栏：核心连接状态、平台标识。
 - 中英文运行时切换；所有文案来自 ARB。
 - Rust 核心通过 `fgm_ffi.dll` 加载，不启动 sidecar、不开本地端口。
@@ -39,6 +45,13 @@ FFI 只暴露稳定键和一次性 JSON DTO，不返回用户文案（见 ADR-00
 - `fgm_sm_enable_json(*const u8, usize) -> *mut c_char`
 - `fgm_sm_disable_json(*const u8, usize) -> *mut c_char`
 - `fgm_sm_restore_json(*const u8, usize) -> *mut c_char`
+- `fgm_settings_get_json() -> *mut c_char`
+- `fgm_settings_set_json(*const u8, usize) -> *mut c_char`
+- `fgm_gpu_json() -> *mut c_char`
+- `fgm_logs_tail_json(*const u8, usize) -> *mut c_char`
+- `fgm_dlss5_install_json` / `fgm_dlss5_inspect_json` / `fgm_dlss5_set_hotkey_json` / `fgm_dlss5_uninstall_json`
+- `fgm_anr_current_json` / `fgm_anr_import_json` / `fgm_anr_download_json` / `fgm_anr_deploy_json` / `fgm_anr_restore_json`
+- `fgm_update_check_json` / `fgm_update_download_json` / `fgm_update_install_json` / `fgm_update_open_json`
 - `fgm_alloc(usize) -> *mut u8` / `fgm_free_bytes(*mut u8, usize)`
 - `fgm_string_free(*mut c_char)`
 - 阶段键：`planned`、`backingUp`、`writing`、`verifying`、`installed`、`rolledBack`、`partial`。
@@ -67,6 +80,7 @@ FFI 只暴露稳定键和一次性 JSON DTO，不返回用户文案（见 ADR-00
 
 ## 不做 / 已知限制
 
-- 游戏库、GPU 探测、部署、还原、更新尚未接入。
+- 手动添加游戏、封面加载、启动游戏、跨模式状态徽章尚未接入。
 - 不保存窗口尺寸和位置（对等阶段补上）。
+- DLSS5 快捷键录制界面、更新下载进度/取消、启动时静默更新检查尚未接入。
 - 不使用第三方状态管理、HTTP 或数据库包。

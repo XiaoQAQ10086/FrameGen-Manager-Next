@@ -127,7 +127,6 @@ class _TopBar extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 16),
-          _Badge(label: l10n.phaseBadge),
         ],
       ),
     );
@@ -264,32 +263,6 @@ class _StatusBar extends StatelessWidget {
             style: Theme.of(context).textTheme.labelMedium,
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _Badge extends StatelessWidget {
-  const _Badge({required this.label});
-
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-      decoration: BoxDecoration(
-        color: AppTokens.accentSoft,
-        borderRadius: BorderRadius.circular(999),
-      ),
-      child: Text(
-        label,
-        style: const TextStyle(
-          color: AppTokens.accent,
-          fontSize: 11,
-          fontWeight: FontWeight.w600,
-          letterSpacing: 0.2,
-        ),
       ),
     );
   }

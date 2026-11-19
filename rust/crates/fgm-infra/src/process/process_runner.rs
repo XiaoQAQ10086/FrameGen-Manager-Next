@@ -121,7 +121,7 @@ fn cancelled_result() -> ProcessResult {
     }
 }
 
-fn spawn_error(executable: &Path, error: std::io::Error) -> AppError {
+pub(crate) fn spawn_error(executable: &Path, error: std::io::Error) -> AppError {
     let code = match error.kind() {
         std::io::ErrorKind::NotFound => ErrorCode::FileNotFound,
         std::io::ErrorKind::PermissionDenied => ErrorCode::AccessDenied,

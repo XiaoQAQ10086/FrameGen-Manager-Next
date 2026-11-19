@@ -129,7 +129,7 @@ class _SmoothMotionPageState extends State<SmoothMotionPage> {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      l10n.rewriteTitle,
+                      l10n.smSubtitle,
                       style: Theme.of(context).textTheme.bodyMedium,
                     ),
                   ],

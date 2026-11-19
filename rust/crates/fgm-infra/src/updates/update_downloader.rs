@@ -7,6 +7,7 @@ use crate::hashing::FileHasher;
 use crate::net::Downloader;
 
 use super::update_installer::UpdateInstaller;
+use super::update_source::UpdateSource;
 
 /// Downloads an installer, trying each mirror until size and hash match.
 pub struct UpdateDownloader;
@@ -40,10 +41,16 @@ impl UpdateDownloader {
         let part = directory.join(format!("{name}.part"));
         let mut last_error = None;
 
-        for url in &installer.urls {
+        for url in installer.urls.iter().flat_map(|url| {
+            let mut candidates = UpdateSource::mirrors(url);
+            if candidates.is_empty() {
+                candidates.push(url.clone());
+            }
+            candidates
+        }) {
             let _ = std::fs::remove_file(&part);
             let downloaded =
-                Downloader::download_with_progress(url, &part, cancelled, &mut progress);
+                Downloader::download_with_progress(&url, &part, cancelled, &mut progress);
             if let Err(error) = downloaded {
                 last_error = Some(error);
                 continue;

@@ -51,7 +51,6 @@ class GameLibraryCard extends StatelessWidget {
                         style: Theme.of(context).textTheme.titleMedium,
                       ),
                     ),
-                    _PhaseChip(label: l10n.phaseLibraryBadge),
                   ],
                 ),
                 const SizedBox(height: 8),
@@ -302,31 +301,6 @@ class _MiniChip extends StatelessWidget {
         style: const TextStyle(
           color: AppTokens.textSecondary,
           fontSize: 10,
-          fontWeight: FontWeight.w600,
-        ),
-      ),
-    );
-  }
-}
-
-class _PhaseChip extends StatelessWidget {
-  const _PhaseChip({required this.label});
-
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-      decoration: BoxDecoration(
-        color: AppTokens.accentSoft,
-        borderRadius: BorderRadius.circular(999),
-      ),
-      child: Text(
-        label,
-        style: const TextStyle(
-          color: AppTokens.accent,
-          fontSize: 11,
           fontWeight: FontWeight.w600,
         ),
       ),

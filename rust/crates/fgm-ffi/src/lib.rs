@@ -15,6 +15,7 @@ mod commands;
 mod commands_anr;
 mod commands_dlss5;
 mod commands_sm;
+mod commands_update;
 
 static VERSION: LazyLock<Vec<u8>> = LazyLock::new(|| {
     let mut bytes = fgm_domain::version::VERSION.as_bytes().to_vec();
@@ -164,6 +165,36 @@ pub extern "C" fn fgm_dlss5_set_hotkey_json(request: *const u8, length: usize) -
 #[unsafe(no_mangle)]
 pub extern "C" fn fgm_dlss5_uninstall_json(request: *const u8, length: usize) -> *mut c_char {
     execute_request(request, length, commands_dlss5::dlss5_uninstall)
+}
+
+/// Checks the update manifest against the running version.
+#[unsafe(no_mangle)]
+pub extern "C" fn fgm_update_check_json() -> *mut c_char {
+    execute(|| match commands_update::update_check() {
+        Ok(value) => value,
+        Err(error) => error_json(&error),
+    })
+}
+
+/// Downloads the latest installer without launching it.
+#[unsafe(no_mangle)]
+pub extern "C" fn fgm_update_download_json() -> *mut c_char {
+    execute(|| match commands_update::update_download() {
+        Ok(value) => value,
+        Err(error) => error_json(&error),
+    })
+}
+
+/// Launches a verified installer from the update staging directory.
+#[unsafe(no_mangle)]
+pub extern "C" fn fgm_update_install_json(request: *const u8, length: usize) -> *mut c_char {
+    execute_request(request, length, commands_update::update_install)
+}
+
+/// Opens an http(s) URL with the system handler.
+#[unsafe(no_mangle)]
+pub extern "C" fn fgm_update_open_json(request: *const u8, length: usize) -> *mut c_char {
+    execute_request(request, length, commands_update::update_open)
 }
 
 /// Returns the tail of the operation log.
