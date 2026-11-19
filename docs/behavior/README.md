@@ -42,7 +42,7 @@
 | 资产包 schema/payload | 旧版 `deploy.rs` / `sm.rs` / `dlss5.rs` 的文件表 | `Domain/Packs`、`Infrastructure/Packs`；Rust Phase 1 | [已实现](asset-pack.md) |
 | 内置资产升级 | 旧版升级时自动清理部署 | `Infrastructure/Deployment` + `Infrastructure/Packs` | [已实现](pack-upgrades.md) |
 | 资产更新清除 | 无（新增） | `Core/Features/Maintenance` | [已实现](asset-maintenance.md) |
-| Flutter 外壳（Phase 0） | 无（新增） | `ui/lib/app`、`ui/lib/bridge` | [已实现](flutter-shell.md) |
+| Flutter 外壳（Phase 0/4） | 无（新增） | `ui/lib/app`、`ui/lib/bridge`、`ui/lib/features` | [已实现（壳 + 游戏库只读）](flutter-shell.md) |
 
 ## 模板
 

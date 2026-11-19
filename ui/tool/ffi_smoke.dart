@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:fgm_ui/bridge/core_library.dart';
@@ -21,5 +22,19 @@ void main() {
       core.phaseName(99) != null) {
     stderr.writeln('unexpected phase mapping');
     exitCode = 1;
+  }
+
+  final String? libraryJson = core.listLibraryJson();
+  if (libraryJson == null) {
+    stderr.writeln('library list returned null');
+    exitCode = 1;
+    return;
+  }
+  final Object? decoded = jsonDecode(libraryJson);
+  if (decoded is! Map || decoded['ok'] != true) {
+    stderr.writeln('unexpected library reply: $libraryJson');
+    exitCode = 1;
+  } else {
+    stdout.writeln('library reply ok, games=${(decoded['games'] as List).length}');
   }
 }

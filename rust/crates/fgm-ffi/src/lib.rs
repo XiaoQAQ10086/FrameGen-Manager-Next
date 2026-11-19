@@ -1,8 +1,15 @@
 #![allow(unsafe_code)]
 
-use fgm_core::operation::OperationPhase;
-use std::ffi::c_char;
+use std::ffi::{CString, c_char};
+use std::panic::{AssertUnwindSafe, catch_unwind};
 use std::sync::LazyLock;
+
+use fgm_core::operation::OperationPhase;
+use fgm_domain::error::AppError;
+use fgm_infra::library::{LibraryCache, LibraryScanner, LibraryStore};
+use fgm_infra::paths::AppPaths;
+use fgm_infra::platform::DriveRoots;
+use serde_json::{Value, json};
 
 static VERSION: LazyLock<Vec<u8>> = LazyLock::new(|| {
     let mut bytes = fgm_domain::version::VERSION.as_bytes().to_vec();
@@ -37,6 +44,84 @@ pub extern "C" fn fgm_operation_phase_name(phase: u32) -> *const c_char {
         Ok(phase) => PHASE_NAMES[phase.wire_id() as usize].as_ptr().cast(),
         Err(_) => std::ptr::null(),
     }
+}
+
+/// Scans Steam, Epic and loose folders, updates `library.json`, and returns:
+/// `{"ok":true,"games":[...]}` or `{"ok":false,"code":"...","context":[...]}`.
+#[unsafe(no_mangle)]
+pub extern "C" fn fgm_library_scan_json() -> *mut c_char {
+    execute(|| match scan_library() {
+        Ok(games) => json!({ "ok": true, "games": games }),
+        Err(error) => error_json(&error),
+    })
+}
+
+/// Returns the cached library without scanning.
+#[unsafe(no_mangle)]
+pub extern "C" fn fgm_library_list_json() -> *mut c_char {
+    execute(|| match list_library() {
+        Ok(games) => json!({ "ok": true, "games": games }),
+        Err(error) => error_json(&error),
+    })
+}
+
+/// Frees a string returned by an `fgm_*_json` function.
+///
+/// # Safety
+/// `value` must come from one of this library's JSON functions and be freed once.
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn fgm_string_free(value: *mut c_char) {
+    if value.is_null() {
+        return;
+    }
+    unsafe {
+        drop(CString::from_raw(value));
+    }
+}
+
+fn scan_library() -> Result<Vec<fgm_domain::library::GameEntry>, AppError> {
+    let paths = AppPaths::create_default(None)?;
+    paths.ensure_created()?;
+    let roots = DriveRoots::roots();
+    let games = LibraryScanner::scan(&roots);
+
+    let store = LibraryStore::new(paths.library().join("library.json"));
+    let mut cache = store.load()?;
+    cache.schema_version = 1;
+    cache.games = games;
+    store.save(&cache)?;
+    Ok(cache.games)
+}
+
+fn list_library() -> Result<Vec<fgm_domain::library::GameEntry>, AppError> {
+    let paths = AppPaths::create_default(None)?;
+    let store = LibraryStore::new(paths.library().join("library.json"));
+    let cache = store.load().unwrap_or_else(|_| LibraryCache::default());
+    Ok(cache.games)
+}
+
+fn execute(action: impl FnOnce() -> Value) -> *mut c_char {
+    let value = catch_unwind(AssertUnwindSafe(action)).unwrap_or_else(|_| {
+        json!({
+            "ok": false,
+            "code": "Internal",
+            "context": [["reason", "ffi panic"]]
+        })
+    });
+    to_c_string(value.to_string())
+}
+
+fn error_json(error: &AppError) -> Value {
+    json!({
+        "ok": false,
+        "code": format!("{:?}", error.code),
+        "context": error.context
+    })
+}
+
+fn to_c_string(value: String) -> *mut c_char {
+    let sanitized = value.replace('\0', "");
+    CString::new(sanitized).unwrap_or_default().into_raw()
 }
 
 #[cfg(test)]

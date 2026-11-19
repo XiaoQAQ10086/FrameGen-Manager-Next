@@ -53,7 +53,7 @@ impl SteamGameScanner {
                 let Some(game) = read_manifest(&path, &steamapps) else {
                     continue;
                 };
-                let key = game.install_directory.to_string_lossy().to_lowercase();
+                let key = super::path_key(&game.install_directory);
                 if seen.insert(key) {
                     games.push(game);
                 }

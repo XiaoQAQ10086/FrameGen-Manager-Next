@@ -1,14 +1,51 @@
 import 'package:material_ui/material_ui.dart';
 
 import '../../bridge/core_library.dart';
+import '../../bridge/library_bridge.dart';
+import '../../bridge/library_game.dart';
+import '../../bridge/library_snapshot.dart';
 import '../../design/app_tokens.dart';
 import '../../l10n/app_localizations.dart';
+import 'game_library_card.dart';
 
 /// First migrated page: mirror of the existing frame-generation workspace.
-class FrameGenPage extends StatelessWidget {
+class FrameGenPage extends StatefulWidget {
   const FrameGenPage({super.key, this.core});
 
   final CoreLibrary? core;
+
+  @override
+  State<FrameGenPage> createState() => _FrameGenPageState();
+}
+
+class _FrameGenPageState extends State<FrameGenPage> {
+  List<LibraryGame> _games = const <LibraryGame>[];
+  bool _loading = false;
+  String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    final LibrarySnapshot snapshot = LibraryBridge.list(widget.core);
+    _games = snapshot.games;
+    _error = snapshot.hasError ? snapshot.errorCode : null;
+  }
+
+  Future<void> _scan() async {
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
+    final LibrarySnapshot snapshot = await LibraryBridge.scan(widget.core);
+    if (!mounted) {
+      return;
+    }
+    setState(() {
+      _loading = false;
+      _games = snapshot.games;
+      _error = snapshot.hasError ? snapshot.errorCode : null;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -48,10 +85,17 @@ class FrameGenPage extends StatelessWidget {
                 final Widget sidebar = Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: <Widget>[
-                    _CoreCard(core: core),
+                    _CoreCard(core: widget.core),
                     const SizedBox(height: AppTokens.gap),
                     _MigrationCard(l10n: l10n),
                   ],
+                );
+                final Widget library = GameLibraryCard(
+                  l10n: l10n,
+                  games: _games,
+                  loading: _loading,
+                  error: _error,
+                  onScan: _scan,
                 );
 
                 if (!wide) {
@@ -60,10 +104,7 @@ class FrameGenPage extends StatelessWidget {
                       children: <Widget>[
                         sidebar,
                         const SizedBox(height: AppTokens.gap),
-                        SizedBox(
-                          height: 360,
-                          child: _LibraryCard(l10n: l10n),
-                        ),
+                        SizedBox(height: 420, child: library),
                       ],
                     ),
                   );
@@ -74,7 +115,7 @@ class FrameGenPage extends StatelessWidget {
                   children: <Widget>[
                     SizedBox(width: 320, child: sidebar),
                     const SizedBox(width: AppTokens.gap),
-                    Expanded(child: _LibraryCard(l10n: l10n)),
+                    Expanded(child: library),
                   ],
                 );
               },
@@ -169,18 +210,18 @@ class _MigrationCard extends StatelessWidget {
           const SizedBox(height: 14),
           _MigrationRow(
             label: l10n.migrationDomain,
+            status: l10n.statusDone,
+            tone: _ChipTone.success,
+          ),
+          _MigrationRow(
+            label: l10n.migrationCore,
             status: l10n.statusNext,
             tone: _ChipTone.accent,
           ),
           _MigrationRow(
-            label: l10n.migrationCore,
-            status: l10n.statusPlanned,
-            tone: _ChipTone.neutral,
-          ),
-          _MigrationRow(
             label: l10n.migrationInfra,
-            status: l10n.statusPlanned,
-            tone: _ChipTone.neutral,
+            status: l10n.statusNext,
+            tone: _ChipTone.accent,
           ),
           _MigrationRow(
             label: l10n.migrationUi,
@@ -229,80 +270,15 @@ class _MigrationRow extends StatelessWidget {
   }
 }
 
-class _LibraryCard extends StatelessWidget {
-  const _LibraryCard({required this.l10n});
-
-  final AppLocalizations l10n;
-
-  @override
-  Widget build(BuildContext context) {
-    return _Panel(
-      padding: EdgeInsets.zero,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: <Widget>[
-          Padding(
-            padding: const EdgeInsets.fromLTRB(22, 18, 22, 16),
-            child: Row(
-              children: <Widget>[
-                Expanded(
-                  child: Text(
-                    l10n.gameLibraryTitle,
-                    style: Theme.of(context).textTheme.titleMedium,
-                  ),
-                ),
-                _PhaseChip(label: l10n.phaseLibraryBadge),
-              ],
-            ),
-          ),
-          const Divider(height: 1),
-          Expanded(
-            child: Center(
-              child: Padding(
-                padding: const EdgeInsets.all(24),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: <Widget>[
-                    Container(
-                      width: 64,
-                      height: 64,
-                      decoration: const BoxDecoration(
-                        color: AppTokens.surfaceMuted,
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(
-                        Icons.sports_esports_outlined,
-                        color: AppTokens.textSecondary,
-                        size: 28,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      l10n.gameLibraryEmpty,
-                      textAlign: TextAlign.center,
-                      style: Theme.of(context).textTheme.bodyMedium,
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
 class _Panel extends StatelessWidget {
-  const _Panel({required this.child, this.padding});
+  const _Panel({required this.child});
 
   final Widget child;
-  final EdgeInsets? padding;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: padding ?? const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: AppTokens.surface,
         borderRadius: BorderRadius.circular(AppTokens.radiusLarge),

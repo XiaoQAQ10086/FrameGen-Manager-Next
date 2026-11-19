@@ -60,11 +60,18 @@ impl LooseGameScanner {
                     if !metadata.is_dir() || is_reparse_point(&metadata) {
                         continue;
                     }
+                    let directory_name = directory.file_name().and_then(|name| name.to_str());
+                    if directory_name.is_some_and(|name| {
+                        name.eq_ignore_ascii_case("steamapps")
+                            || name.eq_ignore_ascii_case("common")
+                    }) {
+                        continue;
+                    }
                     if !contains_executable(&directory) {
                         continue;
                     }
 
-                    let key = directory.to_string_lossy().to_lowercase();
+                    let key = super::path_key(&directory);
                     if !seen.insert(key) {
                         continue;
                     }

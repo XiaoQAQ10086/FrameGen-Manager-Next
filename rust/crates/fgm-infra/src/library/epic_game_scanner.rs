@@ -53,7 +53,7 @@ impl EpicGameScanner {
             if !install_directory.is_dir() {
                 continue;
             }
-            let key = install_directory.to_string_lossy().to_lowercase();
+            let key = super::path_key(&install_directory);
             if !seen.insert(key) {
                 continue;
             }

@@ -19,12 +19,19 @@
 | SHELL-003 | 所有候选都失败 | 壳正常启动，状态栏和核心卡显示未加载，不抛异常 | `app_smoke_test.dart` |
 | SHELL-004 | 加载成功 | 显示 `fgm_version()` 返回的版本 | `ffi_smoke.dart` |
 | SHELL-005 | 查询未知部署阶段 | FFI 返回空指针，Dart 侧返回 `null` | `ffi_smoke.dart` |
+| SHELL-006 | 打开帧生成页 | 读取缓存游戏库并显示游戏行；不自动扫描 | `app_smoke_test.dart` |
+| SHELL-007 | 点击“扫描游戏” | 在 isolate 中调用 `fgm_library_scan_json`，完成后刷新列表 | 手动/真机 |
+| SHELL-008 | FFI 返回错误信封 | 卡片显示本地化错误 + 错误码，不崩溃 | 手动 |
 
-FFI 只暴露稳定键，不返回用户文案：
+FFI 只暴露稳定键和一次性 JSON DTO，不返回用户文案（见 ADR-0014）：
 
 - `fgm_version() -> *const c_char`
 - `fgm_operation_phase_name(u32) -> *const c_char`
+- `fgm_library_scan_json() -> *mut c_char`
+- `fgm_library_list_json() -> *mut c_char`
+- `fgm_string_free(*mut c_char)`
 - 阶段键：`planned`、`backingUp`、`writing`、`verifying`、`installed`、`rolledBack`、`partial`。
+- 游戏库信封：`{"ok":true,"games":[...]}` 或 `{"ok":false,"code":"...","context":[...]}`。
 
 ## 本地化
 

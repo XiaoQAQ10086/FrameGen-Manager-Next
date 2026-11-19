@@ -6,16 +6,29 @@ typedef _VersionNative = Pointer<Int8> Function();
 typedef _VersionDart = Pointer<Int8> Function();
 typedef _PhaseNameNative = Pointer<Int8> Function(Uint32);
 typedef _PhaseNameDart = Pointer<Int8> Function(int);
+typedef _JsonNative = Pointer<Int8> Function();
+typedef _JsonDart = Pointer<Int8> Function();
+typedef _StringFreeNative = Void Function(Pointer<Int8>);
+typedef _StringFreeDart = void Function(Pointer<Int8>);
 
 /// Thin loader around the `fgm-ffi` cdylib.
 ///
-/// The UI never reaches into Rust internals: it only reads the version and
-/// stable phase keys exposed by the C ABI.
+/// The UI never reaches into Rust internals: it only reads the version, phase
+/// keys and JSON DTOs exposed by the C ABI.
 final class CoreLibrary {
-  CoreLibrary._(this._version, this._phaseName);
+  CoreLibrary._(
+    this._version,
+    this._phaseName,
+    this._libraryScan,
+    this._libraryList,
+    this._stringFree,
+  );
 
   final _VersionDart _version;
   final _PhaseNameDart _phaseName;
+  final _JsonDart _libraryScan;
+  final _JsonDart _libraryList;
+  final _StringFreeDart _stringFree;
 
   /// Loads the native library, or returns null when it has not been built yet.
   static CoreLibrary? tryOpen() {
@@ -26,6 +39,15 @@ final class CoreLibrary {
           library.lookupFunction<_VersionNative, _VersionDart>('fgm_version'),
           library.lookupFunction<_PhaseNameNative, _PhaseNameDart>(
             'fgm_operation_phase_name',
+          ),
+          library.lookupFunction<_JsonNative, _JsonDart>(
+            'fgm_library_scan_json',
+          ),
+          library.lookupFunction<_JsonNative, _JsonDart>(
+            'fgm_library_list_json',
+          ),
+          library.lookupFunction<_StringFreeNative, _StringFreeDart>(
+            'fgm_string_free',
           ),
         );
       } on Object {
@@ -44,6 +66,24 @@ final class CoreLibrary {
       return null;
     }
     return _readCString(pointer);
+  }
+
+  /// Scans Steam/Epic/loose folders and returns the JSON reply.
+  String? scanLibraryJson() => _json(_libraryScan);
+
+  /// Reads the cached library and returns the JSON reply.
+  String? listLibraryJson() => _json(_libraryList);
+
+  String? _json(_JsonDart function) {
+    final Pointer<Int8> pointer = function();
+    if (pointer.address == 0) {
+      return null;
+    }
+    try {
+      return _readCString(pointer);
+    } finally {
+      _stringFree(pointer);
+    }
   }
 
   static Iterable<String> _candidates() sync* {

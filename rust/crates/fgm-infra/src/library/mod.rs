@@ -23,3 +23,11 @@ pub use render_exe::RenderExe;
 pub use render_exe_selector::RenderExeSelector;
 pub use steam_game_scanner::SteamGameScanner;
 pub use steam_locator::SteamLocator;
+
+pub(crate) fn path_key(path: &std::path::Path) -> String {
+    let mut value = path.to_string_lossy().replace('/', "\\").to_lowercase();
+    while value.len() > 3 && value.ends_with('\\') {
+        value.pop();
+    }
+    value
+}

@@ -1,0 +1,295 @@
+import 'package:material_ui/material_ui.dart';
+
+import '../../bridge/library_game.dart';
+import '../../design/app_tokens.dart';
+import '../../l10n/app_localizations.dart';
+
+/// Game library panel with scan control and per-game rows.
+class GameLibraryCard extends StatelessWidget {
+  const GameLibraryCard({
+    super.key,
+    required this.l10n,
+    required this.games,
+    required this.loading,
+    required this.error,
+    required this.onScan,
+  });
+
+  final AppLocalizations l10n;
+  final List<LibraryGame> games;
+  final bool loading;
+  final String? error;
+  final Future<void> Function() onScan;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: AppTokens.surface,
+        borderRadius: BorderRadius.circular(AppTokens.radiusLarge),
+        border: Border.all(color: AppTokens.border),
+        boxShadow: AppTokens.panelShadow,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: <Widget>[
+          Padding(
+            padding: const EdgeInsets.fromLTRB(22, 18, 22, 12),
+            child: Column(
+              children: <Widget>[
+                Row(
+                  children: <Widget>[
+                    Expanded(
+                      child: Text(
+                        l10n.gameLibraryTitle,
+                        style: Theme.of(context).textTheme.titleMedium,
+                      ),
+                    ),
+                    _PhaseChip(label: l10n.phaseLibraryBadge),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  children: <Widget>[
+                    Text(
+                      l10n.gamesCount(games.length),
+                      style: Theme.of(context).textTheme.labelMedium,
+                    ),
+                    const Spacer(),
+                    if (loading)
+                      Text(
+                        l10n.scanningGames,
+                        style: Theme.of(context).textTheme.labelMedium,
+                      )
+                    else
+                      TextButton.icon(
+                        onPressed: onScan,
+                        icon: const Icon(Icons.refresh, size: 16),
+                        label: Text(l10n.scanGames),
+                      ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          const Divider(height: 1),
+          Expanded(child: _body(context)),
+        ],
+      ),
+    );
+  }
+
+  Widget _body(BuildContext context) {
+    if (error != null) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+              const Icon(
+                Icons.error_outline,
+                color: AppTokens.warning,
+                size: 28,
+              ),
+              const SizedBox(height: 12),
+              Text(
+                l10n.libraryLoadFailed,
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.bodyMedium,
+              ),
+              const SizedBox(height: 4),
+              Text(error!, style: Theme.of(context).textTheme.labelMedium),
+              const SizedBox(height: 12),
+              FilledButton.icon(
+                onPressed: onScan,
+                icon: const Icon(Icons.refresh, size: 16),
+                label: Text(l10n.scanGames),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    if (games.isEmpty) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+              Container(
+                width: 64,
+                height: 64,
+                decoration: const BoxDecoration(
+                  color: AppTokens.surfaceMuted,
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.sports_esports_outlined,
+                  color: AppTokens.textSecondary,
+                  size: 28,
+                ),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                l10n.gameLibraryEmpty,
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.bodyMedium,
+              ),
+              const SizedBox(height: 12),
+              FilledButton.icon(
+                onPressed: onScan,
+                icon: const Icon(Icons.search, size: 16),
+                label: Text(l10n.scanGames),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    return ListView.separated(
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      itemCount: games.length,
+      separatorBuilder: (BuildContext context, int index) =>
+          const Divider(height: 1, indent: 22, endIndent: 22),
+      itemBuilder: (BuildContext context, int index) =>
+          _GameRow(game: games[index], l10n: l10n),
+    );
+  }
+}
+
+class _GameRow extends StatelessWidget {
+  const _GameRow({required this.game, required this.l10n});
+
+  final LibraryGame game;
+  final AppLocalizations l10n;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 12),
+      child: Row(
+        children: <Widget>[
+          Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              color: AppTokens.accentSoft,
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: const Icon(
+              Icons.sports_esports,
+              size: 18,
+              color: AppTokens.accent,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Text(
+                  game.name,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: AppTokens.textPrimary,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  game.targetDirectory,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.labelMedium,
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          _MiniChip(label: _sourceLabel(l10n, game.source)),
+          const SizedBox(width: 6),
+          _MiniChip(label: _apiLabel(game.graphicsApi)),
+        ],
+      ),
+    );
+  }
+}
+
+class _MiniChip extends StatelessWidget {
+  const _MiniChip({required this.label});
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: AppTokens.surfaceMuted,
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Text(
+        label,
+        style: const TextStyle(
+          color: AppTokens.textSecondary,
+          fontSize: 10,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+    );
+  }
+}
+
+class _PhaseChip extends StatelessWidget {
+  const _PhaseChip({required this.label});
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      decoration: BoxDecoration(
+        color: AppTokens.accentSoft,
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Text(
+        label,
+        style: const TextStyle(
+          color: AppTokens.accent,
+          fontSize: 11,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+    );
+  }
+}
+
+String _sourceLabel(AppLocalizations l10n, String source) {
+  return switch (source.toLowerCase()) {
+    'steam' => l10n.sourceSteam,
+    'epic' => l10n.sourceEpic,
+    'wegame' => l10n.sourceWeGame,
+    'xbox' => l10n.sourceXbox,
+    'manual' => l10n.sourceManual,
+    _ => l10n.sourceLoose,
+  };
+}
+
+String _apiLabel(String api) {
+  return switch (api.toLowerCase()) {
+    'dx12' => 'DX12',
+    'dx11' => 'DX11',
+    'dx10' => 'DX10',
+    'dx9' => 'DX9',
+    'vulkan' => 'Vulkan',
+    'opengl' => 'OpenGL',
+    _ => 'Unknown',
+  };
+}

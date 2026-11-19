@@ -41,9 +41,44 @@ impl LibraryScanner {
 
 fn append(games: &mut Vec<GameEntry>, seen: &mut HashSet<String>, entries: Vec<GameEntry>) {
     for entry in entries {
-        let key = entry.install_directory.to_string_lossy().to_lowercase();
+        let key = super::path_key(&entry.install_directory);
         if seen.insert(key) {
             games.push(entry);
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use fgm_domain::library::{GraphicsApi, LibrarySource};
+    use std::path::PathBuf;
+
+    #[test]
+    fn deduplicates_mixed_separators_and_case() {
+        let entry = |path: &str| GameEntry {
+            id: path.to_string(),
+            name: "Game".to_string(),
+            source: LibrarySource::Steam,
+            install_directory: PathBuf::from(path),
+            render_exe: None,
+            target_directory: PathBuf::from(path),
+            graphics_api: GraphicsApi::Unknown,
+            app_id: None,
+            is_manual: false,
+        };
+        let mut games = Vec::new();
+        let mut seen = HashSet::new();
+
+        append(
+            &mut games,
+            &mut seen,
+            vec![
+                entry("d:/steam/steamapps/common/Game"),
+                entry("D:\\Steam\\steamapps\\common\\Game"),
+            ],
+        );
+
+        assert_eq!(games.len(), 1);
     }
 }

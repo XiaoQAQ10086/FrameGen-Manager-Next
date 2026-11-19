@@ -23,7 +23,7 @@
   "rewriteTitle": "Rewrite in progress",
   "rewriteBody": "This is the Rust + Flutter foundation. Features move over module by module while the current release stays available.",
   "gameLibraryTitle": "Game library",
-  "gameLibraryEmpty": "No games yet. Library scanning arrives in Phase 3.",
+  "gameLibraryEmpty": "No games yet. Scan to discover installed games.",
   "migrationTitle": "Migration status",
   "migrationDomain": "Domain and rules",
   "migrationCore": "Core use cases",
@@ -33,6 +33,23 @@
   "statusNext": "Next",
   "statusPlanned": "Planned",
   "sectionPending": "This module is scheduled for a later phase.",
+  "scanGames": "Scan games",
+  "scanningGames": "Scanning...",
+  "gamesCount": "{count} games",
+  "@gamesCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "libraryLoadFailed": "Could not load the game library.",
+  "sourceSteam": "Steam",
+  "sourceEpic": "Epic",
+  "sourceLoose": "Loose",
+  "sourceManual": "Manual",
+  "sourceWeGame": "WeGame",
+  "sourceXbox": "Xbox",
   "phaseBadge": "Phase 0",
   "phaseLibraryBadge": "Phase 3",
   "footerCore": "Rust core {version}",
