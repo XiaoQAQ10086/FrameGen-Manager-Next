@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:isolate';
 
 import 'core_library.dart';
+import 'deploy_options.dart';
 import 'deployment_result.dart';
 import 'library_game.dart';
 
@@ -14,13 +15,14 @@ final class DeploymentBridge {
   static Future<DeploymentResult> deploy({
     required LibraryGame game,
     String packId = 'framegen.sm86',
-    String? proxySlot,
+    DeployOptions? options,
     String? gameExe,
   }) {
     final String request = jsonEncode(<String, Object?>{
       'packId': packId,
       'targetDir': game.targetDirectory,
-      'proxySlot': proxySlot,
+      'proxySlot': options?.proxySlot,
+      'ini': options?.iniOverrides() ?? const <Map<String, String>>[],
       'gameExe': gameExe,
       'appVersion': appVersion,
     });

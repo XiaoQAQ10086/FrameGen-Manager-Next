@@ -2,6 +2,7 @@ import 'package:material_ui/material_ui.dart';
 
 import '../../bridge/app_settings.dart';
 import '../../bridge/core_library.dart';
+import '../../bridge/deploy_options.dart';
 import '../../bridge/deployment_bridge.dart';
 import '../../bridge/deployment_result.dart';
 import '../../bridge/game_modes.dart';
@@ -123,12 +124,20 @@ class _FrameGenPageState extends State<FrameGenPage> {
 
   Future<void> _deploy(LibraryGame game) async {
     final AppLocalizations l10n = AppLocalizations.of(context);
-    if (!await FrameGenActions.confirmDeploy(context, l10n, game) || !mounted) {
+    final DeployOptions? options = await FrameGenActions.showDeployOptions(
+      context,
+      l10n,
+      game,
+    );
+    if (options == null || !mounted) {
       return;
     }
 
     setState(() => _busyGameId = game.id);
-    final DeploymentResult result = await DeploymentBridge.deploy(game: game);
+    final DeploymentResult result = await DeploymentBridge.deploy(
+      game: game,
+      options: options,
+    );
     if (!mounted) {
       return;
     }

@@ -81,6 +81,6 @@ FFI 只暴露稳定键和一次性 JSON DTO，不返回用户文案（见 ADR-00
 ## 不做 / 已知限制
 
 - 手动添加游戏、封面加载、启动游戏、跨模式状态徽章尚未接入。
-- 窗口尺寸/位置由 `fgm_window_restore_json` / `fgm_window_save_json` 持久化到 `config/window.json`；启动后重试等待窗口可见，运行中每 5 秒保存一次，最小化时不覆盖记录。
+- 窗口尺寸由 `fgm_window_restore_json` / `fgm_window_save_json` 持久化到 `config/window.json`；启动后重试等待窗口可见，运行中每 5 秒保存一次，最小化时不覆盖记录。位置交给 Windows（`SWP_NOMOVE`），避免保存的坐标在换显示器或分辨率变化后把窗口放到屏幕外。
 - DLSS5 快捷键录制界面、更新下载进度/取消、启动时静默更新检查尚未接入。
 - 不使用第三方状态管理、HTTP 或数据库包。

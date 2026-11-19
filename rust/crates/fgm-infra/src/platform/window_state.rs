@@ -8,6 +8,7 @@ type Hwnd = isize;
 
 const GW_OWNER: u32 = 4;
 const SW_MAXIMIZE: i32 = 3;
+const SWP_NOMOVE: u32 = 0x0002;
 const SWP_NOZORDER: u32 = 0x0004;
 const SWP_NOACTIVATE: u32 = 0x0010;
 
@@ -48,8 +49,6 @@ unsafe extern "system" {
 #[derive(Clone, Copy, Debug, Deserialize, Serialize, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
 struct WindowState {
-    x: i32,
-    y: i32,
     width: i32,
     height: i32,
     maximized: bool,
@@ -67,16 +66,17 @@ impl WindowStateService {
         let Some(hwnd) = main_window() else {
             return Ok(false);
         };
+        // Position is left to Windows so a saved size cannot open off-screen.
         let state = sanitize(state);
         unsafe {
             SetWindowPos(
                 hwnd,
                 0,
-                state.x,
-                state.y,
+                0,
+                0,
                 state.width,
                 state.height,
-                SWP_NOZORDER | SWP_NOACTIVATE,
+                SWP_NOMOVE | SWP_NOZORDER | SWP_NOACTIVATE,
             );
             if state.maximized {
                 ShowWindow(hwnd, SW_MAXIMIZE);
@@ -102,8 +102,6 @@ impl WindowStateService {
             return Ok(());
         }
         let state = WindowState {
-            x: rect.left,
-            y: rect.top,
             width: rect.right - rect.left,
             height: rect.bottom - rect.top,
             maximized: unsafe { IsZoomed(hwnd) } != 0,
@@ -137,8 +135,6 @@ fn load(paths: &AppPaths) -> Result<Option<WindowState>, AppError> {
 
 fn sanitize(state: WindowState) -> WindowState {
     WindowState {
-        x: state.x.clamp(-10_000, 10_000),
-        y: state.y.clamp(-10_000, 10_000),
         width: state.width.clamp(800, 12_000),
         height: state.height.clamp(600, 12_000),
         maximized: state.maximized,
@@ -195,15 +191,11 @@ mod tests {
     #[test]
     fn sanitize_clamps_offscreen_and_tiny_bounds() {
         let state = sanitize(WindowState {
-            x: -99_999,
-            y: 99_999,
             width: 10,
-            height: 10,
+            height: 99_999,
             maximized: false,
         });
-        assert_eq!(state.x, -10_000);
-        assert_eq!(state.y, 10_000);
         assert_eq!(state.width, 800);
-        assert_eq!(state.height, 600);
+        assert_eq!(state.height, 12_000);
     }
 }

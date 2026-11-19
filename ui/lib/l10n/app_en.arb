@@ -45,6 +45,17 @@
   "cancel": "Cancel",
   "deployConfirmTitle": "Deploy frame generation",
   "deployConfirmBody": "Deploy frame generation components to {game}?",
+  "optionProxySlot": "Proxy DLL",
+  "optionEngine": "Frame engine",
+  "optionFrames": "Generated frames",
+  "optionOptimized": "Optimization tier",
+  "optionPreset": "Render preset",
+  "optionSuperResolution": "Super resolution",
+  "optionOff": "Off",
+  "optimizedTier0": "0 · stock",
+  "optimizedTier1": "1 · bit-identical",
+  "optimizedTier2": "2 · fast",
+  "optimizedTier3": "3 · fastest",
   "@deployConfirmBody": {
     "placeholders": {
       "game": {

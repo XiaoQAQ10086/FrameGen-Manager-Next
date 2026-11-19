@@ -3,6 +3,7 @@ use std::path::{Path, PathBuf};
 use std::sync::atomic::AtomicBool;
 
 use fgm_domain::error::{AppError, ErrorCode};
+use fgm_domain::pack::IniSetting;
 use fgm_domain::version::VERSION;
 use fgm_infra::deployment::{DeploymentEngine, DeploymentInspector, PackDeploymentPlanner};
 use fgm_infra::pack_json::PackJson;
@@ -30,6 +31,8 @@ struct DeployRequest {
     app_version: Option<String>,
     #[serde(default)]
     data_dir: Option<String>,
+    #[serde(default)]
+    ini: Vec<IniSetting>,
 }
 
 #[derive(Deserialize)]
@@ -71,7 +74,7 @@ pub(crate) fn deploy(request: &str) -> Result<Value, AppError> {
         &pack_directory,
         &target_directory,
         &options,
-        &[],
+        &request.ini,
         Some(&app_version),
     )?;
 

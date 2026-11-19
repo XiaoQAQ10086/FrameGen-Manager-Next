@@ -187,7 +187,7 @@ fgm-next inspect <target-dir> --family <id> [--pack-dir <dir>] [--data-dir <dir>
 - `inspect` 只读输出 `NotDeployed/Installed/Outdated/Partial/Conflict/InstalledWithoutManifest` 和明细。
 - `--data-dir` 不传时使用 `AppPaths::create_default`（`FGM_DATA_DIR` / `portable.flag` / `%LOCALAPPDATA%`）。
 
-UI：“帧生成”页点击某个游戏的“部署”后才展开代理/优化/帧数/Preset/引擎/SR 参数；确认后部署。其余时间不占用页面空间。
+UI：点击“部署”打开选项面板（代理 DLL、插帧引擎、生成帧数、优化档位、渲染预设、超分辨率）；`XeSS` 时生成帧数上限收敛为 3。确认后把选项以 `ini` 覆盖传给 Rust 部署，其余时间不占用页面空间。
 
 部署弹窗：绿色“部署”按钮；不提供“取消”按钮（右上角关闭或点遮罩退出）；“还原”只有在当前游戏的部署状态可还原、且所选目标目录与部署目录一致时才启用，否则显示灰色锁定。游戏卡片的主动作在部署成功后从“部署”变为“还原”；已部署徽章显示 `已部署 资产版本：<packVersion>`。
 
