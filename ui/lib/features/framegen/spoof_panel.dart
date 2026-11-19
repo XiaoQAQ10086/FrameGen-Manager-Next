@@ -5,6 +5,7 @@ import '../../bridge/gpu_spoof_state.dart';
 import '../../bridge/system_bridge.dart';
 import '../../design/app_tokens.dart';
 import '../../design/error_dialog.dart';
+import '../../design/legacy_button_styles.dart';
 import '../../design/legacy_dialog.dart';
 import '../../design/legacy_panel.dart';
 import '../../design/legacy_pill.dart';
@@ -178,11 +179,13 @@ class _SpoofPanelState extends State<SpoofPanel> {
           const SizedBox(height: 10),
           FilledButton(
             onPressed: _busy || _preset == null ? null : () => _apply(_preset!),
+            style: LegacyButtonStyles.tall(LegacyButtonStyles.primary),
             child: Text(l10n.gpuSpoofApply),
           ),
           const SizedBox(height: 6),
           OutlinedButton(
             onPressed: _busy || state?.hasBackup != true ? null : _restore,
+            style: LegacyButtonStyles.tall(LegacyButtonStyles.standard),
             child: Text(l10n.gpuSpoofRestoreDriver),
           ),
         ],

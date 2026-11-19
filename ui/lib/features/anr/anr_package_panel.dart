@@ -10,6 +10,7 @@ import '../../bridge/system_bridge.dart';
 import '../../bridge/system_paths.dart';
 import '../../design/app_tokens.dart';
 import '../../design/error_dialog.dart';
+import '../../design/legacy_button_styles.dart';
 import '../../design/legacy_panel.dart';
 import '../../design/legacy_pill.dart';
 import '../../design/operation_progress_dialog.dart';
@@ -158,6 +159,7 @@ class _AnrPackagePanelState extends State<AnrPackagePanel> {
           const SizedBox(height: 10),
           FilledButton(
             onPressed: _downloading || _importing ? null : _download,
+            style: LegacyButtonStyles.tall(LegacyButtonStyles.primary),
             child: Text(
               _downloading ? l10n.operationDownloading : l10n.anrDownload,
             ),
@@ -165,6 +167,7 @@ class _AnrPackagePanelState extends State<AnrPackagePanel> {
           const SizedBox(height: 6),
           OutlinedButton(
             onPressed: _downloading || _importing ? null : _import,
+            style: LegacyButtonStyles.tall(LegacyButtonStyles.standard),
             child: Text(l10n.anrImportZip),
           ),
           const SizedBox(height: 6),

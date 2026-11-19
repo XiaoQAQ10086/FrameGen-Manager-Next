@@ -3,6 +3,7 @@ import 'package:material_ui/material_ui.dart';
 import '../../bridge/system_bridge.dart';
 import '../../bridge/system_paths.dart';
 import '../../design/app_tokens.dart';
+import '../../design/legacy_button_styles.dart';
 import '../../design/legacy_panel.dart';
 import '../../l10n/app_localizations.dart';
 
@@ -95,6 +96,7 @@ class _PathBlock extends StatelessWidget {
           width: double.infinity,
           child: OutlinedButton(
             onPressed: onOpen,
+            style: LegacyButtonStyles.tall(LegacyButtonStyles.standard),
             child: Text(l10n.openFolder),
           ),
         ),

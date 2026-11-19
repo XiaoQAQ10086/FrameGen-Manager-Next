@@ -68,7 +68,8 @@ FFI 只暴露稳定键和一次性 JSON DTO，不返回用户文案（见 ADR-00
 - 平滑运动在两种语言下都显示为 `Smooth Motion`（与旧版一致），不再使用“平滑运动”字样。
 - 页面外边距 22×20；帧生成 / 平滑运动 / ANR 使用 340px 左栏 + 右侧列表，宽度 < 980 时改为纵向滚动。
 - 游戏卡片：52×70 缩略图、名称、来源、状态胶囊、底部操作按钮；列表头包含标题、状态、添加、已移除、扫描，其中三个操作按钮统一 38px 高、最小 116px 宽。
-- 卡片与侧栏面板使用纯白底、`#DCE5F2` 描边和轻投影，与渐变背景明确分离；圆角保持 16。
+- 卡片与侧栏面板使用纯白底、`#DCE5F2` 描边；游戏卡片带轻投影，侧栏面板不加阴影；圆角保持 16。
+- 侧栏整宽按钮（打开设置、应用伪装、打开文件夹、ANR 下载/导入）统一 44px 高；图标按钮为 34px 无阴影平面方块，避免小尺寸阴影产生暗角。
 - DLSS5 使用 168px 封面墙；ANR 使用与帧生成相同的卡片样式。
 - 页面切换使用 300ms 淡入 + 2% 垂直位移，进入曲线 `Cubic(0.22, 0.61, 0.36, 1)`，退出曲线 `Cubic(0.55, 0.06, 0.68, 0.19)`。
 - 弹窗统一走 `showLegacyDialog`：背景页面 6px 高斯模糊 + 18% 深色遮罩，弹窗以 easeOutCubic 淡入并轻微缩放；Esc 与点击遮罩可关闭。
@@ -82,6 +83,7 @@ FFI 只暴露稳定键和一次性 JSON DTO，不返回用户文案（见 ADR-00
 
 ## 构建集成
 
+- exe 与安装包图标使用 `ui/windows/runner/resources/app_icon.ico`（旧版品牌图标，含 16–256 多尺寸）。
 - `windows/runner/CMakeLists.txt` 的 POST_BUILD 把 `rust/target/{debug,release}/fgm_ffi.dll` 复制到 exe 目录。
 - 核心尚未构建时只告警，不阻塞 `flutter run`。
 - 完整门禁：`build/verify-rust-flutter.ps1`。
@@ -91,3 +93,4 @@ FFI 只暴露稳定键和一次性 JSON DTO，不返回用户文案（见 ADR-00
 - WeGame 扫描按用户决定不做。
 - 窗口位置交给 Windows（`SWP_NOMOVE`），避免保存坐标在换显示器后把窗口放到屏幕外；运行中每 5 秒保存一次，最小化时不覆盖记录。
 - 不使用第三方状态管理、HTTP 或数据库包。
+- RTSS/MSI Afterburner 的帧数覆盖层由 RTSS 注入绘制，程序内无法拦截；已在本机创建 `Profiles/fgm_ui.exe.cfg`（`[Hooking] EnableHooking = 0`）把本程序排除，安装 RTSS 的用户可照此添加，不影响游戏内 OSD。

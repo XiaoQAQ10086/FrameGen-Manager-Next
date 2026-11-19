@@ -2,6 +2,7 @@ import 'package:material_ui/material_ui.dart';
 
 import '../../bridge/gpu_info.dart';
 import '../../design/app_tokens.dart';
+import '../../design/legacy_button_styles.dart';
 import '../../design/legacy_panel.dart';
 import '../../design/legacy_pill.dart';
 import '../../l10n/app_localizations.dart';
@@ -45,6 +46,7 @@ class GpuPanel extends StatelessWidget {
             width: double.infinity,
             child: OutlinedButton(
               onPressed: onOpenHags,
+              style: LegacyButtonStyles.tall(LegacyButtonStyles.standard),
               child: Text(l10n.gpuOpenHags),
             ),
           ),
@@ -97,13 +99,16 @@ class _Row extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 8),
-          LegacyPill(
-            label: value,
-            foreground: tone ?? AppTokens.textPrimary,
-            background: (tone ?? AppTokens.textSecondary).withValues(
-              alpha: 0.08,
+          SizedBox(
+            width: 96,
+            child: LegacyPill(
+              label: value,
+              foreground: tone ?? AppTokens.textPrimary,
+              background: (tone ?? AppTokens.textSecondary).withValues(
+                alpha: 0.08,
+              ),
+              textAlign: TextAlign.center,
             ),
-            maxWidth: 150,
           ),
         ],
       ),

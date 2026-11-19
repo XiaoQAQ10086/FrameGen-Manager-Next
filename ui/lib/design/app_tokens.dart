@@ -54,7 +54,6 @@ abstract final class AppTokens {
     color: surfaceSolid,
     borderRadius: BorderRadius.all(Radius.circular(radius)),
     border: Border.fromBorderSide(BorderSide(color: cardBorder)),
-    boxShadow: cardShadow,
   );
 
   static const BoxDecoration cardDecoration = BoxDecoration(

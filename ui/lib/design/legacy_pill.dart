@@ -12,6 +12,7 @@ class LegacyPill extends StatelessWidget {
     this.border,
     this.fontSize = 11.5,
     this.maxWidth,
+    this.textAlign = TextAlign.start,
   });
 
   final String label;
@@ -20,12 +21,14 @@ class LegacyPill extends StatelessWidget {
   final Color? border;
   final double fontSize;
   final double? maxWidth;
+  final TextAlign textAlign;
 
   @override
   Widget build(BuildContext context) {
     final Widget text = Text(
       label,
       maxLines: 1,
+      textAlign: textAlign,
       overflow: TextOverflow.ellipsis,
       style: TextStyle(
         color: foreground,
