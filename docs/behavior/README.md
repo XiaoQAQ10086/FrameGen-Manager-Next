@@ -16,7 +16,7 @@
 
 | 模块 | 旧版来源 | 新位置 | 状态 |
 |---|---|---|---|
-| 游戏库扫描 | `crates/core/src/scan.rs`、`ui/library.js` | `Core/Features/Library` + `Infrastructure/Library` | [已实现](library.md) |
+| 游戏库扫描 | `crates/core/src/scan.rs`、`ui/library.js` | `Core/Features/Library` + `Infrastructure/Library`；Rust 散装扫描 + 缓存 | [已实现](library.md) |
 | 渲染 EXE 识别 | `scan.rs::find_render_exe` 及评分逻辑 | `Domain/Library`；Rust `fgm-infra/src/library` | [已实现](library.md) |
 | 图形 API 检测 | `scan.rs::pe_imports`、`api_from_facts` | `Domain/Library` + `Infrastructure/Library`；Rust `fgm-infra/src/library` | [已实现](library.md) |
 | 帧生成部署 | `deploy.rs`、`ui/deploy.js` | `Core/Features/Deployment` + `Infrastructure/Deployment` | [已实现](deployment.md) |

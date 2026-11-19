@@ -82,8 +82,15 @@ Steam junk 跳过（精确名称）：`steamworks common redistributables`、`st
 - `fgm-infra/src/library/graphics_api_detector.rs`：图形 API 检测。
   - 优先级：Vulkan wrapper DLL → EXE 文件名 token → PE 导入 → 同目录 runtime DLL → 引擎 DLL 导入 → `Unknown`。
   - 支持 DX12/Vulkan/DX11/DX10/DX9/OpenGL。
-- 测试：`rust/crates/fgm-infra/tests/pe_imports.rs`、`render_exe.rs`、`graphics_api.rs`。
-- 尚未迁移：启动器扫描（Steam/Epic/WeGame/Xbox/散装）、library.json 缓存、封面。
+- `fgm-infra/src/library/loose_game_scanner.rs`：散装游戏扫描。
+  - 已知目录：`Games`、`Game`、`My Games`、`SteamLibrary`、`GOG Games`、`Epic Games`、`Origin Games`、`Repacks`、`游戏`、`单机游戏`、`游戏库`。
+  - 每根目录最多 300 个子目录、80 个游戏；深度 ≤3；EXE ≥64 KiB；不跟随 reparse point。
+  - 生成 `loose:<DeploymentKey>` id，选择渲染 EXE 并检测 API。
+- `fgm-infra/src/library/library_cache.rs` / `library_store.rs`：`library.json` 缓存。
+  - 字段：`schemaVersion`、`games`、`ignoredIds`、`targetOverrides`。
+  - 缺失返回默认；损坏重命名为 `library.json.bad` 后从空库开始；写入走原子替换。
+- 测试：`rust/crates/fgm-infra/tests/pe_imports.rs`、`render_exe.rs`、`graphics_api.rs`、`library_cache.rs`。
+- 尚未迁移：Steam/Epic/WeGame/Xbox 启动器扫描、封面。
 
 ## 真实机器对照（2026-10-29）
 
