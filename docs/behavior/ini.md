@@ -14,7 +14,7 @@
 - 纯领域实现，不读写文件；调用方负责读取模板、选择换行符并交给部署引擎写入。
 - 测试：`rust/crates/fgm-domain/tests/ini_document.rs`（14 个）。
 - pack 的 `ini` 字段已接入 `PackDeploymentPlanner`：读取模板并校验 SHA-256/大小，应用 `stockValues` 与用户覆盖（`IniMerger`），作为普通部署文件写入并由引擎备份/还原。
-- FFI `fgm_deploy_json` 接受 `ini` 覆盖数组（`section/key/value`）；Flutter 部署面板提供代理、引擎、生成帧数、优化档位、渲染预设、超分辨率六项，写入 `dlssg_sm86.ini`。
+- FFI `fgm_deploy_json` 接受 `ini` 覆盖数组（`section/key/value`）；Flutter 部署面板提供代理、引擎、生成帧数、优化档位、渲染预设、超分辨率；选择 XeSS 时再提供 `[XeSSFG]` 光流分辨率与无 HUD 输入，全部写入 `dlssg_sm86.ini`。
 
 ## 解析规则
 

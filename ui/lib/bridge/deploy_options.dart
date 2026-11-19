@@ -7,6 +7,10 @@ final class DeployOptions {
     this.optimized = 1,
     this.preset = 'A',
     this.superResolution = 'Off',
+    this.xeSSFlowResolution = 'Middle',
+    this.xeSSUseHudless = 'Auto',
+    this.gameExe,
+    this.persistExe = false,
   });
 
   final String proxySlot;
@@ -15,6 +19,10 @@ final class DeployOptions {
   final int optimized;
   final String preset;
   final String superResolution;
+  final String xeSSFlowResolution;
+  final String xeSSUseHudless;
+  final String? gameExe;
+  final bool persistExe;
 
   List<Map<String, String>> iniOverrides() => <Map<String, String>>[
     <String, String>{
@@ -38,6 +46,16 @@ final class DeployOptions {
       'key': 'Mode',
       'value': superResolution,
     },
+    <String, String>{
+      'section': 'XeSSFG',
+      'key': 'FlowResolution',
+      'value': xeSSFlowResolution,
+    },
+    <String, String>{
+      'section': 'XeSSFG',
+      'key': 'UseHudless',
+      'value': xeSSUseHudless,
+    },
   ];
 
   DeployOptions copyWith({
@@ -47,6 +65,10 @@ final class DeployOptions {
     int? optimized,
     String? preset,
     String? superResolution,
+    String? xeSSFlowResolution,
+    String? xeSSUseHudless,
+    String? gameExe,
+    bool? persistExe,
   }) {
     return DeployOptions(
       proxySlot: proxySlot ?? this.proxySlot,
@@ -55,6 +77,10 @@ final class DeployOptions {
       optimized: optimized ?? this.optimized,
       preset: preset ?? this.preset,
       superResolution: superResolution ?? this.superResolution,
+      xeSSFlowResolution: xeSSFlowResolution ?? this.xeSSFlowResolution,
+      xeSSUseHudless: xeSSUseHudless ?? this.xeSSUseHudless,
+      gameExe: gameExe ?? this.gameExe,
+      persistExe: persistExe ?? this.persistExe,
     );
   }
 }

@@ -29,6 +29,26 @@ final class LibraryBridge {
     return _parse(reply);
   }
 
+  /// Opens the native executable picker and returns its path.
+  static Future<String?> pickExecutable() async {
+    final String? reply = await Isolate.run(() {
+      final CoreLibrary? core = CoreLibrary.tryOpen();
+      return core?.pickExecutableJson();
+    });
+    if (reply == null) {
+      return null;
+    }
+    try {
+      final Object? decoded = jsonDecode(reply);
+      if (decoded is! Map || decoded['ok'] != true) {
+        return null;
+      }
+      return decoded['path'] as String?;
+    } on FormatException {
+      return null;
+    }
+  }
+
   /// Reads manifest-only deployment badges for all games.
   static Future<Map<String, GameModes>> modes() async {
     final String? reply = await Isolate.run(() {

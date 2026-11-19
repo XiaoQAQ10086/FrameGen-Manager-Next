@@ -103,7 +103,8 @@ Steam junk 跳过（精确名称）：`steamworks common redistributables`、`st
 - `fgm-ffi/src/commands_library.rs`：`fgm_library_add_manual_json`（无路径时打开原生选择器，取消返回 `cancelled`）、`fgm_launch_game_json`、`fgm_cover_json`。
 - CLI：`fgm-next library scan [--root <dir>]...`、`fgm-next library list`。
 - 测试：`pe_imports.rs`、`render_exe.rs`、`graphics_api.rs`、`library_cache.rs`、`steam_scanner.rs`、`epic_scanner.rs`、`library_scanner.rs`、`tests/library_service.rs`（手动添加、去重、缺失文件）。
-- 尚未迁移：WeGame/Xbox 扫描、Epic 封面、移除游戏/忽略列表 UI、部署弹窗手动覆盖渲染 EXE。
+- 部署弹窗可“选择启动 EXE”：选择结果写入 `targetOverrides`，同时更新该游戏的渲染 EXE 与目标目录，重新扫描后仍生效（`LibraryService::set_target_override` / `apply_overrides`）。
+- 尚未迁移：WeGame/Xbox 扫描、Epic 封面、移除游戏/忽略列表 UI。
 
 ## 真实机器对照（2026-10-29）
 

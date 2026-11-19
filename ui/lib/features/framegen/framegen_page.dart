@@ -145,6 +145,17 @@ class _FrameGenPageState extends State<FrameGenPage> {
     _showResult(
       result.ok ? l10n.deployComplete : '${l10n.deployFailed} ${result.code}',
     );
+    if (result.ok) {
+      if (options.persistExe) {
+        final LibrarySnapshot snapshot = LibraryBridge.list(widget.core);
+        setState(() {
+          _games = snapshot.games;
+          _error = snapshot.hasError ? snapshot.errorCode : null;
+        });
+        await _loadCovers();
+      }
+      await _loadModes();
+    }
   }
 
   Future<void> _restore(LibraryGame game) async {
@@ -161,6 +172,9 @@ class _FrameGenPageState extends State<FrameGenPage> {
               : l10n.restoreConflicts)
         : '${l10n.deployFailed} ${result.code}';
     _showResult(message);
+    if (result.ok) {
+      await _loadModes();
+    }
   }
 
   void _showResult(String message) {

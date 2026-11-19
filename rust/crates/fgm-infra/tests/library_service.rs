@@ -63,6 +63,27 @@ fn add_manual_replaces_an_existing_entry_for_the_same_directory() {
 }
 
 #[test]
+fn target_override_updates_the_cached_game() {
+    let root = unique_dir("library-override");
+    fs::create_dir_all(root.join("game")).unwrap();
+    fs::create_dir_all(root.join("game").join("bin")).unwrap();
+    let executable = root.join("game").join("demo.exe");
+    let actual = root.join("game").join("bin").join("real.exe");
+    fs::write(&executable, b"not-a-pe").unwrap();
+    fs::write(&actual, b"not-a-pe").unwrap();
+    let paths = AppPaths::new(root.join("data"), false).unwrap();
+    paths.ensure_created().unwrap();
+    let entry = LibraryService::add_manual(&paths, &executable).unwrap();
+
+    let updated = LibraryService::set_target_override(&paths, &entry.id, &actual).unwrap();
+
+    assert_eq!(updated.render_exe, Some(actual.clone()));
+    assert_eq!(updated.target_directory, actual.parent().unwrap());
+    let cached = LibraryService::list(&paths);
+    assert_eq!(cached[0].render_exe, Some(actual));
+}
+
+#[test]
 fn add_manual_rejects_a_missing_file() {
     let root = unique_dir("library-manual-missing");
     let paths = AppPaths::new(root.join("data"), false).unwrap();

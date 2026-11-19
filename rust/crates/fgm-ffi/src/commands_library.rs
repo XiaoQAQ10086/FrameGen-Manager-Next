@@ -35,6 +35,13 @@ pub(crate) fn add_manual(request: &str) -> Result<Value, AppError> {
     Ok(json!({ "ok": true, "game": game }))
 }
 
+pub(crate) fn pick_executable() -> Result<Value, AppError> {
+    Ok(match FilePicker::pick_executable() {
+        Some(path) => json!({ "ok": true, "path": path.to_string_lossy() }),
+        None => json!({ "ok": true, "cancelled": true }),
+    })
+}
+
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct LaunchRequest {

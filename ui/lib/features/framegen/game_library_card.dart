@@ -283,7 +283,9 @@ class _GameRow extends StatelessWidget {
             _RowAction(
               icon: Icons.restore,
               tooltip: l10n.restore,
-              onPressed: () => onRestore(game),
+              onPressed: modes?.framegenDeployed == true
+                  ? () => onRestore(game)
+                  : null,
             ),
           ],
         ],

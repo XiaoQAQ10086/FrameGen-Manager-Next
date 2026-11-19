@@ -31,7 +31,9 @@ impl LibraryService {
 
         let scanned = LibraryScanner::scan(&DriveRoots::roots());
         cache.schema_version = 1;
-        cache.games = merge(manual, scanned, &cache.ignored_ids);
+        let mut games = merge(manual, scanned, &cache.ignored_ids);
+        apply_overrides(&mut games, &cache.target_overrides);
+        cache.games = games;
         store.save(&cache)?;
         Ok(cache.games)
     }
@@ -102,6 +104,37 @@ impl LibraryService {
         Ok(entry)
     }
 
+    /// Remembers the executable the user picked for a game and applies it to
+    /// the cached entry, so rescans keep using it.
+    pub fn set_target_override(
+        paths: &AppPaths,
+        game_id: &str,
+        executable: &Path,
+    ) -> Result<GameEntry, AppError> {
+        let executable = std::path::absolute(executable).map_err(|error| {
+            AppError::new(ErrorCode::InvalidPath)
+                .with("path", executable.display().to_string())
+                .with("reason", error.to_string())
+        })?;
+        let Some(directory) = executable.parent().map(Path::to_path_buf) else {
+            return Err(AppError::new(ErrorCode::InvalidPath)
+                .with("path", executable.display().to_string()));
+        };
+        let store = Self::store(paths);
+        let mut cache = store.load()?;
+        let Some(game) = cache.games.iter_mut().find(|game| game.id == game_id) else {
+            return Err(AppError::new(ErrorCode::FileNotFound).with("gameId", game_id.to_string()));
+        };
+        game.render_exe = Some(executable.clone());
+        game.target_directory = directory;
+        let updated = game.clone();
+        cache
+            .target_overrides
+            .insert(game_id.to_string(), executable.display().to_string());
+        store.save(&cache)?;
+        Ok(updated)
+    }
+
     /// Launches through the store's protocol handler; the UI never supplies paths.
     pub fn launch(paths: &AppPaths, game_id: &str) -> Result<(), AppError> {
         let game = Self::list(paths)
@@ -158,6 +191,23 @@ impl LibraryService {
 
     fn store(paths: &AppPaths) -> LibraryStore {
         LibraryStore::new(paths.library().join("library.json"))
+    }
+}
+
+fn apply_overrides(
+    games: &mut [GameEntry],
+    overrides: &std::collections::BTreeMap<String, String>,
+) {
+    for game in games {
+        let Some(path) = overrides.get(&game.id) else {
+            continue;
+        };
+        let executable = PathBuf::from(path);
+        let Some(directory) = executable.parent().map(Path::to_path_buf) else {
+            continue;
+        };
+        game.render_exe = Some(executable);
+        game.target_directory = directory;
     }
 }
 

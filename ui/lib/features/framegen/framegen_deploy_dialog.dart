@@ -1,6 +1,7 @@
 import 'package:material_ui/material_ui.dart';
 
 import '../../bridge/deploy_options.dart';
+import '../../bridge/library_bridge.dart';
 import '../../bridge/library_game.dart';
 import '../../design/app_tokens.dart';
 import '../../l10n/app_localizations.dart';
@@ -39,6 +40,19 @@ class _FrameGenDeployDialogState extends State<FrameGenDeployDialog> {
   ];
 
   late DeployOptions _options = widget.initial;
+  late String? _gameExe = widget.game.renderExe;
+  bool _exeChanged = false;
+
+  Future<void> _pickExe() async {
+    final String? path = await LibraryBridge.pickExecutable();
+    if (path == null || !mounted) {
+      return;
+    }
+    setState(() {
+      _gameExe = path;
+      _exeChanged = true;
+    });
+  }
 
   void _update(DeployOptions options) => setState(() => _options = options);
 
@@ -61,6 +75,28 @@ class _FrameGenDeployDialogState extends State<FrameGenDeployDialog> {
                 style: Theme.of(context).textTheme.bodyMedium,
               ),
               const SizedBox(height: 16),
+              Text(
+                l10n.optionGameExe,
+                style: Theme.of(context).textTheme.labelMedium,
+              ),
+              const SizedBox(height: 4),
+              Row(
+                children: <Widget>[
+                  Expanded(
+                    child: Text(
+                      _gameExe ?? '—',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
+                  ),
+                  TextButton(
+                    onPressed: _pickExe,
+                    child: Text(l10n.chooseExe),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
               _Dropdown<String>(
                 label: l10n.optionProxySlot,
                 value: _options.proxySlot,
@@ -107,6 +143,29 @@ class _FrameGenDeployDialogState extends State<FrameGenDeployDialog> {
                 onChanged: (String value) =>
                     _update(_options.copyWith(preset: value)),
               ),
+              if (xeSS) ...<Widget>[
+                const SizedBox(height: 12),
+                _Dropdown<String>(
+                  label: l10n.optionFlowResolution,
+                  value: _options.xeSSFlowResolution,
+                  values: const <String>[
+                    'Coarse',
+                    'Middle',
+                    'Fine',
+                    'CoarseAt4K',
+                  ],
+                  onChanged: (String value) =>
+                      _update(_options.copyWith(xeSSFlowResolution: value)),
+                ),
+                const SizedBox(height: 12),
+                _Dropdown<String>(
+                  label: l10n.optionUseHudless,
+                  value: _options.xeSSUseHudless,
+                  values: const <String>['Auto', '1', '0'],
+                  onChanged: (String value) =>
+                      _update(_options.copyWith(xeSSUseHudless: value)),
+                ),
+              ],
               const SizedBox(height: 12),
               _Dropdown<String>(
                 label: l10n.optionSuperResolution,
@@ -127,7 +186,10 @@ class _FrameGenDeployDialogState extends State<FrameGenDeployDialog> {
           child: Text(l10n.cancel),
         ),
         FilledButton(
-          onPressed: () => Navigator.pop(context, _options),
+          onPressed: () => Navigator.pop(
+            context,
+            _options.copyWith(gameExe: _gameExe, persistExe: _exeChanged),
+          ),
           child: Text(l10n.deploy),
         ),
       ],

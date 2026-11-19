@@ -23,7 +23,9 @@ final class DeploymentBridge {
       'targetDir': game.targetDirectory,
       'proxySlot': options?.proxySlot,
       'ini': options?.iniOverrides() ?? const <Map<String, String>>[],
-      'gameExe': gameExe,
+      'gameExe': gameExe ?? options?.gameExe ?? game.renderExe,
+      'gameId': game.id,
+      'persistExe': options?.persistExe ?? false,
       'appVersion': appVersion,
     });
     return _run('fgm_deploy_json', request);

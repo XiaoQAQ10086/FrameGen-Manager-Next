@@ -85,6 +85,15 @@ pub extern "C" fn fgm_launch_game_json(request: *const u8, length: usize) -> *mu
     execute_request(request, length, commands_library::launch)
 }
 
+/// Opens the native picker and returns the chosen executable path.
+#[unsafe(no_mangle)]
+pub extern "C" fn fgm_pick_executable_json() -> *mut c_char {
+    execute(|| match commands_library::pick_executable() {
+        Ok(value) => value,
+        Err(error) => error_json(&error),
+    })
+}
+
 /// Returns manifest-only deployment badges for every library game.
 #[unsafe(no_mangle)]
 pub extern "C" fn fgm_game_modes_json(request: *const u8, length: usize) -> *mut c_char {

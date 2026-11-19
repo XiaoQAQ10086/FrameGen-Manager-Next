@@ -32,6 +32,7 @@ final class CoreLibrary {
     this._cover,
     this._gameModes,
     this._diagnosticsExport,
+    this._pickExecutable,
     this._deploy,
     this._restore,
     this._inspect,
@@ -72,6 +73,7 @@ final class CoreLibrary {
   final _RequestDart _cover;
   final _RequestDart _gameModes;
   final _RequestDart _diagnosticsExport;
+  final _JsonDart _pickExecutable;
   final _RequestDart _deploy;
   final _RequestDart _restore;
   final _RequestDart _inspect;
@@ -132,6 +134,9 @@ final class CoreLibrary {
           ),
           library.lookupFunction<_RequestNative, _RequestDart>(
             'fgm_diagnostics_export_json',
+          ),
+          library.lookupFunction<_JsonNative, _JsonDart>(
+            'fgm_pick_executable_json',
           ),
           library.lookupFunction<_RequestNative, _RequestDart>(
             'fgm_deploy_json',
@@ -252,6 +257,8 @@ final class CoreLibrary {
 
   String? diagnosticsExportJson(String request) =>
       _request(_diagnosticsExport, request);
+
+  String? pickExecutableJson() => _json(_pickExecutable);
 
   String? deployJson(String request) => _request(_deploy, request);
 

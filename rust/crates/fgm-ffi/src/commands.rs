@@ -28,6 +28,10 @@ struct DeployRequest {
     #[serde(default)]
     game_exe: Option<String>,
     #[serde(default)]
+    game_id: Option<String>,
+    #[serde(default)]
+    persist_exe: bool,
+    #[serde(default)]
     app_version: Option<String>,
     #[serde(default)]
     data_dir: Option<String>,
@@ -61,8 +65,23 @@ pub(crate) fn deploy(request: &str) -> Result<Value, AppError> {
     let request: DeployRequest = parse(request)?;
     let pack_directory = pack_directory(request.pack_dir.as_deref(), &request.pack_id)?;
     let pack = PackJson::load(&pack_directory.join("pack.json"))?;
-    let target_directory = absolute(Path::new(&request.target_dir))?;
+    let mut target_directory = absolute(Path::new(&request.target_dir))?;
     let app_version = request.app_version.unwrap_or_else(|| VERSION.to_string());
+    let paths = data_paths(request.data_dir.as_deref())?;
+    paths.ensure_created()?;
+    let game_executable = request
+        .game_exe
+        .as_deref()
+        .map(Path::new)
+        .map(absolute)
+        .transpose()?;
+    if request.persist_exe
+        && let (Some(game_id), Some(executable)) = (&request.game_id, &game_executable)
+    {
+        let game =
+            fgm_infra::library::LibraryService::set_target_override(&paths, game_id, executable)?;
+        target_directory = game.target_directory;
+    }
 
     let mut options = BTreeMap::new();
     if let Some(slot) = &request.proxy_slot {
@@ -78,15 +97,7 @@ pub(crate) fn deploy(request: &str) -> Result<Value, AppError> {
         Some(&app_version),
     )?;
 
-    let paths = data_paths(request.data_dir.as_deref())?;
-    paths.ensure_created()?;
     let family = request.family.unwrap_or_else(|| pack.id.clone());
-    let game_executable = request
-        .game_exe
-        .as_deref()
-        .map(Path::new)
-        .map(absolute)
-        .transpose()?;
 
     if let Some(executable) = game_executable.as_deref() {
         ReframeworkService::install_before_deploy(
