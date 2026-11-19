@@ -37,6 +37,7 @@ final class CoreLibrary {
     this._settingsGet,
     this._settingsSet,
     this._dlss5Install,
+    this._dlss5Uninstall,
     this._logsTail,
     this._anrCurrent,
     this._anrImport,
@@ -63,6 +64,7 @@ final class CoreLibrary {
   final _JsonDart _settingsGet;
   final _RequestDart _settingsSet;
   final _RequestDart _dlss5Install;
+  final _RequestDart _dlss5Uninstall;
   final _RequestDart _logsTail;
   final _JsonDart _anrCurrent;
   final _RequestDart _anrImport;
@@ -119,6 +121,9 @@ final class CoreLibrary {
           ),
           library.lookupFunction<_RequestNative, _RequestDart>(
             'fgm_dlss5_install_json',
+          ),
+          library.lookupFunction<_RequestNative, _RequestDart>(
+            'fgm_dlss5_uninstall_json',
           ),
           library.lookupFunction<_RequestNative, _RequestDart>(
             'fgm_logs_tail_json',
@@ -193,6 +198,9 @@ final class CoreLibrary {
 
   String? dlss5InstallJson(String request) =>
       _request(_dlss5Install, request);
+
+  String? dlss5UninstallJson(String request) =>
+      _request(_dlss5Uninstall, request);
 
   String? logsTailJson(String request) => _request(_logsTail, request);
 

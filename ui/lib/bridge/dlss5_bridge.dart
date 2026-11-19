@@ -28,4 +28,17 @@ final class Dlss5Bridge {
     });
     return Dlss5Result.parse(reply);
   }
+
+  /// Removes everything the install wrote; user-modified files are reported
+  /// as conflicts and left in place.
+  static Future<Dlss5Result> uninstall(LibraryGame game) async {
+    final String request = jsonEncode(<String, Object?>{
+      'targetDir': game.targetDirectory,
+    });
+    final String? reply = await Isolate.run(() {
+      final CoreLibrary? core = CoreLibrary.tryOpen();
+      return core?.dlss5UninstallJson(request);
+    });
+    return Dlss5Result.parse(reply);
+  }
 }

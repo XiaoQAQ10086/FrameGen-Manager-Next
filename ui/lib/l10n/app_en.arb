@@ -112,6 +112,24 @@
       }
     }
   },
+  "dlss5Uninstall": "Uninstall DLSS5",
+  "dlss5UninstallConfirm": "Remove DLSS5, ReShade and the GITC files from {game}? Files you changed are kept.",
+  "@dlss5UninstallConfirm": {
+    "placeholders": {
+      "game": {
+        "type": "String"
+      }
+    }
+  },
+  "dlss5Uninstalled": "DLSS5 removed.",
+  "dlss5UninstallConflicts": "Uninstall finished; {count} modified files were kept.",
+  "@dlss5UninstallConflicts": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "logsEmpty": "No log entries yet.",
   "copy": "Copy",
   "anrImport": "Import ANR package",

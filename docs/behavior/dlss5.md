@@ -9,10 +9,16 @@
 - `fgm-infra/src/dlss5/reshade_installer.rs`：
   - 根据渲染 EXE 是否 AMD64/ARM64 选择 `ReShade64.dll` / `ReShade32.dll`。
   - 目标已有模块时读取 PE `ProductName`，只有包含 `ReShade` 才允许覆盖；否则返回 `Conflict`，不误删第三方 `dxgi.dll`。
-  - 模块走原子写入；`ReShade.ini` 缺失时写默认搜索路径。
 - `fgm-infra/src/pe/pe_imports.rs::is_64_bit`：读取 PE machine（0x8664 / 0xAA64），读取失败默认 64 位。
-- 尚未迁移：DLSS5 pack 部署编排、API→代理槽选择、Vulkan 回退到官方 setup、GITC 选项/INI、卸载与第三方文件保护、FFI/UI。
-- 测试：`reshade_zip.rs` 内 stored/deflate 提取测试；`tests/reshade_installer.rs` 安装与冲突测试。
+- `fgm-infra/src/dlss5/dlss5_service.rs`：
+  - `install` 选择代理槽（DX10/11/12 → `dxgi.dll`，DX9 → `d3d9.dll`，Vulkan → `vulkan-1.dll`，OpenGL → `opengl32.dll`），用 `PackDeploymentPlanner` 生成 pack 文件计划，再把解包出的 ReShade 模块（role=`proxy`）和缺失时的默认 `ReShade.ini`（role=`config`）作为带内容的内存文件追加到同一份计划，由 `DeploymentEngine` 统一备份/原子写入/校验/回滚。代理槽已有非 ReShade 模块时在写入前返回 `Conflict`。
+  - 代理与 INI 因此进入部署清单：卸载时可以精确区分“这个文件是我们写的”和“部署前就存在”。
+  - `uninstall` 走 `DeploymentEngine::restore`：哈希与清单一致的文件被删除（有备份的恢复备份），用户改过的文件报告为冲突并保留。**不运行 ReShade 官方卸载器**——官方卸载器按文件名删除，正是旧版误删第三方 `dxgi.dll` 的原因。
+- `fgm-ffi/src/commands_dlss5.rs`：`fgm_dlss5_install_json`、`fgm_dlss5_uninstall_json`；卸载返回 `restored`/`removed`/`conflicts`/`warnings`。
+- `fgm-cli/src/dlss5.rs`：`dlss5 install|inspect|uninstall`；`install` 未给 `--api` 时用 `GraphicsApiDetector` 自动判定。
+- Flutter：DLSS5 页每局游戏提供安装与卸载按钮；卸载有冲突时按数量提示，不误报成功。
+- 尚未迁移：部署状态卡片（`Installed/Outdated/Partial/Conflict/InstalledWithoutManifest` + ReShade 探测 + 旧版 RenoDX 残留检测）、GITC 选项/INI（`StartEnabled`、快捷键）、Vulkan 回退到官方 setup、“还原保留 ReShade”与“卸载全部移除”的区分。
+- 测试：`reshade_zip.rs` 内 stored/deflate 提取测试；`tests/reshade_installer.rs` 安装与冲突测试；`tests/dlss5_service.rs` 覆盖安装、代理冲突回滚、卸载删除代理/INI、用户修改文件保留、部署前已有 `ReShade.ini` 保留。
 
 ## 前置条件
 
@@ -66,37 +72,38 @@
 - 同时报告旧版 DLSS5/RenoDX 残留：根目录 `renodx-dlss*.addon*`（含第三方整合包常见的 `renodx-dlss-SF-*.addon64`）或旧布局根目录 `nvngx_dlssnr.dll`；命中项写入 `legacyFiles`，详情页逐项列出，避免用户误以为是本软件部署过 ReShade。
 - 检测到旧版 DLSS5/RenoDX 时拒绝安装 GITC pack，返回 `LegacyInstallPresent`，必须先执行“清理旧版文件”。这不是按本软件的部署记录判断，而是按目录里的实际文件判断；文件可能来自其他 DLSS5 整合包或手动安装。
 
-## 还原
+## 还原 / 卸载（Rust 实现）
 
-- 通过部署引擎还原 114 个 pack 文件，恢复部署前备份。
-- **不自动运行 ReShade 卸载器**；ReShade 模块、`ReShade.ini`、`ReShade.log`、`ReShadePreset.ini` 会保留，并明确提示。
-- 需要彻底清理时使用“卸载”。
+新版把“还原”和“卸载”合并为一个可安全重复执行的操作：`Dlss5Service::uninstall`（CLI `dlss5 uninstall`，FFI `fgm_dlss5_uninstall_json`，界面“卸载 DLSS5”）。
 
-## 彻底卸载
+1. 读取 `dlss5` 家族清单；没有清单返回 `ManifestMissing`，不猜测目录内容。
+2. 逐条比对当前文件哈希与清单记录：
+   - 一致且部署前不存在 → 删除（`removed`）。
+   - 一致且部署前存在 → 从备份恢复原文件（`restored`）。
+   - 不一致（用户或第三方程序改过）→ 记入 `conflicts`，**保留文件**。
+   - 文件已不存在 → 只记 warning。
+3. 代理 DLL 与默认 `ReShade.ini` 同在清单里，因此：
+   - 我们写入的 ReShade 代理会被删除；部署前就存在的 ReShade 代理会被恢复。
+   - 如果用户把代理换成了雪月等基于 ReShade 的第三方 DLL，哈希不匹配 → 保留并报告冲突，绝不按文件名删除。
+4. 没有冲突时删除清单、备份目录和 pack 声明的空目录；有冲突时清单转为 `partial`，保留剩余记录供下次重试。
+5. 不调用 ReShade 官方卸载器，也不删除未跟踪的 `ReShade.log` / `ReShadePreset.ini`。这两点是对旧版行为的有意修正：官方卸载器按文件名删除 DLL，曾导致误删第三方 `dxgi.dll`。
+6. 用户自己后续重新安装的 ReShade 配置不在清单内，不会被删除；需要清理时由用户手动处理。
 
-界面只有在检测到已部署（含旧版 DLSS5/RenoDX/残留）时才允许点“卸载”；只有旧版文件、没有本软件部署时，按钮文字显示“清理旧版文件”。
+与旧版的差异（待补齐）：
 
-1. 读取卸载前的清单，记录 `ExistedBefore=true` 的路径。这些是游戏原有文件，后续按 pack 清理时必须跳过。
-2. 从 bundled setup 提取当前架构的 ReShade 模块并计算 SHA-256；只有“版本信息含 ReShade 且哈希与它完全一致”的代理 DLL 才被认定为本次部署的模块。
-3. 找到自己的模块后才运行 ReShade 官方卸载器（`--state uninstall --api <module>`）；运行前暂存 `d3dcompiler_47.dll`，若被官方卸载器删除则恢复。代理 DLL 哈希不一致（例如雪月 Snowy Moon 等基于 ReShade 的第三方 mod）时跳过官方卸载器，避免它按文件名盲删。
-4. 官方卸载器超时、失败或被跳过后，直接删除仍通过哈希校验的模块；哈希不一致、被替换、无法读取或无法验证时一律保留，并记录“belongs to another ReShade-based program”。
-5. 调用部署引擎还原并清理清单/备份：删除仍匹配部署哈希的文件，恢复部署前已有的原文件；用户改过的文件保留并报告冲突。
-6. 删除 `ReShade.ini`、`ReShade.log`、`ReShadePreset.ini`。
-7. 删除 GITC 组件（`gitc-uplift.addon32/64`、`gitc-uplift-helper64.exe`、`GITC-Uplift/`）与已知 shader。
-8. 按当前 pack 的文件表扫描 `reshade-shaders/Shaders/**` 与 `reshade-shaders/Textures/**`：哈希匹配的残留直接删除；用户改过的文件保留并计入剩余项。此步骤覆盖“官方 setup 写入或清单已丢失”的纹理/着色器残留。
-9. 清理旧版 DLSS5/RenoDX：`renodx-dlss*.addon*`、旧布局根目录 `nvngx_dlssnr.dll`。
-10. 清理插件运行时残渣（`renodx-dlss-report*`、`renodx-dlss-*`、`ReShade.ini.renodx-dlss*`、崩溃日志、trace）。
-11. 仅当 `D3D12\` 只有 `D3D12Core.dll` 且版本信息含 Microsoft 时删除该 Agility SDK 文件。
-12. 删除空目录后重新扫描；剩余项包含仍存在的 pack 文件，但被判定为其他程序的代理 DLL 不计入剩余项。只有剩余项为 0 才丢弃清单和备份。
-13. 返回 `removed` / `remaining` / `clean`；界面在 `clean=false` 时显示“卸载未完成”错误，而不是提示成功。删除是永久的，不进回收站。
+- 旧版“还原”只移除 pack 文件、保留 ReShade 模块/INI，方便用户继续使用 ReShade；“卸载”才全部移除。新版暂时只有一种全量卸载。
+- 旧版“彻底卸载”会运行官方卸载器并清理 `ReShade.log`、`ReShadePreset.ini`、旧版 RenoDX 文件和运行时残渣；新版依赖清单 + 哈希，暂不扫描未跟踪残留。旧版 RenoDX 检测会在状态卡片迁移时一起补。
+
+## 旧版“彻底卸载”参考
+
+保留旧版规则作为后续补齐残留清理的对照（当前 Rust 未实现这些步骤）：卸载前记录 `ExistedBefore=true` 的路径；从 bundled setup 提取 ReShade 模块并做 SHA-256 校验；只有“版本信息含 ReShade 且哈希一致”的代理才运行官方卸载器；官方卸载器失败或被跳过后删除仍通过哈希校验的模块，哈希不一致的一律保留；还原清单文件；删除 `ReShade.ini`/`ReShade.log`/`ReShadePreset.ini`；按 pack 文件表清理 GITC 组件、shader/纹理残留（哈希匹配才删）；清理旧版 RenoDX（`renodx-dlss*.addon*`、根目录 `nvngx_dlssnr.dll`）与运行时残渣；仅在 `D3D12\` 只有 Microsoft 版 `D3D12Core.dll` 时删除该文件；最后返回 `removed`/`remaining`/`clean`，`clean=false` 时界面显示失败而不是成功。
 
 ## 命令
 
 ```powershell
-fgm-next dlss5 inspect <target-dir> <game-exe>
-fgm-next dlss5 install <target-dir> <game-exe>
-fgm-next dlss5 restore <target-dir> [game-exe]
-fgm-next dlss5 uninstall <target-dir> [game-exe]
+fgm-next dlss5 install <target-dir> <game-exe> [--api <api>] [--pack-dir <dir>] [--data-dir <dir>]
+fgm-next dlss5 inspect <target-dir> [--pack-dir <dir>] [--data-dir <dir>]
+fgm-next dlss5 uninstall <target-dir> [--data-dir <dir>]
 ```
 
 ## 真机验证（2026-10-29）

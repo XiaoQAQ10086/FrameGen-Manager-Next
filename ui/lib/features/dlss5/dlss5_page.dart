@@ -67,6 +67,48 @@ class _Dlss5PageState extends State<Dlss5Page> {
     );
   }
 
+  Future<void> _uninstall(LibraryGame game) async {
+    final AppLocalizations l10n = AppLocalizations.of(context);
+    final bool? confirmed = await showDialog<bool>(
+      context: context,
+      builder: (BuildContext context) => AlertDialog(
+        title: Text(l10n.dlss5Uninstall),
+        content: Text(l10n.dlss5UninstallConfirm(game.name)),
+        actions: <Widget>[
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text(l10n.cancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: Text(l10n.dlss5Uninstall),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) {
+      return;
+    }
+
+    setState(() => _busyGameId = game.id);
+    final Dlss5Result result = await Dlss5Bridge.uninstall(game);
+    if (!mounted) {
+      return;
+    }
+    setState(() => _busyGameId = null);
+    final String message;
+    if (!result.ok) {
+      message = '${l10n.deployFailed} ${result.code}';
+    } else if (result.conflicts.isEmpty) {
+      message = l10n.dlss5Uninstalled;
+    } else {
+      message = l10n.dlss5UninstallConflicts(result.conflicts.length);
+    }
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message), behavior: SnackBarBehavior.floating),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final AppLocalizations l10n = AppLocalizations.of(context);
@@ -142,7 +184,7 @@ class _Dlss5PageState extends State<Dlss5Page> {
                                     strokeWidth: 2,
                                   ),
                                 )
-                              else
+                              else ...<Widget>[
                                 IconButton(
                                   onPressed: game.renderExe == null
                                       ? null
@@ -154,6 +196,16 @@ class _Dlss5PageState extends State<Dlss5Page> {
                                   tooltip: l10n.dlss5Install,
                                   color: AppTokens.textSecondary,
                                 ),
+                                IconButton(
+                                  onPressed: () => _uninstall(game),
+                                  icon: const Icon(
+                                    Icons.delete_outline,
+                                    size: 18,
+                                  ),
+                                  tooltip: l10n.dlss5Uninstall,
+                                  color: AppTokens.textSecondary,
+                                ),
+                              ],
                             ],
                           ),
                         );

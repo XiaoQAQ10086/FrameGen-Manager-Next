@@ -8,6 +8,7 @@ use fgm_infra::pack_payload::PackPayloadValidator;
 
 mod anr;
 mod deploy;
+mod dlss5;
 mod library;
 
 fn main() {
@@ -36,6 +37,7 @@ fn run(args: Vec<String>) -> i32 {
         [inspect, rest @ ..] if inspect == "inspect" => self::deploy::run_inspect(rest),
         [library, rest @ ..] if library == "library" => self::library::run_library(rest),
         [anr, rest @ ..] if anr == "anr" => self::anr::run_anr(rest),
+        [dlss5, rest @ ..] if dlss5 == "dlss5" => self::dlss5::run_dlss5(rest),
         _ => {
             eprintln!("unknown command");
             print_usage();
@@ -176,6 +178,7 @@ fn print_usage() {
     eprintln!("  fgm-next library scan [--root <dir>]... [--data-dir <dir>]");
     eprintln!("  fgm-next library list [--data-dir <dir>]");
     eprintln!("  fgm-next anr import|status|deploy|restore ...");
+    eprintln!("  fgm-next dlss5 install|inspect|uninstall ...");
 }
 
 fn print_pack_usage() {

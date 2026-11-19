@@ -4,6 +4,7 @@ use std::time::{SystemTime, UNIX_EPOCH};
 
 use fgm_domain::error::ErrorCode;
 use fgm_domain::library::GraphicsApi;
+use fgm_infra::deployment::RestoreReport;
 use fgm_infra::dlss5::Dlss5Service;
 use fgm_infra::hashing::FileHasher;
 use fgm_infra::paths::AppPaths;
@@ -39,6 +40,50 @@ fn refuses_a_foreign_proxy_and_rolls_back_pack_files() {
         b"foreign"
     );
     assert!(!fixture.target.join("shader.fx").exists());
+}
+
+#[test]
+fn uninstall_removes_the_pack_the_proxy_and_the_default_ini() {
+    let fixture = Fixture::new("dlss5-uninstall");
+    fixture.install().unwrap();
+
+    let report = fixture.uninstall().unwrap();
+
+    assert_eq!(report.conflicts, Vec::<String>::new());
+    assert!(!fixture.target.join("shader.fx").exists());
+    assert!(!fixture.target.join("dxgi.dll").exists());
+    assert!(!fixture.target.join("ReShade.ini").exists());
+}
+
+#[test]
+fn uninstall_keeps_a_pack_file_the_user_changed() {
+    let fixture = Fixture::new("dlss5-uninstall-conflict");
+    fixture.install().unwrap();
+    fs::write(fixture.target.join("shader.fx"), b"edited").unwrap();
+
+    let report = fixture.uninstall().unwrap();
+
+    assert_eq!(report.conflicts, vec!["shader.fx".to_string()]);
+    assert_eq!(
+        fs::read_to_string(fixture.target.join("shader.fx")).unwrap(),
+        "edited"
+    );
+    assert!(!fixture.target.join("dxgi.dll").exists());
+}
+
+#[test]
+fn uninstall_keeps_a_reshade_ini_that_predates_the_install() {
+    let fixture = Fixture::new("dlss5-uninstall-preexisting-ini");
+    fs::write(fixture.target.join("ReShade.ini"), b"[GENERAL]\r\n").unwrap();
+
+    fixture.install().unwrap();
+    fixture.uninstall().unwrap();
+
+    assert_eq!(
+        fs::read_to_string(fixture.target.join("ReShade.ini")).unwrap(),
+        "[GENERAL]\r\n"
+    );
+    assert!(!fixture.target.join("dxgi.dll").exists());
 }
 
 struct Fixture {
@@ -82,16 +127,24 @@ impl Fixture {
     }
 
     fn install(&self) -> Result<fgm_infra::dlss5::Dlss5Report, fgm_domain::error::AppError> {
-        let paths = AppPaths::new(self.root.join("data"), false).unwrap();
-        paths.ensure_created().unwrap();
         Dlss5Service::install(
             &self.pack,
             &self.target.join("game.exe"),
             &self.target,
             GraphicsApi::Dx12,
             "2.3.4",
-            &paths,
+            &self.paths(),
         )
+    }
+
+    fn uninstall(&self) -> Result<RestoreReport, fgm_domain::error::AppError> {
+        Dlss5Service::uninstall(&self.target, &self.paths())
+    }
+
+    fn paths(&self) -> AppPaths {
+        let paths = AppPaths::new(self.root.join("data"), false).unwrap();
+        paths.ensure_created().unwrap();
+        paths
     }
 }
 

@@ -4,7 +4,8 @@ use fgm_domain::error::{AppError, ErrorCode};
 use fgm_domain::library::GraphicsApi;
 use fgm_domain::pack::AssetPackStep;
 
-use crate::deployment::{DeploymentEngine, PackDeploymentPlanner};
+use crate::deployment::{DeploymentEngine, DeploymentFile, PackDeploymentPlanner, RestoreReport};
+use crate::hashing::sha256_hex;
 use crate::pack_json::PackJson;
 use crate::paths::{AppPaths, TargetPath};
 
@@ -53,8 +54,39 @@ impl Dlss5Service {
             &[],
             Some(app_version),
         )?;
+
+        let proxy_path = TargetPath::combine(target_directory, proxy_module)?;
+        if proxy_path.is_file() && !ReShadeInstaller::is_reshade_module(&proxy_path) {
+            return Err(AppError::new(ErrorCode::Conflict)
+                .with("path", proxy_path.display().to_string())
+                .with("reason", "the target module belongs to another program"));
+        }
+
+        let mut files = plan.files;
+        files.push(DeploymentFile {
+            relative_path: proxy_module.to_string(),
+            source: None,
+            content: Some(module.clone()),
+            sha256: sha256_hex(&module),
+            size: module.len() as i64,
+            role: "proxy".to_string(),
+        });
+
+        let ini_path = TargetPath::combine(target_directory, "ReShade.ini")?;
+        if !ini_path.is_file() {
+            let content = ReShadeInstaller::default_ini().as_bytes().to_vec();
+            files.push(DeploymentFile {
+                relative_path: "ReShade.ini".to_string(),
+                source: None,
+                content: Some(content.clone()),
+                sha256: sha256_hex(&content),
+                size: content.len() as i64,
+                role: "config".to_string(),
+            });
+        }
+
         let report = DeploymentEngine::apply(
-            &plan.files,
+            &files,
             target_directory,
             Self::FAMILY,
             &pack.id,
@@ -67,22 +99,24 @@ impl Dlss5Service {
             &std::sync::atomic::AtomicBool::new(false),
         )?;
 
-        if let Err(error) =
-            ReShadeInstaller::install_module(target_directory, proxy_module, &module)
-        {
-            let _ = DeploymentEngine::restore(
-                Self::FAMILY,
-                target_directory,
-                &paths.backups(),
-                &paths.state().join("locks"),
-            );
-            return Err(error.with("rollback", "components"));
-        }
-
         Ok(Dlss5Report {
             files_written: report.files_written,
             proxy_module: proxy_module.to_string(),
         })
+    }
+
+    /// Restores everything the install wrote, including the ReShade proxy and
+    /// the default `ReShade.ini`. Files that were present before the install
+    /// are restored from backup; files changed by the user are reported as
+    /// conflicts and left untouched, so a third-party module that reused the
+    /// proxy slot is never deleted.
+    pub fn uninstall(target_directory: &Path, paths: &AppPaths) -> Result<RestoreReport, AppError> {
+        DeploymentEngine::restore(
+            Self::FAMILY,
+            target_directory,
+            &paths.backups(),
+            &paths.state().join("locks"),
+        )
     }
 }
 

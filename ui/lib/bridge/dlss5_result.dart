@@ -2,7 +2,13 @@ import 'dart:convert';
 
 /// Result of a DLSS5 install request.
 final class Dlss5Result {
-  const Dlss5Result({required this.ok, this.proxyModule, this.code, this.detail});
+  const Dlss5Result({
+    required this.ok,
+    this.proxyModule,
+    this.conflicts = const <String>[],
+    this.code,
+    this.detail,
+  });
 
   factory Dlss5Result.parse(String? reply) {
     if (reply == null) {
@@ -17,6 +23,7 @@ final class Dlss5Result {
         return Dlss5Result(
           ok: true,
           proxyModule: decoded['proxyModule'] as String? ?? '',
+          conflicts: _stringList(decoded['conflicts']),
         );
       }
       return Dlss5Result(
@@ -31,8 +38,16 @@ final class Dlss5Result {
 
   final bool ok;
   final String? proxyModule;
+  final List<String> conflicts;
   final String? code;
   final String? detail;
+
+  static List<String> _stringList(Object? value) {
+    if (value is! List) {
+      return const <String>[];
+    }
+    return value.whereType<String>().toList(growable: false);
+  }
 
   static String? _contextDetail(Object? context) {
     if (context is! List) {

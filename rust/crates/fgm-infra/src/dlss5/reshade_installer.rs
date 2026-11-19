@@ -43,6 +43,15 @@ impl ReShadeInstaller {
         })
     }
 
+    pub fn is_reshade_module(path: &Path) -> bool {
+        path.is_file()
+            && product_name(path).is_some_and(|name| name.to_lowercase().contains("reshade"))
+    }
+
+    pub fn default_ini() -> &'static str {
+        DEFAULT_INI
+    }
+
     pub fn install_module(
         target_directory: &Path,
         proxy_module: &str,
@@ -54,14 +63,10 @@ impl ReShadeInstaller {
         }
 
         let target = TargetPath::combine(target_directory, proxy_module)?;
-        if target.is_file() {
-            let is_reshade =
-                product_name(&target).is_some_and(|name| name.to_lowercase().contains("reshade"));
-            if !is_reshade {
-                return Err(AppError::new(ErrorCode::Conflict)
-                    .with("path", target.display().to_string())
-                    .with("reason", "the target module belongs to another program"));
-            }
+        if target.is_file() && !Self::is_reshade_module(&target) {
+            return Err(AppError::new(ErrorCode::Conflict)
+                .with("path", target.display().to_string())
+                .with("reason", "the target module belongs to another program"));
         }
 
         AtomicFile::write(&target, module)?;
