@@ -25,7 +25,7 @@
 
 - Serde 区分 JSON 属性名大小写，不接受注释和尾随逗号；pack 由生成器产出，不依赖这些扩展（ADR-0013）。
 - `SafePath::CombineUnderRoot` 已由 `TargetPath::combine` 补齐（Phase 2），包含 junction/符号链接逃逸和受保护系统目录检查。
-- CLI `--app-version` 默认取 Rust 程序版本（当前 `0.1.0`）；校验 2.x 现有 pack 时需传入目标版本，例如 `--app-version 2.3.4`。
+- CLI `--app-version` 默认取 Rust 程序版本（当前 `2.3.4`，与 pack 的 `minAppVersion` 同一版本线）。
 
 ## 文件布局
 

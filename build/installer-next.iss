@@ -1,5 +1,5 @@
 #define AppName "FrameGen Manager-Next"
-#define AppVersion "0.1.0"
+#define AppVersion "2.3.4"
 #define AppPublisher "FrameGen"
 #define AppExeName "fgm_ui.exe"
 

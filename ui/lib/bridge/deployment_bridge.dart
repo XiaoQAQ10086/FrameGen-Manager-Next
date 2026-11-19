@@ -10,8 +10,6 @@ import 'library_game.dart';
 final class DeploymentBridge {
   const DeploymentBridge._();
 
-  static const String appVersion = '2.3.4';
-
   static Future<DeploymentResult> deploy({
     required LibraryGame game,
     String packId = 'framegen.sm86',
@@ -26,7 +24,6 @@ final class DeploymentBridge {
       'gameExe': gameExe ?? options?.gameExe ?? game.renderExe,
       'gameId': game.id,
       'persistExe': options?.persistExe ?? false,
-      'appVersion': appVersion,
     });
     return _run('fgm_deploy_json', request);
   }

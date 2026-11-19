@@ -18,7 +18,7 @@
 - Inno Setup 6.7.4，`UseSetupLdr=x64`，避免旧 32 位 loader 在 Win10 22H2 上无响应。
 - 每用户安装：`{localappdata}\Programs\FrameGen Manager-Next`。
 - 不包含 `portable.flag`，因此数据目录使用 `%LOCALAPPDATA%\FrameGen-Manager-Next`。
-- 输出：`artifacts/installer-next/releases/FrameGenManagerNext-0.1.0-win-Setup.exe`。
+- 输出：`artifacts/installer-next/releases/FrameGenManagerNext-2.3.4-win-Setup.exe`。
 - 每次编译前清空 releases，只保留最新安装包。
 
 ## 更新清单

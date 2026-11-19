@@ -9,8 +9,6 @@ import 'smooth_motion_status.dart';
 final class SmoothMotionBridge {
   const SmoothMotionBridge._();
 
-  static const String appVersion = '2.3.4';
-
   static Future<Map<String, SmoothMotionStatus>> inspectMany(
     List<LibraryGame> games,
   ) async {
@@ -54,7 +52,6 @@ final class SmoothMotionBridge {
       'game': game.name,
       'exePath': exe,
       'targetDir': game.targetDirectory,
-      'appVersion': appVersion,
     });
     final String? reply = await Isolate.run(() {
       final CoreLibrary? core = CoreLibrary.tryOpen();
