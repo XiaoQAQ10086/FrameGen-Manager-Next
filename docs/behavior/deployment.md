@@ -56,14 +56,17 @@ manifest 状态：`Installing → Installed / RolledBack / Partial`，还原后 
   - 只有当前哈希等于部署哈希才还原备份或删除；用户修改过的文件报告冲突并保留
   - 冲突为空时按 manifest 删除 `ownedDirectories`（递归），失败写入 warnings
   - 冲突为空时删除 manifest；否则标记 `partial`
+- `fgm-infra/src/deployment/deployment_inspector.rs`：`DeploymentInspector::inspect`
+  - 有 manifest：逐文件比对哈希；修改 → `Conflict`，缺失 → `Partial`，pack 版本不同 → `Outdated`，否则 `Installed`
+  - 无 manifest：提供 pack 时按 pack 文件表匹配，命中 → `InstalledWithoutManifest`
+  - 只读，不修改目标或备份
 - `fgm-infra/src/fs/`：`AtomicFile`、`DeploymentKey`、`TargetLock`（见 [filesystem-primitives.md](filesystem-primitives.md)）
 - `fgm-infra/src/process/game_process_probe.rs`：部署/还原前的游戏进程检测
   - Toolhelp32 快照按 EXE 文件名匹配；再用 `QueryFullProcessImageNameW` 比对完整路径
   - `OpenProcess` 或查询路径失败时，按“名称匹配即运行”处理，避免受保护进程被误判为未运行
   - 空路径、无法解析的路径返回 false
 - 新 manifest 状态使用统一阶段机 `planned/backingUp/writing/verifying/installed/rolledBack/partial`；不兼容旧版 `Installing/Restored` 字段，旧数据不迁移。
-- 尚未实现：Smooth Motion/帧生成互斥检查、ReShade/网络、FFI/UI 接线。
-- 测试：`rust/crates/fgm-infra/tests/backup_store.rs`、`fs_primitives.rs`、`process_probe.rs`、`deployment_engine.rs`、`pack_planner.rs`。
+- 尚未实现：Smooth Motion/帧生成互斥检查、ReShade/网络、FFI/UI 接线。- 测试：`rust/crates/fgm-infra/tests/backup_store.rs`、`fs_primitives.rs`、`process_probe.rs`、`deployment_engine.rs`、`pack_planner.rs`。
 
 ## 部署流程
 
@@ -174,12 +177,14 @@ Rust CLI（Phase 3）：
 fgm-next deploy <pack-dir> <target-dir> --family <id> --proxy-slot version.dll --data-dir <dir> --game-exe <game.exe> --app-version 2.3.4
 fgm-next deploy <pack-dir> <target-dir> --dry-run
 fgm-next restore <target-dir> --family <id> --data-dir <dir>
+fgm-next inspect <target-dir> --family <id> [--pack-dir <dir>] [--data-dir <dir>]
 ```
 
 - `deploy` 执行 pack 校验、代理槽选择、INI 合并、游戏运行预检、文件事务与 manifest。
 - `--game-exe` 指定渲染 EXE；检测到运行中返回 `GameRunning`，不写文件。
 - `--dry-run` 只打印计划文件，不读写目标。
 - `restore` 按 manifest 还原；存在冲突时退出码为 1。
+- `inspect` 只读输出 `NotDeployed/Installed/Outdated/Partial/Conflict/InstalledWithoutManifest` 和明细。
 - `--data-dir` 不传时使用 `AppPaths::create_default`（`FGM_DATA_DIR` / `portable.flag` / `%LOCALAPPDATA%`）。
 
 UI：“帧生成”页点击某个游戏的“部署”后才展开代理/优化/帧数/Preset/引擎/SR 参数；确认后部署。其余时间不占用页面空间。

@@ -31,6 +31,7 @@ fn run(args: Vec<String>) -> i32 {
         }
         [deploy, rest @ ..] if deploy == "deploy" => self::deploy::run_deploy(rest),
         [restore, rest @ ..] if restore == "restore" => self::deploy::run_restore(rest),
+        [inspect, rest @ ..] if inspect == "inspect" => self::deploy::run_inspect(rest),
         _ => {
             eprintln!("unknown command");
             print_usage();
@@ -165,6 +166,9 @@ fn print_usage() {
         "  fgm-next deploy <pack-dir> <target-dir> [--family <id>] [--proxy-slot <target>] [--data-dir <dir>] [--game-exe <path>] [--dry-run]"
     );
     eprintln!("  fgm-next restore <target-dir> --family <id> [--data-dir <dir>]");
+    eprintln!(
+        "  fgm-next inspect <target-dir> --family <id> [--pack-dir <dir>] [--data-dir <dir>]"
+    );
 }
 
 fn print_pack_usage() {

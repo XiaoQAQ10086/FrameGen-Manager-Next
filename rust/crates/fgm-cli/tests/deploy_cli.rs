@@ -83,6 +83,44 @@ fn unknown_proxy_slot_fails_without_writing() {
 }
 
 #[test]
+fn inspect_reports_the_current_state() {
+    let fixture = Fixture::new("deploy-inspect");
+    fixture.run(&[
+        "deploy",
+        fixture.pack.to_str().unwrap(),
+        fixture.target.to_str().unwrap(),
+        "--family",
+        "test.pack",
+        "--data-dir",
+        fixture.data.to_str().unwrap(),
+        "--app-version",
+        "2.3.4",
+    ]);
+
+    let installed = fixture.run(&[
+        "inspect",
+        fixture.target.to_str().unwrap(),
+        "--family",
+        "test.pack",
+        "--data-dir",
+        fixture.data.to_str().unwrap(),
+    ]);
+    assert!(installed.status.success(), "{}", stderr(&installed));
+    assert!(stdout(&installed).contains("state=Installed"));
+
+    fs::write(fixture.target.join("version.dll"), b"modified").unwrap();
+    let conflict = fixture.run(&[
+        "inspect",
+        fixture.target.to_str().unwrap(),
+        "--family",
+        "test.pack",
+        "--data-dir",
+        fixture.data.to_str().unwrap(),
+    ]);
+    assert!(stdout(&conflict).contains("state=Conflict"));
+}
+
+#[test]
 fn restore_requires_a_family() {
     let fixture = Fixture::new("deploy-family");
     let result = fixture.run(&["restore", fixture.target.to_str().unwrap()]);
