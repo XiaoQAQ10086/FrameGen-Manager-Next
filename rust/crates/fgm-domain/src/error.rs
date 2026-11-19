@@ -8,6 +8,7 @@ pub enum ErrorCode {
     FileLocked,
     GameRunning,
     GpuUnsupported,
+    NetworkError,
     AccessDenied,
     Conflict,
     ManifestMissing,

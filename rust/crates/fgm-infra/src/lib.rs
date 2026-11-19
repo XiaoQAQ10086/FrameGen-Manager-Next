@@ -9,6 +9,7 @@ pub mod gpu;
 pub mod hashing;
 pub mod library;
 pub mod logging;
+pub mod net;
 pub mod nvapi;
 pub mod pack_json;
 pub mod pack_payload;
