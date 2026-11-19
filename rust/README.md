@@ -32,3 +32,13 @@ cargo run -p fgm-cli -- pack validate <pack-dir> --no-hash
 ```
 
 Exit codes: `0` valid, `1` validation failure, `2` argument or directory error.
+
+## Deploy / restore
+
+```bash
+cargo run -p fgm-cli -- deploy <pack-dir> <target-dir> --family framegen.sm86 --data-dir <dir> --app-version 2.3.4
+cargo run -p fgm-cli -- deploy <pack-dir> <target-dir> --dry-run
+cargo run -p fgm-cli -- restore <target-dir> --family framegen.sm86 --data-dir <dir>
+```
+
+`deploy` selects one proxy slot, merges the pack INI, writes through the file transaction engine, and records a manifest. `restore` reports conflicts with exit code `1`.

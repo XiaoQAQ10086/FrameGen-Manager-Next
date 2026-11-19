@@ -6,6 +6,8 @@ use fgm_domain::version::VERSION;
 use fgm_infra::pack_json::PackJson;
 use fgm_infra::pack_payload::PackPayloadValidator;
 
+mod deploy;
+
 fn main() {
     std::process::exit(run(std::env::args().skip(1).collect()));
 }
@@ -27,6 +29,8 @@ fn run(args: Vec<String>) -> i32 {
         [pack, validate, rest @ ..] if pack == "pack" && validate == "validate" => {
             run_pack_validate(rest)
         }
+        [deploy, rest @ ..] if deploy == "deploy" => self::deploy::run_deploy(rest),
+        [restore, rest @ ..] if restore == "restore" => self::deploy::run_restore(rest),
         _ => {
             eprintln!("unknown command");
             print_usage();
@@ -157,6 +161,10 @@ fn print_usage() {
     eprintln!(
         "  fgm-next pack validate <pack-dir> [--no-hash] [--schema-only] [--app-version <version>]"
     );
+    eprintln!(
+        "  fgm-next deploy <pack-dir> <target-dir> [--family <id>] [--proxy-slot <target>] [--data-dir <dir>] [--dry-run]"
+    );
+    eprintln!("  fgm-next restore <target-dir> --family <id> [--data-dir <dir>]");
 }
 
 fn print_pack_usage() {
