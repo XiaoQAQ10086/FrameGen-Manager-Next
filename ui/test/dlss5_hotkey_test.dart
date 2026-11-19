@@ -1,6 +1,6 @@
+import 'package:fgm_ui/features/dlss5/dlss5_hotkey.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fgm_ui/features/dlss5/dlss5_hotkey.dart';
 
 void main() {
   test('maps letters, digits and function keys to virtual keys', () {

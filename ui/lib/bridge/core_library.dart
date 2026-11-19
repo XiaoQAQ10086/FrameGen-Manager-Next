@@ -30,6 +30,7 @@ final class CoreLibrary {
     this._libraryAddManual,
     this._launchGame,
     this._cover,
+    this._gameModes,
     this._deploy,
     this._restore,
     this._inspect,
@@ -68,6 +69,7 @@ final class CoreLibrary {
   final _RequestDart _libraryAddManual;
   final _RequestDart _launchGame;
   final _RequestDart _cover;
+  final _RequestDart _gameModes;
   final _RequestDart _deploy;
   final _RequestDart _restore;
   final _RequestDart _inspect;
@@ -122,6 +124,9 @@ final class CoreLibrary {
           ),
           library.lookupFunction<_RequestNative, _RequestDart>(
             'fgm_cover_json',
+          ),
+          library.lookupFunction<_RequestNative, _RequestDart>(
+            'fgm_game_modes_json',
           ),
           library.lookupFunction<_RequestNative, _RequestDart>(
             'fgm_deploy_json',
@@ -237,6 +242,8 @@ final class CoreLibrary {
   String? launchGameJson(String request) => _request(_launchGame, request);
 
   String? coverJson(String request) => _request(_cover, request);
+
+  String? gameModesJson(String request) => _request(_gameModes, request);
 
   String? deployJson(String request) => _request(_deploy, request);
 

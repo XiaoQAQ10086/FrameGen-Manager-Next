@@ -11,7 +11,7 @@
   - 目标已有模块时读取 PE `ProductName`，只有包含 `ReShade` 才允许覆盖；否则返回 `Conflict`，不误删第三方 `dxgi.dll`。
 - `fgm-infra/src/pe/pe_imports.rs::is_64_bit`：读取 PE machine（0x8664 / 0xAA64），读取失败默认 64 位。
 - `fgm-infra/src/dlss5/dlss5_service.rs`：
-  - `install` 选择代理槽（DX10/11/12 → `dxgi.dll`，DX9 → `d3d9.dll`，Vulkan → `vulkan-1.dll`，OpenGL → `opengl32.dll`），用 `PackDeploymentPlanner` 生成 pack 文件计划，再把解包出的 ReShade 模块（role=`proxy`）和缺失时的默认 `ReShade.ini`（role=`config`）作为带内容的内存文件追加到同一份计划，由 `DeploymentEngine` 统一备份/原子写入/校验/回滚。代理槽已有非 ReShade 模块时在写入前返回 `Conflict`。
+  - `install` 选择代理槽（DX10/11/12 → `dxgi.dll`，DX9 → `d3d9.dll`，OpenGL → `opengl32.dll`；Vulkan 依赖全局 layer，官方 setup 流程尚未迁移，当前返回 `InvalidArgument` 而不是写入无效的 `vulkan-1.dll`），用 `PackDeploymentPlanner` 生成 pack 文件计划，再把解包出的 ReShade 模块（role=`proxy`）和缺失时的默认 `ReShade.ini`（role=`config`）作为带内容的内存文件追加到同一份计划，由 `DeploymentEngine` 统一备份/原子写入/校验/回滚。代理槽已有非 ReShade 模块时在写入前返回 `Conflict`。
   - 代理与 INI 因此进入部署清单：卸载时可以精确区分“这个文件是我们写的”和“部署前就存在”。
   - `install` 始终把 `ReShade.ini` 纳入计划：`[GENERAL] EffectSearchPaths/TextureSearchPaths` 缺失时追加 pack 搜索路径，已有键、注释和 `[Uplift]` 等设置原样保留；部署前已有的 INI 会先备份，卸载时恢复原文。
   - `set_hotkey` 写入 `[INPUT] KeyOverlay=<VK>,0,0,0`，并把 `ReShade.ini` 在清单里的哈希/大小同步更新，避免热键修改被误判为冲突；没有清单时返回 `ManifestMissing`。

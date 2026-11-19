@@ -1,10 +1,11 @@
-import 'dart:io';
-
 import 'package:material_ui/material_ui.dart';
 
+import '../../bridge/game_modes.dart';
 import '../../bridge/library_game.dart';
 import '../../design/app_tokens.dart';
 import '../../l10n/app_localizations.dart';
+import 'game_cover.dart';
+import 'game_mode_badges.dart';
 
 /// Game library panel with scan control and per-game rows.
 class GameLibraryCard extends StatelessWidget {
@@ -22,6 +23,7 @@ class GameLibraryCard extends StatelessWidget {
     this.busyGameId,
     this.showCovers = true,
     this.covers = const <String, String?>{},
+    this.modes = const <String, GameModes>{},
   });
 
   final AppLocalizations l10n;
@@ -36,6 +38,7 @@ class GameLibraryCard extends StatelessWidget {
   final String? busyGameId;
   final bool showCovers;
   final Map<String, String?> covers;
+  final Map<String, GameModes> modes;
 
   @override
   Widget build(BuildContext context) {
@@ -192,6 +195,7 @@ class GameLibraryCard extends StatelessWidget {
         l10n: l10n,
         busy: busyGameId == games[index].id,
         coverPath: showCovers ? covers[games[index].id] : null,
+        modes: modes[games[index].id],
         onLaunch: onLaunch,
         onDeploy: onDeploy,
         onRestore: onRestore,
@@ -206,6 +210,7 @@ class _GameRow extends StatelessWidget {
     required this.l10n,
     required this.busy,
     required this.coverPath,
+    this.modes,
     required this.onLaunch,
     required this.onDeploy,
     required this.onRestore,
@@ -215,6 +220,7 @@ class _GameRow extends StatelessWidget {
   final AppLocalizations l10n;
   final bool busy;
   final String? coverPath;
+  final GameModes? modes;
   final Future<void> Function(LibraryGame game) onLaunch;
   final Future<void> Function(LibraryGame game) onDeploy;
   final Future<void> Function(LibraryGame game) onRestore;
@@ -225,7 +231,7 @@ class _GameRow extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 12),
       child: Row(
         children: <Widget>[
-          _Cover(game: game, path: coverPath),
+          GameCover(game: game, path: coverPath),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
@@ -248,6 +254,7 @@ class _GameRow extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                   style: Theme.of(context).textTheme.labelMedium,
                 ),
+                GameModeBadges(modes: modes, l10n: l10n),
               ],
             ),
           ),
@@ -355,43 +362,4 @@ String _apiLabel(String api) {
     'opengl' => 'OpenGL',
     _ => 'Unknown',
   };
-}
-
-class _Cover extends StatelessWidget {
-  const _Cover({required this.game, required this.path});
-
-  final LibraryGame game;
-  final String? path;
-
-  @override
-  Widget build(BuildContext context) {
-    final Widget placeholder = Container(
-      width: 36,
-      height: 36,
-      decoration: BoxDecoration(
-        color: AppTokens.accentSoft,
-        borderRadius: BorderRadius.circular(10),
-      ),
-      child: const Icon(
-        Icons.sports_esports,
-        size: 18,
-        color: AppTokens.accent,
-      ),
-    );
-    final String? cover = path;
-    if (cover == null || cover.isEmpty) {
-      return placeholder;
-    }
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(10),
-      child: Image.file(
-        File(cover),
-        width: 36,
-        height: 36,
-        fit: BoxFit.cover,
-        errorBuilder: (BuildContext context, Object error, StackTrace? stack) =>
-            placeholder,
-      ),
-    );
-  }
 }

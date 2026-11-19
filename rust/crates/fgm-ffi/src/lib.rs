@@ -84,6 +84,12 @@ pub extern "C" fn fgm_launch_game_json(request: *const u8, length: usize) -> *mu
     execute_request(request, length, commands_library::launch)
 }
 
+/// Returns manifest-only deployment badges for every library game.
+#[unsafe(no_mangle)]
+pub extern "C" fn fgm_game_modes_json(request: *const u8, length: usize) -> *mut c_char {
+    execute_request(request, length, commands_library::game_modes)
+}
+
 /// Returns the cached cover path for a Steam game, downloading it on demand.
 #[unsafe(no_mangle)]
 pub extern "C" fn fgm_cover_json(request: *const u8, length: usize) -> *mut c_char {
@@ -362,34 +368,4 @@ fn to_c_string(value: String) -> *mut c_char {
 }
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-    use std::ffi::CStr;
-
-    #[test]
-    fn phase_names_are_stable_keys() {
-        for (id, expected) in [
-            (0, "planned"),
-            (1, "backingUp"),
-            (2, "writing"),
-            (3, "verifying"),
-            (4, "installed"),
-            (5, "rolledBack"),
-            (6, "partial"),
-        ] {
-            let name = unsafe { CStr::from_ptr(fgm_operation_phase_name(id)) };
-            assert_eq!(name.to_str().unwrap(), expected);
-        }
-    }
-
-    #[test]
-    fn unknown_phase_returns_null() {
-        assert!(fgm_operation_phase_name(7).is_null());
-    }
-
-    #[test]
-    fn version_is_nul_terminated() {
-        let version = unsafe { CStr::from_ptr(fgm_version()) };
-        assert_eq!(version.to_str().unwrap(), fgm_domain::version::VERSION);
-    }
-}
+mod tests;

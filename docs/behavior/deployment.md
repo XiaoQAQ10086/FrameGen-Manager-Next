@@ -24,7 +24,7 @@ manifest 状态：`Installing → Installed / RolledBack / Partial`，还原后 
 
 ## Rust 迁移状态（Phase 2/3）
 
-已实现 pack 规划 + 文件级部署事务，尚未接入 ownedDirectories 和游戏运行检查：
+已实现 pack 规划 + 文件级部署事务（含 ownedDirectories 与游戏运行检查）：
 
 - `fgm-domain/src/deployment/`：`DeploymentManifest`、`DeployedFileRecord`、`DeploymentManifestState`
 - `fgm-infra/src/deployment/backup_store.rs`：manifest 读写与备份目录布局
@@ -192,6 +192,12 @@ UI：“帧生成”页点击某个游戏的“部署”后才展开代理/优�
 部署弹窗：绿色“部署”按钮；不提供“取消”按钮（右上角关闭或点遮罩退出）；“还原”只有在当前游戏的部署状态可还原、且所选目标目录与部署目录一致时才启用，否则显示灰色锁定。游戏卡片的主动作在部署成功后从“部署”变为“还原”；已部署徽章显示 `已部署 资产版本：<packVersion>`。
 
 显卡检测：帧生成页仍显示当前显卡和驱动，但**不再用 GPU 路由拦截部署**。自资产 0.4.2 起上游支持 RTX 20–50 系（40/50 走 PTX 内核），`NotNeeded` 不再是阻断原因；GTX 16/AMD/Intel 不属于上游支持范围，界面不拦截但运行时不保证生效。Smooth Motion 仍保留自己的显卡门控。资产 0.4.2 的部署文件表与 0.4.1 相同（`version.dll`、`dlssg_sm86.ini`、`dlssg_sm86\`）；5 个备用代理留在 pack 的 `alternatives\` 里，按上游说明只在游戏不加载 `version.dll` 时才换，本程序通过重新部署换槽。旧部署更新时沿用原备份。游戏卡片同时显示 Smooth Motion/ANR 的部署徽章；部署/还原后广播库变更，其他模式页面与重新显示的页面会刷新徽章。
+
+## 库状态徽章（Rust）
+
+- `fgm-infra/src/deployment/deployment_summary.rs`：只读 manifest 计算 `NotDeployed/Installed/Outdated/Partial`，不哈希文件，供游戏卡片批量显示徽章（逐文件哈希在大资产上过慢）。
+- `fgm-ffi/src/commands_library.rs::game_modes`：为库中每局游戏返回 `framegen`/`dlss5`/`anr` 三个状态；pack 版本用于判断 `Outdated`。
+- Flutter 游戏行在已部署时显示“帧生成/DLSS5/ANR”小徽章；健康为绿色，`Outdated/Partial` 为黄色。Smooth Motion 状态由平滑运动页单独展示，不进入批量徽章。
 
 ## 测试
 

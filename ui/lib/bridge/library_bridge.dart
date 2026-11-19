@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:isolate';
 
 import 'core_library.dart';
+import 'game_modes.dart';
 import 'library_add_result.dart';
 import 'library_game.dart';
 import 'library_snapshot.dart';
@@ -26,6 +27,15 @@ final class LibraryBridge {
       return local?.scanLibraryJson();
     });
     return _parse(reply);
+  }
+
+  /// Reads manifest-only deployment badges for all games.
+  static Future<Map<String, GameModes>> modes() async {
+    final String? reply = await Isolate.run(() {
+      final CoreLibrary? core = CoreLibrary.tryOpen();
+      return core?.gameModesJson('{}');
+    });
+    return GameModes.parse(reply);
   }
 
   /// Opens the native executable picker and stores the selection.

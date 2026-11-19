@@ -1,7 +1,10 @@
 use std::path::Path;
 
 use fgm_domain::error::{AppError, ErrorCode};
+use fgm_infra::deployment::DeploymentSummary;
 use fgm_infra::library::{CoverService, LibraryService};
+use fgm_infra::pack_json::PackJson;
+use fgm_infra::packs::PackLocator;
 use fgm_infra::platform::FilePicker;
 use serde::Deserialize;
 use serde_json::{Value, json};
@@ -72,4 +75,55 @@ pub(crate) fn cover(request: &str) -> Result<Value, AppError> {
         "ok": true,
         "path": path.map(|path| path.to_string_lossy().into_owned()),
     }))
+}
+
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct ModesRequest {
+    #[serde(default)]
+    data_dir: Option<String>,
+}
+
+/// Manifest-only deployment badges for every library game.
+pub(crate) fn game_modes(request: &str) -> Result<Value, AppError> {
+    let request: ModesRequest = parse(request)?;
+    let paths = data_paths(request.data_dir.as_deref())?;
+    let framegen_version = pack_version("framegen.sm86");
+    let dlss5_version = pack_version("dlss5.reshade-gitc");
+
+    let modes: Vec<Value> = LibraryService::list(&paths)
+        .into_iter()
+        .map(|game| {
+            let target = &game.target_directory;
+            let framegen = DeploymentSummary::state(
+                "framegen.sm86",
+                target,
+                &paths.backups(),
+                framegen_version.as_deref(),
+            )
+            .ok();
+            let dlss5 = DeploymentSummary::state(
+                "dlss5",
+                target,
+                &paths.backups(),
+                dlss5_version.as_deref(),
+            )
+            .ok();
+            let anr = DeploymentSummary::state("anr", target, &paths.backups(), None).ok();
+            json!({
+                "gameId": game.id,
+                "framegen": framegen,
+                "dlss5": dlss5,
+                "anr": anr,
+            })
+        })
+        .collect();
+    Ok(json!({ "ok": true, "modes": modes }))
+}
+
+fn pack_version(pack_id: &str) -> Option<String> {
+    let directory = PackLocator::find(pack_id)?;
+    PackJson::load(&directory.join("pack.json"))
+        .ok()
+        .map(|pack| pack.version)
 }

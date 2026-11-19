@@ -40,7 +40,12 @@ impl Dlss5Service {
         match api {
             GraphicsApi::Dx12 | GraphicsApi::Dx11 | GraphicsApi::Dx10 => Ok("dxgi.dll"),
             GraphicsApi::Dx9 => Ok("d3d9.dll"),
-            GraphicsApi::Vulkan => Ok("vulkan-1.dll"),
+            // ReShade's Vulkan support is a global layer, not a proxy DLL; the
+            // legacy app ran the official setup for it, which is not ported yet.
+            GraphicsApi::Vulkan => Err(AppError::new(ErrorCode::InvalidArgument).with(
+                "reason",
+                "the Vulkan ReShade layer requires the official setup",
+            )),
             GraphicsApi::OpenGl => Ok("opengl32.dll"),
             GraphicsApi::Unknown => Err(AppError::new(ErrorCode::InvalidArgument)
                 .with("reason", "the graphics API could not be determined")),
@@ -282,9 +287,10 @@ mod tests {
             Dlss5Service::proxy_for(GraphicsApi::Dx9).unwrap(),
             "d3d9.dll"
         );
+        assert!(Dlss5Service::proxy_for(GraphicsApi::Vulkan).is_err());
         assert_eq!(
-            Dlss5Service::proxy_for(GraphicsApi::Vulkan).unwrap(),
-            "vulkan-1.dll"
+            Dlss5Service::proxy_for(GraphicsApi::OpenGl).unwrap(),
+            "opengl32.dll"
         );
         assert!(Dlss5Service::proxy_for(GraphicsApi::Unknown).is_err());
     }

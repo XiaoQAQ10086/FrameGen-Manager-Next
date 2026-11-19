@@ -4,6 +4,7 @@ import '../../bridge/app_settings.dart';
 import '../../bridge/core_library.dart';
 import '../../bridge/deployment_bridge.dart';
 import '../../bridge/deployment_result.dart';
+import '../../bridge/game_modes.dart';
 import '../../bridge/library_add_result.dart';
 import '../../bridge/library_bridge.dart';
 import '../../bridge/library_game.dart';
@@ -27,6 +28,7 @@ class FrameGenPage extends StatefulWidget {
 class _FrameGenPageState extends State<FrameGenPage> {
   List<LibraryGame> _games = const <LibraryGame>[];
   Map<String, String?> _covers = const <String, String?>{};
+  Map<String, GameModes> _modes = const <String, GameModes>{};
   bool _showCovers = true;
   bool _loading = false;
   String? _error;
@@ -40,11 +42,20 @@ class _FrameGenPageState extends State<FrameGenPage> {
     _error = snapshot.hasError ? snapshot.errorCode : null;
     final AppSettings settings = SettingsBridge.load(widget.core);
     _showCovers = settings.showCovers;
+    _loadModes();
     if (settings.autoScanOnStartup) {
       _scan();
     } else {
       _loadCovers();
     }
+  }
+
+  Future<void> _loadModes() async {
+    final Map<String, GameModes> modes = await LibraryBridge.modes();
+    if (!mounted) {
+      return;
+    }
+    setState(() => _modes = modes);
   }
 
   Future<void> _loadCovers() async {
@@ -80,6 +91,7 @@ class _FrameGenPageState extends State<FrameGenPage> {
       _error = snapshot.hasError ? snapshot.errorCode : null;
     });
     await _loadCovers();
+    await _loadModes();
   }
 
   Future<void> _addManual() async {
@@ -98,6 +110,7 @@ class _FrameGenPageState extends State<FrameGenPage> {
       _error = snapshot.hasError ? snapshot.errorCode : null;
     });
     await _loadCovers();
+    await _loadModes();
   }
 
   Future<void> _launch(LibraryGame game) async {
@@ -187,6 +200,7 @@ class _FrameGenPageState extends State<FrameGenPage> {
                   busyGameId: _busyGameId,
                   showCovers: _showCovers,
                   covers: _covers,
+                  modes: _modes,
                 );
 
                 if (!wide) {
