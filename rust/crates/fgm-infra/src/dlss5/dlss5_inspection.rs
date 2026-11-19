@@ -9,6 +9,7 @@ pub struct Dlss5Inspection {
     pub pack_version: Option<String>,
     pub proxy_module: Option<String>,
     pub re_shade_present: bool,
+    pub hotkey_vk: Option<u32>,
     pub legacy_files: Vec<String>,
     pub details: Vec<String>,
 }

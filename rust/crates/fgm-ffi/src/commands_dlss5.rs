@@ -88,9 +88,27 @@ pub(crate) fn dlss5_inspect(request: &str) -> Result<Value, AppError> {
         "packVersion": inspection.pack_version,
         "proxyModule": inspection.proxy_module,
         "reShadePresent": inspection.re_shade_present,
+        "hotkeyVk": inspection.hotkey_vk,
         "legacyFiles": inspection.legacy_files,
         "details": inspection.details,
     }))
+}
+
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct Dlss5HotkeyRequest {
+    target_dir: String,
+    virtual_key: u32,
+    #[serde(default)]
+    data_dir: Option<String>,
+}
+
+pub(crate) fn dlss5_set_hotkey(request: &str) -> Result<Value, AppError> {
+    let request: Dlss5HotkeyRequest = parse(request)?;
+    let target_directory = absolute(Path::new(&request.target_dir))?;
+    let paths = data_paths(request.data_dir.as_deref())?;
+    Dlss5Service::set_hotkey(&target_directory, request.virtual_key, &paths)?;
+    Ok(json!({ "ok": true, "hotkeyVk": request.virtual_key }))
 }
 
 #[derive(Deserialize)]

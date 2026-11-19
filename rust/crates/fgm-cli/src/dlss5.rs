@@ -16,6 +16,7 @@ pub fn run_dlss5(args: &[String]) -> i32 {
         Some((command, rest)) if command == "install" => run_install(rest),
         Some((command, rest)) if command == "uninstall" => run_uninstall(rest),
         Some((command, rest)) if command == "inspect" => run_inspect(rest),
+        Some((command, rest)) if command == "hotkey" => run_hotkey(rest),
         _ => {
             print_usage();
             2
@@ -258,9 +259,12 @@ fn run_inspect(args: &[String]) -> i32 {
         inspection.pack_version.as_deref().unwrap_or("-")
     );
     println!(
-        "reshade={} proxy={}",
+        "reshade={} proxy={} hotkey={}",
         inspection.re_shade_present,
-        inspection.proxy_module.as_deref().unwrap_or("-")
+        inspection.proxy_module.as_deref().unwrap_or("-"),
+        inspection
+            .hotkey_vk
+            .map_or_else(|| "-".to_string(), |vk| vk.to_string())
     );
     for legacy in &inspection.legacy_files {
         println!("LEGACY {legacy}");
@@ -269,6 +273,57 @@ fn run_inspect(args: &[String]) -> i32 {
         println!("DETAIL {detail}");
     }
     0
+}
+
+fn run_hotkey(args: &[String]) -> i32 {
+    let mut data_directory = None;
+    let mut positionals = Vec::new();
+    let mut index = 0;
+
+    while index < args.len() {
+        let argument = args[index].as_str();
+        match argument {
+            "--data-dir" => match next_value(args, &mut index) {
+                Some(value) => data_directory = Some(value),
+                None => return 2,
+            },
+            "--help" | "-h" => {
+                print_usage();
+                return 0;
+            }
+            value if value.starts_with('-') => {
+                eprintln!("unknown option: {value}");
+                return 2;
+            }
+            value => positionals.push(value.to_string()),
+        }
+        index += 1;
+    }
+
+    if positionals.len() != 2 {
+        print_usage();
+        return 2;
+    }
+    let Ok(virtual_key) = positionals[1].parse::<u32>() else {
+        eprintln!("virtual key must be a number");
+        return 2;
+    };
+    let target_directory = match absolute(Path::new(&positionals[0])) {
+        Ok(path) => path,
+        Err(error) => return print_error(&error),
+    };
+    let paths = match data_paths(data_directory.as_deref()) {
+        Ok(paths) => paths,
+        Err(error) => return print_error(&error),
+    };
+
+    match Dlss5Service::set_hotkey(&target_directory, virtual_key, &paths) {
+        Ok(()) => {
+            println!("OK hotkey={virtual_key}");
+            0
+        }
+        Err(error) => print_error(&error),
+    }
 }
 
 fn resolve_pack(directory: Option<&str>) -> Result<PathBuf, AppError> {
@@ -335,4 +390,5 @@ fn print_usage() {
     );
     eprintln!("  fgm-next dlss5 inspect <target-dir> [--pack-dir <dir>] [--data-dir <dir>]");
     eprintln!("  fgm-next dlss5 uninstall <target-dir> [--data-dir <dir>]");
+    eprintln!("  fgm-next dlss5 hotkey <target-dir> <virtual-key> [--data-dir <dir>]");
 }

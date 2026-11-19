@@ -116,6 +116,52 @@ fn inspect_reports_state_proxy_and_legacy_residue() {
     assert!(!removed.re_shade_present);
 }
 
+#[test]
+fn install_merges_search_paths_and_preserves_user_settings() {
+    let fixture = Fixture::new("dlss5-ini-merge");
+    let ini = fixture.target.join("ReShade.ini");
+    let original = "[GENERAL]\r\nEffectSearchPaths=.\\custom\\**\r\n\r\n[UPLIFT]\r\nStartEnabled=1\r\n\r\n[INPUT]\r\nKeyOverlay=20,0,0,0\r\n";
+    fs::write(&ini, original).unwrap();
+
+    fixture.install().unwrap();
+
+    let text = fs::read_to_string(&ini).unwrap();
+    assert!(text.contains("StartEnabled=1"));
+    assert!(text.contains(".\\custom\\**"));
+    assert!(text.contains(".\\reshade-shaders\\Shaders\\**"));
+    assert!(text.contains(".\\reshade-shaders\\Textures\\**"));
+    assert!(text.contains("KeyOverlay=20,0,0,0"));
+
+    fixture.uninstall().unwrap();
+    assert_eq!(fs::read_to_string(&ini).unwrap(), original);
+}
+
+#[test]
+fn set_hotkey_keeps_the_deployment_installed() {
+    let fixture = Fixture::new("dlss5-hotkey");
+    fixture.install().unwrap();
+    let paths = fixture.paths();
+
+    Dlss5Service::set_hotkey(&fixture.target, 118, &paths).unwrap();
+
+    let text = fs::read_to_string(fixture.target.join("ReShade.ini")).unwrap();
+    assert!(text.contains("KeyOverlay=118,0,0,0"));
+    let pack = PackJson::load(&fixture.pack.join("pack.json")).unwrap();
+    let inspection = Dlss5Service::inspect(&fixture.target, Some(&pack), &paths).unwrap();
+    assert_eq!(inspection.state, DeploymentState::Installed);
+    assert!(Dlss5Service::set_hotkey(&fixture.target, 0, &paths).is_err());
+}
+
+#[test]
+fn set_hotkey_requires_an_existing_deployment() {
+    let fixture = Fixture::new("dlss5-hotkey-missing");
+
+    let error = Dlss5Service::set_hotkey(&fixture.target, 118, &fixture.paths()).unwrap_err();
+
+    assert_eq!(error.code, ErrorCode::ManifestMissing);
+    assert!(!fixture.target.join("ReShade.ini").exists());
+}
+
 struct Fixture {
     root: PathBuf,
     pack: PathBuf,

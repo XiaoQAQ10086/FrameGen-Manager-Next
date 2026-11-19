@@ -2,16 +2,19 @@ use std::collections::BTreeMap;
 use std::path::Path;
 
 use fgm_domain::error::{AppError, ErrorCode};
+use fgm_domain::ini::IniDocument;
 use fgm_domain::library::GraphicsApi;
 use fgm_domain::pack::{AssetPack, AssetPackStep};
 
 use crate::deployment::{
-    DeploymentEngine, DeploymentFile, DeploymentInspector, PackDeploymentPlanner, RestoreReport,
+    BackupStore, DeploymentEngine, DeploymentFile, DeploymentInspector, PackDeploymentPlanner,
+    RestoreReport,
 };
-use crate::hashing::sha256_hex;
+use crate::hashing::{FileHasher, sha256_hex};
 use crate::pack_json::PackJson;
 use crate::paths::{AppPaths, TargetPath};
 
+use super::dlss5_config::Dlss5Config;
 use super::dlss5_inspection::Dlss5Inspection;
 use super::dlss5_report::Dlss5Report;
 use super::reshade_installer::ReShadeInstaller;
@@ -87,17 +90,24 @@ impl Dlss5Service {
         });
 
         let ini_path = TargetPath::combine(target_directory, "ReShade.ini")?;
-        if !ini_path.is_file() {
-            let content = ReShadeInstaller::default_ini().as_bytes().to_vec();
-            files.push(DeploymentFile {
-                relative_path: "ReShade.ini".to_string(),
-                source: None,
-                content: Some(content.clone()),
-                sha256: sha256_hex(&content),
-                size: content.len() as i64,
-                role: "config".to_string(),
-            });
-        }
+        let ini_text = if ini_path.is_file() {
+            std::fs::read_to_string(&ini_path).map_err(|error| {
+                AppError::new(ErrorCode::FileLocked)
+                    .with("path", ini_path.display().to_string())
+                    .with("reason", error.to_string())
+            })?
+        } else {
+            ReShadeInstaller::default_ini().to_string()
+        };
+        let content = Dlss5Config::merge(&ini_text).into_bytes();
+        files.push(DeploymentFile {
+            relative_path: "ReShade.ini".to_string(),
+            source: None,
+            content: Some(content.clone()),
+            sha256: sha256_hex(&content),
+            size: content.len() as i64,
+            role: "config".to_string(),
+        });
 
         let mut options = BTreeMap::new();
         options.insert("proxySlot".to_string(), proxy_module.to_string());
@@ -149,6 +159,7 @@ impl Dlss5Service {
             pack_version: inspection.pack_version,
             proxy_module,
             re_shade_present,
+            hotkey_vk: read_hotkey(target_directory),
             legacy_files: legacy_residue(target_directory),
             details: inspection.details,
         })
@@ -167,6 +178,51 @@ impl Dlss5Service {
             &paths.state().join("locks"),
         )
     }
+
+    /// Writes `[INPUT] KeyOverlay` for an installed game and re-syncs the
+    /// manifest hash so the edit is not reported as a conflict.
+    pub fn set_hotkey(
+        target_directory: &Path,
+        virtual_key: u32,
+        paths: &AppPaths,
+    ) -> Result<(), AppError> {
+        let store = BackupStore::new(paths.backups());
+        let Some(mut manifest) = store.load_manifest(Self::FAMILY, target_directory)? else {
+            return Err(AppError::new(ErrorCode::ManifestMissing)
+                .with("path", target_directory.display().to_string())
+                .with("family", Self::FAMILY));
+        };
+        let ini_path = TargetPath::combine(target_directory, "ReShade.ini")?;
+        Dlss5Config::set_hotkey(&ini_path, virtual_key)?;
+
+        let size = std::fs::metadata(&ini_path)
+            .map_err(|error| {
+                AppError::new(ErrorCode::FileNotFound)
+                    .with("path", ini_path.display().to_string())
+                    .with("reason", error.to_string())
+            })?
+            .len() as i64;
+        let hash = FileHasher::sha256_file(&ini_path)?;
+        for record in &mut manifest.files {
+            if record.relative_path.eq_ignore_ascii_case("ReShade.ini") {
+                record.sha256 = hash.clone();
+                record.size = size;
+            }
+        }
+        store.save_manifest(&manifest)
+    }
+}
+
+fn read_hotkey(target_directory: &Path) -> Option<u32> {
+    let text = std::fs::read_to_string(target_directory.join("ReShade.ini")).ok()?;
+    let document = IniDocument::parse(&text);
+    document
+        .get_value("INPUT", "KeyOverlay")?
+        .split(',')
+        .next()?
+        .trim()
+        .parse()
+        .ok()
 }
 
 fn legacy_residue(target_directory: &Path) -> Vec<String> {
