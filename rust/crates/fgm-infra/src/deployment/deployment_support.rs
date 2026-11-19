@@ -52,23 +52,40 @@ pub(super) fn ensure_sources_match(
     files: &[(super::deployment_file::DeploymentFile, std::path::PathBuf)],
 ) -> Result<(), AppError> {
     for (file, _) in files {
-        if !file.source.is_file() {
-            return Err(AppError::new(ErrorCode::FileNotFound)
-                .with("path", file.source.display().to_string())
-                .with("reason", "pack source file is missing"));
-        }
-        let metadata =
-            std::fs::metadata(&file.source).map_err(|error| io_error(&file.source, error))?;
-        if metadata.len() as i64 != file.size {
-            return Err(AppError::new(ErrorCode::PackHashMismatch)
-                .with("path", file.source.display().to_string())
-                .with("reason", "pack source size does not match pack.json"));
-        }
-        let actual = hash_file(&file.source)?;
-        if !actual.eq_ignore_ascii_case(&file.sha256) {
-            return Err(AppError::new(ErrorCode::PackHashMismatch)
-                .with("path", file.source.display().to_string())
-                .with("reason", "pack source hash does not match pack.json"));
+        if let Some(source) = &file.source {
+            if !source.is_file() {
+                return Err(AppError::new(ErrorCode::FileNotFound)
+                    .with("path", source.display().to_string())
+                    .with("reason", "pack source file is missing"));
+            }
+            let metadata = std::fs::metadata(source).map_err(|error| io_error(source, error))?;
+            if metadata.len() as i64 != file.size {
+                return Err(AppError::new(ErrorCode::PackHashMismatch)
+                    .with("path", source.display().to_string())
+                    .with("reason", "pack source size does not match pack.json"));
+            }
+            let actual = hash_file(source)?;
+            if !actual.eq_ignore_ascii_case(&file.sha256) {
+                return Err(AppError::new(ErrorCode::PackHashMismatch)
+                    .with("path", source.display().to_string())
+                    .with("reason", "pack source hash does not match pack.json"));
+            }
+        } else if let Some(content) = &file.content {
+            if content.len() as i64 != file.size {
+                return Err(AppError::new(ErrorCode::PackHashMismatch)
+                    .with("path", file.relative_path.clone())
+                    .with("reason", "generated file size does not match the plan"));
+            }
+            let actual = crate::hashing::sha256_hex(content);
+            if !actual.eq_ignore_ascii_case(&file.sha256) {
+                return Err(AppError::new(ErrorCode::PackHashMismatch)
+                    .with("path", file.relative_path.clone())
+                    .with("reason", "generated file hash does not match the plan"));
+            }
+        } else {
+            return Err(AppError::new(ErrorCode::InvalidArgument)
+                .with("path", file.relative_path.clone())
+                .with("reason", "deployment file has no source or content"));
         }
     }
     Ok(())

@@ -2,6 +2,8 @@ pub mod backup_store;
 pub mod deployment_engine;
 pub mod deployment_file;
 pub mod deployment_report;
+pub mod pack_plan;
+pub mod pack_planner;
 pub mod restore_report;
 
 mod deployment_restore;
@@ -11,4 +13,6 @@ pub use backup_store::BackupStore;
 pub use deployment_engine::DeploymentEngine;
 pub use deployment_file::DeploymentFile;
 pub use deployment_report::DeploymentReport;
+pub use pack_plan::PackPlan;
+pub use pack_planner::PackDeploymentPlanner;
 pub use restore_report::RestoreReport;

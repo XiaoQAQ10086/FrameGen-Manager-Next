@@ -215,7 +215,15 @@ fn write_files(
             return Err(cancelled_error(family));
         }
 
-        AtomicFile::copy(&file.source, target)?;
+        if let Some(source) = &file.source {
+            AtomicFile::copy(source, target)?;
+        } else if let Some(content) = &file.content {
+            AtomicFile::write(target, content)?;
+        } else {
+            return Err(AppError::new(ErrorCode::InvalidArgument)
+                .with("path", file.relative_path.clone())
+                .with("reason", "deployment file has no source or content"));
+        }
         let actual = hash_file(target)?;
         if !actual.eq_ignore_ascii_case(&file.sha256) {
             return Err(AppError::new(ErrorCode::PackHashMismatch)

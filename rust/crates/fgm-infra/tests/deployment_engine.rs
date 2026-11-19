@@ -218,7 +218,8 @@ fn deployment_file(source: &Path, relative: &str, role: &str) -> DeploymentFile 
     let size = fs::metadata(source).unwrap().len() as i64;
     DeploymentFile {
         relative_path: relative.to_string(),
-        source: source.to_path_buf(),
+        source: Some(source.to_path_buf()),
+        content: None,
         sha256,
         size,
         role: role.to_string(),

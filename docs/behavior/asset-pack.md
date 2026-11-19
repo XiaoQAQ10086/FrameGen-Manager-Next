@@ -10,7 +10,7 @@
 - `Infrastructure/Packs/PackPayloadValidator.cs`：文件存在性、大小、SHA-256
 - `Cli/PackValidationCommand.cs`：`fgm-next pack validate`
 
-## Rust 迁移状态（Phase 1）
+## Rust 迁移状态（Phase 1/3）
 
 已实现：
 
@@ -18,12 +18,13 @@
 - `rust/crates/fgm-domain/src/safety/safe_path.rs`：`SafePath::normalize_relative`
 - `rust/crates/fgm-infra/src/pack_json.rs`：严格 JSON 读取
 - `rust/crates/fgm-infra/src/pack_payload.rs`：存在性、大小、SHA-256、INI 模板、安装器校验
+- `rust/crates/fgm-infra/src/deployment/pack_planner.rs`：`PackDeploymentPlanner` 把 pack 转成部署文件表，选择代理槽并生成合并 INI
 - `rust/crates/fgm-cli`：`fgm-next pack validate <dir> [--no-hash] [--schema-only] [--app-version <v>]`
 
 与 C# 版一致的规则如上表。差异：
 
 - Serde 区分 JSON 属性名大小写，不接受注释和尾随逗号；pack 由生成器产出，不依赖这些扩展（ADR-0013）。
-- `SafePath::CombineUnderRoot`、junction/符号链接解析和受保护系统目录检查仍在 Phase 2；当前 payload 校验只做词法组合。
+- `SafePath::CombineUnderRoot` 已由 `TargetPath::combine` 补齐（Phase 2），包含 junction/符号链接逃逸和受保护系统目录检查。
 - CLI `--app-version` 默认取 Rust 程序版本（当前 `0.1.0`）；校验 2.x 现有 pack 时需传入目标版本，例如 `--app-version 2.3.4`。
 
 ## 文件布局

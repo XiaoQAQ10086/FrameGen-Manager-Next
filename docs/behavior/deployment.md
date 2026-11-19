@@ -24,7 +24,7 @@ manifest 状态：`Installing → Installed / RolledBack / Partial`，还原后 
 
 ## Rust 迁移状态（Phase 2/3）
 
-已实现文件级部署事务，尚未接入 pack 代理选择、INI、ownedDirectories 和游戏运行检查：
+已实现 pack 规划 + 文件级部署事务，尚未接入 ownedDirectories 和游戏运行检查：
 
 - `fgm-domain/src/deployment/`：`DeploymentManifest`、`DeployedFileRecord`、`DeploymentManifestState`
 - `fgm-infra/src/deployment/backup_store.rs`：manifest 读写与备份目录布局
@@ -34,6 +34,12 @@ manifest 状态：`Installing → Installed / RolledBack / Partial`，还原后 
   - 保存走同目录临时文件 + 原子替换
   - `store_file` / `restore_file` 流式复制并原子替换，不整文件读入内存
   - 备份内相对路径只允许通过 `TargetPath::combine`
+- `fgm-infra/src/deployment/pack_planner.rs`：`PackDeploymentPlanner::plan`
+  - 先跑 `PackValidator`；schema 不通过直接返回 `PackInvalid`
+  - 代理槽：`proxySlot` 选项优先，未指定时取第一个 `role=proxy && proxySlot=true`；其余代理槽不进入部署表
+  - 非代理文件全部进入部署表；源路径经过 `TargetPath`
+  - `ini.mode=merge`：读模板、校验模板大小/哈希，目标 INI 已存在时在其上合并，否则从模板开始；应用 stockValues + 调用方 overrides
+  - 生成 INI 使用 CRLF 和末尾换行，作为内存内容交给部署引擎
 - `fgm-infra/src/deployment/deployment_engine.rs`：`DeploymentEngine::apply`
   - 校验目标为绝对路径、存在、非受保护系统目录
   - 获取 `TargetLock`；预检所有源文件存在、大小、SHA-256
@@ -51,8 +57,8 @@ manifest 状态：`Installing → Installed / RolledBack / Partial`，还原后 
   - `OpenProcess` 或查询路径失败时，按“名称匹配即运行”处理，避免受保护进程被误判为未运行
   - 空路径、无法解析的路径返回 false
 - 新 manifest 状态使用统一阶段机 `planned/backingUp/writing/verifying/installed/rolledBack/partial`；不兼容旧版 `Installing/Restored` 字段，旧数据不迁移。
-- 尚未实现：旧 manifest 中不再部署的遗留文件清理、INI 生成、代理槽选择、ownedDirectories 整目录删除。
-- 测试：`rust/crates/fgm-infra/tests/backup_store.rs`、`fs_primitives.rs`、`process_probe.rs`、`deployment_engine.rs`。
+- 尚未实现：旧 manifest 中不再部署的遗留文件清理、`ownedDirectories` 整目录删除、游戏运行检查接线、CLI 端到端命令。
+- 测试：`rust/crates/fgm-infra/tests/backup_store.rs`、`fs_primitives.rs`、`process_probe.rs`、`deployment_engine.rs`、`pack_planner.rs`。
 
 ## 部署流程
 
