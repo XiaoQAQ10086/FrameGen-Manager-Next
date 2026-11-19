@@ -1,0 +1,47 @@
+{
+  "@@locale": "en",
+  "appTitle": "FrameGen Manager-Next",
+  "navFrameGeneration": "Frame generation",
+  "navSmoothMotion": "Smooth Motion",
+  "navDlss5": "DLSS5",
+  "navAnr": "ANR",
+  "navGpu": "GPU",
+  "navLogs": "Logs",
+  "navSettings": "Settings",
+  "navAbout": "About",
+  "coreConnected": "Rust core connected",
+  "coreOffline": "Rust core not loaded",
+  "coreVersion": "Version {version}",
+  "@coreVersion": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "coreOfflineHint": "Build fgm-ffi to enable the native bridge.",
+  "rewriteTitle": "Rewrite in progress",
+  "rewriteBody": "This is the Rust + Flutter foundation. Features move over module by module while the current release stays available.",
+  "gameLibraryTitle": "Game library",
+  "gameLibraryEmpty": "No games yet. Library scanning arrives in Phase 3.",
+  "migrationTitle": "Migration status",
+  "migrationDomain": "Domain and rules",
+  "migrationCore": "Core use cases",
+  "migrationInfra": "Windows platform layer",
+  "migrationUi": "Flutter shell",
+  "statusDone": "Done",
+  "statusNext": "Next",
+  "statusPlanned": "Planned",
+  "sectionPending": "This module is scheduled for a later phase.",
+  "phaseBadge": "Phase 0",
+  "phaseLibraryBadge": "Phase 3",
+  "footerCore": "Rust core {version}",
+  "@footerCore": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "footerPlatform": "Windows x64"
+}

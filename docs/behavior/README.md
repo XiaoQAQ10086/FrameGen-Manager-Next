@@ -1,6 +1,6 @@
 # 行为规格（Behavior Specs）
 
-本目录是“旧版行为的唯一文字来源”。实现任何模块之前，先把规则写进对应的 `.md`，再写 C# 和测试。
+本目录是“旧版行为的唯一文字来源”。实现任何模块之前，先把规则写进对应的 `.md`，再写实现和测试。当前表格中的“新位置”仍指向冻结的 2.x C# 树；Rust/Flutter 对等过程中按切片迁移，迁移后的规格在文件内标注。
 
 ## 为什么需要
 
@@ -8,7 +8,7 @@
 
 1. 从旧代码、旧测试、CHANGELOG、README 和真实反馈中提取规则。
 2. 写成可验收的表格/清单。
-3. 为每条规则写 C# 单元测试或夹具测试。
+3. 为每条规则写 Rust 单元测试或夹具测试。
 4. 实现。
 5. 在真实硬件/游戏上跑对照清单。
 
@@ -34,6 +34,7 @@
 | 资产包 schema/payload | 旧版 `deploy.rs` / `sm.rs` / `dlss5.rs` 的文件表 | `Domain/Packs`、`Infrastructure/Packs` | [已实现](asset-pack.md) |
 | 内置资产升级 | 旧版升级时自动清理部署 | `Infrastructure/Deployment` + `Infrastructure/Packs` | [已实现](pack-upgrades.md) |
 | 资产更新清除 | 无（新增） | `Core/Features/Maintenance` | [已实现](asset-maintenance.md) |
+| Flutter 外壳（Phase 0） | 无（新增） | `ui/lib/app`、`ui/lib/bridge` | [已实现](flutter-shell.md) |
 
 ## 模板
 

@@ -1,0 +1,18 @@
+[workspace]
+resolver = "3"
+members = [
+    "crates/fgm-domain",
+    "crates/fgm-core",
+    "crates/fgm-infra",
+    "crates/fgm-ffi",
+    "crates/fgm-cli",
+]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+license = "MIT"
+
+[workspace.dependencies]
+fgm-domain = { path = "crates/fgm-domain" }
+fgm-core = { path = "crates/fgm-core" }

@@ -77,6 +77,16 @@ fgm-domain ← fgm-core ← fgm-infra
 - 不为“以后可能用到”造抽象；抽象必须隔离真实变化。
 - 生成代码、FFI 绑定、资产清单不计入文件行数限制。
 
+### Phase 0 依赖决定
+
+| 依赖 | 用途 | 理由 |
+|---|---|---|
+| `material_ui` | Material 3 组件 | Flutter master 已将 Material 拆到官方 `material_ui` 包；继续用 `flutter/material.dart` 会走兼容层。 |
+| `flutter_localizations` + `intl` | 运行时中英切换 | Flutter 官方本地化链路；不引入第三方 i18n 包。 |
+| `flutter_test` | widget 测试 | SDK 自带。 |
+
+不引入状态管理框架、HTTP 客户端、数据库、动画库或路由包。页面状态使用 `StatefulWidget`；跨页共享状态等 Phase 3 出现真实需求再评估。
+
 ## FFI 边界
 
 - C ABI 稳定，句柄不透明；不把 Rust 引用、panic 或内部错误类型跨边界。

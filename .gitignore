@@ -506,3 +506,6 @@ build/tools/
 
 # Local agent/search index, not part of the project
 .memsearch/
+
+# Rust build output
+/rust/target/
