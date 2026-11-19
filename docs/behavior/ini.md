@@ -7,6 +7,14 @@
 - `Domain/Ini/IniDocument.cs`：保留行结构的解析/编辑。
 - `Domain/Ini/IniMerger.cs`：按 stock 值差异应用覆盖。
 
+## Rust 迁移状态（Phase 3）
+
+- `rust/crates/fgm-domain/src/ini/ini_document.rs`：`IniDocument` 已实现 INI-001 ~ INI-011、INI-020 ~ INI-023。
+- `rust/crates/fgm-domain/src/ini/ini_merger.rs`：`IniMerger` 已实现 INI-030 ~ INI-033。
+- 纯领域实现，不读写文件；调用方负责读取模板、选择换行符并交给部署引擎写入。
+- 测试：`rust/crates/fgm-domain/tests/ini_document.rs`（14 个）。
+- 尚未接入 pack 的 `ini` 字段与部署引擎。
+
 ## 解析规则
 
 | 编号 | 条件 | 行为 | 测试 |

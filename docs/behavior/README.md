@@ -21,7 +21,7 @@
 | 图形 API 检测 | `scan.rs::pe_imports`、`api_from_facts` | `Domain/Library` + `Infrastructure/Library` | [已实现](library.md) |
 | 帧生成部署 | `deploy.rs`、`ui/deploy.js` | `Core/Features/Deployment` + `Infrastructure/Deployment` | [已实现](deployment.md) |
 | 备份/还原 | `deploy.rs`、`backup_restore.rs`、`sm.rs`、`dlss5.rs` | `Infrastructure/Deployment` | [已实现](deployment.md) |
-| INI 写入 | `update.rs::prepare_deploy_ini` | `Domain/Ini` | [已实现](ini.md) |
+| INI 写入 | `update.rs::prepare_deploy_ini` | `Domain/Ini`；Rust `fgm-domain/src/ini` | [已实现](ini.md) |
 | Smooth Motion | `sm.rs`、`ui/sm.js` | `Core/Features/SmoothMotion` + `Infrastructure/NvApi` | [已实现](smooth-motion.md) |
 | DLSS5 / ReShade | `dlss5.rs`、`ui/dlss5.js` | `Core/Features/Dlss5` + `Infrastructure/Processes` | [已实现（安装/还原/卸载）](dlss5.md) |
 | GPU / 驱动闸门 | `gpu.rs`、`scan.rs::classify_gpu`、`ui/settings.js` | `Domain/Gpu` + `Infrastructure/Gpu` | [已实现](gpu.md) |
