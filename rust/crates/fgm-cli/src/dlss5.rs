@@ -3,23 +3,13 @@ use std::path::{Path, PathBuf};
 use fgm_domain::error::{AppError, ErrorCode};
 use fgm_domain::library::GraphicsApi;
 use fgm_domain::version::VERSION;
-use fgm_infra::deployment::DeploymentInspector;
-use fgm_infra::dlss5::{Dlss5Service, ReShadeInstaller};
+use fgm_infra::dlss5::Dlss5Service;
 use fgm_infra::library::GraphicsApiDetector;
 use fgm_infra::pack_json::PackJson;
 use fgm_infra::packs::PackLocator;
 use fgm_infra::paths::AppPaths;
 
 const PACK_ID: &str = "dlss5.reshade-gitc";
-const PROXY_CANDIDATES: [&str; 7] = [
-    "dxgi.dll",
-    "d3d9.dll",
-    "d3d10.dll",
-    "d3d11.dll",
-    "d3d12.dll",
-    "opengl32.dll",
-    "vulkan-1.dll",
-];
 
 pub fn run_dlss5(args: &[String]) -> i32 {
     match args.split_first() {
@@ -256,24 +246,10 @@ fn run_inspect(args: &[String]) -> i32 {
         Ok(paths) => paths,
         Err(error) => return print_error(&error),
     };
-    let inspection = match DeploymentInspector::inspect(
-        Dlss5Service::FAMILY,
-        &target_directory,
-        &paths.backups(),
-        pack.as_ref(),
-    ) {
+    let inspection = match Dlss5Service::inspect(&target_directory, pack.as_ref(), &paths) {
         Ok(inspection) => inspection,
         Err(error) => return print_error(&error),
     };
-
-    let proxies: Vec<&str> = PROXY_CANDIDATES
-        .iter()
-        .copied()
-        .filter(|name| {
-            let path = target_directory.join(name);
-            path.is_file() && ReShadeInstaller::is_reshade_module(&path)
-        })
-        .collect();
 
     println!(
         "state={:?} manifest={} version={}",
@@ -282,14 +258,13 @@ fn run_inspect(args: &[String]) -> i32 {
         inspection.pack_version.as_deref().unwrap_or("-")
     );
     println!(
-        "reshade={} proxies={}",
-        !proxies.is_empty(),
-        if proxies.is_empty() {
-            "-".to_string()
-        } else {
-            proxies.join(",")
-        }
+        "reshade={} proxy={}",
+        inspection.re_shade_present,
+        inspection.proxy_module.as_deref().unwrap_or("-")
     );
+    for legacy in &inspection.legacy_files {
+        println!("LEGACY {legacy}");
+    }
     for detail in &inspection.details {
         println!("DETAIL {detail}");
     }

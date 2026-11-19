@@ -1,16 +1,30 @@
+use std::collections::BTreeMap;
 use std::path::Path;
 
 use fgm_domain::error::{AppError, ErrorCode};
 use fgm_domain::library::GraphicsApi;
-use fgm_domain::pack::AssetPackStep;
+use fgm_domain::pack::{AssetPack, AssetPackStep};
 
-use crate::deployment::{DeploymentEngine, DeploymentFile, PackDeploymentPlanner, RestoreReport};
+use crate::deployment::{
+    DeploymentEngine, DeploymentFile, DeploymentInspector, PackDeploymentPlanner, RestoreReport,
+};
 use crate::hashing::sha256_hex;
 use crate::pack_json::PackJson;
 use crate::paths::{AppPaths, TargetPath};
 
+use super::dlss5_inspection::Dlss5Inspection;
 use super::dlss5_report::Dlss5Report;
 use super::reshade_installer::ReShadeInstaller;
+
+const PROXY_CANDIDATES: [&str; 7] = [
+    "dxgi.dll",
+    "d3d9.dll",
+    "d3d10.dll",
+    "d3d11.dll",
+    "d3d12.dll",
+    "opengl32.dll",
+    "vulkan-1.dll",
+];
 
 /// DLSS5 pack deployment plus offline ReShade proxy installation.
 pub struct Dlss5Service;
@@ -50,7 +64,7 @@ impl Dlss5Service {
             &pack,
             pack_directory,
             target_directory,
-            &std::collections::BTreeMap::new(),
+            &BTreeMap::new(),
             &[],
             Some(app_version),
         )?;
@@ -85,13 +99,16 @@ impl Dlss5Service {
             });
         }
 
+        let mut options = BTreeMap::new();
+        options.insert("proxySlot".to_string(), proxy_module.to_string());
+
         let report = DeploymentEngine::apply(
             &files,
             target_directory,
             Self::FAMILY,
             &pack.id,
             &pack.version,
-            &std::collections::BTreeMap::new(),
+            &options,
             &pack.owned_directories,
             Some(game_exe),
             &paths.backups(),
@@ -102,6 +119,38 @@ impl Dlss5Service {
         Ok(Dlss5Report {
             files_written: report.files_written,
             proxy_module: proxy_module.to_string(),
+        })
+    }
+
+    /// Reports pack state plus ReShade presence and legacy RenoDX residue.
+    pub fn inspect(
+        target_directory: &Path,
+        pack: Option<&AssetPack>,
+        paths: &AppPaths,
+    ) -> Result<Dlss5Inspection, AppError> {
+        let inspection =
+            DeploymentInspector::inspect(Self::FAMILY, target_directory, &paths.backups(), pack)?;
+        let proxy_module = inspection
+            .options
+            .as_ref()
+            .and_then(|options| options.get("proxySlot").cloned());
+        let tracked_proxy_present = proxy_module.as_deref().is_some_and(|name| {
+            TargetPath::combine(target_directory, name).is_ok_and(|path| path.is_file())
+        });
+        let re_shade_present = tracked_proxy_present
+            || PROXY_CANDIDATES.iter().any(|name| {
+                let path = target_directory.join(name);
+                path.is_file() && ReShadeInstaller::is_reshade_module(&path)
+            });
+
+        Ok(Dlss5Inspection {
+            state: inspection.state,
+            has_manifest: inspection.has_manifest,
+            pack_version: inspection.pack_version,
+            proxy_module,
+            re_shade_present,
+            legacy_files: legacy_residue(target_directory),
+            details: inspection.details,
         })
     }
 
@@ -118,6 +167,23 @@ impl Dlss5Service {
             &paths.state().join("locks"),
         )
     }
+}
+
+fn legacy_residue(target_directory: &Path) -> Vec<String> {
+    let Ok(entries) = std::fs::read_dir(target_directory) else {
+        return Vec::new();
+    };
+    let mut names: Vec<String> = entries
+        .flatten()
+        .filter(|entry| entry.path().is_file())
+        .filter_map(|entry| entry.file_name().into_string().ok())
+        .filter(|name| {
+            let lower = name.to_lowercase();
+            lower.starts_with("renodx-dlss") || lower == "nvngx_dlssnr.dll"
+        })
+        .collect();
+    names.sort_by_key(|name| name.to_lowercase());
+    names
 }
 
 fn installer_source(steps: &[Option<AssetPackStep>]) -> Option<String> {

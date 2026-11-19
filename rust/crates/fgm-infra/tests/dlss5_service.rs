@@ -2,11 +2,13 @@ use std::fs;
 use std::path::PathBuf;
 use std::time::{SystemTime, UNIX_EPOCH};
 
+use fgm_domain::deployment::DeploymentState;
 use fgm_domain::error::ErrorCode;
 use fgm_domain::library::GraphicsApi;
 use fgm_infra::deployment::RestoreReport;
 use fgm_infra::dlss5::Dlss5Service;
 use fgm_infra::hashing::FileHasher;
+use fgm_infra::pack_json::PackJson;
 use fgm_infra::paths::AppPaths;
 
 #[test]
@@ -84,6 +86,34 @@ fn uninstall_keeps_a_reshade_ini_that_predates_the_install() {
         "[GENERAL]\r\n"
     );
     assert!(!fixture.target.join("dxgi.dll").exists());
+}
+
+#[test]
+fn inspect_reports_state_proxy_and_legacy_residue() {
+    let fixture = Fixture::new("dlss5-inspect");
+    let paths = fixture.paths();
+    let pack = PackJson::load(&fixture.pack.join("pack.json")).unwrap();
+
+    let before = Dlss5Service::inspect(&fixture.target, Some(&pack), &paths).unwrap();
+    assert_eq!(before.state, DeploymentState::NotDeployed);
+    assert!(!before.re_shade_present);
+    assert!(before.legacy_files.is_empty());
+
+    fs::write(fixture.target.join("renodx-dlss-SF-1.addon64"), b"legacy").unwrap();
+    let legacy = Dlss5Service::inspect(&fixture.target, Some(&pack), &paths).unwrap();
+    assert_eq!(legacy.legacy_files, vec!["renodx-dlss-SF-1.addon64"]);
+
+    fixture.install().unwrap();
+    let after = Dlss5Service::inspect(&fixture.target, Some(&pack), &paths).unwrap();
+    assert_eq!(after.state, DeploymentState::Installed);
+    assert_eq!(after.proxy_module.as_deref(), Some("dxgi.dll"));
+    assert!(after.re_shade_present);
+    assert_eq!(after.legacy_files, vec!["renodx-dlss-SF-1.addon64"]);
+
+    fixture.uninstall().unwrap();
+    let removed = Dlss5Service::inspect(&fixture.target, Some(&pack), &paths).unwrap();
+    assert_eq!(removed.state, DeploymentState::NotDeployed);
+    assert!(!removed.re_shade_present);
 }
 
 struct Fixture {

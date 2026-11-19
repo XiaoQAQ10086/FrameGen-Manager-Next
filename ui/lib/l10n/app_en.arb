@@ -113,6 +113,7 @@
     }
   },
   "dlss5Uninstall": "Uninstall DLSS5",
+  "dlss5Update": "Update DLSS5",
   "dlss5UninstallConfirm": "Remove DLSS5, ReShade and the GITC files from {game}? Files you changed are kept.",
   "@dlss5UninstallConfirm": {
     "placeholders": {
@@ -123,6 +124,22 @@
   },
   "dlss5Uninstalled": "DLSS5 removed.",
   "dlss5UninstallConflicts": "Uninstall finished; {count} modified files were kept.",
+  "dlss5StateNotDeployed": "Not installed",
+  "dlss5StateInstalled": "Installed",
+  "dlss5StateOutdated": "Update available",
+  "dlss5StatePartial": "Incomplete",
+  "dlss5StateNoManifest": "Installed (no manifest)",
+  "dlss5StateConflict": "Conflicts",
+  "dlss5StateUnknown": "Unknown",
+  "dlss5ReShadePresent": "ReShade present",
+  "dlss5LegacyResidue": "{count} legacy DLSS5 files found",
+  "@dlss5LegacyResidue": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "@dlss5UninstallConflicts": {
     "placeholders": {
       "count": {

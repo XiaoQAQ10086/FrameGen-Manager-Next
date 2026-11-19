@@ -1,9 +1,10 @@
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 use fgm_domain::error::{AppError, ErrorCode};
 use fgm_domain::library::GraphicsApi;
 use fgm_domain::version::VERSION;
 use fgm_infra::dlss5::Dlss5Service;
+use fgm_infra::pack_json::PackJson;
 use fgm_infra::packs::PackLocator;
 use serde::Deserialize;
 use serde_json::{Value, json};
@@ -28,15 +29,9 @@ struct Dlss5InstallRequest {
 
 pub(crate) fn dlss5_install(request: &str) -> Result<Value, AppError> {
     let request: Dlss5InstallRequest = parse(request)?;
-    let pack_id = request
-        .pack_id
-        .unwrap_or_else(|| "dlss5.reshade-gitc".to_string());
-    let pack_directory = match request.pack_dir {
-        Some(directory) => absolute(Path::new(&directory))?,
-        None => PackLocator::find(&pack_id).ok_or_else(|| {
-            AppError::new(ErrorCode::PackNotFound).with("packId", pack_id.clone())
-        })?,
-    };
+    let pack_directory = resolve_pack(request.pack_id, request.pack_dir)?
+        .or_else(|| PackLocator::find(DEFAULT_PACK))
+        .ok_or_else(|| AppError::new(ErrorCode::PackNotFound).with("packId", DEFAULT_PACK))?;
     let executable = absolute(Path::new(&request.exe_path))?;
     let target_directory = absolute(Path::new(&request.target_dir))?;
     let paths = data_paths(request.data_dir.as_deref())?;
@@ -62,6 +57,44 @@ pub(crate) fn dlss5_install(request: &str) -> Result<Value, AppError> {
 
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]
+struct Dlss5InspectRequest {
+    target_dir: String,
+    #[serde(default)]
+    pack_id: Option<String>,
+    #[serde(default)]
+    pack_dir: Option<String>,
+    #[serde(default)]
+    data_dir: Option<String>,
+}
+
+pub(crate) fn dlss5_inspect(request: &str) -> Result<Value, AppError> {
+    let request: Dlss5InspectRequest = parse(request)?;
+    let target_directory = absolute(Path::new(&request.target_dir))?;
+    let pack = match resolve_pack(request.pack_id, request.pack_dir)? {
+        Some(directory) => Some(PackJson::load(&directory.join("pack.json"))?),
+        // The pack is optional for inspection: outdated detection needs it, but
+        // a machine without bundled packs must still report the manifest state.
+        None => PackLocator::find(DEFAULT_PACK)
+            .map(|directory| PackJson::load(&directory.join("pack.json")))
+            .transpose()?,
+    };
+    let paths = data_paths(request.data_dir.as_deref())?;
+    let inspection = Dlss5Service::inspect(&target_directory, pack.as_ref(), &paths)?;
+
+    Ok(json!({
+        "ok": true,
+        "state": inspection.state,
+        "hasManifest": inspection.has_manifest,
+        "packVersion": inspection.pack_version,
+        "proxyModule": inspection.proxy_module,
+        "reShadePresent": inspection.re_shade_present,
+        "legacyFiles": inspection.legacy_files,
+        "details": inspection.details,
+    }))
+}
+
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
 struct Dlss5UninstallRequest {
     target_dir: String,
     #[serde(default)]
@@ -81,6 +114,23 @@ pub(crate) fn dlss5_uninstall(request: &str) -> Result<Value, AppError> {
         "conflicts": report.conflicts,
         "warnings": report.warnings,
     }))
+}
+
+const DEFAULT_PACK: &str = "dlss5.reshade-gitc";
+
+fn resolve_pack(
+    pack_id: Option<String>,
+    pack_dir: Option<String>,
+) -> Result<Option<PathBuf>, AppError> {
+    if let Some(directory) = pack_dir {
+        return Ok(Some(absolute(Path::new(&directory))?));
+    }
+    let Some(pack_id) = pack_id else {
+        return Ok(None);
+    };
+    PackLocator::find(&pack_id)
+        .map(Some)
+        .ok_or_else(|| AppError::new(ErrorCode::PackNotFound).with("packId", pack_id))
 }
 
 fn parse_api(value: &str) -> Result<GraphicsApi, AppError> {

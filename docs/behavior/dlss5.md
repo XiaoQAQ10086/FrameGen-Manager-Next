@@ -14,11 +14,12 @@
   - `install` 选择代理槽（DX10/11/12 → `dxgi.dll`，DX9 → `d3d9.dll`，Vulkan → `vulkan-1.dll`，OpenGL → `opengl32.dll`），用 `PackDeploymentPlanner` 生成 pack 文件计划，再把解包出的 ReShade 模块（role=`proxy`）和缺失时的默认 `ReShade.ini`（role=`config`）作为带内容的内存文件追加到同一份计划，由 `DeploymentEngine` 统一备份/原子写入/校验/回滚。代理槽已有非 ReShade 模块时在写入前返回 `Conflict`。
   - 代理与 INI 因此进入部署清单：卸载时可以精确区分“这个文件是我们写的”和“部署前就存在”。
   - `uninstall` 走 `DeploymentEngine::restore`：哈希与清单一致的文件被删除（有备份的恢复备份），用户改过的文件报告为冲突并保留。**不运行 ReShade 官方卸载器**——官方卸载器按文件名删除，正是旧版误删第三方 `dxgi.dll` 的原因。
-- `fgm-ffi/src/commands_dlss5.rs`：`fgm_dlss5_install_json`、`fgm_dlss5_uninstall_json`；卸载返回 `restored`/`removed`/`conflicts`/`warnings`。
+  - `inspect` 返回部署状态、清单版本、代理槽（安装在清单 options 里记录 `proxySlot`）、ReShade 是否在位，以及根目录旧版 RenoDX 残留（`renodx-dlss*`、覆盖旧布局的 `nvngx_dlssnr.dll`）。ReShade 判定优先认清单里的代理记录，其次用 PE `ProductName` 探测。
+- `fgm-ffi/src/commands_dlss5.rs`：`fgm_dlss5_install_json`、`fgm_dlss5_inspect_json`、`fgm_dlss5_uninstall_json`；卸载返回 `restored`/`removed`/`conflicts`/`warnings`；inspect 在没有显式 pack 时静默尝试本地 `dlss5.reshade-gitc`，缺 pack 也照样报告清单状态。
 - `fgm-cli/src/dlss5.rs`：`dlss5 install|inspect|uninstall`；`install` 未给 `--api` 时用 `GraphicsApiDetector` 自动判定。
-- Flutter：DLSS5 页每局游戏提供安装与卸载按钮；卸载有冲突时按数量提示，不误报成功。
-- 尚未迁移：部署状态卡片（`Installed/Outdated/Partial/Conflict/InstalledWithoutManifest` + ReShade 探测 + 旧版 RenoDX 残留检测）、GITC 选项/INI（`StartEnabled`、快捷键）、Vulkan 回退到官方 setup、“还原保留 ReShade”与“卸载全部移除”的区分。
-- 测试：`reshade_zip.rs` 内 stored/deflate 提取测试；`tests/reshade_installer.rs` 安装与冲突测试；`tests/dlss5_service.rs` 覆盖安装、代理冲突回滚、卸载删除代理/INI、用户修改文件保留、部署前已有 `ReShade.ini` 保留。
+- Flutter：DLSS5 页每局游戏显示状态标签（未安装/已安装/需更新/不完整/冲突/无清单）、ReShade 标签、旧版残留提示，并提供安装、更新、卸载按钮；操作后自动刷新状态。卸载有冲突时按数量提示，不误报成功。
+- 尚未迁移：GITC 选项/INI（`StartEnabled`、快捷键录制与 `hotkey-queue`）、Vulkan 回退到官方 setup、“还原保留 ReShade”与“卸载全部移除”的区分、旧版残留的一键清理与安装拦截（`LegacyInstallPresent`）。
+- 测试：`reshade_zip.rs` 内 stored/deflate 提取测试；`tests/reshade_installer.rs` 安装与冲突测试；`tests/dlss5_service.rs` 覆盖安装、代理冲突回滚、卸载删除代理/INI、用户修改文件保留、部署前已有 `ReShade.ini` 保留、inspect 状态/代理/ReShade/旧版残留。
 
 ## 前置条件
 
@@ -69,8 +70,8 @@
 - pack 文件状态来自部署引擎（未部署/已部署/需更新/不完整/冲突）。
 - 清单缺失但目录里仍有与当前 pack 哈希一致的文件时，状态为 `InstalledWithoutManifest`；界面允许“重新部署”或“卸载”，不会永久锁死。
 - 通过文件版本信息识别 ReShade 模块（`d3d9/d3d10/d3d11/d3d12/dxgi/opengl32.dll`，ProductName/FileDescription 含 `ReShade`）仅用于展示和状态判断；卸载删除时必须再通过“与 bundled setup 内 ReShade 模块 SHA-256 完全一致”校验，避免误删雪月等同样基于 ReShade 的第三方 DLL。
-- 同时报告旧版 DLSS5/RenoDX 残留：根目录 `renodx-dlss*.addon*`（含第三方整合包常见的 `renodx-dlss-SF-*.addon64`）或旧布局根目录 `nvngx_dlssnr.dll`；命中项写入 `legacyFiles`，详情页逐项列出，避免用户误以为是本软件部署过 ReShade。
-- 检测到旧版 DLSS5/RenoDX 时拒绝安装 GITC pack，返回 `LegacyInstallPresent`，必须先执行“清理旧版文件”。这不是按本软件的部署记录判断，而是按目录里的实际文件判断；文件可能来自其他 DLSS5 整合包或手动安装。
+- 同时报告旧版 DLSS5/RenoDX 残留：根目录 `renodx-dlss*.addon*`（含第三方整合包常见的 `renodx-dlss-SF-*.addon64`）或旧布局根目录 `nvngx_dlssnr.dll`；命中项写入 `legacyFiles`，界面显示数量并可在悬浮提示中逐项查看，避免用户误以为是本软件部署过 ReShade。
+- 旧版规则“检测到旧版 DLSS5/RenoDX 时拒绝安装 GITC pack（`LegacyInstallPresent`）”尚未在 Rust 实现：当前只提示不拦截，尚未提供一键清理。
 
 ## 还原 / 卸载（Rust 实现）
 

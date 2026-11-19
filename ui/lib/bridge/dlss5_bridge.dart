@@ -3,6 +3,7 @@ import 'dart:isolate';
 
 import 'core_library.dart';
 import 'dlss5_result.dart';
+import 'dlss5_state.dart';
 import 'library_game.dart';
 
 /// DLSS5 pack + ReShade install.
@@ -10,6 +11,18 @@ final class Dlss5Bridge {
   const Dlss5Bridge._();
 
   static const String appVersion = '2.3.4';
+
+  /// Reads deployment state, ReShade presence and legacy residue.
+  static Future<Dlss5State> inspect(LibraryGame game) async {
+    final String request = jsonEncode(<String, Object?>{
+      'targetDir': game.targetDirectory,
+    });
+    final String? reply = await Isolate.run(() {
+      final CoreLibrary? core = CoreLibrary.tryOpen();
+      return core?.dlss5InspectJson(request);
+    });
+    return Dlss5State.parse(reply);
+  }
 
   static Future<Dlss5Result> install(LibraryGame game) async {
     final String? exe = game.renderExe;

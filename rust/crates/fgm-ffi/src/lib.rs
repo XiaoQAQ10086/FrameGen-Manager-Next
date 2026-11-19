@@ -148,6 +148,12 @@ pub extern "C" fn fgm_dlss5_install_json(request: *const u8, length: usize) -> *
     execute_request(request, length, commands_dlss5::dlss5_install)
 }
 
+/// Inspects DLSS5 state, ReShade presence and legacy residue.
+#[unsafe(no_mangle)]
+pub extern "C" fn fgm_dlss5_inspect_json(request: *const u8, length: usize) -> *mut c_char {
+    execute_request(request, length, commands_dlss5::dlss5_inspect)
+}
+
 /// Removes the DLSS5 deployment, restoring files that predated it.
 #[unsafe(no_mangle)]
 pub extern "C" fn fgm_dlss5_uninstall_json(request: *const u8, length: usize) -> *mut c_char {

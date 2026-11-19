@@ -3,11 +3,13 @@ import 'package:material_ui/material_ui.dart';
 import '../../bridge/core_library.dart';
 import '../../bridge/dlss5_bridge.dart';
 import '../../bridge/dlss5_result.dart';
+import '../../bridge/dlss5_state.dart';
 import '../../bridge/library_bridge.dart';
 import '../../bridge/library_game.dart';
 import '../../bridge/library_snapshot.dart';
 import '../../design/app_tokens.dart';
 import '../../l10n/app_localizations.dart';
+import 'dlss5_game_row.dart';
 
 /// DLSS5 page: installs the pack and the ReShade proxy per game.
 class Dlss5Page extends StatefulWidget {
@@ -21,6 +23,7 @@ class Dlss5Page extends StatefulWidget {
 
 class _Dlss5PageState extends State<Dlss5Page> {
   List<LibraryGame> _games = const <LibraryGame>[];
+  Map<String, Dlss5State> _states = const <String, Dlss5State>{};
   String? _busyGameId;
 
   @override
@@ -28,6 +31,33 @@ class _Dlss5PageState extends State<Dlss5Page> {
     super.initState();
     final LibrarySnapshot snapshot = LibraryBridge.list(widget.core);
     _games = snapshot.games;
+    _loadStates();
+  }
+
+  Future<void> _loadStates() async {
+    if (_games.isEmpty) {
+      return;
+    }
+    final List<MapEntry<String, Dlss5State>> entries = await Future.wait(
+      _games.map(
+        (LibraryGame game) async =>
+            MapEntry<String, Dlss5State>(game.id, await Dlss5Bridge.inspect(game)),
+      ),
+    );
+    if (!mounted) {
+      return;
+    }
+    setState(() => _states = Map<String, Dlss5State>.fromEntries(entries));
+  }
+
+  Future<void> _refreshState(LibraryGame game) async {
+    final Dlss5State state = await Dlss5Bridge.inspect(game);
+    if (!mounted) {
+      return;
+    }
+    setState(() {
+      _states = <String, Dlss5State>{..._states, game.id: state};
+    });
   }
 
   Future<void> _install(LibraryGame game) async {
@@ -65,6 +95,9 @@ class _Dlss5PageState extends State<Dlss5Page> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(message), behavior: SnackBarBehavior.floating),
     );
+    if (result.ok) {
+      await _refreshState(game);
+    }
   }
 
   Future<void> _uninstall(LibraryGame game) async {
@@ -107,6 +140,9 @@ class _Dlss5PageState extends State<Dlss5Page> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(message), behavior: SnackBarBehavior.floating),
     );
+    if (result.ok) {
+      await _refreshState(game);
+    }
   }
 
   @override
@@ -142,72 +178,12 @@ class _Dlss5PageState extends State<Dlss5Page> {
                           const Divider(height: 1, indent: 22, endIndent: 22),
                       itemBuilder: (BuildContext context, int index) {
                         final LibraryGame game = _games[index];
-                        final bool busy = _busyGameId == game.id;
-                        return Padding(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 22,
-                            vertical: 10,
-                          ),
-                          child: Row(
-                            children: <Widget>[
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: <Widget>[
-                                    Text(
-                                      game.name,
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: const TextStyle(
-                                        color: AppTokens.textPrimary,
-                                        fontSize: 13,
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 2),
-                                    Text(
-                                      game.targetDirectory,
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .labelMedium,
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              if (busy)
-                                const SizedBox(
-                                  width: 22,
-                                  height: 22,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                  ),
-                                )
-                              else ...<Widget>[
-                                IconButton(
-                                  onPressed: game.renderExe == null
-                                      ? null
-                                      : () => _install(game),
-                                  icon: const Icon(
-                                    Icons.system_update_alt,
-                                    size: 18,
-                                  ),
-                                  tooltip: l10n.dlss5Install,
-                                  color: AppTokens.textSecondary,
-                                ),
-                                IconButton(
-                                  onPressed: () => _uninstall(game),
-                                  icon: const Icon(
-                                    Icons.delete_outline,
-                                    size: 18,
-                                  ),
-                                  tooltip: l10n.dlss5Uninstall,
-                                  color: AppTokens.textSecondary,
-                                ),
-                              ],
-                            ],
-                          ),
+                        return Dlss5GameRow(
+                          game: game,
+                          state: _states[game.id],
+                          busy: _busyGameId == game.id,
+                          onInstall: () => _install(game),
+                          onUninstall: () => _uninstall(game),
                         );
                       },
                     ),
