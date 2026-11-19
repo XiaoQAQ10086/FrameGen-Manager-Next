@@ -203,6 +203,12 @@ pub extern "C" fn fgm_dlss5_set_hotkey_json(request: *const u8, length: usize) -
     execute_request(request, length, commands_dlss5::dlss5_set_hotkey)
 }
 
+/// Removes the DLSS5 pack but keeps the ReShade proxy and INI.
+#[unsafe(no_mangle)]
+pub extern "C" fn fgm_dlss5_restore_json(request: *const u8, length: usize) -> *mut c_char {
+    execute_request(request, length, commands_dlss5::dlss5_restore)
+}
+
 /// Removes the DLSS5 deployment, restoring files that predated it.
 #[unsafe(no_mangle)]
 pub extern "C" fn fgm_dlss5_uninstall_json(request: *const u8, length: usize) -> *mut c_char {

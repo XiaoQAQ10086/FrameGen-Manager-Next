@@ -145,6 +145,29 @@ pub(crate) fn dlss5_set_hotkey(request: &str) -> Result<Value, AppError> {
 
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]
+struct Dlss5RestoreRequest {
+    target_dir: String,
+    #[serde(default)]
+    data_dir: Option<String>,
+}
+
+pub(crate) fn dlss5_restore(request: &str) -> Result<Value, AppError> {
+    let request: Dlss5RestoreRequest = parse(request)?;
+    let target_directory = absolute(Path::new(&request.target_dir))?;
+    let paths = data_paths(request.data_dir.as_deref())?;
+    paths.ensure_created()?;
+    let report = Dlss5Service::restore_keeping_reshade(&target_directory, &paths)?;
+    Ok(json!({
+        "ok": true,
+        "restored": report.restored_files,
+        "removed": report.removed_files,
+        "conflicts": report.conflicts,
+        "warnings": report.warnings,
+    }))
+}
+
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
 struct Dlss5UninstallRequest {
     target_dir: String,
     #[serde(default)]

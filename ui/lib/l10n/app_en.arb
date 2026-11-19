@@ -181,6 +181,16 @@
     }
   },
   "dlss5Uninstall": "Uninstall DLSS5",
+  "dlss5Restore": "Restore, keep ReShade",
+  "dlss5RestoreConfirm": "Remove the DLSS5/GITC files from {game} but keep ReShade and its configuration?",
+  "@dlss5RestoreConfirm": {
+    "placeholders": {
+      "game": {
+        "type": "String"
+      }
+    }
+  },
+  "dlss5Restored": "DLSS5 components restored; ReShade was kept.",
   "dlss5Update": "Update DLSS5",
   "dlss5UninstallConfirm": "Remove DLSS5, ReShade and the GITC files from {game}? Files you changed are kept.",
   "@dlss5UninstallConfirm": {

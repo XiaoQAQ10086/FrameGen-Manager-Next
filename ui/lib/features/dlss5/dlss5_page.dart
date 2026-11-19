@@ -103,6 +103,48 @@ class _Dlss5PageState extends State<Dlss5Page> {
     }
   }
 
+  Future<void> _restore(LibraryGame game) async {
+    final AppLocalizations l10n = AppLocalizations.of(context);
+    final bool? confirmed = await showDialog<bool>(
+      context: context,
+      builder: (BuildContext context) => AlertDialog(
+        title: Text(l10n.dlss5Restore),
+        content: Text(l10n.dlss5RestoreConfirm(game.name)),
+        actions: <Widget>[
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text(l10n.cancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: Text(l10n.ok),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) {
+      return;
+    }
+    setState(() => _busyGameId = game.id);
+    final Dlss5Result result = await Dlss5Bridge.restore(game);
+    if (!mounted) {
+      return;
+    }
+    setState(() => _busyGameId = null);
+    final String message;
+    if (!result.ok) {
+      message = '${l10n.deployFailed} ${result.code}';
+    } else if (result.conflicts.isEmpty) {
+      message = l10n.dlss5Restored;
+    } else {
+      message = l10n.dlss5UninstallConflicts(result.conflicts.length);
+    }
+    _notify(message);
+    if (result.ok) {
+      await _refreshState(game);
+    }
+  }
+
   Future<void> _uninstall(LibraryGame game) async {
     final AppLocalizations l10n = AppLocalizations.of(context);
     final bool? confirmed = await showDialog<bool>(
@@ -261,6 +303,7 @@ class _Dlss5PageState extends State<Dlss5Page> {
                           onInstall: () => _install(game),
                           onHotkey: () => _recordHotkey(game),
                           onCleanLegacy: () => _cleanLegacy(game),
+                          onRestore: () => _restore(game),
                           onUninstall: () => _uninstall(game),
                         );
                       },

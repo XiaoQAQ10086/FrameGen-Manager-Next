@@ -16,6 +16,18 @@ impl super::deployment_engine::DeploymentEngine {
         backups_root: &Path,
         lock_directory: &Path,
     ) -> Result<RestoreReport, AppError> {
+        Self::restore_keeping(family, target_directory, backups_root, lock_directory, &[])
+    }
+
+    /// Restores the deployment while leaving records whose role is listed in
+    /// `keep_roles` in place (for example the ReShade proxy and its INI).
+    pub fn restore_keeping(
+        family: &str,
+        target_directory: &Path,
+        backups_root: &Path,
+        lock_directory: &Path,
+        keep_roles: &[&str],
+    ) -> Result<RestoreReport, AppError> {
         validate_target_directory(target_directory)?;
         let _lock = acquire_target_lock(lock_directory, family, target_directory)?;
 
@@ -28,8 +40,22 @@ impl super::deployment_engine::DeploymentEngine {
 
         let backup_directory = store.directory(family, target_directory)?;
         let mut report = RestoreReport::default();
+        let kept: Vec<_> = manifest
+            .files
+            .iter()
+            .filter(|record| {
+                keep_roles
+                    .iter()
+                    .any(|role| record.role.eq_ignore_ascii_case(role))
+            })
+            .cloned()
+            .collect();
 
-        for record in &manifest.files {
+        for record in manifest.files.iter().filter(|record| {
+            !keep_roles
+                .iter()
+                .any(|role| record.role.eq_ignore_ascii_case(role))
+        }) {
             let target =
                 match crate::paths::TargetPath::combine(target_directory, &record.relative_path) {
                     Ok(target) => target,
@@ -82,7 +108,10 @@ impl super::deployment_engine::DeploymentEngine {
             }
         }
 
-        if report.conflicts.is_empty() {
+        if !report.conflicts.is_empty() {
+            manifest.state = DeploymentManifestState::Partial;
+            store.save_manifest(&manifest)?;
+        } else {
             for relative in &manifest.owned_directories {
                 match crate::paths::TargetPath::combine(target_directory, relative) {
                     Ok(path) if path.is_dir() => {
@@ -101,14 +130,17 @@ impl super::deployment_engine::DeploymentEngine {
                 }
             }
 
-            let manifest_path = store.manifest_path(family, target_directory)?;
-            let _ = std::fs::remove_file(manifest_path);
-            if let Ok(directory) = store.directory(family, target_directory) {
-                let _ = std::fs::remove_dir(directory);
+            if kept.is_empty() {
+                let manifest_path = store.manifest_path(family, target_directory)?;
+                let _ = std::fs::remove_file(manifest_path);
+                if let Ok(directory) = store.directory(family, target_directory) {
+                    let _ = std::fs::remove_dir(directory);
+                }
+            } else {
+                manifest.files = kept;
+                manifest.state = DeploymentManifestState::Restored;
+                store.save_manifest(&manifest)?;
             }
-        } else {
-            manifest.state = DeploymentManifestState::Partial;
-            store.save_manifest(&manifest)?;
         }
 
         Ok(report)

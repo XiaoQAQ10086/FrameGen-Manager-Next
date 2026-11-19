@@ -32,9 +32,9 @@ impl DeploymentSummary {
             | DeploymentManifestState::BackingUp
             | DeploymentManifestState::Writing
             | DeploymentManifestState::Verifying => DeploymentState::Partial,
-            DeploymentManifestState::Planned | DeploymentManifestState::RolledBack => {
-                DeploymentState::NotDeployed
-            }
+            DeploymentManifestState::Planned
+            | DeploymentManifestState::RolledBack
+            | DeploymentManifestState::Restored => DeploymentState::NotDeployed,
         })
     }
 }

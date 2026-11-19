@@ -4,6 +4,8 @@ import 'dart:ffi';
 import 'core_candidates.dart';
 import 'ffi_string.dart';
 
+part 'core_library_requests.dart';
+
 typedef _VersionNative = Pointer<Int8> Function();
 typedef _VersionDart = Pointer<Int8> Function();
 typedef _PhaseNameNative = Pointer<Int8> Function(Uint32);
@@ -52,6 +54,7 @@ final class CoreLibrary {
     this._dlss5SetHotkey,
     this._dlss5CleanLegacy,
     this._dlss5ProcessHotkeyQueue,
+    this._dlss5Restore,
     this._dlss5Uninstall,
     this._logsTail,
     this._anrCurrent,
@@ -98,6 +101,7 @@ final class CoreLibrary {
   final _RequestDart _dlss5SetHotkey;
   final _RequestDart _dlss5CleanLegacy;
   final _JsonDart _dlss5ProcessHotkeyQueue;
+  final _RequestDart _dlss5Restore;
   final _RequestDart _dlss5Uninstall;
   final _RequestDart _logsTail;
   final _JsonDart _anrCurrent;
@@ -200,6 +204,9 @@ final class CoreLibrary {
           ),
           library.lookupFunction<_JsonNative, _JsonDart>(
             'fgm_dlss5_process_hotkey_queue_json',
+          ),
+          library.lookupFunction<_RequestNative, _RequestDart>(
+            'fgm_dlss5_restore_json',
           ),
           library.lookupFunction<_RequestNative, _RequestDart>(
             'fgm_dlss5_uninstall_json',
@@ -329,6 +336,9 @@ final class CoreLibrary {
 
   String? dlss5ProcessHotkeyQueueJson() => _json(_dlss5ProcessHotkeyQueue);
 
+  String? dlss5RestoreJson(String request) =>
+      _request(_dlss5Restore, request);
+
   String? dlss5UninstallJson(String request) =>
       _request(_dlss5Uninstall, request);
 
@@ -360,37 +370,11 @@ final class CoreLibrary {
   /// Persists the current window bounds.
   String? windowSaveJson() => _json(_windowSave);
 
-  String? _request(_RequestDart function, String request) {
-    final List<int> bytes = utf8.encode(request);
-    final Pointer<Uint8> buffer = _alloc(bytes.length);
-    if (buffer.address == 0) {
-      return null;
-    }
-    try {
-      buffer.asTypedList(bytes.length).setAll(0, bytes);
-      final Pointer<Int8> pointer = function(buffer, bytes.length);
-      if (pointer.address == 0) {
-        return null;
-      }
-      try {
-        return readCString(pointer);
-      } finally {
-        _stringFree(pointer);
-      }
-    } finally {
-      _freeBytes(buffer, bytes.length);
-    }
-  }
+  String? _request(_RequestDart function, String request) =>
+      _requestJson(function, request, _alloc, _stringFree, _freeBytes);
 
-  String? _json(_JsonDart function) {
-    final Pointer<Int8> pointer = function();
-    if (pointer.address == 0) {
-      return null;
-    }
-    try {
-      return readCString(pointer);
-    } finally {
-      _stringFree(pointer);
-    }
-  }
+
+  String? _json(_JsonDart function) =>
+      _jsonString(function, _stringFree);
+
 }

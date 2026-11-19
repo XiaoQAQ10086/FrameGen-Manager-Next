@@ -21,7 +21,7 @@
 - `fgm-cli/src/dlss5.rs`：`dlss5 install|inspect|uninstall|hotkey`；`install` 未给 `--api` 时用 `GraphicsApiDetector` 自动判定。
 - Flutter：DLSS5 页每局游戏显示状态标签（未安装/已安装/需更新/不完整/冲突/无清单）、ReShade 标签、旧版残留提示，并提供安装、更新、快捷键、卸载按钮；操作后自动刷新状态。快捷键按钮打开录制对话框（Esc 取消），把 USB HID 映射为 Windows 虚拟键后调用 `fgm_dlss5_set_hotkey_json`，成功后刷新显示当前键；返回“已排队”时提示游戏退出后自动写入。主界面每 30 秒调用 `fgm_dlss5_process_hotkey_queue_json` 重试队列。卸载有冲突时按数量提示，不误报成功。
 - 旧版残留：`Dlss5Service::clean_legacy` 删除根目录 `renodx-dlss*` 与旧布局 `nvngx_dlssnr.dll`（只删这两类，其他文件不动）；存在残留时 `install` 返回 `Conflict` 并要求先清理，界面在残留标签旁显示“清理旧版文件”按钮与确认框。
-- 尚未迁移：GITC 选项/INI 的其余项（`StartEnabled` 默认值切换）、Vulkan 回退到官方 setup、“还原保留 ReShade”与“卸载全部移除”的区分。
+- 尚未迁移：GITC 选项/INI 的其余项（`StartEnabled` 默认值切换）、Vulkan 回退到官方 setup。
 - 测试：`reshade_zip.rs` 内 stored/deflate 提取测试；`tests/reshade_installer.rs` 安装与冲突测试；`tests/dlss5_service.rs` 覆盖安装、代理冲突回滚、卸载删除代理/INI、用户修改文件保留、部署前已有 `ReShade.ini` 保留、inspect 状态/代理/ReShade/旧版残留。
 
 ## 前置条件
@@ -78,7 +78,10 @@
 
 ## 还原 / 卸载（Rust 实现）
 
-新版把“还原”和“卸载”合并为一个可安全重复执行的操作：`Dlss5Service::uninstall`（CLI `dlss5 uninstall`，FFI `fgm_dlss5_uninstall_json`，界面“卸载 DLSS5”）。
+提供两个可安全重复执行的操作：
+
+- **还原（保留 ReShade）**：`Dlss5Service::restore_keeping_reshade` → `DeploymentEngine::restore_keeping`（CLI `dlss5 restore`，FFI `fgm_dlss5_restore_json`，界面“还原（保留 ReShade）”）。只还原 role 不是 `proxy` / `config` 的文件，代理 DLL 与 `ReShade.ini` 原样保留；清单转为 `restored`，状态检查显示“未部署”且仍报告 ReShade 在位，之后可以直接重新部署或彻底卸载。
+- **卸载**：`Dlss5Service::uninstall`（CLI `dlss5 uninstall`，FFI `fgm_dlss5_uninstall_json`，界面“卸载 DLSS5”），按清单移除包括代理与 INI 在内的全部记录。
 
 1. 读取 `dlss5` 家族清单；没有清单返回 `ManifestMissing`，不猜测目录内容。
 2. 逐条比对当前文件哈希与清单记录：
@@ -93,10 +96,10 @@
 5. 不调用 ReShade 官方卸载器，也不删除未跟踪的 `ReShade.log` / `ReShadePreset.ini`。这两点是对旧版行为的有意修正：官方卸载器按文件名删除 DLL，曾导致误删第三方 `dxgi.dll`。
 6. 用户自己后续重新安装的 ReShade 配置不在清单内，不会被删除；需要清理时由用户手动处理。
 
-与旧版的差异（待补齐）：
+与旧版的差异：
 
-- 旧版“还原”只移除 pack 文件、保留 ReShade 模块/INI，方便用户继续使用 ReShade；“卸载”才全部移除。新版暂时只有一种全量卸载。
-- 旧版“彻底卸载”会运行官方卸载器并清理 `ReShade.log`、`ReShadePreset.ini`、旧版 RenoDX 文件和运行时残渣；新版依赖清单 + 哈希，暂不扫描未跟踪残留。旧版 RenoDX 检测会在状态卡片迁移时一起补。
+- 旧版“彻底卸载”会运行官方卸载器并清理 `ReShade.log`、`ReShadePreset.ini` 与运行时残渣；新版依赖清单 + 哈希，不删除未跟踪文件（只提供旧版 RenoDX 的一键清理）。
+- 重新部署时，当前代理 DLL 的哈希与新模块相同（或版本信息含 ReShade）即视为自己的文件；换成雪月等第三方 DLL 仍返回 `Conflict`。
 
 ## 旧版“彻底卸载”参考
 
@@ -107,6 +110,7 @@
 ```powershell
 fgm-next dlss5 install <target-dir> <game-exe> [--api <api>] [--pack-dir <dir>] [--data-dir <dir>]
 fgm-next dlss5 inspect <target-dir> [--pack-dir <dir>] [--data-dir <dir>]
+fgm-next dlss5 restore <target-dir> [--data-dir <dir>]
 fgm-next dlss5 uninstall <target-dir> [--data-dir <dir>]
 ```
 

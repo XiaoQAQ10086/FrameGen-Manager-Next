@@ -58,6 +58,29 @@ fn uninstall_removes_the_pack_the_proxy_and_the_default_ini() {
 }
 
 #[test]
+fn restore_keeping_reshade_removes_pack_files_only() {
+    let fixture = Fixture::new("dlss5-restore-keep-reshade");
+    fixture.install().unwrap();
+    let paths = fixture.paths();
+
+    let report = Dlss5Service::restore_keeping_reshade(&fixture.target, &paths).unwrap();
+
+    assert!(report.conflicts.is_empty());
+    assert!(!fixture.target.join("shader.fx").exists());
+    assert!(fixture.target.join("dxgi.dll").is_file());
+    assert!(fixture.target.join("ReShade.ini").is_file());
+    let pack = PackJson::load(&fixture.pack.join("pack.json")).unwrap();
+    let inspection = Dlss5Service::inspect(&fixture.target, Some(&pack), &paths).unwrap();
+    assert_eq!(inspection.state, DeploymentState::NotDeployed);
+    assert!(inspection.re_shade_present);
+
+    fixture.install().unwrap();
+    fixture.uninstall().unwrap();
+    assert!(!fixture.target.join("dxgi.dll").exists());
+    assert!(!fixture.target.join("ReShade.ini").exists());
+}
+
+#[test]
 fn uninstall_keeps_a_pack_file_the_user_changed() {
     let fixture = Fixture::new("dlss5-uninstall-conflict");
     fixture.install().unwrap();

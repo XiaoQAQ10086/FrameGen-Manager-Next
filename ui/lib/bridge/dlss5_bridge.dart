@@ -93,6 +93,18 @@ final class Dlss5Bridge {
     }
   }
 
+  /// Removes the pack but keeps the ReShade proxy and its INI.
+  static Future<Dlss5Result> restore(LibraryGame game) async {
+    final String request = jsonEncode(<String, Object?>{
+      'targetDir': game.targetDirectory,
+    });
+    final String? reply = await Isolate.run(() {
+      final CoreLibrary? core = CoreLibrary.tryOpen();
+      return core?.dlss5RestoreJson(request);
+    });
+    return Dlss5Result.parse(reply);
+  }
+
   /// Removes everything the install wrote; user-modified files are reported
   /// as conflicts and left in place.
   static Future<Dlss5Result> uninstall(LibraryGame game) async {

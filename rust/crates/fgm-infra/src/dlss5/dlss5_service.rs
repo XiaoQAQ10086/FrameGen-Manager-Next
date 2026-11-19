@@ -89,9 +89,14 @@ impl Dlss5Service {
 
         let proxy_path = TargetPath::combine(target_directory, proxy_module)?;
         if proxy_path.is_file() && !ReShadeInstaller::is_reshade_module(&proxy_path) {
-            return Err(AppError::new(ErrorCode::Conflict)
-                .with("path", proxy_path.display().to_string())
-                .with("reason", "the target module belongs to another program"));
+            let module_hash = sha256_hex(&module);
+            let same_module = FileHasher::sha256_file(&proxy_path)
+                .is_ok_and(|hash| hash.eq_ignore_ascii_case(&module_hash));
+            if !same_module {
+                return Err(AppError::new(ErrorCode::Conflict)
+                    .with("path", proxy_path.display().to_string())
+                    .with("reason", "the target module belongs to another program"));
+            }
         }
 
         let mut files = plan.files;
@@ -195,6 +200,21 @@ impl Dlss5Service {
             }
         }
         Ok(removed)
+    }
+
+    /// Removes the DLSS5 pack while keeping the ReShade proxy and INI, so a
+    /// user-installed ReShade stays usable.
+    pub fn restore_keeping_reshade(
+        target_directory: &Path,
+        paths: &AppPaths,
+    ) -> Result<RestoreReport, AppError> {
+        DeploymentEngine::restore_keeping(
+            Self::FAMILY,
+            target_directory,
+            &paths.backups(),
+            &paths.state().join("locks"),
+            &["proxy", "config"],
+        )
     }
 
     /// Restores everything the install wrote, including the ReShade proxy and

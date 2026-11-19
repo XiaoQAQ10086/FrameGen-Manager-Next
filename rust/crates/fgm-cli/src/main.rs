@@ -9,6 +9,7 @@ use fgm_infra::pack_payload::PackPayloadValidator;
 mod anr;
 mod deploy;
 mod dlss5;
+mod dlss5_common;
 mod gpu;
 mod library;
 

@@ -15,6 +15,7 @@ class Dlss5GameRow extends StatelessWidget {
     required this.onInstall,
     required this.onHotkey,
     required this.onCleanLegacy,
+    required this.onRestore,
     required this.onUninstall,
   });
 
@@ -24,6 +25,7 @@ class Dlss5GameRow extends StatelessWidget {
   final VoidCallback onInstall;
   final VoidCallback onHotkey;
   final VoidCallback onCleanLegacy;
+  final VoidCallback onRestore;
   final VoidCallback onUninstall;
 
   @override
@@ -100,6 +102,12 @@ class Dlss5GameRow extends StatelessWidget {
               onPressed: current?.isDeployed == true ? onHotkey : null,
               icon: const Icon(Icons.keyboard, size: 18),
               tooltip: l10n.dlss5Hotkey,
+              color: AppTokens.textSecondary,
+            ),
+            IconButton(
+              onPressed: current?.isDeployed == true ? onRestore : null,
+              icon: const Icon(Icons.settings_backup_restore, size: 18),
+              tooltip: l10n.dlss5Restore,
               color: AppTokens.textSecondary,
             ),
             IconButton(

@@ -13,4 +13,7 @@ pub enum DeploymentManifestState {
     Installed,
     RolledBack,
     Partial,
+    /// Pack files were removed on purpose while optional components (for
+    /// example the ReShade proxy) were kept.
+    Restored,
 }

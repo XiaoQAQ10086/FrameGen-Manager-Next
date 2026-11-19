@@ -39,6 +39,16 @@ fn inspect_manifest(
     target_directory: &Path,
     pack: Option<&AssetPack>,
 ) -> Result<DeploymentInspection, AppError> {
+    if manifest.state == fgm_domain::deployment::DeploymentManifestState::Restored {
+        return Ok(DeploymentInspection {
+            state: DeploymentState::NotDeployed,
+            pack_version: Some(manifest.pack_version.clone()),
+            has_manifest: true,
+            details: vec!["pack files were restored; optional components are kept".to_string()],
+            options: Some(manifest.options.clone()),
+        });
+    }
+
     let mut conflicts = 0;
     let mut missing = 0;
     let mut details = Vec::new();
