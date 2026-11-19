@@ -162,7 +162,7 @@ fn print_usage() {
         "  fgm-next pack validate <pack-dir> [--no-hash] [--schema-only] [--app-version <version>]"
     );
     eprintln!(
-        "  fgm-next deploy <pack-dir> <target-dir> [--family <id>] [--proxy-slot <target>] [--data-dir <dir>] [--dry-run]"
+        "  fgm-next deploy <pack-dir> <target-dir> [--family <id>] [--proxy-slot <target>] [--data-dir <dir>] [--game-exe <path>] [--dry-run]"
     );
     eprintln!("  fgm-next restore <target-dir> --family <id> [--data-dir <dir>]");
 }

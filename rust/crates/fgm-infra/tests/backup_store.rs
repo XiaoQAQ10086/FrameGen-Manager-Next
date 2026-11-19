@@ -150,6 +150,7 @@ fn sample_manifest(target: PathBuf) -> DeploymentManifest {
             role: "proxy".to_string(),
             last_write_time_utc_ticks: Some(42),
         }],
+        owned_directories: Vec::new(),
         options: BTreeMap::from([("api".to_string(), "dxgi".to_string())]),
     }
 }

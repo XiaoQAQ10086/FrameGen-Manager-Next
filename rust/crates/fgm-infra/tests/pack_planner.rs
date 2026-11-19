@@ -126,6 +126,8 @@ fn planned_files_can_be_applied_and_restored() {
         "framegen.sm86",
         "0.4.2",
         &BTreeMap::new(),
+        &[],
+        None,
         &backups,
         &locks,
         &std::sync::atomic::AtomicBool::new(false),

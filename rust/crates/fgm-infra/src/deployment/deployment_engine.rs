@@ -28,11 +28,20 @@ impl DeploymentEngine {
         pack_id: &str,
         pack_version: &str,
         options: &BTreeMap<String, String>,
+        owned_directories: &[String],
+        game_exe: Option<&Path>,
         backups_root: &Path,
         lock_directory: &Path,
         cancelled: &AtomicBool,
     ) -> Result<DeploymentReport, AppError> {
         validate_target_directory(target_directory)?;
+        if let Some(executable) = game_exe
+            && crate::process::GameProcessProbe::is_running(executable)
+        {
+            return Err(AppError::new(ErrorCode::GameRunning)
+                .with("path", executable.display().to_string())
+                .with("reason", "the game is still running"));
+        }
         let _lock = acquire_target_lock(lock_directory, family, target_directory)?;
         if cancelled.load(Ordering::Relaxed) {
             return Err(cancelled_error(family));
@@ -86,6 +95,7 @@ impl DeploymentEngine {
         };
         manifest.state = DeploymentManifestState::BackingUp;
         manifest.files = records.clone();
+        manifest.owned_directories = owned_directories.to_vec();
         manifest.options = options.clone();
         store.save_manifest(&manifest)?;
 

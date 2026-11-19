@@ -42,14 +42,17 @@ manifest 状态：`Installing → Installed / RolledBack / Partial`，还原后 
   - 生成 INI 使用 CRLF 和末尾换行，作为内存内容交给部署引擎
 - `fgm-infra/src/deployment/deployment_engine.rs`：`DeploymentEngine::apply`
   - 校验目标为绝对路径、存在、非受保护系统目录
+  - 可选 `game_exe`：检测到进程运行返回 `GameRunning`，不写任何文件、不等待锁
   - 获取 `TargetLock`；预检所有源文件存在、大小、SHA-256
   - 目标已存在且不是我们的文件才备份；旧 manifest 的有效备份复用
+  - manifest 记录 `ownedDirectories`
   - manifest 状态 `backingUp → writing → installed`
   - 逐文件原子复制并读回 SHA-256；任一步失败回滚已写文件
   - 回滚成功标记 `rolledBack`，回滚自身失败标记 `partial`
 - `fgm-infra/src/deployment/deployment_restore.rs`：`DeploymentEngine::restore`
   - 没有 manifest 返回 `ManifestMissing`
   - 只有当前哈希等于部署哈希才还原备份或删除；用户修改过的文件报告冲突并保留
+  - 冲突为空时按 manifest 删除 `ownedDirectories`（递归），失败写入 warnings
   - 冲突为空时删除 manifest；否则标记 `partial`
 - `fgm-infra/src/fs/`：`AtomicFile`、`DeploymentKey`、`TargetLock`（见 [filesystem-primitives.md](filesystem-primitives.md)）
 - `fgm-infra/src/process/game_process_probe.rs`：部署/还原前的游戏进程检测
@@ -57,7 +60,7 @@ manifest 状态：`Installing → Installed / RolledBack / Partial`，还原后 
   - `OpenProcess` 或查询路径失败时，按“名称匹配即运行”处理，避免受保护进程被误判为未运行
   - 空路径、无法解析的路径返回 false
 - 新 manifest 状态使用统一阶段机 `planned/backingUp/writing/verifying/installed/rolledBack/partial`；不兼容旧版 `Installing/Restored` 字段，旧数据不迁移。
-- 尚未实现：旧 manifest 中不再部署的遗留文件清理、`ownedDirectories` 整目录删除、游戏运行检查接线、CLI 端到端命令。
+- 尚未实现：旧 manifest 中不再部署的遗留文件清理、Smooth Motion/帧生成互斥检查、FFI/UI 接线。
 - 测试：`rust/crates/fgm-infra/tests/backup_store.rs`、`fs_primitives.rs`、`process_probe.rs`、`deployment_engine.rs`、`pack_planner.rs`。
 
 ## 部署流程
@@ -166,12 +169,13 @@ fgm-next deploy restore <target-dir>
 Rust CLI（Phase 3）：
 
 ```powershell
-fgm-next deploy <pack-dir> <target-dir> --family <id> --proxy-slot version.dll --data-dir <dir> --app-version 2.3.4
+fgm-next deploy <pack-dir> <target-dir> --family <id> --proxy-slot version.dll --data-dir <dir> --game-exe <game.exe> --app-version 2.3.4
 fgm-next deploy <pack-dir> <target-dir> --dry-run
 fgm-next restore <target-dir> --family <id> --data-dir <dir>
 ```
 
-- `deploy` 执行 pack 校验、代理槽选择、INI 合并、文件事务与 manifest。
+- `deploy` 执行 pack 校验、代理槽选择、INI 合并、游戏运行预检、文件事务与 manifest。
+- `--game-exe` 指定渲染 EXE；检测到运行中返回 `GameRunning`，不写文件。
 - `--dry-run` 只打印计划文件，不读写目标。
 - `restore` 按 manifest 还原；存在冲突时退出码为 1。
 - `--data-dir` 不传时使用 `AppPaths::create_default`（`FGM_DATA_DIR` / `portable.flag` / `%LOCALAPPDATA%`）。

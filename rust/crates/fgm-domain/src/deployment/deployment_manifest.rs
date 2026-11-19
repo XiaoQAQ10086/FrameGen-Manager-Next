@@ -25,6 +25,8 @@ pub struct DeploymentManifest {
     #[serde(default)]
     pub files: Vec<DeployedFileRecord>,
     #[serde(default)]
+    pub owned_directories: Vec<String>,
+    #[serde(default)]
     pub options: BTreeMap<String, String>,
 }
 
@@ -39,6 +41,7 @@ impl Default for DeploymentManifest {
             created_unix_ms: 0,
             state: DeploymentManifestState::default(),
             files: Vec::new(),
+            owned_directories: Vec::new(),
             options: BTreeMap::new(),
         }
     }

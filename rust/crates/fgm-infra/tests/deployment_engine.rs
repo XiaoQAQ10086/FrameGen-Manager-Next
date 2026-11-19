@@ -131,6 +131,57 @@ fn restore_recreates_a_missing_target_from_backup() {
 }
 
 #[test]
+fn removes_owned_directories_on_restore() {
+    let fixture = Fixture::new("engine-owned");
+    fixture.apply(&fixture.files()).unwrap();
+    fs::create_dir_all(fixture.target.join("owned")).unwrap();
+    fs::write(fixture.target.join("owned").join("cache.txt"), b"cache").unwrap();
+
+    fixture.restore().unwrap();
+
+    assert!(!fixture.target.join("owned").exists());
+}
+
+#[test]
+fn keeps_owned_directories_when_restore_has_conflicts() {
+    let fixture = Fixture::new("engine-owned-conflict");
+    fixture.apply(&fixture.files()).unwrap();
+    fs::create_dir_all(fixture.target.join("owned")).unwrap();
+    fs::write(fixture.target.join("runtime.dll"), b"user-modified").unwrap();
+
+    fixture.restore().unwrap();
+
+    assert!(fixture.target.join("owned").exists());
+}
+
+#[test]
+fn refuses_to_deploy_while_the_game_is_running() {
+    let fixture = Fixture::new("engine-running");
+    let current = std::env::current_exe().unwrap();
+
+    let error = DeploymentEngine::apply(
+        &fixture.files(),
+        &fixture.target,
+        "framegen.sm86",
+        "framegen.sm86",
+        "0.4.2",
+        &BTreeMap::new(),
+        &[],
+        Some(&current),
+        &fixture.backups,
+        &fixture.locks,
+        &AtomicBool::new(false),
+    )
+    .unwrap_err();
+
+    assert_eq!(error.code, ErrorCode::GameRunning);
+    assert_eq!(
+        fs::read_to_string(fixture.target.join("version.dll")).unwrap(),
+        "original"
+    );
+}
+
+#[test]
 fn duplicate_targets_are_rejected() {
     let fixture = Fixture::new("engine-duplicate");
     let mut files = fixture.files();
@@ -196,6 +247,8 @@ impl Fixture {
             "framegen.sm86",
             "0.4.2",
             &BTreeMap::new(),
+            &["owned".to_string()],
+            None,
             &self.backups,
             &self.locks,
             cancelled,

@@ -6,6 +6,7 @@ pub enum ErrorCode {
     UnsafePath,
     FileNotFound,
     FileLocked,
+    GameRunning,
     AccessDenied,
     Conflict,
     ManifestMissing,

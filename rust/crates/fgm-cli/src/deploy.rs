@@ -13,6 +13,7 @@ pub fn run_deploy(args: &[String]) -> i32 {
     let mut family = None;
     let mut proxy_slot = None;
     let mut data_directory = None;
+    let mut game_exe = None;
     let mut app_version = VERSION.to_string();
     let mut dry_run = false;
     let mut index = 0;
@@ -30,6 +31,10 @@ pub fn run_deploy(args: &[String]) -> i32 {
             },
             "--data-dir" => match next_value(args, &mut index) {
                 Some(value) => data_directory = Some(value),
+                None => return 2,
+            },
+            "--game-exe" => match next_value(args, &mut index) {
+                Some(value) => game_exe = Some(value),
                 None => return 2,
             },
             "--app-version" => match next_value(args, &mut index) {
@@ -116,6 +121,13 @@ pub fn run_deploy(args: &[String]) -> i32 {
 
     let family = family.unwrap_or_else(|| pack.id.clone());
     let lock_directory = paths.state().join("locks");
+    let game_executable = match game_exe {
+        Some(path) => match absolute(Path::new(&path)) {
+            Ok(path) => Some(path),
+            Err(error) => return print_error(&error),
+        },
+        None => None,
+    };
     let report = match DeploymentEngine::apply(
         &plan.files,
         &target_directory,
@@ -123,6 +135,8 @@ pub fn run_deploy(args: &[String]) -> i32 {
         &pack.id,
         &pack.version,
         &options,
+        &pack.owned_directories,
+        game_executable.as_deref(),
         &paths.backups(),
         &lock_directory,
         &AtomicBool::new(false),
@@ -257,7 +271,9 @@ fn print_deploy_usage() {
     eprintln!(
         "usage: fgm-next deploy <pack-dir> <target-dir> [--family <id>] [--proxy-slot <target>]"
     );
-    eprintln!("       [--app-version <version>] [--data-dir <dir>] [--dry-run]");
+    eprintln!(
+        "       [--app-version <version>] [--data-dir <dir>] [--game-exe <path>] [--dry-run]"
+    );
 }
 
 fn print_restore_usage() {

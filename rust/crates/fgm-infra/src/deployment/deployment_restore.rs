@@ -83,6 +83,24 @@ impl super::deployment_engine::DeploymentEngine {
         }
 
         if report.conflicts.is_empty() {
+            for relative in &manifest.owned_directories {
+                match crate::paths::TargetPath::combine(target_directory, relative) {
+                    Ok(path) if path.is_dir() => {
+                        if let Err(error) = std::fs::remove_dir_all(&path) {
+                            report.warnings.push(format!(
+                                "{relative}: could not remove owned directory ({error})"
+                            ));
+                        }
+                    }
+                    Ok(_) => {}
+                    Err(error) => {
+                        report
+                            .warnings
+                            .push(format!("{relative}: {}", first_reason(&error)));
+                    }
+                }
+            }
+
             let manifest_path = store.manifest_path(family, target_directory)?;
             let _ = std::fs::remove_file(manifest_path);
             if let Ok(directory) = store.directory(family, target_directory) {
