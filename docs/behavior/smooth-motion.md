@@ -72,6 +72,19 @@
 - `DRS_SetSetting` 的返回码不可信，必须读回复核。
 - 基础 profile 句柄一律拒绝写入。
 
+## Rust 迁移状态（Phase 2）
+
+- `fgm-infra/src/nvapi/` 已实现：
+  - `NvApiSession::open()`：加载 `nvapi64.dll`，`nvapi_QueryInterface` 解析导出，`NvAPI_Initialize` → `DRS_CreateSession` → `DRS_LoadSettings`
+  - `base_profile` / `find_profile(name)` / `find_profile_for_exe`
+  - `find_profiles_for_exe`：直接接口 + `DRS_EnumProfiles` / `DRS_EnumApplications` 枚举，按完整路径、相对路径、裸文件名匹配
+  - `read_setting` / `read_smooth_motion` / `set_dword` / `save`
+  - `Drop` 依次调用 `DRS_DestroySession`（`0xDAD9CFF8`，存在时）、`NvAPI_Unload`（`0xD22BDD7E`）、`FreeLibrary`；不调用不存在的 `NvAPI_Uninitialize`
+- 结构体布局与 C# 版一致：设置 12,320 字节、application V4 20,492 字节、`appName` 只放裸文件名、目录放偏移 12,296、设置名 `PLACEHOLDER`。
+- 尚未迁移：创建 profile、挂 application、profile 旧值备份、开启/关闭/还原编排、`DRS_SetSetting` 后换会话读回。
+- 真机验证（RTX 3070）：会话可打开，基础 profile 的 Smooth Motion 设置为 `Some(0)`；对测试 EXE 的枚举查找返回 0 个 profile，无崩溃。
+- 测试：`rust/crates/fgm-infra/tests/nvapi_session.rs`；`NvApiUnavailable` 时跳过，其余 NVAPI 错误视为失败。
+
 ## 命令
 
 ```powershell

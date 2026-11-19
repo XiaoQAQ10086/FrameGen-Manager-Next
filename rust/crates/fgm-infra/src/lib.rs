@@ -5,6 +5,7 @@ use fgm_core::ports::Clock;
 pub mod deployment;
 pub mod fs;
 pub mod hashing;
+pub mod nvapi;
 pub mod pack_json;
 pub mod pack_payload;
 pub mod paths;
