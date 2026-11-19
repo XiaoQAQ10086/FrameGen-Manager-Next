@@ -42,3 +42,12 @@ cargo run -p fgm-cli -- restore <target-dir> --family framegen.sm86 --data-dir <
 ```
 
 `deploy` selects one proxy slot, merges the pack INI, writes through the file transaction engine, and records a manifest. `restore` reports conflicts with exit code `1`.
+
+## Library
+
+```bash
+cargo run -p fgm-cli -- library scan [--root <dir>]... [--data-dir <dir>]
+cargo run -p fgm-cli -- library list [--data-dir <dir>]
+```
+
+`library scan` combines Steam, Epic and loose-folder discovery, then writes `library/library.json`.

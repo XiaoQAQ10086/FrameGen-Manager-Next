@@ -7,6 +7,7 @@ use fgm_infra::pack_json::PackJson;
 use fgm_infra::pack_payload::PackPayloadValidator;
 
 mod deploy;
+mod library;
 
 fn main() {
     std::process::exit(run(std::env::args().skip(1).collect()));
@@ -32,6 +33,7 @@ fn run(args: Vec<String>) -> i32 {
         [deploy, rest @ ..] if deploy == "deploy" => self::deploy::run_deploy(rest),
         [restore, rest @ ..] if restore == "restore" => self::deploy::run_restore(rest),
         [inspect, rest @ ..] if inspect == "inspect" => self::deploy::run_inspect(rest),
+        [library, rest @ ..] if library == "library" => self::library::run_library(rest),
         _ => {
             eprintln!("unknown command");
             print_usage();
@@ -169,6 +171,8 @@ fn print_usage() {
     eprintln!(
         "  fgm-next inspect <target-dir> --family <id> [--pack-dir <dir>] [--data-dir <dir>]"
     );
+    eprintln!("  fgm-next library scan [--root <dir>]... [--data-dir <dir>]");
+    eprintln!("  fgm-next library list [--data-dir <dir>]");
 }
 
 fn print_pack_usage() {

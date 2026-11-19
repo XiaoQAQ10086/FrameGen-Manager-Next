@@ -11,6 +11,7 @@ pub mod pack_json;
 pub mod pack_payload;
 pub mod paths;
 pub mod pe;
+pub mod platform;
 pub mod process;
 
 pub struct SystemClock;

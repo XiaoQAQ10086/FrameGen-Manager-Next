@@ -94,8 +94,13 @@ Steam junk 跳过（精确名称）：`steamworks common redistributables`、`st
   - 解析 `appmanifest_*.acf` 的 `appid/name/installdir`。
   - 跳过指定 junk 名称、`steam linux runtime ` 前缀和 `proton <数字>`。
 - `fgm-infra/src/library/epic_game_scanner.rs`：Epic `.item` 清单扫描；`bIsApplication=false` 跳过。
-- 测试：`pe_imports.rs`、`render_exe.rs`、`graphics_api.rs`、`library_cache.rs`、`steam_scanner.rs`、`epic_scanner.rs`。
-- 尚未迁移：Steam 安装目录定位、WeGame/Xbox 扫描、封面。
+- `fgm-infra/src/library/steam_locator.rs`：HKCU/HKLM Steam 路径 + Program Files 回退。
+- `fgm-infra/src/library/epic_locator.rs`：`%ProgramData%\Epic\EpicGamesLauncher\Data\Manifests`。
+- `fgm-infra/src/library/library_scanner.rs`：聚合 Steam → Epic → 散装，按安装目录大小写不敏感去重。
+- `fgm-infra/src/platform/drive_roots.rs`：固定/可移动盘符枚举。
+- CLI：`fgm-next library scan [--root <dir>]...`、`fgm-next library list`。
+- 测试：`pe_imports.rs`、`render_exe.rs`、`graphics_api.rs`、`library_cache.rs`、`steam_scanner.rs`、`epic_scanner.rs`、`library_scanner.rs`。
+- 尚未迁移：WeGame/Xbox 扫描、封面。
 
 ## 真实机器对照（2026-10-29）
 
