@@ -1,5 +1,13 @@
 # 自动更新检查与下载
 
+## Rust 迁移状态（Phase 5）
+
+- `fgm-infra/src/updates/update_checker.rs`：按顺序尝试清单 URL，解析 `version/notes/pageUrl/installer`；版本比较忽略 `v` 前缀和构建元数据。
+- `fgm-infra/src/updates/update_downloader.rs`：按 `installer.urls` 逐条尝试，写入 `%TEMP%\FrameGen-Manager-Next\updates\<version>\<name>.part`；大小和 SHA-256 都匹配才改名为最终文件，失败删除并换下一个镜像。
+- 下载基于 `fgm-infra/src/net` 的 WinHTTP，支持重定向、取消和进度回调。
+- 尚未迁移：清单默认 URL、UI 更新弹窗/进度、启动安装包、便携版行为、卸载清理。
+- 测试：`rust/crates/fgm-infra/tests/updates.rs`（本地 HTTP 清单 + 安装包下载）、`downloader.rs`。
+
 ## 检查
 
 - 读取可镜像的 `update.json` 清单；不再依赖 GitHub API `releases/latest`。

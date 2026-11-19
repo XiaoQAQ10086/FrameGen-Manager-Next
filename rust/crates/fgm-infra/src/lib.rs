@@ -20,6 +20,7 @@ pub mod platform;
 pub mod process;
 pub mod settings;
 pub mod smooth_motion;
+pub mod updates;
 
 pub struct SystemClock;
 

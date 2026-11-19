@@ -27,7 +27,7 @@
 | GPU / 驱动闸门 | `gpu.rs`、`scan.rs::classify_gpu`、`ui/settings.js` | `Domain/Gpu` + `Infrastructure/Gpu`；Rust `fgm-infra/src/gpu` | [已实现](gpu.md) |
 | 显卡名称伪装 | `gpu.rs::apply/restore/run_elevated` | `Infrastructure/Gpu` + `FrameGenManagerNext.Elevated` | [已实现](gpu-spoof.md) |
 | 设置 / 封面 | `ui/settings.js`、`ui/app.js` | `Infrastructure/Settings` + `Infrastructure/Library`；Rust `fgm-infra/src/settings` | [已实现（设置，不含封面）](settings.md) |
-| 更新 | `update.rs`、`apps/electron/main.js` | Velopack + `Core/Features/Packs` | [已实现](updates.md) |
+| 更新 | `update.rs`、`apps/electron/main.js` | Velopack + `Core/Features/Packs`；Rust `fgm-infra/src/updates` | [已实现（检查/下载）](updates.md) |
 | 网络下载 | reqwest（旧版） | `fgm-infra/src/net`（WinHTTP） | [已实现（基础下载）](network.md) |
 | 便携版 / 安装包 | Inno 6.7.4 | `build/publish-portable-next.ps1`、`installer-next.iss` | [已实现（本地构建）](packaging.md) |
 | 诊断包 | `sidecar::diagnostics_export`、`ui/settings.js` | `Core/Features/Diagnostics` | [已实现](diagnostics.md) |
