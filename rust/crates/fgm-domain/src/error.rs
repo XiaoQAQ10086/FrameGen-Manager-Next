@@ -8,6 +8,7 @@ pub enum ErrorCode {
     FileLocked,
     AccessDenied,
     Conflict,
+    ManifestMissing,
     PackInvalid,
     PackNotFound,
     PackHashMismatch,

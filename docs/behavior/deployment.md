@@ -22,9 +22,9 @@ manifest 状态：`Installing → Installed / RolledBack / Partial`，还原后 
 
 检查时优先使用 manifest 里记录的部署选项（代理槽、优化等级、帧数、Preset、引擎、超分、XeSS），只有没有有效 manifest 时才使用默认值。否则用户改过的选项会被误报成 `Outdated`。
 
-## Rust 迁移状态（Phase 2）
+## Rust 迁移状态（Phase 2/3）
 
-已实现基础设施，尚未实现部署引擎本体的复制/回滚：
+已实现文件级部署事务，尚未接入 pack 代理选择、INI、ownedDirectories 和游戏运行检查：
 
 - `fgm-domain/src/deployment/`：`DeploymentManifest`、`DeployedFileRecord`、`DeploymentManifestState`
 - `fgm-infra/src/deployment/backup_store.rs`：manifest 读写与备份目录布局
@@ -34,13 +34,25 @@ manifest 状态：`Installing → Installed / RolledBack / Partial`，还原后 
   - 保存走同目录临时文件 + 原子替换
   - `store_file` / `restore_file` 流式复制并原子替换，不整文件读入内存
   - 备份内相对路径只允许通过 `TargetPath::combine`
+- `fgm-infra/src/deployment/deployment_engine.rs`：`DeploymentEngine::apply`
+  - 校验目标为绝对路径、存在、非受保护系统目录
+  - 获取 `TargetLock`；预检所有源文件存在、大小、SHA-256
+  - 目标已存在且不是我们的文件才备份；旧 manifest 的有效备份复用
+  - manifest 状态 `backingUp → writing → installed`
+  - 逐文件原子复制并读回 SHA-256；任一步失败回滚已写文件
+  - 回滚成功标记 `rolledBack`，回滚自身失败标记 `partial`
+- `fgm-infra/src/deployment/deployment_restore.rs`：`DeploymentEngine::restore`
+  - 没有 manifest 返回 `ManifestMissing`
+  - 只有当前哈希等于部署哈希才还原备份或删除；用户修改过的文件报告冲突并保留
+  - 冲突为空时删除 manifest；否则标记 `partial`
 - `fgm-infra/src/fs/`：`AtomicFile`、`DeploymentKey`、`TargetLock`（见 [filesystem-primitives.md](filesystem-primitives.md)）
 - `fgm-infra/src/process/game_process_probe.rs`：部署/还原前的游戏进程检测
   - Toolhelp32 快照按 EXE 文件名匹配；再用 `QueryFullProcessImageNameW` 比对完整路径
   - `OpenProcess` 或查询路径失败时，按“名称匹配即运行”处理，避免受保护进程被误判为未运行
   - 空路径、无法解析的路径返回 false
 - 新 manifest 状态使用统一阶段机 `planned/backingUp/writing/verifying/installed/rolledBack/partial`；不兼容旧版 `Installing/Restored` 字段，旧数据不迁移。
-- 测试：`rust/crates/fgm-infra/tests/backup_store.rs`、`fs_primitives.rs`、`process_probe.rs`。
+- 尚未实现：旧 manifest 中不再部署的遗留文件清理、INI 生成、代理槽选择、ownedDirectories 整目录删除。
+- 测试：`rust/crates/fgm-infra/tests/backup_store.rs`、`fs_primitives.rs`、`process_probe.rs`、`deployment_engine.rs`。
 
 ## 部署流程
 

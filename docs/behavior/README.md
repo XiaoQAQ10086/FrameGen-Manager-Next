@@ -33,6 +33,7 @@
 | 应用数据目录 | `Infrastructure/Paths/AppPaths.cs` | `fgm-infra/src/paths` | [已实现](app-paths.md) |
 | 文件系统原语 | `Deployment/TargetLock.cs`、`DeploymentKey.cs`、原子写 | `fgm-infra/src/fs` | [已实现](filesystem-primitives.md) |
 | 备份清单与备份存储 | `Deployment/BackupStore.cs` | `fgm-domain/src/deployment`、`fgm-infra/src/deployment` | [已实现](deployment.md) |
+| 部署事务引擎 | `Infrastructure/Deployment/DeploymentEngine*.cs` | `fgm-infra/src/deployment` | [已实现（文件级）](deployment.md) |
 | PE 导入读取 | `Infrastructure/Library/PeImportReader.cs` | `fgm-infra/src/pe` | [已实现](library.md) |
 | 游戏进程检测 | `Infrastructure/Processes/GameProcessProbe.cs` | `fgm-infra/src/process` | [已实现](deployment.md) |
 | 子进程运行 | `Infrastructure/Processes/ProcessRunner.cs` | `fgm-infra/src/process` | [已实现](process-runner.md) |
