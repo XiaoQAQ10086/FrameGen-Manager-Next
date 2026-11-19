@@ -1,5 +1,13 @@
 # 诊断包导出行为规格
 
+## Rust 迁移状态（Phase 5）
+
+- `fgm-infra/src/diagnostics.rs`：收集 `logs/fgm.log` 末尾最多 4 MiB，加 `summary.json`（版本、平台、游戏数、GPU 名称/驱动/路由、设置项），不包含绝对路径、游戏文件或部署备份。
+- `fgm-infra/src/archive/zip_writer.rs`：store 方式的最小 ZIP 写入器（CRC32 + local/central/EOCD），不引入新依赖。
+- `fgm-ffi/src/commands_diagnostics.rs`：`fgm_diagnostics_export_json` 先构建内存 ZIP，再打开原生“另存为”对话框；取消返回 `cancelled`，不写文件。
+- Flutter 日志页“导出诊断包”按钮：导出中禁用按钮，成功提示最终路径，取消静默。
+- 测试：`zip_writer.rs` 单测、`tests/diagnostics.rs`（ZIP 头、日志与摘要、无绝对路径）。
+
 ## 输入
 
 - 用户在“日志”页点击“导出诊断包”。

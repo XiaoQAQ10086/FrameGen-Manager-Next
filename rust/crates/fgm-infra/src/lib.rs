@@ -5,6 +5,7 @@ use fgm_core::ports::Clock;
 pub mod anr;
 pub mod archive;
 pub mod deployment;
+pub mod diagnostics;
 pub mod dlss5;
 pub mod fs;
 pub mod gpu;

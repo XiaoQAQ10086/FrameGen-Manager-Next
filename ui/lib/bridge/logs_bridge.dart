@@ -1,10 +1,21 @@
 import 'dart:convert';
 
-import 'core_library.dart';
+import 'dart:isolate';
 
-/// Reads the tail of the operation log.
+import 'core_library.dart';
+import 'diagnostics_result.dart';
+
+/// Reads the tail of the operation log and exports diagnostics.
 final class LogsBridge {
   const LogsBridge._();
+
+  static Future<DiagnosticsResult> exportDiagnostics() async {
+    final String? reply = await Isolate.run(() {
+      final CoreLibrary? core = CoreLibrary.tryOpen();
+      return core?.diagnosticsExportJson('{}');
+    });
+    return DiagnosticsResult.parse(reply);
+  }
 
   static List<String> tail(CoreLibrary? core, {int maxLines = 500}) {
     if (core == null) {

@@ -12,6 +12,7 @@ use serde_json::{Value, json};
 
 mod commands;
 mod commands_anr;
+mod commands_diagnostics;
 mod commands_dlss5;
 mod commands_library;
 mod commands_sm;
@@ -220,6 +221,12 @@ pub extern "C" fn fgm_update_install_json(request: *const u8, length: usize) -> 
 #[unsafe(no_mangle)]
 pub extern "C" fn fgm_update_open_json(request: *const u8, length: usize) -> *mut c_char {
     execute_request(request, length, commands_update::update_open)
+}
+
+/// Saves a diagnostics bundle through the native save dialog.
+#[unsafe(no_mangle)]
+pub extern "C" fn fgm_diagnostics_export_json(request: *const u8, length: usize) -> *mut c_char {
+    execute_request(request, length, commands_diagnostics::export)
 }
 
 /// Returns the tail of the operation log.

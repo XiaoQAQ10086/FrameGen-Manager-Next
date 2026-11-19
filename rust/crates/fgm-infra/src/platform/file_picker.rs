@@ -17,4 +17,12 @@ impl FilePicker {
             .add_filter("Executable", &["exe"])
             .pick_file()
     }
+
+    pub fn save_zip(default_name: &str) -> Option<PathBuf> {
+        rfd::FileDialog::new()
+            .set_title("Save diagnostics bundle")
+            .add_filter("ZIP", &["zip"])
+            .set_file_name(default_name)
+            .save_file()
+    }
 }

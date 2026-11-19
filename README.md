@@ -24,7 +24,6 @@ FrameGen Manager-Next 是[原项目 FrameGen-Manager](https://github.com/XiaoQAQ
 - **帧生成部署**：为 RTX 20–50 系显卡部署 SM75 / SM86 运行时（当前资产 0.4.2，RTX 40/50 走 PTX 内核），支持代理槽、优化等级、2X/3X/4X/6X、DLSS / XeSS 引擎、超分模式和 XeSS 光流参数；部署后可还原，被用户改过的文件会保留并报告冲突。
 - **Smooth Motion**：为游戏写入驱动 profile 的 Smooth Motion 开关并部署解锁组件；写入前记录旧值，关闭时移除组件，还原时写回原值。
 - **DLSS5 / ReShade**：离线安装 ReShade 模块、GITC Uplift 组件和标准 shader，支持卸载与旧版 RenoDX 清理。
-- **显卡型号伪装**：在管理员权限下修改驱动记录的显卡名称，支持应用、还原驱动名和恢复原始值，重启后生效。
 - **诊断与本地化**：结构化日志、诊断包导出、中英文运行时切换。
 
 | Smooth Motion | DLSS5 / ReShade |

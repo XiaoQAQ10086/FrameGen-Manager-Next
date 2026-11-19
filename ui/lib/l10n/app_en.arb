@@ -193,6 +193,16 @@
     }
   },
   "logsEmpty": "No log entries yet.",
+  "diagnosticsExport": "Export diagnostics",
+  "diagnosticsSaved": "Diagnostics saved to {path}",
+  "@diagnosticsSaved": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "diagnosticsFailed": "Could not export diagnostics.",
   "copy": "Copy",
   "anrImport": "Import ANR package",
   "anrDownload": "Download latest",
