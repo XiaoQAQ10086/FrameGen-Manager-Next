@@ -1,4 +1,5 @@
 pub mod cover_service;
+pub mod engine_detector;
 pub mod epic_game_scanner;
 pub mod epic_locator;
 pub mod graphics_api_detector;
@@ -15,6 +16,7 @@ pub mod steam_locator;
 mod valve_key_values;
 
 pub use cover_service::CoverService;
+pub use engine_detector::{EngineDetector, GameEngine};
 pub use epic_game_scanner::EpicGameScanner;
 pub use epic_locator::EpicLocator;
 pub use graphics_api_detector::GraphicsApiDetector;

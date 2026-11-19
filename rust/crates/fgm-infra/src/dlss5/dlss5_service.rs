@@ -13,6 +13,7 @@ use crate::deployment::{
 use crate::hashing::{FileHasher, sha256_hex};
 use crate::pack_json::PackJson;
 use crate::paths::{AppPaths, TargetPath};
+use crate::reframework::ReframeworkService;
 
 use super::dlss5_config::Dlss5Config;
 use super::dlss5_inspection::Dlss5Inspection;
@@ -55,6 +56,7 @@ impl Dlss5Service {
         paths: &AppPaths,
     ) -> Result<Dlss5Report, AppError> {
         let pack = PackJson::load(&pack_directory.join("pack.json"))?;
+        ReframeworkService::install_before_deploy(game_exe, target_directory, app_version, paths)?;
         let proxy_module = Self::proxy_for(api)?;
         let setup_source = installer_source(&pack.steps).ok_or_else(|| {
             AppError::new(ErrorCode::PackInvalid)
@@ -171,12 +173,14 @@ impl Dlss5Service {
     /// conflicts and left untouched, so a third-party module that reused the
     /// proxy slot is never deleted.
     pub fn uninstall(target_directory: &Path, paths: &AppPaths) -> Result<RestoreReport, AppError> {
-        DeploymentEngine::restore(
+        let report = DeploymentEngine::restore(
             Self::FAMILY,
             target_directory,
             &paths.backups(),
             &paths.state().join("locks"),
-        )
+        )?;
+        ReframeworkService::uninstall(target_directory, paths)?;
+        Ok(report)
     }
 
     /// Writes `[INPUT] KeyOverlay` for an installed game and re-syncs the

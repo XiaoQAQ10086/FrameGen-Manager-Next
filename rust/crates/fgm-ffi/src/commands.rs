@@ -8,6 +8,7 @@ use fgm_infra::deployment::{DeploymentEngine, DeploymentInspector, PackDeploymen
 use fgm_infra::pack_json::PackJson;
 use fgm_infra::packs::PackLocator;
 use fgm_infra::paths::AppPaths;
+use fgm_infra::reframework::ReframeworkService;
 use serde::Deserialize;
 use serde_json::{Value, json};
 
@@ -83,6 +84,15 @@ pub(crate) fn deploy(request: &str) -> Result<Value, AppError> {
         .map(Path::new)
         .map(absolute)
         .transpose()?;
+
+    if let Some(executable) = game_executable.as_deref() {
+        ReframeworkService::install_before_deploy(
+            executable,
+            &target_directory,
+            &app_version,
+            &paths,
+        )?;
+    }
 
     let report = DeploymentEngine::apply(
         &plan.files,
