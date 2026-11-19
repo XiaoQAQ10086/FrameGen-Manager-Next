@@ -2,6 +2,7 @@
 
 use fgm_core::ports::Clock;
 
+pub mod deployment;
 pub mod fs;
 pub mod hashing;
 pub mod pack_json;

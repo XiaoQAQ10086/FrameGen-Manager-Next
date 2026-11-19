@@ -22,6 +22,21 @@ manifest 状态：`Installing → Installed / RolledBack / Partial`，还原后 
 
 检查时优先使用 manifest 里记录的部署选项（代理槽、优化等级、帧数、Preset、引擎、超分、XeSS），只有没有有效 manifest 时才使用默认值。否则用户改过的选项会被误报成 `Outdated`。
 
+## Rust 迁移状态（Phase 2）
+
+已实现基础设施，尚未实现部署引擎本体的复制/回滚：
+
+- `fgm-domain/src/deployment/`：`DeploymentManifest`、`DeployedFileRecord`、`DeploymentManifestState`
+- `fgm-infra/src/deployment/backup_store.rs`：manifest 读写与备份目录布局
+  - `<backups>\<family>\<DeploymentKey>\manifest.json`
+  - family 非法时用 `unknown`；key 由目标绝对路径生成
+  - 损坏 manifest 移到 `manifest.json.bad`，按“无 manifest”处理
+  - 保存走同目录临时文件 + 原子替换
+  - 备份内相对路径只允许通过 `TargetPath::combine`
+- `fgm-infra/src/fs/`：`AtomicFile`、`DeploymentKey`、`TargetLock`（见 [filesystem-primitives.md](filesystem-primitives.md)）
+- 新 manifest 状态使用统一阶段机 `planned/backingUp/writing/verifying/installed/rolledBack/partial`；不兼容旧版 `Installing/Restored` 字段，旧数据不迁移。
+- 测试：`rust/crates/fgm-infra/tests/backup_store.rs`、`fs_primitives.rs`。
+
 ## 部署流程
 
 0. 与 Smooth Motion 互斥：部署前读取目标 EXE 的驱动 profile，`Smooth Motion - Enable` 为 1 时返回 `Conflict`，界面显示红色徽章“冲突：已开启 Smooth Motion”并锁死部署/更新按钮；已部署的帧生成仍可还原/清理，用于解除冲突。

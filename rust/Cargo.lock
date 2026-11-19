@@ -65,6 +65,7 @@ name = "fgm-core"
 version = "0.1.0"
 dependencies = [
  "fgm-domain",
+ "serde",
 ]
 
 [[package]]

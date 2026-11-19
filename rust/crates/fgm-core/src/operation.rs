@@ -1,9 +1,11 @@
 use fgm_domain::error::{AppError, ErrorCode};
+use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub struct OperationId(pub u64);
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, Deserialize, Serialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
 pub enum OperationPhase {
     Planned,
     BackingUp,
