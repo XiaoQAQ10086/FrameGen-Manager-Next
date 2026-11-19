@@ -29,6 +29,8 @@ class GameModeBadges extends StatelessWidget {
             _StateBadge(label: l10n.navDlss5, state: current.dlss5),
           if (current.anrDeployed)
             _StateBadge(label: l10n.navAnr, state: current.anr),
+          if (current.smoothMotionOn)
+            _StateBadge(label: l10n.navSmoothMotion, state: 'installed'),
         ],
       ),
     );

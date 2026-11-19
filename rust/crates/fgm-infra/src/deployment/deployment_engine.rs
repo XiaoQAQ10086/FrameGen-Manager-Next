@@ -9,6 +9,7 @@ use crate::fs::AtomicFile;
 
 use super::backup_store::BackupStore;
 use super::deployment_file::DeploymentFile;
+use super::deployment_progress::DeploymentProgress;
 use super::deployment_report::DeploymentReport;
 use super::deployment_support::{
     acquire_target_lock, backup_relative_path, ensure_sources_match, hash_file, io_error,
@@ -33,6 +34,7 @@ impl DeploymentEngine {
         backups_root: &Path,
         lock_directory: &Path,
         cancelled: &AtomicBool,
+        progress: Option<&dyn DeploymentProgress>,
     ) -> Result<DeploymentReport, AppError> {
         validate_target_directory(target_directory)?;
         if let Some(executable) = game_exe
@@ -128,9 +130,18 @@ impl DeploymentEngine {
         manifest.state = DeploymentManifestState::Writing;
         store.save_manifest(&manifest)?;
 
-        let write_result = write_files(&planned, cancelled, family);
+        if let Some(progress) = progress {
+            progress.start(planned.len());
+        }
+        let write_result = write_files(&planned, cancelled, progress, family);
         if let Err(error) = write_result {
-            let complete = rollback(&planned, &records, &store, &backup_directory);
+            let complete = super::deployment_rollback::rollback(
+                &planned,
+                &records,
+                &store,
+                &backup_directory,
+                target_directory,
+            );
             manifest.state = if complete && !stale_proxy_removed {
                 DeploymentManifestState::RolledBack
             } else {
@@ -166,7 +177,13 @@ impl DeploymentEngine {
         };
         manifest.state = state;
         if let Err(error) = store.save_manifest(&manifest) {
-            let complete = rollback(&planned, &records, &store, &backup_directory);
+            let complete = super::deployment_rollback::rollback(
+                &planned,
+                &records,
+                &store,
+                &backup_directory,
+                target_directory,
+            );
             manifest.state = if complete && !stale_proxy_removed {
                 DeploymentManifestState::RolledBack
             } else {
@@ -268,6 +285,7 @@ fn prepare_record(
 fn write_files(
     planned: &[(DeploymentFile, PathBuf)],
     cancelled: &AtomicBool,
+    progress: Option<&dyn DeploymentProgress>,
     family: &str,
 ) -> Result<(), AppError> {
     for (file, target) in planned {
@@ -290,36 +308,11 @@ fn write_files(
                 .with("path", target.display().to_string())
                 .with("reason", "deployed file hash does not match the plan"));
         }
-    }
-    Ok(())
-}
-
-fn rollback(
-    planned: &[(DeploymentFile, PathBuf)],
-    records: &[DeployedFileRecord],
-    store: &BackupStore,
-    backup_directory: &Path,
-) -> bool {
-    let mut complete = true;
-
-    for ((_, target), record) in planned.iter().zip(records).rev() {
-        if record.existed_before {
-            let Some(relative) = record.backup_relative_path.as_deref() else {
-                complete = false;
-                continue;
-            };
-            if store
-                .restore_file(backup_directory, relative, target)
-                .is_err()
-            {
-                complete = false;
-            }
-        } else if target.exists() && std::fs::remove_file(target).is_err() {
-            complete = false;
+        if let Some(progress) = progress {
+            progress.advance();
         }
     }
-
-    complete
+    Ok(())
 }
 
 enum StaleOutcome {

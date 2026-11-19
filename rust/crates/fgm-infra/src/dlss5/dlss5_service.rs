@@ -1,5 +1,6 @@
 use std::collections::BTreeMap;
 use std::path::Path;
+use std::sync::atomic::AtomicBool;
 
 use fgm_domain::error::{AppError, ErrorCode};
 use fgm_domain::ini::IniDocument;
@@ -7,7 +8,8 @@ use fgm_domain::library::GraphicsApi;
 use fgm_domain::pack::{AssetPack, AssetPackStep};
 
 use crate::deployment::{
-    DeploymentEngine, DeploymentFile, DeploymentInspector, PackDeploymentPlanner,
+    DeploymentEngine, DeploymentFile, DeploymentInspector, DeploymentProgress,
+    PackDeploymentPlanner,
 };
 use crate::hashing::{FileHasher, sha256_hex};
 use crate::pack_json::PackJson;
@@ -53,6 +55,7 @@ impl Dlss5Service {
         }
     }
 
+    #[allow(clippy::too_many_arguments)]
     pub fn install(
         pack_directory: &Path,
         game_exe: &Path,
@@ -60,6 +63,8 @@ impl Dlss5Service {
         api: GraphicsApi,
         app_version: &str,
         paths: &AppPaths,
+        cancelled: &AtomicBool,
+        progress: Option<&dyn DeploymentProgress>,
     ) -> Result<Dlss5Report, AppError> {
         let pack = PackJson::load(&pack_directory.join("pack.json"))?;
         let legacy = legacy_residue(target_directory);
@@ -159,7 +164,8 @@ impl Dlss5Service {
             Some(game_exe),
             &paths.backups(),
             &paths.state().join("locks"),
-            &std::sync::atomic::AtomicBool::new(false),
+            cancelled,
+            progress,
         )?;
 
         Ok(Dlss5Report {

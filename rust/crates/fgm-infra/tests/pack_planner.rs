@@ -131,6 +131,7 @@ fn planned_files_can_be_applied_and_restored() {
         &backups,
         &locks,
         &std::sync::atomic::AtomicBool::new(false),
+        None,
     )
     .unwrap();
     assert_eq!(report.files_written, plan.files.len());

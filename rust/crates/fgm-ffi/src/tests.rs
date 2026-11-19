@@ -31,3 +31,32 @@ fn version_is_nul_terminated() {
     let version = unsafe { CStr::from_ptr(fgm_version()) };
     assert_eq!(version.to_str().unwrap(), fgm_domain::version::VERSION);
 }
+
+#[test]
+fn operation_progress_and_cancel_are_exposed() {
+    use std::sync::atomic::Ordering;
+
+    use serde_json::Value;
+
+    fn read(pointer: *mut c_char) -> Value {
+        let text = unsafe { CStr::from_ptr(pointer) }
+            .to_str()
+            .unwrap()
+            .to_string();
+        unsafe { fgm_string_free(pointer) };
+        serde_json::from_str(&text).unwrap()
+    }
+
+    let operation = commands_operation::begin("test");
+    let progress = read(commands_operation::fgm_operation_progress_json());
+    assert_eq!(progress["active"], true);
+    assert_eq!(progress["kind"], "test");
+
+    let cancelled = read(commands_operation::fgm_operation_cancel_json());
+    assert_eq!(cancelled["cancelled"], true);
+    assert!(operation.cancelled.load(Ordering::Relaxed));
+
+    commands_operation::finish();
+    let finished = read(commands_operation::fgm_operation_progress_json());
+    assert_eq!(finished["active"], false);
+}

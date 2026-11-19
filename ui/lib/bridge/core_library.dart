@@ -40,6 +40,8 @@ final class CoreLibrary {
     this._gpuSpoofInspect,
     this._gpuSpoofApply,
     this._gpuSpoofRestore,
+    this._operationProgress,
+    this._operationCancel,
     this._deploy,
     this._restore,
     this._inspect,
@@ -87,6 +89,8 @@ final class CoreLibrary {
   final _JsonDart _gpuSpoofInspect;
   final _RequestDart _gpuSpoofApply;
   final _RequestDart _gpuSpoofRestore;
+  final _JsonDart _operationProgress;
+  final _JsonDart _operationCancel;
   final _RequestDart _deploy;
   final _RequestDart _restore;
   final _RequestDart _inspect;
@@ -119,6 +123,11 @@ final class CoreLibrary {
   final _StringFreeDart _stringFree;
   final _AllocDart _alloc;
   final _FreeBytesDart _freeBytes;
+
+  static CoreLibrary? _shared;
+
+  /// Cached handle for cheap polling from the UI isolate.
+  static CoreLibrary? shared() => _shared ??= tryOpen();
 
   /// Loads the native library, or returns null when it has not been built yet.
   static CoreLibrary? tryOpen() {
@@ -162,6 +171,12 @@ final class CoreLibrary {
           ),
           library.lookupFunction<_RequestNative, _RequestDart>(
             'fgm_gpu_spoof_restore_json',
+          ),
+          library.lookupFunction<_JsonNative, _JsonDart>(
+            'fgm_operation_progress_json',
+          ),
+          library.lookupFunction<_JsonNative, _JsonDart>(
+            'fgm_operation_cancel_json',
           ),
           library.lookupFunction<_RequestNative, _RequestDart>(
             'fgm_deploy_json',
@@ -301,6 +316,10 @@ final class CoreLibrary {
 
   String? gpuSpoofRestoreJson(String request) =>
       _request(_gpuSpoofRestore, request);
+
+  String? operationProgressJson() => _json(_operationProgress);
+
+  String? operationCancelJson() => _json(_operationCancel);
 
   String? deployJson(String request) => _request(_deploy, request);
 

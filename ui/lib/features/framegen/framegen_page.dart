@@ -12,6 +12,8 @@ import '../../bridge/library_game.dart';
 import '../../bridge/library_snapshot.dart';
 import '../../bridge/settings_bridge.dart';
 import '../../design/app_tokens.dart';
+import '../../design/error_dialog.dart';
+import '../../design/operation_progress_dialog.dart';
 import '../../l10n/app_localizations.dart';
 import 'frame_gen_actions.dart';
 import 'game_library_card.dart';
@@ -102,7 +104,11 @@ class _FrameGenPageState extends State<FrameGenPage> {
       return;
     }
     if (!result.ok) {
-      _showResult('${l10n.addGameFailed} ${result.code}');
+      await ErrorDialog.show(
+        context,
+        message: l10n.addGameFailed,
+        code: result.code ?? 'AddGameFailed',
+      );
       return;
     }
     final LibrarySnapshot snapshot = LibraryBridge.list(widget.core);
@@ -118,7 +124,11 @@ class _FrameGenPageState extends State<FrameGenPage> {
     final AppLocalizations l10n = AppLocalizations.of(context);
     final bool started = await LibraryBridge.launch(game);
     if (mounted && !started) {
-      _showResult(l10n.launchFailed);
+      await ErrorDialog.show(
+        context,
+        message: l10n.launchFailed,
+        code: 'LaunchFailed',
+      );
     }
   }
 
@@ -134,17 +144,31 @@ class _FrameGenPageState extends State<FrameGenPage> {
     }
 
     setState(() => _busyGameId = game.id);
-    final DeploymentResult result = await DeploymentBridge.deploy(
-      game: game,
-      options: options,
-    );
-    if (!mounted) {
+    final DeploymentResult? result =
+        await OperationProgressDialog.run<DeploymentResult>(
+          context: context,
+          title: l10n.operationDeploying,
+          action: () => DeploymentBridge.deploy(game: game, options: options),
+        );
+    if (!mounted || result == null) {
+      if (mounted) {
+        setState(() => _busyGameId = null);
+      }
       return;
     }
     setState(() => _busyGameId = null);
-    _showResult(
-      result.ok ? l10n.deployComplete : '${l10n.deployFailed} ${result.code}',
-    );
+    if (result.code == 'OperationCancelled') {
+      return;
+    }
+    if (result.ok) {
+      _showResult(l10n.deployComplete);
+    } else {
+      await ErrorDialog.show(
+        context,
+        message: l10n.deployFailed,
+        code: result.code ?? 'DeployFailed',
+      );
+    }
     if (result.ok) {
       if (options.persistExe) {
         final LibrarySnapshot snapshot = LibraryBridge.list(widget.core);
@@ -166,12 +190,17 @@ class _FrameGenPageState extends State<FrameGenPage> {
       return;
     }
     setState(() => _busyGameId = null);
-    final String message = result.ok
-        ? (result.conflicts.isEmpty
-              ? l10n.restoreComplete
-              : l10n.restoreConflicts)
-        : '${l10n.deployFailed} ${result.code}';
-    _showResult(message);
+    if (result.ok) {
+      _showResult(
+        result.conflicts.isEmpty ? l10n.restoreComplete : l10n.restoreConflicts,
+      );
+    } else {
+      await ErrorDialog.show(
+        context,
+        message: l10n.deployFailed,
+        code: result.code ?? 'RestoreFailed',
+      );
+    }
     if (result.ok) {
       await _loadModes();
     }

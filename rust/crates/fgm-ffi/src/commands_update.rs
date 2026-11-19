@@ -32,12 +32,16 @@ pub(crate) fn update_download() -> Result<Value, AppError> {
     let installer = info.manifest.installer.clone().ok_or_else(|| {
         AppError::new(ErrorCode::PackInvalid).with("reason", "the update manifest has no installer")
     })?;
-    let path = UpdateDownloader::download(
+    let operation = super::commands_operation::begin("updateDownload");
+    super::commands_operation::report_total(&operation, installer.size);
+    let result = UpdateDownloader::download(
         &installer,
         &info.manifest.version,
-        &AtomicBool::new(false),
-        |_| {},
-    )?;
+        &operation.cancelled,
+        |done| super::commands_operation::report_bytes(&operation, done),
+    );
+    super::commands_operation::finish();
+    let path = result?;
     let portable = AppPaths::create_default(None).is_ok_and(|paths| paths.is_portable());
     Ok(json!({
         "ok": true,

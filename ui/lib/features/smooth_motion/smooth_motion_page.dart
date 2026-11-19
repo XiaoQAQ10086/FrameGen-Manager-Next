@@ -7,6 +7,7 @@ import '../../bridge/library_snapshot.dart';
 import '../../bridge/smooth_motion_bridge.dart';
 import '../../bridge/smooth_motion_status.dart';
 import '../../design/app_tokens.dart';
+import '../../design/error_dialog.dart';
 import '../../l10n/app_localizations.dart';
 
 /// Smooth Motion page: driver toggle and component restore per game.
@@ -69,7 +70,12 @@ class _SmoothMotionPageState extends State<SmoothMotionPage> {
 
     final AppLocalizations l10n = AppLocalizations.of(context);
     if (status.code != null) {
-      _show('${l10n.smOperationFailed} ${status.code}');
+      await ErrorDialog.show(
+        context,
+        message: l10n.smOperationFailed,
+        code: status.code!,
+        detail: status.detail,
+      );
       return;
     }
     setState(() {
@@ -90,7 +96,12 @@ class _SmoothMotionPageState extends State<SmoothMotionPage> {
 
     final AppLocalizations l10n = AppLocalizations.of(context);
     if (status.code != null) {
-      _show('${l10n.smOperationFailed} ${status.code}');
+      await ErrorDialog.show(
+        context,
+        message: l10n.smOperationFailed,
+        code: status.code!,
+        detail: status.detail,
+      );
       return;
     }
     setState(() {

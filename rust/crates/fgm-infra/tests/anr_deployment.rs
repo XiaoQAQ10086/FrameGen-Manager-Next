@@ -21,8 +21,15 @@ fn deploys_and_restores_a_full_package() {
     );
     let package = AnrPackageService::import(&zip, &fixture.data).unwrap();
 
-    let report =
-        AnrDeploymentService::deploy(&package, &fixture.target, None, &fixture.paths()).unwrap();
+    let report = AnrDeploymentService::deploy(
+        &package,
+        &fixture.target,
+        None,
+        &fixture.paths(),
+        &std::sync::atomic::AtomicBool::new(false),
+        None,
+    )
+    .unwrap();
 
     assert_eq!(report.proxy_module.as_deref(), Some("dxgi.dll"));
     assert_eq!(fs::read(fixture.target.join("dxgi.dll")).unwrap(), b"proxy");
@@ -53,7 +60,15 @@ fn deploys_and_restores_an_addon_package() {
     );
     let package = AnrPackageService::import(&zip, &fixture.data).unwrap();
 
-    AnrDeploymentService::deploy(&package, &fixture.target, None, &fixture.paths()).unwrap();
+    AnrDeploymentService::deploy(
+        &package,
+        &fixture.target,
+        None,
+        &fixture.paths(),
+        &std::sync::atomic::AtomicBool::new(false),
+        None,
+    )
+    .unwrap();
 
     assert!(
         fixture

@@ -140,6 +140,7 @@ pub fn run_deploy(args: &[String]) -> i32 {
         &paths.backups(),
         &lock_directory,
         &AtomicBool::new(false),
+        None,
     ) {
         Ok(report) => report,
         Err(error) => return print_error(&error),

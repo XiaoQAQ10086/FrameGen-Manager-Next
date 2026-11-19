@@ -59,6 +59,8 @@ impl Fixture {
             GraphicsApi::Dx12,
             "2.3.4",
             &self.paths(),
+            &std::sync::atomic::AtomicBool::new(false),
+            None,
         )
     }
 

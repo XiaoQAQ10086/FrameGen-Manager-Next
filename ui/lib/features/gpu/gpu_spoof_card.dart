@@ -3,6 +3,7 @@ import 'package:material_ui/material_ui.dart';
 import '../../bridge/gpu_spoof_bridge.dart';
 import '../../bridge/gpu_spoof_state.dart';
 import '../../design/app_tokens.dart';
+import '../../design/error_dialog.dart';
 import '../../l10n/app_localizations.dart';
 
 /// GPU name spoofing card: adapter, whitelist preset, apply and restore.
@@ -75,10 +76,16 @@ class _GpuSpoofCardState extends State<GpuSpoofCard> {
       return;
     }
     setState(() => _busy = false);
-    _notify(code == null ? l10n.gpuSpoofDone : '${l10n.gpuSpoofFailed} $code');
-    if (code == null) {
-      await _load();
+    if (code != null) {
+      await ErrorDialog.show(
+        context,
+        message: l10n.gpuSpoofFailed,
+        code: code,
+      );
+      return;
     }
+    _notify(l10n.gpuSpoofDone);
+    await _load();
   }
 
   Future<void> _restore(String mode) async {
@@ -92,12 +99,16 @@ class _GpuSpoofCardState extends State<GpuSpoofCard> {
       return;
     }
     setState(() => _busy = false);
-    _notify(
-      code == null ? l10n.gpuSpoofRestored : '${l10n.gpuSpoofFailed} $code',
-    );
-    if (code == null) {
-      await _load();
+    if (code != null) {
+      await ErrorDialog.show(
+        context,
+        message: l10n.gpuSpoofFailed,
+        code: code,
+      );
+      return;
     }
+    _notify(l10n.gpuSpoofRestored);
+    await _load();
   }
 
   void _notify(String message) {

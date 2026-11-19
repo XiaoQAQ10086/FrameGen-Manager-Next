@@ -73,7 +73,17 @@ pub(crate) fn anr_deploy(request: &str) -> Result<Value, AppError> {
     let package = AnrPackageService::load_current(paths.root()).ok_or_else(|| {
         AppError::new(ErrorCode::PackNotFound).with("reason", "no ANR package imported")
     })?;
-    let report = AnrDeploymentService::deploy(&package, &target, executable.as_deref(), &paths)?;
+    let operation = super::commands_operation::begin("anrDeploy");
+    let result = AnrDeploymentService::deploy(
+        &package,
+        &target,
+        executable.as_deref(),
+        &paths,
+        &operation.cancelled,
+        Some(operation.as_ref()),
+    );
+    super::commands_operation::finish();
+    let report = result?;
     Ok(json!({
         "ok": true,
         "kind": report.kind,
@@ -102,10 +112,13 @@ pub(crate) fn anr_download(request: &str) -> Result<Value, AppError> {
     let request: AnrDownloadRequest = parse(request)?;
     let paths = data_paths(request.data_dir.as_deref())?;
     paths.ensure_created()?;
-    let info = fgm_infra::anr::AnrOnlineService::download_latest(
+    let operation = super::commands_operation::begin("anrDownload");
+    let result = fgm_infra::anr::AnrOnlineService::download_latest(
         paths.root(),
-        &std::sync::atomic::AtomicBool::new(false),
-        |_| {},
-    )?;
+        &operation.cancelled,
+        |done| super::commands_operation::report_bytes(&operation, done),
+    );
+    super::commands_operation::finish();
+    let info = result?;
     Ok(json!({ "ok": true, "package": info }))
 }

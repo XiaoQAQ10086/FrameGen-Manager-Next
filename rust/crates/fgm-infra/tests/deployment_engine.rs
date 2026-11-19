@@ -11,6 +11,39 @@ use fgm_infra::fs::TargetLock;
 use fgm_infra::hashing::FileHasher;
 
 #[test]
+fn reports_file_progress_to_the_sink() {
+    use std::sync::atomic::{AtomicUsize, Ordering};
+
+    struct Counter {
+        total: AtomicUsize,
+        done: AtomicUsize,
+    }
+
+    impl fgm_infra::deployment::DeploymentProgress for Counter {
+        fn start(&self, total: usize) {
+            self.total.store(total, Ordering::Relaxed);
+        }
+
+        fn advance(&self) {
+            self.done.fetch_add(1, Ordering::Relaxed);
+        }
+    }
+
+    let fixture = Fixture::new("deploy-progress");
+    let counter = Counter {
+        total: AtomicUsize::new(0),
+        done: AtomicUsize::new(0),
+    };
+
+    fixture
+        .apply_with_progress(&fixture.files(), &counter)
+        .unwrap();
+
+    assert_eq!(counter.total.load(Ordering::Relaxed), 2);
+    assert_eq!(counter.done.load(Ordering::Relaxed), 2);
+}
+
+#[test]
 fn deploys_and_restores_with_a_backup() {
     let fixture = Fixture::new("engine-roundtrip");
 
@@ -172,6 +205,7 @@ fn refuses_to_deploy_while_the_game_is_running() {
         &fixture.backups,
         &fixture.locks,
         &AtomicBool::new(false),
+        None,
     )
     .unwrap_err();
 
@@ -282,6 +316,27 @@ impl Fixture {
         self.apply_with_cancel(files, &AtomicBool::new(false))
     }
 
+    fn apply_with_progress(
+        &self,
+        files: &[DeploymentFile],
+        progress: &dyn fgm_infra::deployment::DeploymentProgress,
+    ) -> Result<fgm_infra::deployment::DeploymentReport, fgm_domain::error::AppError> {
+        DeploymentEngine::apply(
+            files,
+            &self.target,
+            "framegen.sm86",
+            "framegen.sm86",
+            "0.4.2",
+            &BTreeMap::new(),
+            &["owned".to_string()],
+            None,
+            &self.backups,
+            &self.locks,
+            &AtomicBool::new(false),
+            Some(progress),
+        )
+    }
+
     fn apply_with_cancel(
         &self,
         files: &[DeploymentFile],
@@ -299,6 +354,7 @@ impl Fixture {
             &self.backups,
             &self.locks,
             cancelled,
+            None,
         )
     }
 

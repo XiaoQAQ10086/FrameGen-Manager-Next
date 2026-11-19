@@ -7,6 +7,7 @@ final class GameModes {
     this.framegen = 'notDeployed',
     this.dlss5 = 'notDeployed',
     this.anr = 'notDeployed',
+    this.smoothMotion,
   });
 
   factory GameModes.fromJson(Map<String, Object?> json) {
@@ -15,6 +16,7 @@ final class GameModes {
       framegen: json['framegen'] as String? ?? 'notDeployed',
       dlss5: json['dlss5'] as String? ?? 'notDeployed',
       anr: json['anr'] as String? ?? 'notDeployed',
+      smoothMotion: json['smoothMotion'] as String?,
     );
   }
 
@@ -22,11 +24,14 @@ final class GameModes {
   final String framegen;
   final String dlss5;
   final String anr;
+  final String? smoothMotion;
 
   bool get framegenDeployed => framegen != 'notDeployed';
   bool get dlss5Deployed => dlss5 != 'notDeployed';
   bool get anrDeployed => anr != 'notDeployed';
-  bool get anyDeployed => framegenDeployed || dlss5Deployed || anrDeployed;
+  bool get smoothMotionOn => smoothMotion == 'on';
+  bool get anyDeployed =>
+      framegenDeployed || dlss5Deployed || anrDeployed || smoothMotionOn;
 
   static Map<String, GameModes> parse(String? reply) {
     if (reply == null) {

@@ -9,6 +9,8 @@ import '../../bridge/library_bridge.dart';
 import '../../bridge/library_game.dart';
 import '../../bridge/library_snapshot.dart';
 import '../../design/app_tokens.dart';
+import '../../design/error_dialog.dart';
+import '../../design/operation_progress_dialog.dart';
 import '../../l10n/app_localizations.dart';
 import 'dlss5_game_row.dart';
 import 'dlss5_hotkey.dart';
@@ -87,20 +89,32 @@ class _Dlss5PageState extends State<Dlss5Page> {
     }
 
     setState(() => _busyGameId = game.id);
-    final Dlss5Result result = await Dlss5Bridge.install(game);
-    if (!mounted) {
+    final Dlss5Result? result = await OperationProgressDialog.run<Dlss5Result>(
+      context: context,
+      title: l10n.operationInstallingDlss5,
+      action: () => Dlss5Bridge.install(game),
+    );
+    if (!mounted || result == null) {
+      if (mounted) {
+        setState(() => _busyGameId = null);
+      }
       return;
     }
     setState(() => _busyGameId = null);
-    final String message = result.ok
-        ? l10n.dlss5Complete(result.proxyModule ?? '')
-        : '${l10n.deployFailed} ${result.code}';
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message), behavior: SnackBarBehavior.floating),
-    );
-    if (result.ok) {
-      await _refreshState(game);
+    if (result.code == 'OperationCancelled') {
+      return;
     }
+    if (!result.ok) {
+      await ErrorDialog.show(
+        context,
+        message: l10n.deployFailed,
+        code: result.code ?? 'InstallFailed',
+        detail: result.detail,
+      );
+      return;
+    }
+    _notify(l10n.dlss5Complete(result.proxyModule ?? ''));
+    await _refreshState(game);
   }
 
   Future<void> _restore(LibraryGame game) async {
@@ -131,18 +145,21 @@ class _Dlss5PageState extends State<Dlss5Page> {
       return;
     }
     setState(() => _busyGameId = null);
-    final String message;
     if (!result.ok) {
-      message = '${l10n.deployFailed} ${result.code}';
-    } else if (result.conflicts.isEmpty) {
-      message = l10n.dlss5Restored;
-    } else {
-      message = l10n.dlss5UninstallConflicts(result.conflicts.length);
+      await ErrorDialog.show(
+        context,
+        message: l10n.deployFailed,
+        code: result.code ?? 'RestoreFailed',
+        detail: result.detail,
+      );
+      return;
     }
-    _notify(message);
-    if (result.ok) {
-      await _refreshState(game);
-    }
+    _notify(
+      result.conflicts.isEmpty
+          ? l10n.dlss5Restored
+          : l10n.dlss5UninstallConflicts(result.conflicts.length),
+    );
+    await _refreshState(game);
   }
 
   Future<void> _uninstall(LibraryGame game) async {
@@ -174,20 +191,21 @@ class _Dlss5PageState extends State<Dlss5Page> {
       return;
     }
     setState(() => _busyGameId = null);
-    final String message;
     if (!result.ok) {
-      message = '${l10n.deployFailed} ${result.code}';
-    } else if (result.conflicts.isEmpty) {
-      message = l10n.dlss5Uninstalled;
-    } else {
-      message = l10n.dlss5UninstallConflicts(result.conflicts.length);
+      await ErrorDialog.show(
+        context,
+        message: l10n.deployFailed,
+        code: result.code ?? 'UninstallFailed',
+        detail: result.detail,
+      );
+      return;
     }
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message), behavior: SnackBarBehavior.floating),
+    _notify(
+      result.conflicts.isEmpty
+          ? l10n.dlss5Uninstalled
+          : l10n.dlss5UninstallConflicts(result.conflicts.length),
     );
-    if (result.ok) {
-      await _refreshState(game);
-    }
+    await _refreshState(game);
   }
 
   void _notify(String message) {
@@ -222,14 +240,16 @@ class _Dlss5PageState extends State<Dlss5Page> {
     if (!mounted) {
       return;
     }
-    _notify(
-      removed == null
-          ? l10n.dlss5CleanFailed
-          : l10n.dlss5Cleaned(removed),
-    );
-    if (removed != null) {
-      await _refreshState(game);
+    if (removed == null) {
+      await ErrorDialog.show(
+        context,
+        message: l10n.dlss5CleanFailed,
+        code: 'LegacyCleanupFailed',
+      );
+      return;
     }
+    _notify(l10n.dlss5Cleaned(removed));
+    await _refreshState(game);
   }
 
   Future<void> _recordHotkey(LibraryGame game) async {
@@ -250,17 +270,20 @@ class _Dlss5PageState extends State<Dlss5Page> {
     if (!mounted) {
       return;
     }
-    final String message = switch (outcome) {
-      HotkeyOutcome.applied => l10n.dlss5HotkeySaved(
-        Dlss5Hotkey.label(virtualKey),
-      ),
-      HotkeyOutcome.queued => l10n.dlss5HotkeyQueued,
-      HotkeyOutcome.failed => '${l10n.deployFailed} SetHotkey',
-    };
-    _notify(message);
-    if (outcome != HotkeyOutcome.failed) {
-      await _refreshState(game);
+    if (outcome == HotkeyOutcome.failed) {
+      await ErrorDialog.show(
+        context,
+        message: l10n.deployFailed,
+        code: 'SetHotkeyFailed',
+      );
+      return;
     }
+    _notify(
+      outcome == HotkeyOutcome.queued
+          ? l10n.dlss5HotkeyQueued
+          : l10n.dlss5HotkeySaved(Dlss5Hotkey.label(virtualKey)),
+    );
+    await _refreshState(game);
   }
 
   @override

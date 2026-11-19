@@ -107,6 +107,8 @@ fn run_install(args: &[String]) -> i32 {
         api,
         &app_version,
         &paths,
+        &std::sync::atomic::AtomicBool::new(false),
+        None,
     ) {
         Ok(report) => {
             println!(

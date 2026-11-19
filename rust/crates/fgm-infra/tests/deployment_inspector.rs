@@ -119,6 +119,7 @@ impl Fixture {
             &self.backups,
             &self.locks,
             &AtomicBool::new(false),
+            None,
         )
         .unwrap();
     }

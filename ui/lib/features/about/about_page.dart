@@ -6,6 +6,8 @@ import '../../bridge/core_library.dart';
 import '../../bridge/update_bridge.dart';
 import '../../bridge/update_info.dart';
 import '../../design/app_tokens.dart';
+import '../../design/error_dialog.dart';
+import '../../design/operation_progress_dialog.dart';
 import '../../l10n/app_localizations.dart';
 
 /// About page with version information and the update workflow.
@@ -35,14 +37,25 @@ class _AboutPageState extends State<AboutPage> {
       _info = info;
     });
     if (!info.ok) {
-      _notify(AppLocalizations.of(context).updateFailed(info.code ?? ''));
+      await ErrorDialog.show(
+        context,
+        message: AppLocalizations.of(context).updateFailed(info.code ?? ''),
+        code: info.code ?? 'UpdateCheckFailed',
+      );
     }
   }
 
   Future<void> _download() async {
     setState(() => _downloading = true);
-    final UpdateInfo info = await UpdateBridge.download();
-    if (!mounted) {
+    final UpdateInfo? info = await OperationProgressDialog.run<UpdateInfo>(
+      context: context,
+      title: AppLocalizations.of(context).operationDownloading,
+      action: UpdateBridge.download,
+    );
+    if (!mounted || info == null) {
+      if (mounted) {
+        setState(() => _downloading = false);
+      }
       return;
     }
     setState(() {
@@ -50,8 +63,15 @@ class _AboutPageState extends State<AboutPage> {
       _info = info;
     });
     final AppLocalizations l10n = AppLocalizations.of(context);
+    if (info.code == 'OperationCancelled') {
+      return;
+    }
     if (!info.ok) {
-      _notify(l10n.updateFailed(info.code ?? ''));
+      await ErrorDialog.show(
+        context,
+        message: l10n.updateFailed(info.code ?? ''),
+        code: info.code ?? 'UpdateDownloadFailed',
+      );
     } else if (info.downloaded && info.portable) {
       _notify(l10n.updatePortableHint);
     } else if (info.downloaded) {
@@ -73,7 +93,11 @@ class _AboutPageState extends State<AboutPage> {
     if (started) {
       exit(0);
     }
-    _notify(AppLocalizations.of(context).updateFailed('UpdateInstall'));
+    await ErrorDialog.show(
+      context,
+      message: AppLocalizations.of(context).updateFailed('UpdateInstall'),
+      code: 'UpdateInstallFailed',
+    );
   }
 
   void _notify(String message) {

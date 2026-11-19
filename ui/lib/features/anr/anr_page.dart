@@ -8,6 +8,8 @@ import '../../bridge/library_bridge.dart';
 import '../../bridge/library_game.dart';
 import '../../bridge/library_snapshot.dart';
 import '../../design/app_tokens.dart';
+import '../../design/error_dialog.dart';
+import '../../design/operation_progress_dialog.dart';
 import '../../l10n/app_localizations.dart';
 
 /// ANR page: package import and per-game deploy/restore.
@@ -51,13 +53,28 @@ class _AnrPageState extends State<AnrPage> {
     if (result.cancelled) {
       return;
     }
-    _show(result.ok ? l10n.anrImported : '${l10n.deployFailed} ${result.code}');
+    if (result.ok) {
+      _show(l10n.anrImported);
+    } else {
+      await ErrorDialog.show(
+        context,
+        message: l10n.deployFailed,
+        code: result.code ?? 'ImportFailed',
+      );
+    }
   }
 
   Future<void> _download() async {
     setState(() => _downloading = true);
-    final AnrResult result = await AnrBridge.downloadLatest(widget.core);
-    if (!mounted) {
+    final AnrResult? result = await OperationProgressDialog.run<AnrResult>(
+      context: context,
+      title: AppLocalizations.of(context).operationDownloading,
+      action: () => AnrBridge.downloadLatest(widget.core),
+    );
+    if (!mounted || result == null) {
+      if (mounted) {
+        setState(() => _downloading = false);
+      }
       return;
     }
     setState(() {
@@ -67,7 +84,18 @@ class _AnrPageState extends State<AnrPage> {
       }
     });
     final AppLocalizations l10n = AppLocalizations.of(context);
-    _show(result.ok ? l10n.anrImported : '${l10n.deployFailed} ${result.code}');
+    if (result.code == 'OperationCancelled') {
+      return;
+    }
+    if (result.ok) {
+      _show(l10n.anrImported);
+    } else {
+      await ErrorDialog.show(
+        context,
+        message: l10n.deployFailed,
+        code: result.code ?? 'ImportFailed',
+      );
+    }
   }
 
   Future<void> _deploy(LibraryGame game) async {
@@ -77,16 +105,30 @@ class _AnrPageState extends State<AnrPage> {
       return;
     }
     setState(() => _busyGameId = game.id);
-    final AnrResult result = await AnrBridge.deploy(game);
-    if (!mounted) {
+    final AnrResult? result = await OperationProgressDialog.run<AnrResult>(
+      context: context,
+      title: l10n.operationDeployingAnr,
+      action: () => AnrBridge.deploy(game),
+    );
+    if (!mounted || result == null) {
+      if (mounted) {
+        setState(() => _busyGameId = null);
+      }
       return;
     }
     setState(() => _busyGameId = null);
-    _show(
-      result.ok
-          ? l10n.anrDeployDone(result.proxyModule ?? '-')
-          : '${l10n.deployFailed} ${result.code}',
-    );
+    if (result.code == 'OperationCancelled') {
+      return;
+    }
+    if (result.ok) {
+      _show(l10n.anrDeployDone(result.proxyModule ?? '-'));
+    } else {
+      await ErrorDialog.show(
+        context,
+        message: l10n.deployFailed,
+        code: result.code ?? 'DeployFailed',
+      );
+    }
   }
 
   Future<void> _restore(LibraryGame game) async {
@@ -97,7 +139,15 @@ class _AnrPageState extends State<AnrPage> {
     }
     setState(() => _busyGameId = null);
     final AppLocalizations l10n = AppLocalizations.of(context);
-    _show(result.ok ? l10n.anrRestored : '${l10n.deployFailed} ${result.code}');
+    if (result.ok) {
+      _show(l10n.anrRestored);
+    } else {
+      await ErrorDialog.show(
+        context,
+        message: l10n.deployFailed,
+        code: result.code ?? 'RestoreFailed',
+      );
+    }
   }
 
   void _show(String message) {

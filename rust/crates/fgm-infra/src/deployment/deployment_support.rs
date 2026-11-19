@@ -1,4 +1,5 @@
-use std::path::Path;
+use std::collections::BTreeSet;
+use std::path::{Path, PathBuf};
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use fgm_domain::error::{AppError, ErrorCode};
@@ -104,4 +105,31 @@ pub(super) fn io_error(path: &Path, error: std::io::Error) -> AppError {
     AppError::new(code)
         .with("path", path.display().to_string())
         .with("reason", error.to_string())
+}
+
+pub(crate) fn prune_empty_directories(target_root: &Path, directories: &BTreeSet<PathBuf>) {
+    let mut ordered: Vec<&PathBuf> = directories.iter().collect();
+    ordered.sort_by_key(|path| std::cmp::Reverse(path.components().count()));
+    for directory in ordered {
+        let Ok(relative) = directory.strip_prefix(target_root) else {
+            continue;
+        };
+        if relative.as_os_str().is_empty() {
+            continue;
+        }
+        let mut current = Some(directory.as_path());
+        while let Some(path) = current {
+            if path == target_root {
+                break;
+            }
+            if !path.exists() {
+                current = path.parent();
+                continue;
+            }
+            if std::fs::remove_dir(path).is_err() {
+                break;
+            }
+            current = path.parent();
+        }
+    }
 }

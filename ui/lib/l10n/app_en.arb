@@ -241,6 +241,15 @@
   },
   "save": "Save",
   "ok": "OK",
+  "errorTitle": "Operation failed",
+  "errorCodeLabel": "Error code",
+  "errorCopy": "Copy diagnostics",
+  "errorCopied": "Diagnostics copied.",
+  "operationCancelling": "Cancelling...",
+  "operationDeploying": "Deploying frame generation...",
+  "operationInstallingDlss5": "Installing DLSS5...",
+  "operationDeployingAnr": "Deploying ANR...",
+  "operationDownloading": "Downloading...",
   "dlss5LegacyResidue": "{count} legacy DLSS5 files found",
   "@dlss5LegacyResidue": {
     "placeholders": {

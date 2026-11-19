@@ -16,6 +16,7 @@ mod commands_diagnostics;
 mod commands_dlss5;
 mod commands_gpu_spoof;
 mod commands_library;
+mod commands_operation;
 mod commands_sm;
 mod commands_update;
 mod commands_window;
@@ -84,15 +85,6 @@ pub extern "C" fn fgm_library_add_manual_json(request: *const u8, length: usize)
 #[unsafe(no_mangle)]
 pub extern "C" fn fgm_launch_game_json(request: *const u8, length: usize) -> *mut c_char {
     execute_request(request, length, commands_library::launch)
-}
-
-/// Opens the native picker and returns the chosen executable path.
-#[unsafe(no_mangle)]
-pub extern "C" fn fgm_pick_executable_json() -> *mut c_char {
-    execute(|| match commands_library::pick_executable() {
-        Ok(value) => value,
-        Err(error) => error_json(&error),
-    })
 }
 
 /// Returns manifest-only deployment badges for every library game.

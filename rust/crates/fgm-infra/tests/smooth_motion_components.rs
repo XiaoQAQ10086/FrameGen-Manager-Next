@@ -119,6 +119,7 @@ impl Fixture {
             &paths.backups(),
             &paths.state().join("locks"),
             &AtomicBool::new(false),
+            None,
         )
         .unwrap();
     }

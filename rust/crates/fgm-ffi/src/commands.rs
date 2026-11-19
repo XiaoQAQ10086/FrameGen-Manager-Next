@@ -1,6 +1,5 @@
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
-use std::sync::atomic::AtomicBool;
 
 use fgm_domain::error::{AppError, ErrorCode};
 use fgm_domain::pack::IniSetting;
@@ -108,6 +107,7 @@ pub(crate) fn deploy(request: &str) -> Result<Value, AppError> {
         )?;
     }
 
+    let operation = super::commands_operation::begin("deploy");
     let report = DeploymentEngine::apply(
         &plan.files,
         &target_directory,
@@ -119,8 +119,11 @@ pub(crate) fn deploy(request: &str) -> Result<Value, AppError> {
         game_executable.as_deref(),
         &paths.backups(),
         &paths.state().join("locks"),
-        &AtomicBool::new(false),
-    )?;
+        &operation.cancelled,
+        Some(operation.as_ref()),
+    );
+    super::commands_operation::finish();
+    let report = report?;
 
     let files = report.files_written.to_string();
     log_event(

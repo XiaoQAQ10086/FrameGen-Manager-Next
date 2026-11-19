@@ -196,8 +196,9 @@ UI：点击“部署”打开选项面板（游戏启动 EXE、代理 DLL、插�
 ## 库状态徽章（Rust）
 
 - `fgm-infra/src/deployment/deployment_summary.rs`：只读 manifest 计算 `NotDeployed/Installed/Outdated/Partial`，不哈希文件，供游戏卡片批量显示徽章（逐文件哈希在大资产上过慢）。
-- `fgm-ffi/src/commands_library.rs::game_modes`：为库中每局游戏返回 `framegen`/`dlss5`/`anr` 三个状态；pack 版本用于判断 `Outdated`。
-- Flutter 游戏行在已部署时显示“帧生成/DLSS5/ANR”小徽章；健康为绿色，`Outdated/Partial` 为黄色。Smooth Motion 状态由平滑运动页单独展示，不进入批量徽章。
+- `fgm-ffi/src/commands_library.rs::game_modes`：为库中每局游戏返回 `framegen`/`dlss5`/`anr`/`smoothMotion` 状态；pack 版本用于判断 `Outdated`，Smooth Motion 用批量 NVAPI 检查。
+- Flutter 游戏行在已部署时显示“帧生成/DLSS5/ANR/平滑运动”小徽章；健康为绿色，`Outdated/Partial` 为黄色。
+- 部署通过 `fgm_operation_progress_json` 暴露 `done/total`，界面显示模态进度条；`fgm_operation_cancel_json` 置取消位，引擎在下一个文件前返回 `OperationCancelled` 并回滚。
 
 ## 测试
 

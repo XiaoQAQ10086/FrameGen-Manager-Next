@@ -118,7 +118,14 @@ fn run_deploy(args: &[String]) -> i32 {
         eprintln!("no ANR package imported");
         return 1;
     };
-    match AnrDeploymentService::deploy(&package, &target, exe.as_deref(), &paths) {
+    match AnrDeploymentService::deploy(
+        &package,
+        &target,
+        exe.as_deref(),
+        &paths,
+        &std::sync::atomic::AtomicBool::new(false),
+        None,
+    ) {
         Ok(report) => {
             println!(
                 "OK {:?} files={} proxy={}",

@@ -5,7 +5,7 @@ use std::sync::atomic::AtomicBool;
 use fgm_domain::error::{AppError, ErrorCode};
 use fgm_domain::ini::IniDocument;
 
-use crate::deployment::{DeploymentEngine, DeploymentFile};
+use crate::deployment::{DeploymentEngine, DeploymentFile, DeploymentProgress};
 use crate::hashing::{FileHasher, sha256_hex};
 use crate::paths::AppPaths;
 
@@ -35,6 +35,8 @@ impl AnrDeploymentService {
         target_directory: &Path,
         game_exe: Option<&Path>,
         paths: &AppPaths,
+        cancelled: &AtomicBool,
+        progress: Option<&dyn DeploymentProgress>,
     ) -> Result<AnrReport, AppError> {
         if game_exe.is_some_and(crate::process::GameProcessProbe::is_running) {
             return Err(
@@ -43,8 +45,22 @@ impl AnrDeploymentService {
         }
 
         match package.kind {
-            AnrPackageKind::Full => deploy_full(package, target_directory, game_exe, paths),
-            AnrPackageKind::Addon => deploy_addon(package, target_directory, game_exe, paths),
+            AnrPackageKind::Full => deploy_full(
+                package,
+                target_directory,
+                game_exe,
+                paths,
+                cancelled,
+                progress,
+            ),
+            AnrPackageKind::Addon => deploy_addon(
+                package,
+                target_directory,
+                game_exe,
+                paths,
+                cancelled,
+                progress,
+            ),
         }
     }
 
@@ -82,6 +98,8 @@ fn deploy_full(
     target_directory: &Path,
     game_exe: Option<&Path>,
     paths: &AppPaths,
+    cancelled: &AtomicBool,
+    progress: Option<&dyn DeploymentProgress>,
 ) -> Result<AnrReport, AppError> {
     let proxy = AnrDeploymentService::select_proxy(target_directory)?;
     let files = collect_files(&package.payload_directory)?
@@ -96,7 +114,14 @@ fn deploy_full(
         })
         .collect::<Result<Vec<_>, _>>()?;
 
-    apply(&files, target_directory, game_exe, paths)?;
+    apply(
+        &files,
+        target_directory,
+        game_exe,
+        paths,
+        cancelled,
+        progress,
+    )?;
     Ok(AnrReport {
         kind: AnrPackageKind::Full,
         files_written: files.len(),
@@ -109,6 +134,8 @@ fn deploy_addon(
     target_directory: &Path,
     game_exe: Option<&Path>,
     paths: &AppPaths,
+    cancelled: &AtomicBool,
+    progress: Option<&dyn DeploymentProgress>,
 ) -> Result<AnrReport, AppError> {
     let ini_path = target_directory.join("OptiScaler.ini");
     if !ini_path.is_file() {
@@ -163,7 +190,14 @@ fn deploy_addon(
         role: "config".to_string(),
     });
 
-    apply(&files, target_directory, game_exe, paths)?;
+    apply(
+        &files,
+        target_directory,
+        game_exe,
+        paths,
+        cancelled,
+        progress,
+    )?;
     Ok(AnrReport {
         kind: AnrPackageKind::Addon,
         files_written: files.len(),
@@ -176,6 +210,8 @@ fn apply(
     target_directory: &Path,
     game_exe: Option<&Path>,
     paths: &AppPaths,
+    cancelled: &AtomicBool,
+    progress: Option<&dyn DeploymentProgress>,
 ) -> Result<(), AppError> {
     DeploymentEngine::apply(
         files,
@@ -188,7 +224,8 @@ fn apply(
         game_exe,
         &paths.backups(),
         &paths.state().join("locks"),
-        &AtomicBool::new(false),
+        cancelled,
+        progress,
     )?;
     Ok(())
 }

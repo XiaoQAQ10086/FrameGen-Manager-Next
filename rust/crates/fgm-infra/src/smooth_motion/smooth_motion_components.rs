@@ -85,6 +85,7 @@ impl SmoothMotionComponents {
             &paths.backups(),
             &paths.state().join("locks"),
             &std::sync::atomic::AtomicBool::new(false),
+            None,
         )
     }
 

@@ -104,6 +104,7 @@ Steam junk 跳过（精确名称）：`steamworks common redistributables`、`st
 - CLI：`fgm-next library scan [--root <dir>]...`、`fgm-next library list`。
 - 测试：`pe_imports.rs`、`render_exe.rs`、`graphics_api.rs`、`library_cache.rs`、`steam_scanner.rs`、`epic_scanner.rs`、`library_scanner.rs`、`tests/library_service.rs`（手动添加、去重、缺失文件）。
 - 部署弹窗可“选择启动 EXE”：选择结果写入 `targetOverrides`，同时更新该游戏的渲染 EXE 与目标目录，重新扫描后仍生效（`LibraryService::set_target_override` / `apply_overrides`）。
+- `fgm-ffi/src/commands_library.rs::game_modes` 同时返回 Smooth Motion 状态（批量 NVAPI），游戏行显示“平滑运动”徽章。
 - `fgm-infra/src/library/xbox_game_scanner.rs`：扫描每个盘符的 `XboxGames` 子目录；识别 `Content`、`MicrosoftGame.config`、`AppxManifest.xml`；在 `Content` 或游戏根目录选择渲染 EXE，目标目录取 EXE 所在目录；受 ACL 限制无法读取的目录直接跳过。`LibraryScanner` 的顺序为 Steam → Epic → Xbox → 散装。
 - 尚未迁移：WeGame 扫描、Epic 封面、移除游戏/忽略列表 UI。
 

@@ -62,6 +62,7 @@ impl ReframeworkService {
             &paths.backups(),
             &paths.state().join("locks"),
             &AtomicBool::new(false),
+            None,
         )?;
         Ok(true)
     }

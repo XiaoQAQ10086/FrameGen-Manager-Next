@@ -41,14 +41,19 @@ pub(crate) fn dlss5_install(request: &str) -> Result<Value, AppError> {
     let api = parse_api(&request.api)?;
     let app_version = request.app_version.unwrap_or_else(|| VERSION.to_string());
 
-    let report = Dlss5Service::install(
+    let operation = super::commands_operation::begin("dlss5Install");
+    let result = Dlss5Service::install(
         &pack_directory,
         &executable,
         &target_directory,
         api,
         &app_version,
         &paths,
-    )?;
+        &operation.cancelled,
+        Some(operation.as_ref()),
+    );
+    super::commands_operation::finish();
+    let report = result?;
 
     Ok(json!({
         "ok": true,

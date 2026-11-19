@@ -6,7 +6,7 @@ use fgm_domain::error::{AppError, ErrorCode};
 
 use super::backup_store::BackupStore;
 use super::deployment_support::{
-    acquire_target_lock, hash_file, io_error, validate_target_directory,
+    acquire_target_lock, hash_file, io_error, prune_empty_directories, validate_target_directory,
 };
 use super::restore_report::RestoreReport;
 
@@ -153,33 +153,6 @@ impl super::deployment_engine::DeploymentEngine {
         }
 
         Ok(report)
-    }
-}
-
-fn prune_empty_directories(target_root: &Path, directories: &BTreeSet<PathBuf>) {
-    let mut ordered: Vec<&PathBuf> = directories.iter().collect();
-    ordered.sort_by_key(|path| std::cmp::Reverse(path.components().count()));
-    for directory in ordered {
-        let Ok(relative) = directory.strip_prefix(target_root) else {
-            continue;
-        };
-        if relative.as_os_str().is_empty() {
-            continue;
-        }
-        let mut current = Some(directory.as_path());
-        while let Some(path) = current {
-            if path == target_root {
-                break;
-            }
-            if !path.exists() {
-                current = path.parent();
-                continue;
-            }
-            if std::fs::remove_dir(path).is_err() {
-                break;
-            }
-            current = path.parent();
-        }
     }
 }
 

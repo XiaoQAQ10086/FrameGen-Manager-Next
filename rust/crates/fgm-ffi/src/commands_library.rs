@@ -1,3 +1,4 @@
+use std::ffi::c_char;
 use std::path::Path;
 
 use fgm_domain::error::{AppError, ErrorCode};
@@ -10,6 +11,7 @@ use serde::Deserialize;
 use serde_json::{Value, json};
 
 use super::commands::{absolute, data_paths, parse};
+use super::{error_json, execute};
 
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -98,9 +100,26 @@ pub(crate) fn game_modes(request: &str) -> Result<Value, AppError> {
     let framegen_version = pack_version("framegen.sm86");
     let dlss5_version = pack_version("dlss5.reshade-gitc");
 
-    let modes: Vec<Value> = LibraryService::list(&paths)
+    let games = LibraryService::list(&paths);
+    let executables: Vec<std::path::PathBuf> = games
+        .iter()
+        .filter_map(|game| game.render_exe.clone())
+        .collect();
+    let smooth_motion = fgm_infra::smooth_motion::SmoothMotionService::inspect_many(&executables);
+    let mut smooth_index = 0_usize;
+
+    let modes: Vec<Value> = games
         .into_iter()
         .map(|game| {
+            let smooth = if game.render_exe.is_some() {
+                let state = smooth_motion.get(smooth_index);
+                smooth_index += 1;
+                state
+                    .and_then(|state| state.enabled)
+                    .map(|enabled| if enabled { "on" } else { "off" })
+            } else {
+                None
+            };
             let target = &game.target_directory;
             let framegen = DeploymentSummary::state(
                 "framegen.sm86",
@@ -122,6 +141,7 @@ pub(crate) fn game_modes(request: &str) -> Result<Value, AppError> {
                 "framegen": framegen,
                 "dlss5": dlss5,
                 "anr": anr,
+                "smoothMotion": smooth,
             })
         })
         .collect();
@@ -133,4 +153,13 @@ fn pack_version(pack_id: &str) -> Option<String> {
     PackJson::load(&directory.join("pack.json"))
         .ok()
         .map(|pack| pack.version)
+}
+
+/// Opens the native picker and returns the chosen executable path.
+#[unsafe(no_mangle)]
+pub extern "C" fn fgm_pick_executable_json() -> *mut c_char {
+    execute(|| match pick_executable() {
+        Ok(value) => value,
+        Err(error) => error_json(&error),
+    })
 }
