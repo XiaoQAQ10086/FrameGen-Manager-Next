@@ -12,6 +12,7 @@ use fgm_infra::platform::DriveRoots;
 use serde_json::{Value, json};
 
 mod commands;
+mod commands_dlss5;
 mod commands_sm;
 
 static VERSION: LazyLock<Vec<u8>> = LazyLock::new(|| {
@@ -138,6 +139,12 @@ pub extern "C" fn fgm_sm_disable_json(request: *const u8, length: usize) -> *mut
 #[unsafe(no_mangle)]
 pub extern "C" fn fgm_sm_restore_json(request: *const u8, length: usize) -> *mut c_char {
     execute_request(request, length, commands_sm::sm_restore)
+}
+
+/// Installs DLSS5 pack files and the offline ReShade proxy.
+#[unsafe(no_mangle)]
+pub extern "C" fn fgm_dlss5_install_json(request: *const u8, length: usize) -> *mut c_char {
+    execute_request(request, length, commands_dlss5::dlss5_install)
 }
 
 /// Allocates `size` bytes for a request buffer. Free with `fgm_free_bytes`.

@@ -95,6 +95,23 @@
   "gpuUnsupported": "Smooth Motion not supported",
   "gpuMissing": "NVIDIA GPU not detected",
   "aboutDescription": "Windows frame generation deployment manager.",
+  "dlss5Install": "Install DLSS5",
+  "dlss5ConfirmBody": "Install DLSS5 and ReShade for {game}?",
+  "@dlss5ConfirmBody": {
+    "placeholders": {
+      "game": {
+        "type": "String"
+      }
+    }
+  },
+  "dlss5Complete": "DLSS5 installed ({proxy}).",
+  "@dlss5Complete": {
+    "placeholders": {
+      "proxy": {
+        "type": "String"
+      }
+    }
+  },
   "sourceSteam": "Steam",
   "sourceEpic": "Epic",
   "sourceLoose": "Loose",

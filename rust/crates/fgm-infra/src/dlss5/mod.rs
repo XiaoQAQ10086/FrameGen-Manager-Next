@@ -1,5 +1,9 @@
+pub mod dlss5_report;
+pub mod dlss5_service;
 pub mod reshade_installer;
 
 mod reshade_zip;
 
+pub use dlss5_report::Dlss5Report;
+pub use dlss5_service::Dlss5Service;
 pub use reshade_installer::ReShadeInstaller;
