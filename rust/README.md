@@ -51,3 +51,14 @@ cargo run -p fgm-cli -- library list [--data-dir <dir>]
 ```
 
 `library scan` combines Steam, Epic and loose-folder discovery, then writes `library/library.json`.
+
+## ANR
+
+```bash
+cargo run -p fgm-cli -- anr import <zip> --data-dir <dir>
+cargo run -p fgm-cli -- anr status --data-dir <dir>
+cargo run -p fgm-cli -- anr deploy <target-dir> --exe <game.exe> --data-dir <dir>
+cargo run -p fgm-cli -- anr restore <target-dir> --data-dir <dir>
+```
+
+Imported ANR packages are cached under `<data>/packs/anr-fg/<version>/payload`; deployment uses the shared engine and family `anr`.

@@ -6,6 +6,7 @@ use fgm_domain::version::VERSION;
 use fgm_infra::pack_json::PackJson;
 use fgm_infra::pack_payload::PackPayloadValidator;
 
+mod anr;
 mod deploy;
 mod library;
 
@@ -34,6 +35,7 @@ fn run(args: Vec<String>) -> i32 {
         [restore, rest @ ..] if restore == "restore" => self::deploy::run_restore(rest),
         [inspect, rest @ ..] if inspect == "inspect" => self::deploy::run_inspect(rest),
         [library, rest @ ..] if library == "library" => self::library::run_library(rest),
+        [anr, rest @ ..] if anr == "anr" => self::anr::run_anr(rest),
         _ => {
             eprintln!("unknown command");
             print_usage();
@@ -173,6 +175,7 @@ fn print_usage() {
     );
     eprintln!("  fgm-next library scan [--root <dir>]... [--data-dir <dir>]");
     eprintln!("  fgm-next library list [--data-dir <dir>]");
+    eprintln!("  fgm-next anr import|status|deploy|restore ...");
 }
 
 fn print_pack_usage() {
