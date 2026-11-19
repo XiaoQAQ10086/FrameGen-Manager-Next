@@ -3,6 +3,17 @@
 来源：旧版 `dlss5.rs`、`ui/dlss5.js` 与真机安装器验证。
 新实现：`Core/Features/Dlss5`、`Infrastructure/Dlss5`、`Infrastructure/Processes`、`dlss5.reshade-gitc` pack。
 
+## Rust 迁移状态（Phase 4）
+
+- `fgm-infra/src/dlss5/reshade_zip.rs`：解析 setup EXE 末尾追加的 ZIP（EOCD/central directory/local header），支持 stored 和 DEFLATE（`flate2`），只取文件名匹配的条目；不支持 ZIP64。
+- `fgm-infra/src/dlss5/reshade_installer.rs`：
+  - 根据渲染 EXE 是否 AMD64/ARM64 选择 `ReShade64.dll` / `ReShade32.dll`。
+  - 目标已有模块时读取 PE `ProductName`，只有包含 `ReShade` 才允许覆盖；否则返回 `Conflict`，不误删第三方 `dxgi.dll`。
+  - 模块走原子写入；`ReShade.ini` 缺失时写默认搜索路径。
+- `fgm-infra/src/pe/pe_imports.rs::is_64_bit`：读取 PE machine（0x8664 / 0xAA64），读取失败默认 64 位。
+- 尚未迁移：DLSS5 pack 部署编排、API→代理槽选择、Vulkan 回退到官方 setup、GITC 选项/INI、卸载与第三方文件保护、FFI/UI。
+- 测试：`reshade_zip.rs` 内 stored/deflate 提取测试；`tests/reshade_installer.rs` 安装与冲突测试。
+
 ## 前置条件
 
 - 从游戏渲染 EXE 探测图形 API；映射到 ReShade 参数：

@@ -23,7 +23,7 @@
 | 备份/还原 | `deploy.rs`、`backup_restore.rs`、`sm.rs`、`dlss5.rs` | `Infrastructure/Deployment` | [已实现](deployment.md) |
 | INI 写入 | `update.rs::prepare_deploy_ini` | `Domain/Ini`；Rust `fgm-domain/src/ini` | [已实现](ini.md) |
 | Smooth Motion | `sm.rs`、`ui/sm.js` | `Core/Features/SmoothMotion` + `Infrastructure/NvApi` | [已实现](smooth-motion.md) |
-| DLSS5 / ReShade | `dlss5.rs`、`ui/dlss5.js` | `Core/Features/Dlss5` + `Infrastructure/Processes` | [已实现（安装/还原/卸载）](dlss5.md) |
+| DLSS5 / ReShade | `dlss5.rs`、`ui/dlss5.js` | `Core/Features/Dlss5` + `Infrastructure/Processes`；Rust 离线 ReShade 安装器 | [已实现（旧版）；Rust 模块提取/安装](dlss5.md) |
 | GPU / 驱动闸门 | `gpu.rs`、`scan.rs::classify_gpu`、`ui/settings.js` | `Domain/Gpu` + `Infrastructure/Gpu`；Rust `fgm-infra/src/gpu` | [已实现](gpu.md) |
 | 显卡名称伪装 | `gpu.rs::apply/restore/run_elevated` | `Infrastructure/Gpu` + `FrameGenManagerNext.Elevated` | [已实现](gpu-spoof.md) |
 | 设置 / 封面 | `ui/settings.js`、`ui/app.js` | `Infrastructure/Settings` + `Infrastructure/Library`；Rust `fgm-infra/src/settings` | [已实现（设置，不含封面）](settings.md) |

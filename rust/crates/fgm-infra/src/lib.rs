@@ -3,6 +3,7 @@
 use fgm_core::ports::Clock;
 
 pub mod deployment;
+pub mod dlss5;
 pub mod fs;
 pub mod gpu;
 pub mod hashing;

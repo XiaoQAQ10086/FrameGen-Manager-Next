@@ -23,6 +23,28 @@ impl PeImports {
         Self::read(&mut file)
     }
 
+    /// Returns true for AMD64/ARM64 images; unreadable files default to true.
+    pub fn is_64_bit(path: &Path) -> bool {
+        let Ok(mut file) = File::open(path) else {
+            return true;
+        };
+        let Ok(file_len) = file.seek(SeekFrom::End(0)) else {
+            return true;
+        };
+        let mut dos = [0_u8; 64];
+        if read_at(&mut file, file_len, 0, &mut dos).is_err() || &dos[0..2] != b"MZ" {
+            return true;
+        }
+        let pe_offset = u32::from_le_bytes([dos[0x3c], dos[0x3d], dos[0x3e], dos[0x3f]]) as u64;
+        let mut header = [0_u8; 6];
+        if read_at(&mut file, file_len, pe_offset, &mut header).is_err()
+            || &header[0..4] != b"PE\0\0"
+        {
+            return true;
+        }
+        matches!(u16::from_le_bytes([header[4], header[5]]), 0x8664 | 0xAA64)
+    }
+
     pub fn read<R: Read + Seek>(reader: &mut R) -> Result<Vec<String>, AppError> {
         let file_len = reader.seek(SeekFrom::End(0)).map_err(io_error_message)?;
 
