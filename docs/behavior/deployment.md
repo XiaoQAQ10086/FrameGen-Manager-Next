@@ -34,8 +34,12 @@ manifest 状态：`Installing → Installed / RolledBack / Partial`，还原后 
   - 保存走同目录临时文件 + 原子替换
   - 备份内相对路径只允许通过 `TargetPath::combine`
 - `fgm-infra/src/fs/`：`AtomicFile`、`DeploymentKey`、`TargetLock`（见 [filesystem-primitives.md](filesystem-primitives.md)）
+- `fgm-infra/src/process/game_process_probe.rs`：部署/还原前的游戏进程检测
+  - Toolhelp32 快照按 EXE 文件名匹配；再用 `QueryFullProcessImageNameW` 比对完整路径
+  - `OpenProcess` 或查询路径失败时，按“名称匹配即运行”处理，避免受保护进程被误判为未运行
+  - 空路径、无法解析的路径返回 false
 - 新 manifest 状态使用统一阶段机 `planned/backingUp/writing/verifying/installed/rolledBack/partial`；不兼容旧版 `Installing/Restored` 字段，旧数据不迁移。
-- 测试：`rust/crates/fgm-infra/tests/backup_store.rs`、`fs_primitives.rs`。
+- 测试：`rust/crates/fgm-infra/tests/backup_store.rs`、`fs_primitives.rs`、`process_probe.rs`。
 
 ## 部署流程
 
