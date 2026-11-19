@@ -46,6 +46,8 @@ manifest 状态：`Installing → Installed / RolledBack / Partial`，还原后 
   - 获取 `TargetLock`；预检所有源文件存在、大小、SHA-256
   - 目标已存在且不是我们的文件才备份；旧 manifest 的有效备份复用
   - manifest 记录 `ownedDirectories`
+  - 旧 manifest 中不再部署的代理文件：写新文件前先还原原文件或删除
+  - 写入成功后清理其余遗留文件；只有当前哈希仍等于旧部署哈希才删除/还原，被修改的保留并标记 `partial`
   - manifest 状态 `backingUp → writing → installed`
   - 逐文件原子复制并读回 SHA-256；任一步失败回滚已写文件
   - 回滚成功标记 `rolledBack`，回滚自身失败标记 `partial`
@@ -60,7 +62,7 @@ manifest 状态：`Installing → Installed / RolledBack / Partial`，还原后 
   - `OpenProcess` 或查询路径失败时，按“名称匹配即运行”处理，避免受保护进程被误判为未运行
   - 空路径、无法解析的路径返回 false
 - 新 manifest 状态使用统一阶段机 `planned/backingUp/writing/verifying/installed/rolledBack/partial`；不兼容旧版 `Installing/Restored` 字段，旧数据不迁移。
-- 尚未实现：旧 manifest 中不再部署的遗留文件清理、Smooth Motion/帧生成互斥检查、FFI/UI 接线。
+- 尚未实现：Smooth Motion/帧生成互斥检查、ReShade/网络、FFI/UI 接线。
 - 测试：`rust/crates/fgm-infra/tests/backup_store.rs`、`fs_primitives.rs`、`process_probe.rs`、`deployment_engine.rs`、`pack_planner.rs`。
 
 ## 部署流程

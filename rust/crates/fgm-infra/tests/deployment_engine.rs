@@ -4,6 +4,7 @@ use std::path::{Path, PathBuf};
 use std::sync::atomic::AtomicBool;
 use std::time::{SystemTime, UNIX_EPOCH};
 
+use fgm_domain::deployment::DeploymentManifestState;
 use fgm_domain::error::ErrorCode;
 use fgm_infra::deployment::{DeploymentEngine, DeploymentFile};
 use fgm_infra::fs::TargetLock;
@@ -178,6 +179,52 @@ fn refuses_to_deploy_while_the_game_is_running() {
     assert_eq!(
         fs::read_to_string(fixture.target.join("version.dll")).unwrap(),
         "original"
+    );
+}
+
+#[test]
+fn redeploying_without_the_old_proxy_restores_the_original() {
+    let fixture = Fixture::new("engine-stale-proxy");
+    let files = fixture.files();
+    fixture.apply(&files).unwrap();
+
+    let report = fixture.apply(&files[1..]).unwrap();
+
+    assert_eq!(report.state, DeploymentManifestState::Installed);
+    assert_eq!(
+        fs::read_to_string(fixture.target.join("version.dll")).unwrap(),
+        "original"
+    );
+    assert!(fixture.target.join("runtime.dll").is_file());
+}
+
+#[test]
+fn removes_stale_files_that_are_still_ours() {
+    let fixture = Fixture::new("engine-stale-file");
+    let files = fixture.files();
+    fixture.apply(&files[1..]).unwrap();
+    assert!(fixture.target.join("runtime.dll").is_file());
+
+    let report = fixture.apply(&files[..1]).unwrap();
+
+    assert_eq!(report.state, DeploymentManifestState::Installed);
+    assert!(!fixture.target.join("runtime.dll").exists());
+}
+
+#[test]
+fn leaves_modified_stale_files_and_marks_partial() {
+    let fixture = Fixture::new("engine-stale-conflict");
+    let files = fixture.files();
+    fixture.apply(&files).unwrap();
+    fs::write(fixture.target.join("runtime.dll"), b"user-modified").unwrap();
+
+    let report = fixture.apply(&files[..1]).unwrap();
+
+    assert_eq!(report.state, DeploymentManifestState::Partial);
+    assert!(!report.warnings.is_empty());
+    assert_eq!(
+        fs::read_to_string(fixture.target.join("runtime.dll")).unwrap(),
+        "user-modified"
     );
 }
 

@@ -59,9 +59,17 @@ impl DeploymentEngine {
                     .collect()
             })
             .unwrap_or_default();
+        let previous_files = previous
+            .as_ref()
+            .map(|manifest| manifest.files.clone())
+            .unwrap_or_default();
 
         let planned = plan_files(files, target_directory)?;
         ensure_sources_match(&planned)?;
+        let planned_keys: HashSet<String> = planned
+            .iter()
+            .map(|(file, _)| file.relative_path.to_ascii_lowercase())
+            .collect();
 
         let backup_directory = store.directory(family, target_directory)?;
         std::fs::create_dir_all(&backup_directory)
@@ -99,13 +107,31 @@ impl DeploymentEngine {
         manifest.options = options.clone();
         store.save_manifest(&manifest)?;
 
+        let mut warnings = Vec::new();
+        let mut stale_proxy_removed = false;
+        for record in &previous_files {
+            if !record.role.eq_ignore_ascii_case("proxy")
+                || planned_keys.contains(&record.relative_path.to_ascii_lowercase())
+            {
+                continue;
+            }
+            match remove_stale(&store, &backup_directory, target_directory, record)? {
+                StaleOutcome::Removed | StaleOutcome::Restored => stale_proxy_removed = true,
+                StaleOutcome::Conflict => warnings.push(format!(
+                    "{}: stale proxy was modified and was left in place",
+                    record.relative_path
+                )),
+                StaleOutcome::Missing => {}
+            }
+        }
+
         manifest.state = DeploymentManifestState::Writing;
         store.save_manifest(&manifest)?;
 
         let write_result = write_files(&planned, cancelled, family);
         if let Err(error) = write_result {
             let complete = rollback(&planned, &records, &store, &backup_directory);
-            manifest.state = if complete {
+            manifest.state = if complete && !stale_proxy_removed {
                 DeploymentManifestState::RolledBack
             } else {
                 DeploymentManifestState::Partial
@@ -114,10 +140,34 @@ impl DeploymentEngine {
             return Err(error.with("rollback", if complete { "complete" } else { "partial" }));
         }
 
-        manifest.state = DeploymentManifestState::Installed;
+        for record in &previous_files {
+            let key = record.relative_path.to_ascii_lowercase();
+            if planned_keys.contains(&key) || record.role.eq_ignore_ascii_case("proxy") {
+                continue;
+            }
+            match remove_stale(&store, &backup_directory, target_directory, record) {
+                Ok(StaleOutcome::Conflict) => warnings.push(format!(
+                    "{}: stale file was modified and was left in place",
+                    record.relative_path
+                )),
+                Ok(_) => {}
+                Err(error) => warnings.push(format!(
+                    "{}: stale file cleanup failed ({})",
+                    record.relative_path,
+                    first_reason(&error)
+                )),
+            }
+        }
+
+        let state = if warnings.is_empty() {
+            DeploymentManifestState::Installed
+        } else {
+            DeploymentManifestState::Partial
+        };
+        manifest.state = state;
         if let Err(error) = store.save_manifest(&manifest) {
             let complete = rollback(&planned, &records, &store, &backup_directory);
-            manifest.state = if complete {
+            manifest.state = if complete && !stale_proxy_removed {
                 DeploymentManifestState::RolledBack
             } else {
                 DeploymentManifestState::Partial
@@ -127,10 +177,10 @@ impl DeploymentEngine {
         }
 
         Ok(DeploymentReport {
-            state: DeploymentManifestState::Installed,
+            state,
             files_written: planned.len(),
             files_backed_up,
-            warnings: Vec::new(),
+            warnings,
         })
     }
 }
@@ -270,6 +320,59 @@ fn rollback(
     }
 
     complete
+}
+
+enum StaleOutcome {
+    Removed,
+    Restored,
+    Missing,
+    Conflict,
+}
+
+fn remove_stale(
+    store: &BackupStore,
+    backup_directory: &Path,
+    target_directory: &Path,
+    record: &DeployedFileRecord,
+) -> Result<StaleOutcome, AppError> {
+    let target = crate::paths::TargetPath::combine(target_directory, &record.relative_path)?;
+    if !target.is_file() {
+        return Ok(if target.exists() {
+            StaleOutcome::Conflict
+        } else {
+            StaleOutcome::Missing
+        });
+    }
+
+    let current = hash_file(&target)?;
+    if !current.eq_ignore_ascii_case(&record.sha256) {
+        return Ok(StaleOutcome::Conflict);
+    }
+
+    if record.existed_before {
+        let Some(relative) = record.backup_relative_path.as_deref() else {
+            return Ok(StaleOutcome::Conflict);
+        };
+        if !store
+            .backup_file_path(backup_directory, relative)?
+            .is_file()
+        {
+            return Ok(StaleOutcome::Conflict);
+        }
+        store.restore_file(backup_directory, relative, &target)?;
+        return Ok(StaleOutcome::Restored);
+    }
+
+    std::fs::remove_file(&target).map_err(|error| io_error(&target, error))?;
+    Ok(StaleOutcome::Removed)
+}
+
+fn first_reason(error: &AppError) -> &str {
+    error
+        .context
+        .iter()
+        .find(|(key, _)| key == "reason")
+        .map_or("operation failed", |(_, value)| value.as_str())
 }
 
 fn cancelled_error(family: &str) -> AppError {
