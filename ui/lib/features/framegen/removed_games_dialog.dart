@@ -6,6 +6,7 @@ import '../../bridge/library_bridge.dart';
 import '../../bridge/library_game.dart';
 import '../../bridge/library_snapshot.dart';
 import '../../design/app_tokens.dart';
+import '../../design/legacy_dialog.dart';
 import '../../design/legacy_pill.dart';
 import '../../l10n/app_localizations.dart';
 
@@ -20,7 +21,7 @@ class RemovedGamesDialog extends StatefulWidget {
     BuildContext context,
     List<LibraryGame> games,
   ) async {
-    final bool? changed = await showDialog<bool>(
+    final bool? changed = await showLegacyDialog<bool>(
       context: context,
       builder: (BuildContext context) => RemovedGamesDialog(games: games),
     );
@@ -51,7 +52,7 @@ class _RemovedGamesDialogState extends State<RemovedGamesDialog> {
 
   Future<void> _forget(LibraryGame game) async {
     final AppLocalizations l10n = AppLocalizations.of(context);
-    final bool? confirmed = await showDialog<bool>(
+    final bool? confirmed = await showLegacyDialog<bool>(
       context: context,
       builder: (BuildContext context) => AlertDialog(
         content: Text(l10n.deleteRecordConfirm(game.name)),

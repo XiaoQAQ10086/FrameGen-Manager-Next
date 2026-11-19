@@ -62,7 +62,7 @@ class _FrameGenDeployDialogState extends State<FrameGenDeployDialog> {
         side: const BorderSide(color: Color(0x1F14233C)),
       ),
       child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 580, maxHeight: 660),
+        constraints: const BoxConstraints(maxWidth: 660, maxHeight: 680),
         child: Padding(
           padding: const EdgeInsets.all(22),
           child: Column(
@@ -121,7 +121,7 @@ class _FrameGenDeployDialogState extends State<FrameGenDeployDialog> {
                     ),
                   ),
                   const Spacer(),
-                  TextButton(
+                  OutlinedButton(
                     onPressed: widget.deployed
                         ? () => Navigator.pop(
                             context,

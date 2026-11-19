@@ -7,6 +7,7 @@ import '../bridge/core_library.dart';
 import '../bridge/logs_bridge.dart';
 import '../l10n/app_localizations.dart';
 import 'app_tokens.dart';
+import 'legacy_dialog.dart';
 
 /// Failure dialog with the error code and a diagnostics copy button.
 final class ErrorDialog {
@@ -19,7 +20,7 @@ final class ErrorDialog {
     String? detail,
   }) {
     final AppLocalizations l10n = AppLocalizations.of(context);
-    return showDialog<void>(
+    return showLegacyDialog<void>(
       context: context,
       builder: (BuildContext dialogContext) => AlertDialog(
         title: Text(l10n.errorTitle),

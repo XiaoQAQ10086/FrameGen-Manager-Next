@@ -11,6 +11,7 @@ import '../../bridge/proxy_badge.dart';
 import '../../bridge/system_bridge.dart';
 import '../../design/app_tokens.dart';
 import '../../design/error_dialog.dart';
+import '../../design/legacy_dialog.dart';
 import '../../design/library_list_head.dart';
 import '../../l10n/app_localizations.dart';
 import '../framegen/mode_source_panel.dart';
@@ -158,7 +159,7 @@ class _Dlss5PageState extends State<Dlss5Page> {
 
   Future<void> _remove(LibraryGame game) async {
     final AppLocalizations l10n = AppLocalizations.of(context);
-    final bool? confirmed = await showDialog<bool>(
+    final bool? confirmed = await showLegacyDialog<bool>(
       context: context,
       builder: (BuildContext context) => AlertDialog(
         content: Text(l10n.removeGameConfirm(game.name)),

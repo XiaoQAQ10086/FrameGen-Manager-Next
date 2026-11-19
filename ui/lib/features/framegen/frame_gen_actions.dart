@@ -3,6 +3,7 @@ import 'package:material_ui/material_ui.dart';
 import '../../bridge/deploy_dialog_result.dart';
 import '../../bridge/library_game.dart';
 import '../../bridge/proxy_badge.dart';
+import '../../design/legacy_dialog.dart';
 import '../../l10n/app_localizations.dart';
 import 'framegen_deploy_dialog.dart';
 
@@ -18,7 +19,7 @@ final class FrameGenActions {
     List<ProxyBadge> proxies = const <ProxyBadge>[],
     String? coverPath,
   }) {
-    return showDialog<DeployDialogResult>(
+    return showLegacyDialog<DeployDialogResult>(
       context: context,
       builder: (BuildContext context) => FrameGenDeployDialog(
         game: game,

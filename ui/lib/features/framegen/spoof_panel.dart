@@ -5,6 +5,7 @@ import '../../bridge/gpu_spoof_state.dart';
 import '../../bridge/system_bridge.dart';
 import '../../design/app_tokens.dart';
 import '../../design/error_dialog.dart';
+import '../../design/legacy_dialog.dart';
 import '../../design/legacy_panel.dart';
 import '../../design/legacy_pill.dart';
 import '../../design/legacy_select.dart';
@@ -42,7 +43,7 @@ class _SpoofPanelState extends State<SpoofPanel> {
 
   Future<bool> _confirm(String message) async {
     final AppLocalizations l10n = AppLocalizations.of(context);
-    final bool? result = await showDialog<bool>(
+    final bool? result = await showLegacyDialog<bool>(
       context: context,
       builder: (BuildContext context) => AlertDialog(
         title: Text(l10n.gpuSpoofTitle),
@@ -111,7 +112,7 @@ class _SpoofPanelState extends State<SpoofPanel> {
 
   Future<void> _showRestartPrompt() async {
     final AppLocalizations l10n = AppLocalizations.of(context);
-    final bool? restart = await showDialog<bool>(
+    final bool? restart = await showLegacyDialog<bool>(
       context: context,
       builder: (BuildContext context) => AlertDialog(
         title: Text(l10n.gpuSpoofRestartTitle),

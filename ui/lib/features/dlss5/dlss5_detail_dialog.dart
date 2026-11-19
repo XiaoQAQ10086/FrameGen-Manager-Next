@@ -10,6 +10,7 @@ import '../../bridge/system_bridge.dart';
 import '../../design/app_tokens.dart';
 import '../../design/error_dialog.dart';
 import '../../design/legacy_button_styles.dart';
+import '../../design/legacy_dialog.dart';
 import '../../design/operation_progress_dialog.dart';
 import '../../l10n/app_localizations.dart';
 import 'dlss5_detail_form.dart';
@@ -35,7 +36,7 @@ class Dlss5DetailDialog extends StatefulWidget {
     Dlss5State state,
     List<ProxyBadge> proxies,
   ) async {
-    final bool? changed = await showDialog<bool>(
+    final bool? changed = await showLegacyDialog<bool>(
       context: context,
       builder: (BuildContext context) => Dlss5DetailDialog(
         game: game,
@@ -84,7 +85,7 @@ class _Dlss5DetailDialogState extends State<Dlss5DetailDialog> {
 
   Future<bool> _confirm(String message) async {
     final AppLocalizations l10n = AppLocalizations.of(context);
-    final bool? result = await showDialog<bool>(
+    final bool? result = await showLegacyDialog<bool>(
       context: context,
       builder: (BuildContext context) => AlertDialog(
         content: Text(message),
@@ -225,7 +226,7 @@ class _Dlss5DetailDialogState extends State<Dlss5DetailDialog> {
 
   Future<void> _recordHotkey() async {
     final AppLocalizations l10n = AppLocalizations.of(context);
-    final int? virtualKey = await showDialog<int>(
+    final int? virtualKey = await showLegacyDialog<int>(
       context: context,
       builder: (BuildContext context) =>
           Dlss5HotkeyDialog(initialVirtualKey: _hotkey),

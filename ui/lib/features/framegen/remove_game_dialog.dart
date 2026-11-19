@@ -1,5 +1,6 @@
 import 'package:material_ui/material_ui.dart';
 
+import '../../design/legacy_dialog.dart';
 import '../../l10n/app_localizations.dart';
 
 /// Shared confirmation for hiding a game from the library.
@@ -11,7 +12,7 @@ final class RemoveGameDialog {
     AppLocalizations l10n,
     String gameName,
   ) async {
-    final bool? confirmed = await showDialog<bool>(
+    final bool? confirmed = await showLegacyDialog<bool>(
       context: context,
       builder: (BuildContext context) => AlertDialog(
         content: Text(l10n.removeGameConfirm(gameName)),

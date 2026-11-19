@@ -66,9 +66,9 @@ class _AppShellState extends State<AppShell> {
               ),
               Expanded(
                 child: AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 260),
-                  switchInCurve: const Cubic(0.2, 0.9, 0.3, 1),
-                  switchOutCurve: Curves.easeInCubic,
+                  duration: const Duration(milliseconds: 300),
+                  switchInCurve: const Cubic(0.22, 0.61, 0.36, 1),
+                  switchOutCurve: const Cubic(0.55, 0.06, 0.68, 0.19),
                   transitionBuilder: _fadeThrough,
                   child: KeyedSubtree(
                     key: ValueKey<AppSection>(_section),
@@ -97,7 +97,7 @@ class _AppShellState extends State<AppShell> {
     final Animation<Offset> offset = Tween<Offset>(
       begin: const Offset(0, 0.02),
       end: Offset.zero,
-    ).animate(CurvedAnimation(parent: animation, curve: Curves.easeOutCubic));
+    ).animate(animation);
 
     return FadeTransition(
       opacity: animation,
@@ -209,7 +209,7 @@ class _TopBar extends StatelessWidget {
               ),
               const SizedBox(width: 12),
               SizedBox(
-                width: 104,
+                width: 152,
                 child: _LanguageSelect(
                   language: language,
                   onChanged: onLanguage,

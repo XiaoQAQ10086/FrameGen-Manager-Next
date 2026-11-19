@@ -12,6 +12,7 @@ import '../../bridge/update_info.dart';
 import '../../design/app_tokens.dart';
 import '../../design/error_dialog.dart';
 import '../../design/legacy_button_styles.dart';
+import '../../design/legacy_dialog.dart';
 import '../../design/legacy_panel.dart';
 import '../../design/operation_progress_dialog.dart';
 import '../../l10n/app_localizations.dart';
@@ -90,7 +91,7 @@ class _AboutPageState extends State<AboutPage> {
 
   Future<void> _showUpdate(UpdateInfo info) async {
     final AppLocalizations l10n = AppLocalizations.of(context);
-    final bool? update = await showDialog<bool>(
+    final bool? update = await showLegacyDialog<bool>(
       context: context,
       builder: (BuildContext context) => AlertDialog(
         title: Text(l10n.updateAvailable(info.version)),

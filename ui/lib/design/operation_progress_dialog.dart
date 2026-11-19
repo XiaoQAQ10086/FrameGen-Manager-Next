@@ -5,6 +5,7 @@ import 'package:material_ui/material_ui.dart';
 import '../bridge/core_library.dart';
 import '../bridge/operation_progress.dart';
 import '../l10n/app_localizations.dart';
+import 'legacy_dialog.dart';
 
 /// Modal progress dialog for long native operations, with cancel support.
 final class OperationProgressDialog {
@@ -16,7 +17,7 @@ final class OperationProgressDialog {
     required Future<T> Function() action,
     bool cancellable = true,
   }) {
-    return showDialog<T>(
+    return showLegacyDialog<T>(
       context: context,
       barrierDismissible: false,
       builder: (BuildContext context) => _OperationDialog<T>(
