@@ -147,6 +147,12 @@ pub extern "C" fn fgm_dlss5_install_json(request: *const u8, length: usize) -> *
     execute_request(request, length, commands_dlss5::dlss5_install)
 }
 
+/// Returns the tail of the operation log.
+#[unsafe(no_mangle)]
+pub extern "C" fn fgm_logs_tail_json(request: *const u8, length: usize) -> *mut c_char {
+    execute_request(request, length, commands::logs_tail)
+}
+
 /// Allocates `size` bytes for a request buffer. Free with `fgm_free_bytes`.
 #[unsafe(no_mangle)]
 pub extern "C" fn fgm_alloc(size: usize) -> *mut u8 {

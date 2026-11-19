@@ -37,6 +37,7 @@ final class CoreLibrary {
     this._settingsGet,
     this._settingsSet,
     this._dlss5Install,
+    this._logsTail,
     this._gpu,
     this._stringFree,
     this._alloc,
@@ -57,6 +58,7 @@ final class CoreLibrary {
   final _JsonDart _settingsGet;
   final _RequestDart _settingsSet;
   final _RequestDart _dlss5Install;
+  final _RequestDart _logsTail;
   final _JsonDart _gpu;
   final _StringFreeDart _stringFree;
   final _AllocDart _alloc;
@@ -107,6 +109,9 @@ final class CoreLibrary {
           ),
           library.lookupFunction<_RequestNative, _RequestDart>(
             'fgm_dlss5_install_json',
+          ),
+          library.lookupFunction<_RequestNative, _RequestDart>(
+            'fgm_logs_tail_json',
           ),
           library.lookupFunction<_JsonNative, _JsonDart>('fgm_gpu_json'),
           library.lookupFunction<_StringFreeNative, _StringFreeDart>(
@@ -163,6 +168,8 @@ final class CoreLibrary {
 
   String? dlss5InstallJson(String request) =>
       _request(_dlss5Install, request);
+
+  String? logsTailJson(String request) => _request(_logsTail, request);
 
   String? gpuJson() => _json(_gpu);
 

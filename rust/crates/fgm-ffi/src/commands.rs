@@ -98,6 +98,13 @@ pub(crate) fn deploy(request: &str) -> Result<Value, AppError> {
         &AtomicBool::new(false),
     )?;
 
+    let files = report.files_written.to_string();
+    log_event(
+        &paths,
+        "info",
+        "deploy",
+        &[("family", &family), ("packId", &pack.id), ("files", &files)],
+    );
     Ok(json!({
         "ok": true,
         "state": report.state,
@@ -121,6 +128,7 @@ pub(crate) fn restore(request: &str) -> Result<Value, AppError> {
         &paths.state().join("locks"),
     )?;
 
+    log_event(&paths, "info", "restore", &[("family", &request.family)]);
     Ok(json!({
         "ok": true,
         "restoredFiles": report.restored_files,
@@ -221,6 +229,33 @@ pub(crate) fn gpu() -> Result<Value, AppError> {
         })
     });
     Ok(json!({ "ok": true, "gpu": value }))
+}
+
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct LogsTailRequest {
+    #[serde(default = "default_log_lines")]
+    max_lines: usize,
+}
+
+const fn default_log_lines() -> usize {
+    500
+}
+
+pub(crate) fn logs_tail(request: &str) -> Result<Value, AppError> {
+    let request: LogsTailRequest = parse(request)?;
+    let paths = AppPaths::create_default(None)?;
+    let log = fgm_infra::logging::OperationLog::new(paths.logs().join("fgm.log"));
+    let lines = log.tail(request.max_lines.min(5_000))?;
+    Ok(json!({ "ok": true, "lines": lines }))
+}
+
+pub(crate) fn log_event(paths: &AppPaths, level: &str, message: &str, fields: &[(&str, &str)]) {
+    let operation_id = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map_or(0, |value| value.as_millis() as u64);
+    let log = fgm_infra::logging::OperationLog::new(paths.logs().join("fgm.log"));
+    let _ = log.append(operation_id, level, message, fields);
 }
 
 #[cfg(test)]

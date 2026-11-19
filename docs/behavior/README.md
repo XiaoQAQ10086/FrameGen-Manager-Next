@@ -29,6 +29,7 @@
 | 设置 / 封面 | `ui/settings.js`、`ui/app.js` | `Infrastructure/Settings` + `Infrastructure/Library`；Rust `fgm-infra/src/settings` | [已实现（设置，不含封面）](settings.md) |
 | 更新 | `update.rs`、`apps/electron/main.js` | Velopack + `Core/Features/Packs` | [已实现](updates.md) |
 | 诊断包 | `sidecar::diagnostics_export`、`ui/settings.js` | `Core/Features/Diagnostics` | [已实现](diagnostics.md) |
+| 操作日志 | Serilog 文件 sink | `fgm-infra/src/logging` | [已实现](logging.md) |
 | 路径安全 | `util.rs::safe_join`、sidecar `checked_dir` | `Domain/Safety`；Rust `fgm-domain` + `fgm-infra` | [已实现](path-safety.md) |
 | 应用数据目录 | `Infrastructure/Paths/AppPaths.cs` | `fgm-infra/src/paths` | [已实现](app-paths.md) |
 | 文件系统原语 | `Deployment/TargetLock.cs`、`DeploymentKey.cs`、原子写 | `fgm-infra/src/fs` | [已实现](filesystem-primitives.md) |

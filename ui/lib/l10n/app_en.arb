@@ -112,6 +112,8 @@
       }
     }
   },
+  "logsEmpty": "No log entries yet.",
+  "copy": "Copy",
   "sourceSteam": "Steam",
   "sourceEpic": "Epic",
   "sourceLoose": "Loose",

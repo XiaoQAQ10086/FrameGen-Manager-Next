@@ -6,6 +6,7 @@ import '../features/about/about_page.dart';
 import '../features/dlss5/dlss5_page.dart';
 import '../features/framegen/framegen_page.dart';
 import '../features/gpu/gpu_page.dart';
+import '../features/logs/logs_page.dart';
 import '../features/settings/settings_page.dart';
 import '../features/smooth_motion/smooth_motion_page.dart';
 import '../l10n/app_localizations.dart';
@@ -49,6 +50,7 @@ class _AppShellState extends State<AppShell> {
                   AppSection.dlss5 => Dlss5Page(core: widget.core),
                   AppSection.gpu => GpuPage(core: widget.core),
                   AppSection.about => AboutPage(core: widget.core),
+                  AppSection.logs => LogsPage(core: widget.core),
                   AppSection.settings => SettingsPage(
                     core: widget.core,
                     onLanguageChanged: widget.onLanguageChanged,

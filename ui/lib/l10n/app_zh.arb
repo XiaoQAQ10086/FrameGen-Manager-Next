@@ -63,6 +63,8 @@
   "dlss5Install": "安装 DLSS5",
   "dlss5ConfirmBody": "确定为 {game} 安装 DLSS5 和 ReShade 吗？",
   "dlss5Complete": "DLSS5 已安装（{proxy}）。",
+  "logsEmpty": "暂无日志。",
+  "copy": "复制",
   "sourceSteam": "Steam",
   "sourceEpic": "Epic",
   "sourceLoose": "散装",
