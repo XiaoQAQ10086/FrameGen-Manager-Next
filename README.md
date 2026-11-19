@@ -7,13 +7,12 @@
 [![CI](https://github.com/XiaoQAQ10086/FrameGen-Manager-Next/actions/workflows/ci.yml/badge.svg)](https://github.com/XiaoQAQ10086/FrameGen-Manager-Next/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Platform](https://img.shields.io/badge/platform-Windows%2010%2F11%20x64-0078D4)](#环境要求)
-[![.NET](https://img.shields.io/badge/.NET-10%20LTS-512BD4)](#技术栈)
 
 ## 这是什么
 
 主要面向英伟达 RTX 20–50 系显卡用户部署帧生成，并为 RTX 20 / 30 系提供 DLSS5。ANR 帧生成额外支持 GTX 16、RTX 20–50 系、AMD RX 5000–9000 系（含 Steam Deck）与 Intel Arc 显卡。
 
-FrameGen Manager-Next 是[原项目 FrameGen-Manager](https://github.com/XiaoQAQ10086/FrameGen-Manager) 的重写版，使用 **C# / .NET 10 LTS** 从零实现。它负责扫描游戏库、把帧生成和 DLSS5 组件部署到游戏目录，支持可回滚的还原与清理。
+FrameGen Manager-Next 是[原项目 FrameGen-Manager](https://github.com/XiaoQAQ10086/FrameGen-Manager) 的重写版，从零独立实现。它负责扫描游戏库、把帧生成和 DLSS5 组件部署到游戏目录，支持可回滚的还原与清理。
 
 它**不是帧生成渲染器**：真正的帧生成由游戏、NVIDIA 运行时和 ReShade 执行；本工具只做检测、部署、配置和清理。
 
@@ -48,39 +47,18 @@ FrameGen Manager-Next 是[原项目 FrameGen-Manager](https://github.com/XiaoQAQ
 | REFramework（辅助） | 不限 GPU | 仅 RE Engine 游戏 | `dinput8.dll` + revision 文件 | 占用 `dinput8.dll`；帧生成必须避开该代理 |
 
 
-## 技术栈
-
-| 层 | 选型 |
-|---|---|
-| 运行时 | .NET 10 LTS（`net10.0-windows`） |
-| 宿主 | WPF + Wpf.Ui（仅窗口外壳） |
-| 界面 | WebView2 + 本地 HTML/CSS/JS |
-| 组合 | Microsoft.Extensions.Hosting / DI |
-
-
-依赖版本集中在 [`Directory.Packages.props`](Directory.Packages.props)。核心扩展与测试断言使用当前最新的预览/RC 版本，Serilog 与 Velopack 保持稳定版；运行时保持 .NET 10 LTS
 
 ## 环境要求
 
 - Windows 10 / 11 x64
-- .NET 10 SDK 10.0.403 或更新
 
-## 项目结构
+## 架构原则
 
-```text
-src/
-  FrameGenManagerNext.Domain/          模型、规则、错误码、资产包协议
-  FrameGenManagerNext.Core/            用例服务与端口接口
-  FrameGenManagerNext.Infrastructure/  Windows、文件、NVAPI、ReShade、资产包实现
-  FrameGenManagerNext.App/             WPF 宿主 + WebView2 界面
-  FrameGenManagerNext.Cli/             无 UI 验收入口
-tests/                                 Domain / Core / Infrastructure / Integration 测试
-docs/behavior/                         每个模块的行为规格
-build/                                 生成资产包、校验、发布脚本
-```
-
-依赖方向：`Domain ← Core ← Infrastructure`，`App` / `Cli` 只在组合根引用 Infrastructure。Core 与 Domain 不引用 WPF/WinForms，所有 P/Invoke 只出现在 Infrastructure
-
+- 规则与用例不依赖界面或操作系统实现，平台能力通过端口注入。
+- 资产文件、目标路径、代理槽和安装步骤数据化，上游布局变化不改代码。
+- 部署、备份、还原和清理共用一套可回滚的状态机。
+- 界面只消费稳定契约，不直接操作文件系统或驱动。
+- 新增依赖必须克制，并记录在 ADR 中。
 
 ## 致谢与声明
 

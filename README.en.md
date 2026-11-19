@@ -7,13 +7,12 @@
 [![CI](https://github.com/XiaoQAQ10086/FrameGen-Manager-Next/actions/workflows/ci.yml/badge.svg)](https://github.com/XiaoQAQ10086/FrameGen-Manager-Next/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Platform](https://img.shields.io/badge/platform-Windows%2010%2F11%20x64-0078D4)](#requirements)
-[![.NET](https://img.shields.io/badge/.NET-10%20LTS-512BD4)](#tech-stack)
 
 ## What is this
 
 Built primarily for NVIDIA RTX 20–50 series GPUs to deploy frame generation, with DLSS5 for RTX 20 / 30 series. ANR frame generation adds support for GTX 16 and RTX 20–50 series, AMD RX 5000–9000 series (including Steam Deck) and Intel Arc GPUs.
 
-FrameGen Manager-Next is a rewrite of the [original FrameGen-Manager](https://github.com/XiaoQAQ10086/FrameGen-Manager), built from scratch with **C# / .NET 10 LTS**. It scans your game library, deploys frame generation and DLSS5 components into game folders, and supports reversible restore and cleanup.
+FrameGen Manager-Next is a rewrite of the [original FrameGen-Manager](https://github.com/XiaoQAQ10086/FrameGen-Manager), built from scratch as an independent implementation. It scans your game library, deploys frame generation and DLSS5 components into game folders, and supports reversible restore and cleanup.
 
 It is **not** a frame generation renderer: frame generation itself is performed by the game, the NVIDIA runtime and ReShade. This tool only detects, deploys, configures and cleans up.
 
@@ -47,37 +46,18 @@ As FrameGen-Manager grew and went through long-term iteration, structural proble
 | ANR Addon | Same as above | The game folder already has `OptiScaler.ini` | Writes to `OptiScaler/custom/Apex Neural Rendering FG/` and changes `[FrameGen]` | Requires OptiScaler; refuses to overwrite another ANR folder |
 | REFramework (auxiliary) | Any GPU | RE Engine games only | `dinput8.dll` + revision file | Occupies `dinput8.dll`; frame generation must avoid that proxy |
 
-## Tech stack
-
-| Layer | Choice |
-|---|---|
-| Runtime | .NET 10 LTS (`net10.0-windows`) |
-| Host | WPF + Wpf.Ui (window shell only) |
-| UI | WebView2 + local HTML/CSS/JS |
-| Composition | Microsoft.Extensions.Hosting / DI |
-
-Package versions are centralized in [`Directory.Packages.props`](Directory.Packages.props). Core extensions and test assertions track the latest preview/RC builds; Serilog and Velopack stay on stable releases; the runtime stays on .NET 10 LTS.
 
 ## Requirements
 
 - Windows 10 / 11 x64
-- .NET 10 SDK 10.0.403 or newer
 
-## Project structure
+## Architecture principles
 
-```text
-src/
-  FrameGenManagerNext.Domain/          Models, rules, error codes, asset pack protocol
-  FrameGenManagerNext.Core/            Use-case services and port interfaces
-  FrameGenManagerNext.Infrastructure/  Windows, file, NVAPI, ReShade and pack implementations
-  FrameGenManagerNext.App/             WPF host + WebView2 UI
-  FrameGenManagerNext.Cli/             Headless acceptance entry point
-tests/                                 Domain / Core / Infrastructure / Integration tests
-docs/behavior/                          Behavior specifications for each module
-build/                                 Pack generation, validation and publishing scripts
-```
-
-Dependency direction: `Domain ← Core ← Infrastructure`; `App` / `Cli` reference Infrastructure only at the composition root. Core and Domain do not reference WPF/WinForms, and all P/Invoke stays in Infrastructure.
+- Rules and use cases do not depend on the UI or the operating system; platform capabilities are injected through ports.
+- Asset files, target paths, proxy slots and install steps are data-driven, so upstream layout changes do not require code changes.
+- Deployment, backup, restore and cleanup share one reversible state machine.
+- The UI consumes a stable contract and never touches the file system or driver directly.
+- New dependencies stay minimal and are recorded in an ADR.
 
 ## Acknowledgements and disclaimer
 
