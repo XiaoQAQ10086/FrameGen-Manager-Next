@@ -6,7 +6,7 @@ use fgm_domain::deployment::DeploymentState;
 use fgm_domain::error::ErrorCode;
 use fgm_domain::library::GraphicsApi;
 use fgm_infra::deployment::RestoreReport;
-use fgm_infra::dlss5::Dlss5Service;
+use fgm_infra::dlss5::{Dlss5Service, HotkeyOutcome, HotkeyQueue};
 use fgm_infra::hashing::FileHasher;
 use fgm_infra::pack_json::PackJson;
 use fgm_infra::paths::AppPaths;
@@ -170,21 +170,75 @@ fn set_hotkey_keeps_the_deployment_installed() {
     fixture.install().unwrap();
     let paths = fixture.paths();
 
-    Dlss5Service::set_hotkey(&fixture.target, 118, &paths).unwrap();
+    let outcome = Dlss5Service::set_hotkey(&fixture.target, 118, None, &paths).unwrap();
+    assert_eq!(outcome, fgm_infra::dlss5::HotkeyOutcome::Applied);
 
     let text = fs::read_to_string(fixture.target.join("ReShade.ini")).unwrap();
     assert!(text.contains("KeyOverlay=118,0,0,0"));
     let pack = PackJson::load(&fixture.pack.join("pack.json")).unwrap();
     let inspection = Dlss5Service::inspect(&fixture.target, Some(&pack), &paths).unwrap();
     assert_eq!(inspection.state, DeploymentState::Installed);
-    assert!(Dlss5Service::set_hotkey(&fixture.target, 0, &paths).is_err());
+    assert!(Dlss5Service::set_hotkey(&fixture.target, 0, None, &paths).is_err());
+}
+
+#[test]
+fn hotkey_queue_deduplicates_and_applies_later() {
+    let fixture = Fixture::new("dlss5-hotkey-queue");
+    fixture.install().unwrap();
+    let paths = fixture.paths();
+    HotkeyQueue::enqueue(&paths, &fixture.target, None, 117).unwrap();
+    HotkeyQueue::enqueue(&paths, &fixture.target, None, 118).unwrap();
+
+    let entries = HotkeyQueue::load(&paths).unwrap();
+    assert_eq!(entries.len(), 1);
+    assert_eq!(entries[0].virtual_key, 118);
+
+    assert_eq!(Dlss5Service::process_hotkey_queue(&paths).unwrap(), 1);
+    assert!(HotkeyQueue::load(&paths).unwrap().is_empty());
+    let text = fs::read_to_string(fixture.target.join("ReShade.ini")).unwrap();
+    assert!(text.contains("KeyOverlay=118,0,0,0"));
+}
+
+#[test]
+fn hotkey_queue_drops_entries_without_a_deployment() {
+    let fixture = Fixture::new("dlss5-hotkey-queue-missing");
+    let paths = fixture.paths();
+    HotkeyQueue::enqueue(&paths, &fixture.target, None, 118).unwrap();
+
+    assert_eq!(Dlss5Service::process_hotkey_queue(&paths).unwrap(), 0);
+    assert!(HotkeyQueue::load(&paths).unwrap().is_empty());
+}
+
+#[cfg(windows)]
+#[test]
+fn locked_ini_is_queued_and_retried_after_unlock() {
+    use std::os::windows::fs::OpenOptionsExt;
+
+    let fixture = Fixture::new("dlss5-hotkey-locked");
+    fixture.install().unwrap();
+    let paths = fixture.paths();
+    let ini = fixture.target.join("ReShade.ini");
+    let lock = fs::OpenOptions::new()
+        .read(true)
+        .write(true)
+        .share_mode(0)
+        .open(&ini)
+        .unwrap();
+
+    let outcome = Dlss5Service::set_hotkey(&fixture.target, 119, None, &paths).unwrap();
+
+    assert_eq!(outcome, HotkeyOutcome::Queued);
+    drop(lock);
+    assert_eq!(Dlss5Service::process_hotkey_queue(&paths).unwrap(), 1);
+    let text = fs::read_to_string(&ini).unwrap();
+    assert!(text.contains("KeyOverlay=119,0,0,0"));
 }
 
 #[test]
 fn set_hotkey_requires_an_existing_deployment() {
     let fixture = Fixture::new("dlss5-hotkey-missing");
 
-    let error = Dlss5Service::set_hotkey(&fixture.target, 118, &fixture.paths()).unwrap_err();
+    let error = Dlss5Service::set_hotkey(&fixture.target, 118, None, &fixture.paths()).unwrap_err();
 
     assert_eq!(error.code, ErrorCode::ManifestMissing);
     assert!(!fixture.target.join("ReShade.ini").exists());

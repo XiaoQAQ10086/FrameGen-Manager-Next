@@ -1,3 +1,4 @@
+use std::ffi::c_char;
 use std::path::{Path, PathBuf};
 
 use fgm_domain::error::{AppError, ErrorCode};
@@ -10,6 +11,7 @@ use serde::Deserialize;
 use serde_json::{Value, json};
 
 use super::commands::{absolute, data_paths, parse};
+use super::{error_json, execute};
 
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -113,6 +115,8 @@ struct Dlss5HotkeyRequest {
     target_dir: String,
     virtual_key: u32,
     #[serde(default)]
+    exe_path: Option<String>,
+    #[serde(default)]
     data_dir: Option<String>,
 }
 
@@ -120,8 +124,23 @@ pub(crate) fn dlss5_set_hotkey(request: &str) -> Result<Value, AppError> {
     let request: Dlss5HotkeyRequest = parse(request)?;
     let target_directory = absolute(Path::new(&request.target_dir))?;
     let paths = data_paths(request.data_dir.as_deref())?;
-    Dlss5Service::set_hotkey(&target_directory, request.virtual_key, &paths)?;
-    Ok(json!({ "ok": true, "hotkeyVk": request.virtual_key }))
+    let executable = request
+        .exe_path
+        .as_deref()
+        .map(Path::new)
+        .map(absolute)
+        .transpose()?;
+    let outcome = Dlss5Service::set_hotkey(
+        &target_directory,
+        request.virtual_key,
+        executable.as_deref(),
+        &paths,
+    )?;
+    Ok(json!({
+        "ok": true,
+        "hotkeyVk": request.virtual_key,
+        "queued": outcome == fgm_infra::dlss5::HotkeyOutcome::Queued,
+    }))
 }
 
 #[derive(Deserialize)]
@@ -174,4 +193,17 @@ fn parse_api(value: &str) -> Result<GraphicsApi, AppError> {
         "opengl" => Ok(GraphicsApi::OpenGl),
         _ => Err(AppError::new(ErrorCode::InvalidArgument).with("api", value.to_string())),
     }
+}
+
+/// Retries queued DLSS5 hotkey writes; returns how many were applied.
+#[unsafe(no_mangle)]
+pub extern "C" fn fgm_dlss5_process_hotkey_queue_json() -> *mut c_char {
+    execute(|| {
+        match fgm_infra::paths::AppPaths::create_default(None)
+            .and_then(|paths| Dlss5Service::process_hotkey_queue(&paths))
+        {
+            Ok(applied) => json!({ "ok": true, "applied": applied }),
+            Err(error) => error_json(&error),
+        }
+    })
 }

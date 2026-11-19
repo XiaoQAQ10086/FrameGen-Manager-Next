@@ -123,6 +123,7 @@
   "dlss5CleanFailed": "清理旧版文件失败。",
   "dlss5HotkeyHint": "按下要绑定的按键，Esc 取消。",
   "dlss5HotkeySaved": "快捷键已保存（{key}）。",
+  "dlss5HotkeyQueued": "快捷键已排队，游戏退出后会自动写入。",
   "save": "保存",
   "ok": "确定",
   "dlss5LegacyResidue": "发现 {count} 个旧版 DLSS5 文件",

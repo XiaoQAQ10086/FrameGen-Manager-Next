@@ -16,6 +16,8 @@ use crate::paths::{AppPaths, TargetPath};
 use crate::reframework::ReframeworkService;
 
 use super::dlss5_config::Dlss5Config;
+use super::dlss5_hotkey_outcome::HotkeyOutcome;
+use super::dlss5_hotkey_queue::HotkeyQueue;
 use super::dlss5_inspection::Dlss5Inspection;
 use super::dlss5_report::Dlss5Report;
 use super::reshade_installer::ReShadeInstaller;
@@ -211,9 +213,50 @@ impl Dlss5Service {
         Ok(report)
     }
 
-    /// Writes `[INPUT] KeyOverlay` for an installed game and re-syncs the
-    /// manifest hash so the edit is not reported as a conflict.
+    /// Writes `[INPUT] KeyOverlay` for an installed game. When the game is
+    /// running or the INI is locked the request is queued instead of failing.
     pub fn set_hotkey(
+        target_directory: &Path,
+        virtual_key: u32,
+        game_exe: Option<&Path>,
+        paths: &AppPaths,
+    ) -> Result<HotkeyOutcome, AppError> {
+        if game_exe.is_some_and(crate::process::GameProcessProbe::is_running) {
+            HotkeyQueue::enqueue(paths, target_directory, game_exe, virtual_key)?;
+            return Ok(HotkeyOutcome::Queued);
+        }
+        match Self::apply_hotkey_now(target_directory, virtual_key, paths) {
+            Ok(()) => Ok(HotkeyOutcome::Applied),
+            Err(error) if is_locked(&error) => {
+                HotkeyQueue::enqueue(paths, target_directory, game_exe, virtual_key)?;
+                Ok(HotkeyOutcome::Queued)
+            }
+            Err(error) => Err(error),
+        }
+    }
+
+    /// Retries queued hotkey writes; returns how many were applied.
+    pub fn process_hotkey_queue(paths: &AppPaths) -> Result<usize, AppError> {
+        let entries = HotkeyQueue::load(paths)?;
+        let mut remaining = Vec::new();
+        let mut applied = 0;
+        for entry in entries {
+            let exe = entry.exe_path.as_deref().map(Path::new);
+            if exe.is_some_and(crate::process::GameProcessProbe::is_running) {
+                remaining.push(entry);
+                continue;
+            }
+            match Self::apply_hotkey_now(Path::new(&entry.target_dir), entry.virtual_key, paths) {
+                Ok(()) => applied += 1,
+                Err(error) if is_locked(&error) => remaining.push(entry),
+                Err(_) => {}
+            }
+        }
+        HotkeyQueue::save(paths, &remaining)?;
+        Ok(applied)
+    }
+
+    fn apply_hotkey_now(
         target_directory: &Path,
         virtual_key: u32,
         paths: &AppPaths,
@@ -243,6 +286,10 @@ impl Dlss5Service {
         }
         store.save_manifest(&manifest)
     }
+}
+
+fn is_locked(error: &AppError) -> bool {
+    matches!(error.code, ErrorCode::FileLocked | ErrorCode::AccessDenied)
 }
 
 fn read_hotkey(target_directory: &Path) -> Option<u32> {

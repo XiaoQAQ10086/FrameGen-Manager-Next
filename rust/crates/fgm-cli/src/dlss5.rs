@@ -317,9 +317,12 @@ fn run_hotkey(args: &[String]) -> i32 {
         Err(error) => return print_error(&error),
     };
 
-    match Dlss5Service::set_hotkey(&target_directory, virtual_key, &paths) {
-        Ok(()) => {
-            println!("OK hotkey={virtual_key}");
+    match Dlss5Service::set_hotkey(&target_directory, virtual_key, None, &paths) {
+        Ok(outcome) => {
+            println!(
+                "OK hotkey={virtual_key} queued={}",
+                outcome == fgm_infra::dlss5::HotkeyOutcome::Queued
+            );
             0
         }
         Err(error) => print_error(&error),

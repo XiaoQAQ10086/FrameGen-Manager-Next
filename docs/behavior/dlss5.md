@@ -14,14 +14,14 @@
   - `install` 选择代理槽（DX10/11/12 → `dxgi.dll`，DX9 → `d3d9.dll`，OpenGL → `opengl32.dll`；Vulkan 依赖全局 layer，官方 setup 流程尚未迁移，当前返回 `InvalidArgument` 而不是写入无效的 `vulkan-1.dll`），用 `PackDeploymentPlanner` 生成 pack 文件计划，再把解包出的 ReShade 模块（role=`proxy`）和缺失时的默认 `ReShade.ini`（role=`config`）作为带内容的内存文件追加到同一份计划，由 `DeploymentEngine` 统一备份/原子写入/校验/回滚。代理槽已有非 ReShade 模块时在写入前返回 `Conflict`。
   - 代理与 INI 因此进入部署清单：卸载时可以精确区分“这个文件是我们写的”和“部署前就存在”。
   - `install` 始终把 `ReShade.ini` 纳入计划：`[GENERAL] EffectSearchPaths/TextureSearchPaths` 缺失时追加 pack 搜索路径，已有键、注释和 `[Uplift]` 等设置原样保留；部署前已有的 INI 会先备份，卸载时恢复原文。
-  - `set_hotkey` 写入 `[INPUT] KeyOverlay=<VK>,0,0,0`，并把 `ReShade.ini` 在清单里的哈希/大小同步更新，避免热键修改被误判为冲突；没有清单时返回 `ManifestMissing`。
+  - `set_hotkey` 写入 `[INPUT] KeyOverlay=<VK>,0,0,0`，并把 `ReShade.ini` 在清单里的哈希/大小同步更新，避免热键修改被误判为冲突；没有清单时返回 `ManifestMissing`。游戏正在运行或 INI 被占用时写入 `state/hotkey-queue.json`（同一游戏只保留最后一次），返回“已排队”；后台每 30 秒重试，游戏退出后补写，成功后移出队列。
   - `uninstall` 走 `DeploymentEngine::restore`：哈希与清单一致的文件被删除（有备份的恢复备份），用户改过的文件报告为冲突并保留。**不运行 ReShade 官方卸载器**——官方卸载器按文件名删除，正是旧版误删第三方 `dxgi.dll` 的原因。
   - `inspect` 返回部署状态、清单版本、代理槽（安装在清单 options 里记录 `proxySlot`）、ReShade 是否在位，以及根目录旧版 RenoDX 残留（`renodx-dlss*`、覆盖旧布局的 `nvngx_dlssnr.dll`）。ReShade 判定优先认清单里的代理记录，其次用 PE `ProductName` 探测。
 - `fgm-ffi/src/commands_dlss5.rs`：`fgm_dlss5_install_json`、`fgm_dlss5_inspect_json`、`fgm_dlss5_set_hotkey_json`、`fgm_dlss5_uninstall_json`；卸载返回 `restored`/`removed`/`conflicts`/`warnings`；inspect 在没有显式 pack 时静默尝试本地 `dlss5.reshade-gitc`，缺 pack 也照样报告清单状态；inspect 同时返回当前 `hotkeyVk`。
 - `fgm-cli/src/dlss5.rs`：`dlss5 install|inspect|uninstall|hotkey`；`install` 未给 `--api` 时用 `GraphicsApiDetector` 自动判定。
-- Flutter：DLSS5 页每局游戏显示状态标签（未安装/已安装/需更新/不完整/冲突/无清单）、ReShade 标签、旧版残留提示，并提供安装、更新、快捷键、卸载按钮；操作后自动刷新状态。快捷键按钮打开录制对话框（Esc 取消），把 USB HID 映射为 Windows 虚拟键后调用 `fgm_dlss5_set_hotkey_json`，成功后刷新显示当前键。卸载有冲突时按数量提示，不误报成功。
+- Flutter：DLSS5 页每局游戏显示状态标签（未安装/已安装/需更新/不完整/冲突/无清单）、ReShade 标签、旧版残留提示，并提供安装、更新、快捷键、卸载按钮；操作后自动刷新状态。快捷键按钮打开录制对话框（Esc 取消），把 USB HID 映射为 Windows 虚拟键后调用 `fgm_dlss5_set_hotkey_json`，成功后刷新显示当前键；返回“已排队”时提示游戏退出后自动写入。主界面每 30 秒调用 `fgm_dlss5_process_hotkey_queue_json` 重试队列。卸载有冲突时按数量提示，不误报成功。
 - 旧版残留：`Dlss5Service::clean_legacy` 删除根目录 `renodx-dlss*` 与旧布局 `nvngx_dlssnr.dll`（只删这两类，其他文件不动）；存在残留时 `install` 返回 `Conflict` 并要求先清理，界面在残留标签旁显示“清理旧版文件”按钮与确认框。
-- 尚未迁移：GITC 选项/INI 的其余项（`StartEnabled` 默认值切换）、`hotkey-queue`（游戏运行/INI 被锁时延迟重试；当前直接写入失败即报错）、Vulkan 回退到官方 setup、“还原保留 ReShade”与“卸载全部移除”的区分。
+- 尚未迁移：GITC 选项/INI 的其余项（`StartEnabled` 默认值切换）、Vulkan 回退到官方 setup、“还原保留 ReShade”与“卸载全部移除”的区分。
 - 测试：`reshade_zip.rs` 内 stored/deflate 提取测试；`tests/reshade_installer.rs` 安装与冲突测试；`tests/dlss5_service.rs` 覆盖安装、代理冲突回滚、卸载删除代理/INI、用户修改文件保留、部署前已有 `ReShade.ini` 保留、inspect 状态/代理/ReShade/旧版残留。
 
 ## 前置条件

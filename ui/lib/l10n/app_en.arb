@@ -221,6 +221,7 @@
   "dlss5CleanFailed": "Could not clean the legacy files.",
   "dlss5HotkeyHint": "Press the key to bind. Esc cancels.",
   "dlss5HotkeySaved": "Hotkey saved ({key}).",
+  "dlss5HotkeyQueued": "Hotkey queued; it will be written after the game exits.",
   "@dlss5HotkeySaved": {
     "placeholders": {
       "key": {

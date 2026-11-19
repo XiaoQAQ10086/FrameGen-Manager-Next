@@ -51,6 +51,7 @@ final class CoreLibrary {
     this._dlss5Inspect,
     this._dlss5SetHotkey,
     this._dlss5CleanLegacy,
+    this._dlss5ProcessHotkeyQueue,
     this._dlss5Uninstall,
     this._logsTail,
     this._anrCurrent,
@@ -96,6 +97,7 @@ final class CoreLibrary {
   final _RequestDart _dlss5Inspect;
   final _RequestDart _dlss5SetHotkey;
   final _RequestDart _dlss5CleanLegacy;
+  final _JsonDart _dlss5ProcessHotkeyQueue;
   final _RequestDart _dlss5Uninstall;
   final _RequestDart _logsTail;
   final _JsonDart _anrCurrent;
@@ -195,6 +197,9 @@ final class CoreLibrary {
           ),
           library.lookupFunction<_RequestNative, _RequestDart>(
             'fgm_dlss5_clean_legacy_json',
+          ),
+          library.lookupFunction<_JsonNative, _JsonDart>(
+            'fgm_dlss5_process_hotkey_queue_json',
           ),
           library.lookupFunction<_RequestNative, _RequestDart>(
             'fgm_dlss5_uninstall_json',
@@ -321,6 +326,8 @@ final class CoreLibrary {
 
   String? dlss5CleanLegacyJson(String request) =>
       _request(_dlss5CleanLegacy, request);
+
+  String? dlss5ProcessHotkeyQueueJson() => _json(_dlss5ProcessHotkeyQueue);
 
   String? dlss5UninstallJson(String request) =>
       _request(_dlss5Uninstall, request);

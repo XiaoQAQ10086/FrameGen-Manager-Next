@@ -2,6 +2,7 @@ import 'package:material_ui/material_ui.dart';
 
 import '../../bridge/core_library.dart';
 import '../../bridge/dlss5_bridge.dart';
+import '../../bridge/dlss5_hotkey_result.dart';
 import '../../bridge/dlss5_result.dart';
 import '../../bridge/dlss5_state.dart';
 import '../../bridge/library_bridge.dart';
@@ -200,16 +201,22 @@ class _Dlss5PageState extends State<Dlss5Page> {
     if (virtualKey == null || !mounted) {
       return;
     }
-    final bool saved = await Dlss5Bridge.setHotkey(game, virtualKey);
+    final HotkeyOutcome outcome = await Dlss5Bridge.setHotkey(
+      game,
+      virtualKey,
+    );
     if (!mounted) {
       return;
     }
-    _notify(
-      saved
-          ? l10n.dlss5HotkeySaved(Dlss5Hotkey.label(virtualKey))
-          : '${l10n.deployFailed} SetHotkey',
-    );
-    if (saved) {
+    final String message = switch (outcome) {
+      HotkeyOutcome.applied => l10n.dlss5HotkeySaved(
+        Dlss5Hotkey.label(virtualKey),
+      ),
+      HotkeyOutcome.queued => l10n.dlss5HotkeyQueued,
+      HotkeyOutcome.failed => '${l10n.deployFailed} SetHotkey',
+    };
+    _notify(message);
+    if (outcome != HotkeyOutcome.failed) {
       await _refreshState(game);
     }
   }

@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:isolate';
 
 import 'core_library.dart';
+import 'dlss5_hotkey_result.dart';
 import 'dlss5_result.dart';
 import 'dlss5_state.dart';
 import 'library_game.dart';
@@ -63,23 +64,32 @@ final class Dlss5Bridge {
   }
 
   /// Writes `[INPUT] KeyOverlay` for an installed game.
-  static Future<bool> setHotkey(LibraryGame game, int virtualKey) async {
+  static Future<HotkeyOutcome> setHotkey(
+    LibraryGame game,
+    int virtualKey,
+  ) async {
     final String request = jsonEncode(<String, Object?>{
       'targetDir': game.targetDirectory,
       'virtualKey': virtualKey,
+      'exePath': game.renderExe,
     });
     final String? reply = await Isolate.run(() {
       final CoreLibrary? core = CoreLibrary.tryOpen();
       return core?.dlss5SetHotkeyJson(request);
     });
     if (reply == null) {
-      return false;
+      return HotkeyOutcome.failed;
     }
     try {
       final Object? decoded = jsonDecode(reply);
-      return decoded is Map && decoded['ok'] == true;
+      if (decoded is! Map || decoded['ok'] != true) {
+        return HotkeyOutcome.failed;
+      }
+      return decoded['queued'] == true
+          ? HotkeyOutcome.queued
+          : HotkeyOutcome.applied;
     } on FormatException {
-      return false;
+      return HotkeyOutcome.failed;
     }
   }
 
