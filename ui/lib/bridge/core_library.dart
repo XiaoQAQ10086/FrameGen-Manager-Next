@@ -36,6 +36,7 @@ final class CoreLibrary {
     this._smRestore,
     this._settingsGet,
     this._settingsSet,
+    this._gpu,
     this._stringFree,
     this._alloc,
     this._freeBytes,
@@ -54,6 +55,7 @@ final class CoreLibrary {
   final _RequestDart _smRestore;
   final _JsonDart _settingsGet;
   final _RequestDart _settingsSet;
+  final _JsonDart _gpu;
   final _StringFreeDart _stringFree;
   final _AllocDart _alloc;
   final _FreeBytesDart _freeBytes;
@@ -101,6 +103,7 @@ final class CoreLibrary {
           library.lookupFunction<_RequestNative, _RequestDart>(
             'fgm_settings_set_json',
           ),
+          library.lookupFunction<_JsonNative, _JsonDart>('fgm_gpu_json'),
           library.lookupFunction<_StringFreeNative, _StringFreeDart>(
             'fgm_string_free',
           ),
@@ -152,6 +155,8 @@ final class CoreLibrary {
 
   String? settingsSetJson(String request) =>
       _request(_settingsSet, request);
+
+  String? gpuJson() => _json(_gpu);
 
   String? _request(_RequestDart function, String request) {
     final List<int> bytes = utf8.encode(request);

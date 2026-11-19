@@ -68,6 +68,15 @@ pub extern "C" fn fgm_library_list_json() -> *mut c_char {
     })
 }
 
+/// Returns GPU name, driver version and route.
+#[unsafe(no_mangle)]
+pub extern "C" fn fgm_gpu_json() -> *mut c_char {
+    execute(|| match commands::gpu() {
+        Ok(value) => value,
+        Err(error) => error_json(&error),
+    })
+}
+
 /// Returns the current app settings.
 #[unsafe(no_mangle)]
 pub extern "C" fn fgm_settings_get_json() -> *mut c_char {

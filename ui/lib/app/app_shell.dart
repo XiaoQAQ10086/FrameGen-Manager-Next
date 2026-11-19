@@ -2,7 +2,9 @@ import 'package:material_ui/material_ui.dart';
 
 import '../bridge/core_library.dart';
 import '../design/app_tokens.dart';
+import '../features/about/about_page.dart';
 import '../features/framegen/framegen_page.dart';
+import '../features/gpu/gpu_page.dart';
 import '../features/settings/settings_page.dart';
 import '../features/smooth_motion/smooth_motion_page.dart';
 import '../l10n/app_localizations.dart';
@@ -43,6 +45,8 @@ class _AppShellState extends State<AppShell> {
                 child: switch (_section) {
                   AppSection.frameGeneration => FrameGenPage(core: widget.core),
                   AppSection.smoothMotion => SmoothMotionPage(core: widget.core),
+                  AppSection.gpu => GpuPage(core: widget.core),
+                  AppSection.about => AboutPage(core: widget.core),
                   AppSection.settings => SettingsPage(
                     core: widget.core,
                     onLanguageChanged: widget.onLanguageChanged,

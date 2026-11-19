@@ -210,6 +210,19 @@ pub(crate) fn settings_set(request: &str) -> Result<Value, AppError> {
     Ok(json!({ "ok": true, "settings": settings }))
 }
 
+pub(crate) fn gpu() -> Result<Value, AppError> {
+    let info = fgm_infra::gpu::GpuDetector::detect();
+    let value = info.map(|info| {
+        json!({
+            "name": info.name,
+            "driverVersion": info.driver_version,
+            "route": info.route,
+            "driverSupported": info.driver_supported,
+        })
+    });
+    Ok(json!({ "ok": true, "gpu": value }))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

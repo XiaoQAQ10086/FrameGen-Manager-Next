@@ -75,6 +75,26 @@
   "settingsAutoInstallReframework": "Install REFramework automatically",
   "settingsSaved": "Settings saved.",
   "settingsSaveFailed": "Could not save settings.",
+  "gpuDriver": "Driver {version}",
+  "@gpuDriver": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "gpuRoute": "Route {route}",
+  "@gpuRoute": {
+    "placeholders": {
+      "route": {
+        "type": "String"
+      }
+    }
+  },
+  "gpuSupported": "Smooth Motion supported",
+  "gpuUnsupported": "Smooth Motion not supported",
+  "gpuMissing": "NVIDIA GPU not detected",
+  "aboutDescription": "Windows frame generation deployment manager.",
   "sourceSteam": "Steam",
   "sourceEpic": "Epic",
   "sourceLoose": "Loose",
