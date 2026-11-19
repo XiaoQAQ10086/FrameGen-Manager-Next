@@ -8,6 +8,7 @@ use super::epic_locator::EpicLocator;
 use super::loose_game_scanner::LooseGameScanner;
 use super::steam_game_scanner::SteamGameScanner;
 use super::steam_locator::SteamLocator;
+use super::xbox_game_scanner::XboxGameScanner;
 
 /// Aggregates Steam, Epic and loose-folder results with install-directory dedup.
 pub struct LibraryScanner;
@@ -33,6 +34,7 @@ impl LibraryScanner {
         if let Some(epic_manifests) = epic_manifests {
             append(&mut games, &mut seen, EpicGameScanner::scan(epic_manifests));
         }
+        append(&mut games, &mut seen, XboxGameScanner::scan(roots));
         append(&mut games, &mut seen, LooseGameScanner::scan(roots));
 
         games

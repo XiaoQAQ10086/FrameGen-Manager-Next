@@ -12,6 +12,7 @@ pub mod render_exe;
 pub mod render_exe_selector;
 pub mod steam_game_scanner;
 pub mod steam_locator;
+pub mod xbox_game_scanner;
 
 mod valve_key_values;
 
@@ -29,6 +30,7 @@ pub use render_exe::RenderExe;
 pub use render_exe_selector::RenderExeSelector;
 pub use steam_game_scanner::SteamGameScanner;
 pub use steam_locator::SteamLocator;
+pub use xbox_game_scanner::XboxGameScanner;
 
 pub(crate) fn path_key(path: &std::path::Path) -> String {
     let mut value = path.to_string_lossy().replace('/', "\\").to_lowercase();
