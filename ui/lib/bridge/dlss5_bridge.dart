@@ -42,6 +42,27 @@ final class Dlss5Bridge {
     return Dlss5Result.parse(reply);
   }
 
+  /// Writes `[INPUT] KeyOverlay` for an installed game.
+  static Future<bool> setHotkey(LibraryGame game, int virtualKey) async {
+    final String request = jsonEncode(<String, Object?>{
+      'targetDir': game.targetDirectory,
+      'virtualKey': virtualKey,
+    });
+    final String? reply = await Isolate.run(() {
+      final CoreLibrary? core = CoreLibrary.tryOpen();
+      return core?.dlss5SetHotkeyJson(request);
+    });
+    if (reply == null) {
+      return false;
+    }
+    try {
+      final Object? decoded = jsonDecode(reply);
+      return decoded is Map && decoded['ok'] == true;
+    } on FormatException {
+      return false;
+    }
+  }
+
   /// Removes everything the install wrote; user-modified files are reported
   /// as conflicts and left in place.
   static Future<Dlss5Result> uninstall(LibraryGame game) async {

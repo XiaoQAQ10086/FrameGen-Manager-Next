@@ -8,6 +8,7 @@ final class Dlss5State {
     this.packVersion,
     this.proxyModule,
     this.reShadePresent = false,
+    this.hotkeyVk,
     this.legacyFiles = const <String>[],
     this.errorCode,
   });
@@ -33,6 +34,7 @@ final class Dlss5State {
         packVersion: decoded['packVersion'] as String?,
         proxyModule: decoded['proxyModule'] as String?,
         reShadePresent: decoded['reShadePresent'] == true,
+        hotkeyVk: _intOrNull(decoded['hotkeyVk']),
         legacyFiles: _stringList(decoded['legacyFiles']),
       );
     } on FormatException {
@@ -45,6 +47,7 @@ final class Dlss5State {
   final String? packVersion;
   final String? proxyModule;
   final bool reShadePresent;
+  final int? hotkeyVk;
   final List<String> legacyFiles;
   final String? errorCode;
 
@@ -64,6 +67,8 @@ final class Dlss5State {
       state == 'installedWithoutManifest';
 
   bool get hasLegacyResidue => legacyFiles.isNotEmpty;
+
+  static int? _intOrNull(Object? value) => value is int ? value : null;
 
   static List<String> _stringList(Object? value) {
     if (value is! List) {

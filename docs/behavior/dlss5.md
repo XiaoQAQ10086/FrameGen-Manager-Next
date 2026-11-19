@@ -19,8 +19,8 @@
   - `inspect` 返回部署状态、清单版本、代理槽（安装在清单 options 里记录 `proxySlot`）、ReShade 是否在位，以及根目录旧版 RenoDX 残留（`renodx-dlss*`、覆盖旧布局的 `nvngx_dlssnr.dll`）。ReShade 判定优先认清单里的代理记录，其次用 PE `ProductName` 探测。
 - `fgm-ffi/src/commands_dlss5.rs`：`fgm_dlss5_install_json`、`fgm_dlss5_inspect_json`、`fgm_dlss5_set_hotkey_json`、`fgm_dlss5_uninstall_json`；卸载返回 `restored`/`removed`/`conflicts`/`warnings`；inspect 在没有显式 pack 时静默尝试本地 `dlss5.reshade-gitc`，缺 pack 也照样报告清单状态；inspect 同时返回当前 `hotkeyVk`。
 - `fgm-cli/src/dlss5.rs`：`dlss5 install|inspect|uninstall|hotkey`；`install` 未给 `--api` 时用 `GraphicsApiDetector` 自动判定。
-- Flutter：DLSS5 页每局游戏显示状态标签（未安装/已安装/需更新/不完整/冲突/无清单）、ReShade 标签、旧版残留提示，并提供安装、更新、卸载按钮；操作后自动刷新状态。卸载有冲突时按数量提示，不误报成功。快捷键录制界面尚未接入。
-- 尚未迁移：GITC 选项/INI 的其余项（`StartEnabled` 默认值切换）、快捷键录制界面与 `hotkey-queue`（游戏运行/INI 被锁时延迟重试）、Vulkan 回退到官方 setup、“还原保留 ReShade”与“卸载全部移除”的区分、旧版残留的一键清理与安装拦截（`LegacyInstallPresent`）。
+- Flutter：DLSS5 页每局游戏显示状态标签（未安装/已安装/需更新/不完整/冲突/无清单）、ReShade 标签、旧版残留提示，并提供安装、更新、快捷键、卸载按钮；操作后自动刷新状态。快捷键按钮打开录制对话框（Esc 取消），把 USB HID 映射为 Windows 虚拟键后调用 `fgm_dlss5_set_hotkey_json`，成功后刷新显示当前键。卸载有冲突时按数量提示，不误报成功。
+- 尚未迁移：GITC 选项/INI 的其余项（`StartEnabled` 默认值切换）、`hotkey-queue`（游戏运行/INI 被锁时延迟重试；当前直接写入失败即报错）、Vulkan 回退到官方 setup、“还原保留 ReShade”与“卸载全部移除”的区分、旧版残留的一键清理与安装拦截（`LegacyInstallPresent`）。
 - 测试：`reshade_zip.rs` 内 stored/deflate 提取测试；`tests/reshade_installer.rs` 安装与冲突测试；`tests/dlss5_service.rs` 覆盖安装、代理冲突回滚、卸载删除代理/INI、用户修改文件保留、部署前已有 `ReShade.ini` 保留、inspect 状态/代理/ReShade/旧版残留。
 
 ## 前置条件

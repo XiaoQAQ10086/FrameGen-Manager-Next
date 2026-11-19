@@ -10,6 +10,8 @@ import '../../bridge/library_snapshot.dart';
 import '../../design/app_tokens.dart';
 import '../../l10n/app_localizations.dart';
 import 'dlss5_game_row.dart';
+import 'dlss5_hotkey.dart';
+import 'dlss5_hotkey_dialog.dart';
 
 /// DLSS5 page: installs the pack and the ReShade proxy per game.
 class Dlss5Page extends StatefulWidget {
@@ -145,6 +147,37 @@ class _Dlss5PageState extends State<Dlss5Page> {
     }
   }
 
+  void _notify(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message), behavior: SnackBarBehavior.floating),
+    );
+  }
+
+  Future<void> _recordHotkey(LibraryGame game) async {
+    final AppLocalizations l10n = AppLocalizations.of(context);
+    final int? virtualKey = await showDialog<int>(
+      context: context,
+      builder: (BuildContext context) => Dlss5HotkeyDialog(
+        initialVirtualKey: _states[game.id]?.hotkeyVk,
+      ),
+    );
+    if (virtualKey == null || !mounted) {
+      return;
+    }
+    final bool saved = await Dlss5Bridge.setHotkey(game, virtualKey);
+    if (!mounted) {
+      return;
+    }
+    _notify(
+      saved
+          ? l10n.dlss5HotkeySaved(Dlss5Hotkey.label(virtualKey))
+          : '${l10n.deployFailed} SetHotkey',
+    );
+    if (saved) {
+      await _refreshState(game);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final AppLocalizations l10n = AppLocalizations.of(context);
@@ -183,6 +216,7 @@ class _Dlss5PageState extends State<Dlss5Page> {
                           state: _states[game.id],
                           busy: _busyGameId == game.id,
                           onInstall: () => _install(game),
+                          onHotkey: () => _recordHotkey(game),
                           onUninstall: () => _uninstall(game),
                         );
                       },

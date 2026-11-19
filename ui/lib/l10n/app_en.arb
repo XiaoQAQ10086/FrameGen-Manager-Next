@@ -155,6 +155,17 @@
   "dlss5StateConflict": "Conflicts",
   "dlss5StateUnknown": "Unknown",
   "dlss5ReShadePresent": "ReShade present",
+  "dlss5Hotkey": "Overlay hotkey",
+  "dlss5HotkeyHint": "Press the key to bind. Esc cancels.",
+  "dlss5HotkeySaved": "Hotkey saved ({key}).",
+  "@dlss5HotkeySaved": {
+    "placeholders": {
+      "key": {
+        "type": "String"
+      }
+    }
+  },
+  "save": "Save",
   "dlss5LegacyResidue": "{count} legacy DLSS5 files found",
   "@dlss5LegacyResidue": {
     "placeholders": {
