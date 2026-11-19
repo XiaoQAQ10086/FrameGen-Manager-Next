@@ -24,11 +24,11 @@
 | INI 写入 | `update.rs::prepare_deploy_ini` | `Domain/Ini`；Rust `fgm-domain/src/ini` | [已实现](ini.md) |
 | Smooth Motion | `sm.rs`、`ui/sm.js` | `Core/Features/SmoothMotion` + `Infrastructure/NvApi` | [已实现](smooth-motion.md) |
 | ANR 帧生成 | apex-compute/ANR | `fgm-infra/src/anr` | [已实现（导入/部署/还原）](anr.md) |
-| DLSS5 / ReShade | `dlss5.rs`、`ui/dlss5.js` | `Core/Features/Dlss5` + `Infrastructure/Processes`；Rust 离线 ReShade 安装器 | [已实现（旧版）；Rust 模块提取/安装](dlss5.md) |
+| DLSS5 / ReShade | `dlss5.rs`、`ui/dlss5.js` | `Core/Features/Dlss5` + `Infrastructure/Processes`；Rust 离线 ReShade 安装器 | [已实现（Vulkan 官方 setup 除外）](dlss5.md) |
 | GPU / 驱动闸门 | `gpu.rs`、`scan.rs::classify_gpu`、`ui/settings.js` | `Domain/Gpu` + `Infrastructure/Gpu`；Rust `fgm-infra/src/gpu` | [已实现](gpu.md) |
-| 显卡名称伪装 | `gpu.rs::apply/restore/run_elevated` | `Infrastructure/Gpu` + `FrameGenManagerNext.Elevated` | [已实现](gpu-spoof.md) |
-| 设置 / 封面 | `ui/settings.js`、`ui/app.js` | `Infrastructure/Settings` + `Infrastructure/Library`；Rust `fgm-infra/src/settings` | [已实现（设置，不含封面）](settings.md) |
-| 更新 | `update.rs`、`apps/electron/main.js` | Velopack + `Core/Features/Packs`；Rust `fgm-infra/src/updates` | [已实现（检查/下载）](updates.md) |
+| 显卡名称伪装 | `gpu.rs::apply/restore/run_elevated` | `Infrastructure/Gpu` + `FrameGenManagerNext.Elevated` | [未迁移（需管理员权限与真机验证）](gpu-spoof.md) |
+| 设置 / 封面 | `ui/settings.js`、`ui/app.js` | `Infrastructure/Settings` + `Infrastructure/Library`；Rust `fgm-infra/src/settings` | [已实现（设置 + Steam 封面）](settings.md) |
+| 更新 | `update.rs`、`apps/electron/main.js` | Velopack + `Core/Features/Packs`；Rust `fgm-infra/src/updates` | [已实现（检查/下载/安装）](updates.md) |
 | 网络下载 | reqwest（旧版） | `fgm-infra/src/net`（WinHTTP） | [已实现（基础下载）](network.md) |
 | 便携版 / 安装包 | Inno 6.7.4 | `build/publish-portable-next.ps1`、`installer-next.iss` | [已实现（本地构建）](packaging.md) |
 | 诊断包 | `sidecar::diagnostics_export`、`ui/settings.js` | `Core/Features/Diagnostics` | [已实现](diagnostics.md) |
@@ -46,7 +46,7 @@
 | 资产包 schema/payload | 旧版 `deploy.rs` / `sm.rs` / `dlss5.rs` 的文件表 | `Domain/Packs`、`Infrastructure/Packs`；Rust Phase 1 | [已实现](asset-pack.md) |
 | 内置资产升级 | 旧版升级时自动清理部署 | `Infrastructure/Deployment` + `Infrastructure/Packs` | [已实现](pack-upgrades.md) |
 | 资产更新清除 | 无（新增） | `Core/Features/Maintenance` | [已实现](asset-maintenance.md) |
-| Flutter 外壳（Phase 0/4） | 无（新增） | `ui/lib/app`、`ui/lib/bridge`、`ui/lib/features` | [已实现（壳 + 游戏库只读）](flutter-shell.md) |
+| Flutter 外壳 | 无（新增） | `ui/lib/app`、`ui/lib/bridge`、`ui/lib/features` | [已实现（全部页面）](flutter-shell.md) |
 
 ## 模板
 

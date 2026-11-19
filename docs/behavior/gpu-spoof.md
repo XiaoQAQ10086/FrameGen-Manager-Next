@@ -3,6 +3,10 @@
 来源：旧版 `gpu.rs` 的 `enumerate` / `apply` / `restore` / `run_elevated`。
 新实现：`Infrastructure/Gpu/GpuSpoofOperations.cs`、`GpuSpoofService.cs`、`FrameGenManagerNext.Elevated`。
 
+## Rust 迁移状态
+
+- 尚未迁移。该功能需要管理员权限写 `HKLM\SYSTEM\CurrentControlSet\Enum\PCI` 下的 `DeviceDesc`，并依赖提权助手；当前 Rust/Flutter 版本不提供入口，也不会修改注册表。迁移前必须在真机上验证权限、备份/还原和驱动重装后的行为。
+
 ## 目标
 
 少数游戏只按显卡型号决定是否开放帧生成设置。该功能把 NVIDIA 显示适配器的
