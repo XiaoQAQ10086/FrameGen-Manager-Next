@@ -7,19 +7,25 @@ pub(crate) const ID_CREATE_SESSION: u32 = 0x0694_D52E;
 pub(crate) const ID_LOAD_SETTINGS: u32 = 0x375D_BD6B;
 pub(crate) const ID_GET_BASE_PROFILE: u32 = 0xDA84_66A0;
 pub(crate) const ID_FIND_PROFILE: u32 = 0x7E4A_9A0B;
+pub(crate) const ID_CREATE_PROFILE: u32 = 0xCC17_6068;
+pub(crate) const ID_CREATE_APPLICATION: u32 = 0x4347_A9DE;
 pub(crate) const ID_FIND_APPLICATION: u32 = 0xEEE5_66B2;
 pub(crate) const ID_GET_SETTING: u32 = 0xEA99_498D;
 pub(crate) const ID_SET_SETTING: u32 = 0x8A2C_F5F5;
+pub(crate) const ID_DELETE_SETTING: u32 = 0xD20D_29DF;
 pub(crate) const ID_SAVE_SETTINGS: u32 = 0xFCBC_7E14;
+pub(crate) const ID_PROFILE_INFO: u32 = 0x61CD_6FD6;
 pub(crate) const ID_DESTROY_SESSION: u32 = 0xDAD9_CFF8;
 pub(crate) const ID_ENUM_PROFILES: u32 = 0xBC37_1EE0;
 pub(crate) const ID_ENUM_APPLICATIONS: u32 = 0x7FA2_173A;
 
-pub(crate) const SMOOTH_MOTION_SETTING_ID: u32 = 0xB0D3_84C0;
+pub const SMOOTH_MOTION_SETTING_ID: u32 = 0xB0D3_84C0;
 
 pub(crate) const SETTING_BUFFER_SIZE: usize = 12_320;
+pub(crate) const PROFILE_BUFFER_SIZE: usize = 4_116;
 pub(crate) const APPLICATION_BUFFER_SIZE: usize = 20_492;
 pub(crate) const SETTING_VALUE_OFFSET: usize = 8_220;
+pub(crate) const PROFILE_NAME_OFFSET: usize = 4;
 pub(crate) const APPLICATION_FILE_IN_FOLDER_OFFSET: usize = 12_296;
 pub(crate) const APPLICATION_SLOTS: usize = 32;
 pub(crate) const APPLICATION_VERSION: u32 = 4;
@@ -31,6 +37,10 @@ pub(crate) type FindProfile =
     unsafe extern "C" fn(*mut c_void, *const u16, *mut *mut c_void) -> i32;
 pub(crate) type FindApplication =
     unsafe extern "C" fn(*mut c_void, *const u16, *mut *mut c_void, *mut u8) -> i32;
+pub(crate) type CreateProfile = unsafe extern "C" fn(*mut c_void, *mut u8, *mut *mut c_void) -> i32;
+pub(crate) type CreateApplication = unsafe extern "C" fn(*mut c_void, *mut c_void, *mut u8) -> i32;
+pub(crate) type ProfileInfo = unsafe extern "C" fn(*mut c_void, *mut c_void, *mut u8) -> i32;
+pub(crate) type DeleteSetting = unsafe extern "C" fn(*mut c_void, *mut c_void, u32) -> i32;
 pub(crate) type GetSetting =
     unsafe extern "C" fn(*mut c_void, *mut c_void, u32, *mut u8, *mut u32) -> i32;
 pub(crate) type SetSetting =
@@ -45,9 +55,13 @@ pub(crate) struct NvApiFunctions {
     pub unload: Unload,
     pub get_base_profile: GetBaseProfile,
     pub find_profile: FindProfile,
+    pub create_profile: CreateProfile,
     pub find_application: FindApplication,
+    pub create_application: CreateApplication,
+    pub profile_info: ProfileInfo,
     pub get_setting: GetSetting,
     pub set_setting: SetSetting,
+    pub delete_setting: DeleteSetting,
     pub save_settings: SaveSettings,
     pub destroy_session: Option<DestroySession>,
     pub enum_profiles: EnumProfiles,
@@ -98,6 +112,19 @@ pub(crate) fn setting_buffer(setting_id: u32) -> Vec<u8> {
     write_version(&mut buffer, SETTING_BUFFER_SIZE as u32, 1);
     write_wide(&mut buffer, 4, 2_048, "PLACEHOLDER");
     write_u32(&mut buffer, 4_100, setting_id);
+    buffer
+}
+
+pub(crate) fn profile_buffer(name: &str) -> Vec<u8> {
+    let mut buffer = vec![0_u8; PROFILE_BUFFER_SIZE];
+    write_version(&mut buffer, PROFILE_BUFFER_SIZE as u32, 1);
+    write_wide(&mut buffer, PROFILE_NAME_OFFSET, 2_048, name);
+    buffer
+}
+
+pub(crate) fn profile_info_buffer() -> Vec<u8> {
+    let mut buffer = vec![0_u8; PROFILE_BUFFER_SIZE];
+    write_version(&mut buffer, PROFILE_BUFFER_SIZE as u32, 1);
     buffer
 }
 

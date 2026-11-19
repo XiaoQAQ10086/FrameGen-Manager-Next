@@ -14,6 +14,7 @@ pub mod paths;
 pub mod pe;
 pub mod platform;
 pub mod process;
+pub mod smooth_motion;
 
 pub struct SystemClock;
 
