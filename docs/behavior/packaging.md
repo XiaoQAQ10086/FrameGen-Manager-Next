@@ -21,11 +21,20 @@
 - 输出：`artifacts/installer-next/releases/FrameGenManagerNext-0.1.0-win-Setup.exe`。
 - 每次编译前清空 releases，只保留最新安装包。
 
+## 更新清单
+
+- `build/publish-release-next.ps1`：调用安装包构建，读取 `rust/Cargo.toml` 的工作区版本，计算安装包 SHA-256/大小，输出 `artifacts/release-next/update.json`（`version/notes/pageUrl/installer{name,size,sha256,urls}`）。
+- `urls` 指向 `https://github.com/XiaoQAQ10086/FrameGen-Manager-Next/releases/download/<tag>/<安装包>`；客户端下载时会自动展开 `ghfast.top` / `gh-proxy.com` / `ghproxy.net` 镜像，并逐个校验大小与 SHA-256。
+- 发布步骤：创建 tag/Release 并上传安装包；把 `update.json` 提交到 `main`，客户端从 raw.githubusercontent.com 读取。
+
+## 卸载
+
+- 安装版卸载项通过 Inno `[UninstallDelete]` 删除 `%LOCALAPPDATA%\FrameGen-Manager-Next`（库、备份、设置）与 `%TEMP%\FrameGen-Manager-Next`（下载缓存）。
+- 便携版不写注册表；删除程序目录即完成卸载，`data/` 由用户自行决定是否保留。
+
 ## 尚未完成
 
 - 发布前资产注入/校验。
-- 卸载时是否清理用户数据、`--uninstall-cleanup` 对等。
-- 自动更新源、下载、安装和回滚。
 - 代码签名。
 
-本轮只在本地生成便携版和安装包，未推送、未发布 GitHub Release。
+便携版与安装包均可在本地生成；GitHub Release 仍由人工确认后推送。
