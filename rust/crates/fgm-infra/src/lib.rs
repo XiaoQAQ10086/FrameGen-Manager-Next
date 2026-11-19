@@ -8,6 +8,7 @@ pub mod hashing;
 pub mod pack_json;
 pub mod pack_payload;
 pub mod paths;
+pub mod pe;
 
 pub struct SystemClock;
 

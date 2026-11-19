@@ -33,6 +33,7 @@
 | 应用数据目录 | `Infrastructure/Paths/AppPaths.cs` | `fgm-infra/src/paths` | [已实现](app-paths.md) |
 | 文件系统原语 | `Deployment/TargetLock.cs`、`DeploymentKey.cs`、原子写 | `fgm-infra/src/fs` | [已实现](filesystem-primitives.md) |
 | 备份清单与备份存储 | `Deployment/BackupStore.cs` | `fgm-domain/src/deployment`、`fgm-infra/src/deployment` | [已实现](deployment.md) |
+| PE 导入读取 | `Infrastructure/Library/PeImportReader.cs` | `fgm-infra/src/pe` | [已实现](library.md) |
 | 错误码 | `err.rs` 的关键词规则 | `Domain/Errors` | 已实现（枚举 + 上下文） |
 | 资产包 schema/payload | 旧版 `deploy.rs` / `sm.rs` / `dlss5.rs` 的文件表 | `Domain/Packs`、`Infrastructure/Packs`；Rust Phase 1 | [已实现](asset-pack.md) |
 | 内置资产升级 | 旧版升级时自动清理部署 | `Infrastructure/Deployment` + `Infrastructure/Packs` | [已实现](pack-upgrades.md) |

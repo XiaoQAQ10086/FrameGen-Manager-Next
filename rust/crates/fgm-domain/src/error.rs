@@ -11,6 +11,7 @@ pub enum ErrorCode {
     PackInvalid,
     PackNotFound,
     PackHashMismatch,
+    InvalidPe,
     OperationCancelled,
     OperationTimedOut,
     Internal,
