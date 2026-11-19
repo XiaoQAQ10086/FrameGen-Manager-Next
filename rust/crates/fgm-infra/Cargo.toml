@@ -7,3 +7,5 @@ license.workspace = true
 [dependencies]
 fgm-core.workspace = true
 fgm-domain.workspace = true
+serde_json.workspace = true
+sha2.workspace = true

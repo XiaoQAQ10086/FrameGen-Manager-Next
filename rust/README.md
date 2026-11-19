@@ -1,6 +1,6 @@
 # Rust core
 
-Phase 0 workspace for the Rust + Flutter rewrite.
+Phase 1 workspace for the Rust + Flutter rewrite.
 
 ```
 crates/
@@ -22,3 +22,13 @@ cargo fmt --all -- --check
 cargo clippy --workspace --all-targets --all-features -- -D warnings
 cargo test --workspace
 ```
+
+## Pack validation
+
+```bash
+cargo run -p fgm-cli -- pack validate <pack-dir> --app-version 2.3.4
+cargo run -p fgm-cli -- pack validate <pack-dir> --schema-only
+cargo run -p fgm-cli -- pack validate <pack-dir> --no-hash
+```
+
+Exit codes: `0` valid, `1` validation failure, `2` argument or directory error.

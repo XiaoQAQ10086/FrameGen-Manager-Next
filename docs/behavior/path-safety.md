@@ -4,6 +4,12 @@
 
 新实现：`src/FrameGenManagerNext.Domain/Safety/SafePath.cs`
 
+Rust 迁移：
+
+- `rust/crates/fgm-domain/src/safety/safe_path.rs` 已实现 SAFE-001 ~ SAFE-011（纯字符串校验，无文件系统访问）。
+- SAFE-012 ~ SAFE-014 需要根目录和系统目录信息，留在 Phase 2 的 `fgm-infra`。
+- Rust 测试：`rust/crates/fgm-domain/tests/safe_path.rs`。
+
 ## 输入
 
 - `relativePath`：来自 `pack.json`、配置或用户输入，必须是相对于目标根目录的路径。

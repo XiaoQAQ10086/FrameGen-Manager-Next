@@ -9,6 +9,7 @@ pub enum ErrorCode {
     AccessDenied,
     Conflict,
     PackInvalid,
+    PackNotFound,
     PackHashMismatch,
     OperationCancelled,
     OperationTimedOut,

@@ -10,6 +10,22 @@
 - `Infrastructure/Packs/PackPayloadValidator.cs`：文件存在性、大小、SHA-256
 - `Cli/PackValidationCommand.cs`：`fgm-next pack validate`
 
+## Rust 迁移状态（Phase 1）
+
+已实现：
+
+- `rust/crates/fgm-domain/src/pack/`：`AssetPack` 模型、`PackCode`、纯 `PackValidator`
+- `rust/crates/fgm-domain/src/safety/safe_path.rs`：`SafePath::normalize_relative`
+- `rust/crates/fgm-infra/src/pack_json.rs`：严格 JSON 读取
+- `rust/crates/fgm-infra/src/pack_payload.rs`：存在性、大小、SHA-256、INI 模板、安装器校验
+- `rust/crates/fgm-cli`：`fgm-next pack validate <dir> [--no-hash] [--schema-only] [--app-version <v>]`
+
+与 C# 版一致的规则如上表。差异：
+
+- Serde 区分 JSON 属性名大小写，不接受注释和尾随逗号；pack 由生成器产出，不依赖这些扩展（ADR-0013）。
+- `SafePath::CombineUnderRoot`、junction/符号链接解析和受保护系统目录检查仍在 Phase 2；当前 payload 校验只做词法组合。
+- CLI `--app-version` 默认取 Rust 程序版本（当前 `0.1.0`）；校验 2.x 现有 pack 时需传入目标版本，例如 `--app-version 2.3.4`。
+
 ## 文件布局
 
 ```
@@ -109,4 +125,5 @@ fgm-next pack validate <pack-dir> --no-hash
 - 已从旧项目生成四个 pack：`framegen.sm86`、`smooth-motion.rtx30`、`smooth-motion.rtx20`、`dlss5.reshade-gitc`。
 - 四个 pack 均通过完整 payload 校验（存在性、大小、SHA-256、INI 模板、安装器）。
 - 待完成：`packs.json` 版本索引、下载器、离线包、部署引擎步骤执行器（Phase 3）。
+- Rust 侧 schema、payload 和 CLI 已实现并通过测试；现有四个 pack 尚未在 Rust CLI 下跑完整对照。
 - DLSS5 的 ReShade.ini 搜索路径合并属于功能逻辑，暂由 Phase 4 的 DLSS5 模块实现，不放进通用 pack 步骤。
