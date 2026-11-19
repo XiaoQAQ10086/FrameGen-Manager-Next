@@ -12,6 +12,7 @@ use fgm_infra::platform::DriveRoots;
 use serde_json::{Value, json};
 
 mod commands;
+mod commands_anr;
 mod commands_dlss5;
 mod commands_sm;
 
@@ -151,6 +152,33 @@ pub extern "C" fn fgm_dlss5_install_json(request: *const u8, length: usize) -> *
 #[unsafe(no_mangle)]
 pub extern "C" fn fgm_logs_tail_json(request: *const u8, length: usize) -> *mut c_char {
     execute_request(request, length, commands::logs_tail)
+}
+
+/// Returns the imported ANR package, if any.
+#[unsafe(no_mangle)]
+pub extern "C" fn fgm_anr_current_json() -> *mut c_char {
+    execute(|| match commands_anr::anr_current() {
+        Ok(value) => value,
+        Err(error) => error_json(&error),
+    })
+}
+
+/// Imports an ANR zip, opening the native picker when no path is supplied.
+#[unsafe(no_mangle)]
+pub extern "C" fn fgm_anr_import_json(request: *const u8, length: usize) -> *mut c_char {
+    execute_request(request, length, commands_anr::anr_import)
+}
+
+/// Deploys the imported ANR package to a game directory.
+#[unsafe(no_mangle)]
+pub extern "C" fn fgm_anr_deploy_json(request: *const u8, length: usize) -> *mut c_char {
+    execute_request(request, length, commands_anr::anr_deploy)
+}
+
+/// Restores an ANR deployment.
+#[unsafe(no_mangle)]
+pub extern "C" fn fgm_anr_restore_json(request: *const u8, length: usize) -> *mut c_char {
+    execute_request(request, length, commands_anr::anr_restore)
 }
 
 /// Allocates `size` bytes for a request buffer. Free with `fgm_free_bytes`.

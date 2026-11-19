@@ -38,6 +38,10 @@ final class CoreLibrary {
     this._settingsSet,
     this._dlss5Install,
     this._logsTail,
+    this._anrCurrent,
+    this._anrImport,
+    this._anrDeploy,
+    this._anrRestore,
     this._gpu,
     this._stringFree,
     this._alloc,
@@ -59,6 +63,10 @@ final class CoreLibrary {
   final _RequestDart _settingsSet;
   final _RequestDart _dlss5Install;
   final _RequestDart _logsTail;
+  final _JsonDart _anrCurrent;
+  final _RequestDart _anrImport;
+  final _RequestDart _anrDeploy;
+  final _RequestDart _anrRestore;
   final _JsonDart _gpu;
   final _StringFreeDart _stringFree;
   final _AllocDart _alloc;
@@ -112,6 +120,18 @@ final class CoreLibrary {
           ),
           library.lookupFunction<_RequestNative, _RequestDart>(
             'fgm_logs_tail_json',
+          ),
+          library.lookupFunction<_JsonNative, _JsonDart>(
+            'fgm_anr_current_json',
+          ),
+          library.lookupFunction<_RequestNative, _RequestDart>(
+            'fgm_anr_import_json',
+          ),
+          library.lookupFunction<_RequestNative, _RequestDart>(
+            'fgm_anr_deploy_json',
+          ),
+          library.lookupFunction<_RequestNative, _RequestDart>(
+            'fgm_anr_restore_json',
           ),
           library.lookupFunction<_JsonNative, _JsonDart>('fgm_gpu_json'),
           library.lookupFunction<_StringFreeNative, _StringFreeDart>(
@@ -170,6 +190,14 @@ final class CoreLibrary {
       _request(_dlss5Install, request);
 
   String? logsTailJson(String request) => _request(_logsTail, request);
+
+  String? anrCurrentJson() => _json(_anrCurrent);
+
+  String? anrImportJson(String request) => _request(_anrImport, request);
+
+  String? anrDeployJson(String request) => _request(_anrDeploy, request);
+
+  String? anrRestoreJson(String request) => _request(_anrRestore, request);
 
   String? gpuJson() => _json(_gpu);
 

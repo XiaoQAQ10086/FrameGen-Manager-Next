@@ -3,6 +3,7 @@ import 'package:material_ui/material_ui.dart';
 import '../bridge/core_library.dart';
 import '../design/app_tokens.dart';
 import '../features/about/about_page.dart';
+import '../features/anr/anr_page.dart';
 import '../features/dlss5/dlss5_page.dart';
 import '../features/framegen/framegen_page.dart';
 import '../features/gpu/gpu_page.dart';
@@ -48,6 +49,7 @@ class _AppShellState extends State<AppShell> {
                   AppSection.frameGeneration => FrameGenPage(core: widget.core),
                   AppSection.smoothMotion => SmoothMotionPage(core: widget.core),
                   AppSection.dlss5 => Dlss5Page(core: widget.core),
+                  AppSection.anr => AnrPage(core: widget.core),
                   AppSection.gpu => GpuPage(core: widget.core),
                   AppSection.about => AboutPage(core: widget.core),
                   AppSection.logs => LogsPage(core: widget.core),
@@ -55,7 +57,6 @@ class _AppShellState extends State<AppShell> {
                     core: widget.core,
                     onLanguageChanged: widget.onLanguageChanged,
                   ),
-                  _ => _PlaceholderPage(section: _section),
                 },
               ),
             ),
@@ -217,59 +218,6 @@ class _NavItem extends StatelessWidget {
                   fontWeight:
                       selected ? FontWeight.w600 : FontWeight.w500,
                 ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _PlaceholderPage extends StatelessWidget {
-  const _PlaceholderPage({required this.section});
-
-  final AppSection section;
-
-  @override
-  Widget build(BuildContext context) {
-    final AppLocalizations l10n = AppLocalizations.of(context);
-
-    return Padding(
-      padding: AppTokens.pagePadding,
-      child: Container(
-        decoration: BoxDecoration(
-          color: AppTokens.surface,
-          borderRadius: BorderRadius.circular(AppTokens.radiusLarge),
-          border: Border.all(color: AppTokens.border),
-          boxShadow: AppTokens.panelShadow,
-        ),
-        child: Center(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: <Widget>[
-              Container(
-                width: 56,
-                height: 56,
-                decoration: const BoxDecoration(
-                  color: AppTokens.accentSoft,
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  _sectionIcon(section),
-                  color: AppTokens.accent,
-                  size: 26,
-                ),
-              ),
-              const SizedBox(height: 18),
-              Text(
-                _sectionLabel(l10n, section),
-                style: Theme.of(context).textTheme.headlineSmall,
-              ),
-              const SizedBox(height: 8),
-              Text(
-                l10n.sectionPending,
-                style: Theme.of(context).textTheme.bodyMedium,
               ),
             ],
           ),

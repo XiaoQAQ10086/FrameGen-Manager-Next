@@ -114,6 +114,29 @@
   },
   "logsEmpty": "No log entries yet.",
   "copy": "Copy",
+  "anrImport": "Import ANR package",
+  "anrNoPackage": "No ANR package imported.",
+  "anrReady": "ANR {version} ({kind})",
+  "@anrReady": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      },
+      "kind": {
+        "type": "String"
+      }
+    }
+  },
+  "anrImported": "ANR package imported.",
+  "anrDeployDone": "ANR deployed ({proxy}).",
+  "@anrDeployDone": {
+    "placeholders": {
+      "proxy": {
+        "type": "String"
+      }
+    }
+  },
+  "anrRestored": "ANR restored.",
   "sourceSteam": "Steam",
   "sourceEpic": "Epic",
   "sourceLoose": "Loose",

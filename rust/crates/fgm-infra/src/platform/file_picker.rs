@@ -1,0 +1,20 @@
+use std::path::PathBuf;
+
+/// Native file dialog for user-selected assets.
+pub struct FilePicker;
+
+impl FilePicker {
+    pub fn pick_anr_zip() -> Option<PathBuf> {
+        rfd::FileDialog::new()
+            .set_title("Select an ANR package")
+            .add_filter("ANR package", &["zip"])
+            .pick_file()
+    }
+
+    pub fn pick_executable() -> Option<PathBuf> {
+        rfd::FileDialog::new()
+            .set_title("Select the game executable")
+            .add_filter("Executable", &["exe"])
+            .pick_file()
+    }
+}
