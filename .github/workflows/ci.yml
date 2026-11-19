@@ -12,19 +12,25 @@ permissions:
 
 jobs:
   verify:
-    name: Build, test and quality gates
+    name: Rust and Flutter gates
     runs-on: windows-latest
-    timeout-minutes: 30
+    timeout-minutes: 60
 
     steps:
       - name: Checkout
         uses: actions/checkout@v7
 
-      - name: Set up .NET
-        uses: actions/setup-dotnet@v6
+      - name: Install Rust toolchain
+        shell: pwsh
+        run: rustup toolchain install nightly-2026-11-17 --profile minimal --component rustfmt --component clippy
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
         with:
-          global-json-file: global.json
+          channel: master
+          flutter-version: afad7960e1f4dafdb28a4c45e5e001d4a1994000
+          cache: true
 
       - name: Verify
         shell: pwsh
-        run: ./build/verify.ps1 -Configuration Release
+        run: ./build/verify-rust-flutter.ps1
