@@ -49,7 +49,8 @@ $release = Join-Path $root "ui/build/windows/x64/runner/Release"
 Copy-Item (Join-Path $release "*") $stage -Recurse -Force
 Copy-Item (Join-Path $root "rust/target/release/fgm-next.exe") $stage -Force
 
-$packs = Join-Path $root "packs"
+$assetsPacks = Join-Path $root "assets/packs"
+$packs = if (Test-Path $assetsPacks) { $assetsPacks } else { Join-Path $root "packs" }
 if (Test-Path $packs) {
     Copy-Item $packs (Join-Path $stage "packs") -Recurse -Force
 }
