@@ -24,7 +24,7 @@
 | INI 写入 | `update.rs::prepare_deploy_ini` | `Domain/Ini`；Rust `fgm-domain/src/ini` | [已实现](ini.md) |
 | Smooth Motion | `sm.rs`、`ui/sm.js` | `Core/Features/SmoothMotion` + `Infrastructure/NvApi` | [已实现](smooth-motion.md) |
 | ANR 帧生成 | apex-compute/ANR | `fgm-infra/src/anr` | [已实现（导入/部署/还原）](anr.md) |
-| DLSS5 / ReShade | `dlss5.rs`、`ui/dlss5.js` | `Core/Features/Dlss5` + `Infrastructure/Processes`；Rust 离线 ReShade 安装器 | [已实现（Vulkan 官方 setup 除外）](dlss5.md) |
+| DLSS5 / ReShade | `dlss5.rs`、`ui/dlss5.js` | `Core/Features/Dlss5` + `Infrastructure/Processes`；Rust 离线 ReShade 安装器 | [已实现](dlss5.md) |
 | GPU / 驱动闸门 | `gpu.rs`、`scan.rs::classify_gpu`、`ui/settings.js` | `Domain/Gpu` + `Infrastructure/Gpu`；Rust `fgm-infra/src/gpu` | [已实现](gpu.md) |
 | 显卡名称伪装 | `gpu.rs::apply/restore/run_elevated` | `Infrastructure/Gpu`；Rust `fgm-infra/src/gpu_spoof` | [已实现并真机验证](gpu-spoof.md) |
 | 设置 / 封面 | `ui/settings.js`、`ui/app.js` | `Infrastructure/Settings` + `Infrastructure/Library`；Rust `fgm-infra/src/settings` | [已实现（设置 + Steam 封面）](settings.md) |
