@@ -9,6 +9,7 @@ pub mod diagnostics;
 pub mod dlss5;
 pub mod fs;
 pub mod gpu;
+pub mod gpu_spoof;
 pub mod hashing;
 pub mod library;
 pub mod logging;

@@ -14,6 +14,7 @@ mod commands;
 mod commands_anr;
 mod commands_diagnostics;
 mod commands_dlss5;
+mod commands_gpu_spoof;
 mod commands_library;
 mod commands_sm;
 mod commands_update;

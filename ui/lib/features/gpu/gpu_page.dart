@@ -5,6 +5,7 @@ import '../../bridge/gpu_bridge.dart';
 import '../../bridge/gpu_info.dart';
 import '../../design/app_tokens.dart';
 import '../../l10n/app_localizations.dart';
+import 'gpu_spoof_card.dart';
 
 /// Read-only GPU card backed by nvidia-smi.
 class GpuPage extends StatefulWidget {
@@ -65,6 +66,8 @@ class _GpuPageState extends State<GpuPage> {
                   )
                 : _details(context, l10n, _gpu!),
           ),
+          const SizedBox(height: 16),
+          const GpuSpoofCard(),
         ],
       ),
     );

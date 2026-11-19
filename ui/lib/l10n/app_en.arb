@@ -105,6 +105,36 @@
   "gpuSupported": "Smooth Motion supported",
   "gpuUnsupported": "Smooth Motion not supported",
   "gpuMissing": "NVIDIA GPU not detected",
+  "gpuSpoofTitle": "GPU name spoofing",
+  "gpuSpoofWarning": "Only for games that gate options by GPU model. The name no longer matches the hardware ID, kernel anti-cheat may flag it, and driver updates can reset it. A restart is needed before Windows shows the new name.",
+  "gpuSpoofNeedsAdmin": "Administrator rights are required. Restart this app as administrator to change the adapter name.",
+  "gpuSpoofAdminChip": "Admin required",
+  "gpuSpoofNoAdapter": "No modifiable NVIDIA display adapter was found.",
+  "gpuSpoofAdapter": "Display adapter",
+  "gpuSpoofTarget": "Target model",
+  "gpuSpoofApply": "Apply spoof",
+  "gpuSpoofApplied": "Current spoof: {name}",
+  "@gpuSpoofApplied": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "gpuSpoofRestoreDriver": "Restore driver name",
+  "gpuSpoofRestoreBackup": "Restore original value",
+  "gpuSpoofConfirm": "Change the adapter name to {name}? The original value is backed up first.",
+  "@gpuSpoofConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "gpuSpoofRestoreConfirm": "Restore the adapter name?",
+  "gpuSpoofDone": "Adapter name updated.",
+  "gpuSpoofRestored": "Adapter name restored.",
+  "gpuSpoofFailed": "GPU name operation failed.",
   "aboutDescription": "Windows frame generation deployment manager.",
   "updateTitle": "Updates",
   "updateCheck": "Check for updates",
@@ -199,6 +229,7 @@
     }
   },
   "save": "Save",
+  "ok": "OK",
   "dlss5LegacyResidue": "{count} legacy DLSS5 files found",
   "@dlss5LegacyResidue": {
     "placeholders": {

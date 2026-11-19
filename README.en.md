@@ -23,6 +23,7 @@ It is **not** a frame generation renderer: frame generation itself is performed 
 - **Game library scan**: Steam / Epic / loose game folders, with manual game adding and manual selection of the executable a game actually launches.
 - **Frame generation deployment**: deploys SM75 / SM86 runtimes for RTX 20–50 series GPUs (assets 0.4.2; RTX 40/50 use the PTX kernels), with proxy slot, optimization level, 2X/3X/4X/6X, DLSS / XeSS engine, super-resolution mode and XeSS optical-flow settings. Deployments can be restored; files modified by the user are kept and reported as conflicts.
 - **Smooth Motion**: writes the Smooth Motion switch into the game's driver profile and deploys the unlock component. The previous value is recorded before writing, the component is removed when disabled, and the original value is restored on restore.
+- **GPU name spoofing**: with administrator rights, renames the adapter in the driver record from a fixed RTX 50 whitelist; the original value is backed up and can be restored to the driver name or the original value. A restart is required.
 - **DLSS5 / ReShade**: offline installation of the ReShade module, GITC Uplift components and standard shaders, with uninstall and legacy RenoDX cleanup.
 - **Diagnostics and localization**: structured logs, diagnostic bundle export, and runtime Chinese/English switching.
 

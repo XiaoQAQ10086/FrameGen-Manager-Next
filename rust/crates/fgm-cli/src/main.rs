@@ -9,6 +9,7 @@ use fgm_infra::pack_payload::PackPayloadValidator;
 mod anr;
 mod deploy;
 mod dlss5;
+mod gpu;
 mod library;
 
 fn main() {
@@ -38,6 +39,7 @@ fn run(args: Vec<String>) -> i32 {
         [library, rest @ ..] if library == "library" => self::library::run_library(rest),
         [anr, rest @ ..] if anr == "anr" => self::anr::run_anr(rest),
         [dlss5, rest @ ..] if dlss5 == "dlss5" => self::dlss5::run_dlss5(rest),
+        [gpu, rest @ ..] if gpu == "gpu" => self::gpu::run_gpu(rest),
         _ => {
             eprintln!("unknown command");
             print_usage();
@@ -179,6 +181,7 @@ fn print_usage() {
     eprintln!("  fgm-next library list [--data-dir <dir>]");
     eprintln!("  fgm-next anr import|status|deploy|restore ...");
     eprintln!("  fgm-next dlss5 install|inspect|uninstall ...");
+    eprintln!("  fgm-next gpu spoof inspect|apply|restore ...");
 }
 
 fn print_pack_usage() {

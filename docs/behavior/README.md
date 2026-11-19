@@ -26,7 +26,7 @@
 | ANR 帧生成 | apex-compute/ANR | `fgm-infra/src/anr` | [已实现（导入/部署/还原）](anr.md) |
 | DLSS5 / ReShade | `dlss5.rs`、`ui/dlss5.js` | `Core/Features/Dlss5` + `Infrastructure/Processes`；Rust 离线 ReShade 安装器 | [已实现（Vulkan 官方 setup 除外）](dlss5.md) |
 | GPU / 驱动闸门 | `gpu.rs`、`scan.rs::classify_gpu`、`ui/settings.js` | `Domain/Gpu` + `Infrastructure/Gpu`；Rust `fgm-infra/src/gpu` | [已实现](gpu.md) |
-| 显卡名称伪装 | `gpu.rs::apply/restore/run_elevated` | `Infrastructure/Gpu` + `FrameGenManagerNext.Elevated` | [未迁移（需管理员权限与真机验证）](gpu-spoof.md) |
+| 显卡名称伪装 | `gpu.rs::apply/restore/run_elevated` | `Infrastructure/Gpu`；Rust `fgm-infra/src/gpu_spoof` | [已实现并真机验证](gpu-spoof.md) |
 | 设置 / 封面 | `ui/settings.js`、`ui/app.js` | `Infrastructure/Settings` + `Infrastructure/Library`；Rust `fgm-infra/src/settings` | [已实现（设置 + Steam 封面）](settings.md) |
 | 更新 | `update.rs`、`apps/electron/main.js` | Velopack + `Core/Features/Packs`；Rust `fgm-infra/src/updates` | [已实现（检查/下载/安装）](updates.md) |
 | 网络下载 | reqwest（旧版） | `fgm-infra/src/net`（WinHTTP） | [已实现（基础下载）](network.md) |

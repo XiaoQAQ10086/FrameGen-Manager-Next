@@ -3,9 +3,15 @@
 来源：旧版 `gpu.rs` 的 `enumerate` / `apply` / `restore` / `run_elevated`。
 新实现：`Infrastructure/Gpu/GpuSpoofOperations.cs`、`GpuSpoofService.cs`、`FrameGenManagerNext.Elevated`。
 
-## Rust 迁移状态
+## Rust 迁移状态（Phase 4）
 
-- 尚未迁移。该功能需要管理员权限写 `HKLM\SYSTEM\CurrentControlSet\Enum\PCI` 下的 `DeviceDesc`，并依赖提权助手；当前 Rust/Flutter 版本不提供入口，也不会修改注册表。迁移前必须在真机上验证权限、备份/还原和驱动重装后的行为。
+- `fgm-infra/src/gpu_spoof/`：直接调用 Advapi32 读写注册表（`RegOpenKeyExW/RegQueryValueExW/RegSetValueExW`），不使用提权助手；`IsUserAnAdmin` 判断权限，非管理员返回 `AccessDenied`。
+- 枚举：`Enum\PCI\VEN_10DE*` 实例，保留 `ClassGUID` 为显示适配器且 `Service=nvlddmkm` 的项；从 `Driver` 值取驱动记录名（如 `0002`），再读类键 `DriverDesc`；显示名取 `DriverDesc`，缺失时取 `DeviceDesc` 最后一个分号后的文本。
+- 写入：白名单固定 6 个 50 系型号（5090/5080/5070 Ti/5070/5060 Ti/5060）。首次写入前把原始 `DeviceDesc`、驱动名、实例路径、目标名写入 `state/gpu-name/manifest.json` 并读回校验；写入后读回不一致会尝试写回原值并报错。重复应用保留最早的原始值，只更新 `applied`。
+- 还原：`driver` 写回 `DriverDesc`（纯名称）；`backup` 使用 manifest 原始 `DeviceDesc` 并删除 manifest；没有备份返回 `ManifestMissing`。
+- CLI：`fgm-next gpu spoof inspect|apply|restore`。FFI：`fgm_gpu_spoof_inspect_json` / `fgm_gpu_spoof_apply_json` / `fgm_gpu_spoof_restore_json`。
+- Flutter：显卡页“显卡名称伪装”卡片显示适配器、白名单型号、当前伪装与还原按钮；非管理员时禁用并提示以管理员身份重启。
+- 真机验证（2026-11-19，RTX 3070）：`inspect` 读取到实例/驱动名/DeviceDesc；应用 5070 Ti 后注册表读回一致；`restore backup` 恢复 `@oem49.inf,%nvidia_dev.2484%;NVIDIA GeForce RTX 3070`；再次应用后 `restore driver` 写入纯名称，随后 `restore backup` 恢复原始值并删除 manifest。
 
 ## 目标
 

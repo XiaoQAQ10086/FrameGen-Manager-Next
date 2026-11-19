@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'dart:ffi';
-import 'dart:io';
+
+import 'core_candidates.dart';
+import 'ffi_string.dart';
 
 typedef _VersionNative = Pointer<Int8> Function();
 typedef _VersionDart = Pointer<Int8> Function();
@@ -33,6 +35,9 @@ final class CoreLibrary {
     this._gameModes,
     this._diagnosticsExport,
     this._pickExecutable,
+    this._gpuSpoofInspect,
+    this._gpuSpoofApply,
+    this._gpuSpoofRestore,
     this._deploy,
     this._restore,
     this._inspect,
@@ -75,6 +80,9 @@ final class CoreLibrary {
   final _RequestDart _gameModes;
   final _RequestDart _diagnosticsExport;
   final _JsonDart _pickExecutable;
+  final _JsonDart _gpuSpoofInspect;
+  final _RequestDart _gpuSpoofApply;
+  final _RequestDart _gpuSpoofRestore;
   final _RequestDart _deploy;
   final _RequestDart _restore;
   final _RequestDart _inspect;
@@ -108,7 +116,7 @@ final class CoreLibrary {
 
   /// Loads the native library, or returns null when it has not been built yet.
   static CoreLibrary? tryOpen() {
-    for (final String candidate in _candidates()) {
+    for (final String candidate in coreCandidates()) {
       try {
         final DynamicLibrary library = DynamicLibrary.open(candidate);
         return CoreLibrary._(
@@ -139,6 +147,15 @@ final class CoreLibrary {
           ),
           library.lookupFunction<_JsonNative, _JsonDart>(
             'fgm_pick_executable_json',
+          ),
+          library.lookupFunction<_JsonNative, _JsonDart>(
+            'fgm_gpu_spoof_inspect_json',
+          ),
+          library.lookupFunction<_RequestNative, _RequestDart>(
+            'fgm_gpu_spoof_apply_json',
+          ),
+          library.lookupFunction<_RequestNative, _RequestDart>(
+            'fgm_gpu_spoof_restore_json',
           ),
           library.lookupFunction<_RequestNative, _RequestDart>(
             'fgm_deploy_json',
@@ -234,7 +251,7 @@ final class CoreLibrary {
     return null;
   }
 
-  String get version => _readCString(_version());
+  String get version => readCString(_version());
 
   /// Returns the stable key for a deployment phase, or null when unknown.
   String? phaseName(int phase) {
@@ -242,7 +259,7 @@ final class CoreLibrary {
     if (pointer.address == 0) {
       return null;
     }
-    return _readCString(pointer);
+    return readCString(pointer);
   }
 
   /// Scans Steam/Epic/loose folders and returns the JSON reply.
@@ -264,6 +281,14 @@ final class CoreLibrary {
       _request(_diagnosticsExport, request);
 
   String? pickExecutableJson() => _json(_pickExecutable);
+
+  String? gpuSpoofInspectJson() => _json(_gpuSpoofInspect);
+
+  String? gpuSpoofApplyJson(String request) =>
+      _request(_gpuSpoofApply, request);
+
+  String? gpuSpoofRestoreJson(String request) =>
+      _request(_gpuSpoofRestore, request);
 
   String? deployJson(String request) => _request(_deploy, request);
 
@@ -341,7 +366,7 @@ final class CoreLibrary {
         return null;
       }
       try {
-        return _readCString(pointer);
+        return readCString(pointer);
       } finally {
         _stringFree(pointer);
       }
@@ -356,41 +381,9 @@ final class CoreLibrary {
       return null;
     }
     try {
-      return _readCString(pointer);
+      return readCString(pointer);
     } finally {
       _stringFree(pointer);
     }
   }
-
-  static Iterable<String> _candidates() sync* {
-    final String? override = Platform.environment['FGM_FFI_DLL'];
-    if (override != null && override.isNotEmpty) {
-      yield override;
-    }
-
-    yield 'fgm_ffi.dll';
-
-    final String executableDir = File(Platform.resolvedExecutable).parent.path;
-    yield '$executableDir${Platform.pathSeparator}fgm_ffi.dll';
-
-    final String current = Directory.current.path;
-    for (final String profile in const ['release', 'debug']) {
-      yield '$current/../rust/target/$profile/fgm_ffi.dll';
-      yield '$current/rust/target/$profile/fgm_ffi.dll';
-    }
-  }
-}
-
-String _readCString(Pointer<Int8> pointer) {
-  final List<int> bytes = <int>[];
-  var index = 0;
-  while (true) {
-    final int unit = pointer[index];
-    if (unit == 0) {
-      break;
-    }
-    bytes.add(unit & 0xFF);
-    index++;
-  }
-  return utf8.decode(bytes, allowMalformed: true);
 }
