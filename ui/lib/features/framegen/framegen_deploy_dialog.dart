@@ -2,6 +2,7 @@ import 'package:material_ui/material_ui.dart';
 
 import '../../bridge/deploy_dialog_result.dart';
 import '../../bridge/deploy_options.dart';
+import '../../bridge/graphics_api_label.dart';
 import '../../bridge/library_bridge.dart';
 import '../../bridge/library_game.dart';
 import '../../bridge/path_display.dart';
@@ -96,7 +97,9 @@ class _FrameGenDeployDialogState extends State<FrameGenDeployDialog> {
                             ),
                           ),
                           const SizedBox(width: 8),
-                          LegacyPill(label: widget.game.graphicsApi),
+                          LegacyPill(
+                            label: GraphicsApiLabel.of(widget.game.graphicsApi),
+                          ),
                         ],
                       ),
                       const SizedBox(height: 12),

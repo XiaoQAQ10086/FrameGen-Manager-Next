@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:material_ui/material_ui.dart';
 
 import '../../bridge/dlss5_state.dart';
+import '../../bridge/graphics_api_label.dart';
 import '../../bridge/library_game.dart';
 import '../../design/app_tokens.dart';
 import '../../design/legacy_pill.dart';
@@ -87,7 +88,9 @@ class Dlss5Tile extends StatelessWidget {
                       ),
                       const SizedBox(height: 3),
                       Text(
-                        l10n.dlss5ApiLabel(game.graphicsApi.toUpperCase()),
+                        l10n.dlss5ApiLabel(
+                          GraphicsApiLabel.of(game.graphicsApi),
+                        ),
                         style: const TextStyle(
                           color: Color(0xD9FFFFFF),
                           fontSize: 12,

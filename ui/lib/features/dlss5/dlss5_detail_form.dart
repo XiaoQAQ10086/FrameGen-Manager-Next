@@ -1,6 +1,7 @@
 import 'package:material_ui/material_ui.dart';
 
 import '../../bridge/dlss5_state.dart';
+import '../../bridge/graphics_api_label.dart';
 import '../../bridge/library_game.dart';
 import '../../design/app_tokens.dart';
 import '../../design/legacy_pill.dart';
@@ -84,7 +85,7 @@ class Dlss5DetailForm extends StatelessWidget {
           spacing: 6,
           runSpacing: 6,
           children: <Widget>[
-            LegacyPill(label: game.graphicsApi),
+            LegacyPill(label: GraphicsApiLabel.of(game.graphicsApi)),
             LegacyPill(
               label: _stateLabel(l10n, state.state),
               foreground: _stateColor(state.state),

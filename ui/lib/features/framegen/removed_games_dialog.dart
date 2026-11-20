@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:material_ui/material_ui.dart';
 
+import '../../bridge/graphics_api_label.dart';
 import '../../bridge/library_bridge.dart';
 import '../../bridge/library_game.dart';
 import '../../bridge/library_snapshot.dart';
@@ -171,7 +172,9 @@ class _RemovedGamesDialogState extends State<RemovedGamesDialog> {
                                     children: <Widget>[
                                       LegacyPill(label: game.source),
                                       LegacyPill(
-                                        label: game.graphicsApi,
+                                        label: GraphicsApiLabel.of(
+                                          game.graphicsApi,
+                                        ),
                                       ),
                                       if (!exists)
                                         LegacyPill(

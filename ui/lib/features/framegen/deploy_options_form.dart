@@ -46,14 +46,12 @@ class DeployOptionsForm extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: <Widget>[
-        Wrap(
-          alignment: WrapAlignment.center,
-          spacing: 14,
-          runSpacing: 14,
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: <Widget>[
             _field<String>(
               l10n,
-              width: 340,
+              width: double.infinity,
               label: l10n.optionProxySlot,
               value: options.proxySlot,
               values: _proxySlots,
@@ -63,9 +61,10 @@ class DeployOptionsForm extends StatelessWidget {
               onChanged: (String value) =>
                   onChanged(options.copyWith(proxySlot: value)),
             ),
+            const SizedBox(height: 10),
             _field<String>(
               l10n,
-              width: 340,
+              width: double.infinity,
               label: l10n.optionEngine,
               value: options.engine,
               values: const <String>['DLSS', 'XeSS'],
@@ -82,9 +81,10 @@ class DeployOptionsForm extends StatelessWidget {
                 );
               },
             ),
+            const SizedBox(height: 10),
             _field<int>(
               l10n,
-              width: 340,
+              width: double.infinity,
               label: l10n.optionFrames,
               value: options.maxGeneratedFrames,
               values: _xeSS ? const <int>[1, 2, 3] : const <int>[1, 2, 3, 5],
@@ -92,9 +92,10 @@ class DeployOptionsForm extends StatelessWidget {
               onChanged: (int value) =>
                   onChanged(options.copyWith(maxGeneratedFrames: value)),
             ),
+            const SizedBox(height: 10),
             _field<int>(
               l10n,
-              width: 340,
+              width: double.infinity,
               label: l10n.optionOptimized,
               value: options.optimized,
               values: const <int>[0, 1, 2, 3],
@@ -103,9 +104,10 @@ class DeployOptionsForm extends StatelessWidget {
               onChanged: (int value) =>
                   onChanged(options.copyWith(optimized: value)),
             ),
+            const SizedBox(height: 10),
             _field<String>(
               l10n,
-              width: 340,
+              width: double.infinity,
               label: l10n.optionPreset,
               value: options.preset,
               values: _presets,
@@ -113,9 +115,10 @@ class DeployOptionsForm extends StatelessWidget {
               onChanged: (String value) =>
                   onChanged(options.copyWith(preset: value)),
             ),
+            const SizedBox(height: 10),
             _field<String>(
               l10n,
-              width: 340,
+              width: double.infinity,
               label: l10n.optionSuperResolution,
               value: options.superResolution,
               values: _srModes,
@@ -125,9 +128,10 @@ class DeployOptionsForm extends StatelessWidget {
                   onChanged(options.copyWith(superResolution: value)),
             ),
             if (_xeSS) ...<Widget>[
+              const SizedBox(height: 10),
               _field<String>(
                 l10n,
-                width: 340,
+                width: double.infinity,
                 label: l10n.optionFlowResolution,
                 value: options.xeSSFlowResolution,
                 values: const <String>[
@@ -139,9 +143,10 @@ class DeployOptionsForm extends StatelessWidget {
                 onChanged: (String value) =>
                     onChanged(options.copyWith(xeSSFlowResolution: value)),
               ),
+              const SizedBox(height: 10),
               _field<String>(
                 l10n,
-                width: 340,
+                width: double.infinity,
                 label: l10n.optionUseHudless,
                 value: options.xeSSUseHudless,
                 values: const <String>['Auto', '1', '0'],

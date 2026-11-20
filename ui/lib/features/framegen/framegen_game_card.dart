@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:material_ui/material_ui.dart';
 
 import '../../bridge/game_modes.dart';
+import '../../bridge/graphics_api_label.dart';
 import '../../bridge/library_game.dart';
 import '../../bridge/path_display.dart';
 import '../../bridge/proxy_badge.dart';
@@ -89,7 +90,7 @@ class FrameGenGameCard extends StatelessWidget {
                       runSpacing: 6,
                       children: <Widget>[
                         LegacyPill(label: _sourceLabel(l10n, game.source)),
-                        LegacyPill(label: _apiLabel(game.graphicsApi)),
+                        LegacyPill(label: GraphicsApiLabel.of(game.graphicsApi)),
                         LegacyPill(
                           label: _stateLabel(l10n, state),
                           foreground: _stateColor(state),
@@ -268,17 +269,6 @@ class FrameGenGameCard extends StatelessWidget {
     };
   }
 
-  String _apiLabel(String api) {
-    return switch (api.toLowerCase()) {
-      'dx12' => 'DX12',
-      'dx11' => 'DX11',
-      'dx10' => 'DX10',
-      'dx9' => 'DX9',
-      'vulkan' => 'Vulkan',
-      'opengl' => 'OpenGL',
-      _ => '未知',
-    };
-  }
 }
 
 class _Cover extends StatelessWidget {
