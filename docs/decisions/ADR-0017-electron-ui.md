@@ -52,3 +52,9 @@ Rust 核心、部署引擎、资产包和 CLI 已完成并通过门禁；Flutter
 - 需要维护 napi-rs 构建链和 Electron 版本固定；原生插件必须与 Electron 的 Node ABI 匹配（N-API 降低重编频率）。
 - WebAssets 的 CSS 可直接复用，但旧 JS 桥接层（WebView2 消息）需要重写为 preload IPC。
 - RTSS/MSI Afterburner 的 OSD 注入需按 exe 建排除 profile；沿用已知方案。
+
+## 实施状态
+
+- 2026-11-20：Flutter 树、Flutter 构建脚本与 CI 步骤已删除；`build/verify.ps1` 委托给 `build/verify-rust-electron.ps1`。
+- 全部页面已迁移；实测解压 312MB、便携 zip 144MB、安装包 101MB。
+- 帧生成在真实游戏（Worst Class Ever）完成部署 8 文件并还原，还原后 1424 个文件哈希与部署前完全一致。
