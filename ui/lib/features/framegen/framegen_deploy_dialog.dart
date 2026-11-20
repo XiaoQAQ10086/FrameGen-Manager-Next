@@ -9,10 +9,10 @@ import '../../bridge/path_display.dart';
 import '../../bridge/proxy_badge.dart';
 import '../../design/app_tokens.dart';
 import '../../design/legacy_button_styles.dart';
+import '../../design/legacy_dialog_header.dart';
 import '../../design/legacy_field_row.dart';
 import '../../design/legacy_select.dart';
 import '../../l10n/app_localizations.dart';
-import 'deploy_dialog_header.dart';
 import 'deploy_options_form.dart';
 
 /// Legacy frame-generation deploy modal.
@@ -67,16 +67,17 @@ class _FrameGenDeployDialogState extends State<FrameGenDeployDialog> {
         side: const BorderSide(color: Color(0x1F14233C)),
       ),
       child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 800, maxHeight: 780),
+        constraints: const BoxConstraints(maxWidth: 660, maxHeight: 720),
         child: Padding(
           padding: const EdgeInsets.all(22),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: <Widget>[
-              DeployDialogHeader(
-                game: widget.game,
+              LegacyDialogHeader(
                 coverPath: widget.coverPath,
+                title: widget.game.name,
+                subtitle: displayPath(widget.game.targetDirectory),
                 onClose: () => Navigator.pop(context),
               ),
               const SizedBox(height: 14),
@@ -142,14 +143,18 @@ class _FrameGenDeployDialogState extends State<FrameGenDeployDialog> {
               const SizedBox(height: 12),
               Row(
                 children: <Widget>[
-                  Text(
-                    l10n.deployCloseGameHint,
-                    style: const TextStyle(
-                      color: AppTokens.textSecondary,
-                      fontSize: 12,
+                  Expanded(
+                    child: Text(
+                      l10n.deployCloseGameHint,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: AppTokens.textSecondary,
+                        fontSize: 12,
+                      ),
                     ),
                   ),
-                  const Spacer(),
+                  const SizedBox(width: 8),
                   OutlinedButton(
                     onPressed: widget.deployed
                         ? () => Navigator.pop(

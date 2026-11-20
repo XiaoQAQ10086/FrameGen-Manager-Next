@@ -89,6 +89,7 @@ class _NavGroupState extends State<NavGroup> {
             children: <Widget>[
               if (pill != null)
                 AnimatedPositioned(
+                  key: const ValueKey<String>('nav-pill'),
                   // The first measurement lands after the first frame;
                   // snapping it in avoids a pill flying in from the corner.
                   duration: _animated ? MotionTokens.standard : Duration.zero,

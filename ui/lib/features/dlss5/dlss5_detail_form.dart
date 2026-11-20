@@ -125,8 +125,8 @@ class Dlss5DetailForm extends StatelessWidget {
           value: api,
           values: apis,
           labelFor: (String value) => value == 'auto'
-              ? l10n.dlss5ApiAuto(game.graphicsApi)
-              : value.toUpperCase(),
+              ? l10n.dlss5ApiAuto(GraphicsApiLabel.of(game.graphicsApi))
+              : GraphicsApiLabel.of(value),
           onChanged: onApiChanged,
         ),
         const SizedBox(height: 10),

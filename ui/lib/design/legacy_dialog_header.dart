@@ -2,23 +2,25 @@ import 'dart:io';
 
 import 'package:material_ui/material_ui.dart';
 
-import '../../bridge/library_game.dart';
-import '../../bridge/path_display.dart';
-import '../../design/app_tokens.dart';
+import 'app_tokens.dart';
 
-/// Cover, game name and install path shown at the top of the deploy modal.
-class DeployDialogHeader extends StatelessWidget {
-  const DeployDialogHeader({
+/// Title block shared by the deploy-style modals: optional square cover, a
+/// 20px name, a muted subtitle and a circular close button.
+class LegacyDialogHeader extends StatelessWidget {
+  const LegacyDialogHeader({
     super.key,
-    required this.game,
-    required this.coverPath,
+    this.coverPath,
+    required this.title,
+    required this.subtitle,
     required this.onClose,
   });
 
   static const double _coverSize = 48;
 
-  final LibraryGame game;
+  /// Omitted for dialogs that have no artwork, such as the DLSS5 detail.
   final String? coverPath;
+  final String title;
+  final String subtitle;
   final VoidCallback onClose;
 
   @override
@@ -26,28 +28,33 @@ class DeployDialogHeader extends StatelessWidget {
     final String? cover = coverPath;
     return Row(
       children: <Widget>[
-        ClipRRect(
-          borderRadius: BorderRadius.circular(12),
-          child: cover != null && cover.isNotEmpty
-              ? Image(
-                  image: ResizeImage(FileImage(File(cover)), width: 144),
-                  width: _coverSize,
-                  height: _coverSize,
-                  fit: BoxFit.cover,
-                  errorBuilder:
-                      (BuildContext context, Object error, StackTrace? stack) =>
-                          _placeholder(),
-                )
-              : _placeholder(),
-        ),
-        const SizedBox(width: 14),
+        if (cover != null) ...<Widget>[
+          ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: cover.isNotEmpty
+                ? Image(
+                    image: ResizeImage(FileImage(File(cover)), width: 144),
+                    width: _coverSize,
+                    height: _coverSize,
+                    fit: BoxFit.cover,
+                    errorBuilder:
+                        (
+                          BuildContext context,
+                          Object error,
+                          StackTrace? stack,
+                        ) => _placeholder(),
+                  )
+                : _placeholder(),
+          ),
+          const SizedBox(width: 14),
+        ],
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: <Widget>[
               Text(
-                game.name,
+                title,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: const TextStyle(
@@ -59,7 +66,7 @@ class DeployDialogHeader extends StatelessWidget {
               ),
               const SizedBox(height: 2),
               Text(
-                displayPath(game.targetDirectory),
+                subtitle,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: const TextStyle(
@@ -83,7 +90,7 @@ class DeployDialogHeader extends StatelessWidget {
       color: AppTokens.accentSoft,
       alignment: Alignment.center,
       child: Text(
-        game.name.isEmpty ? '?' : game.name.substring(0, 1).toUpperCase(),
+        title.isEmpty ? '?' : title.substring(0, 1).toUpperCase(),
         style: const TextStyle(
           color: AppTokens.monogram,
           fontSize: 20,
@@ -107,9 +114,7 @@ class _CloseButton extends StatelessWidget {
       height: 32,
       child: Material(
         color: Colors.transparent,
-        shape: const CircleBorder(
-          side: BorderSide(color: AppTokens.border),
-        ),
+        shape: const CircleBorder(side: BorderSide(color: AppTokens.border)),
         clipBehavior: Clip.antiAlias,
         child: InkWell(
           onTap: onPressed,

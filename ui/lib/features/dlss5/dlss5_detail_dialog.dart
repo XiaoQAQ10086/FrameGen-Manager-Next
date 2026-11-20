@@ -12,6 +12,7 @@ import '../../design/app_tokens.dart';
 import '../../design/error_dialog.dart';
 import '../../design/legacy_button_styles.dart';
 import '../../design/legacy_dialog.dart';
+import '../../design/legacy_dialog_header.dart';
 import '../../design/operation_progress_dialog.dart';
 import '../../l10n/app_localizations.dart';
 import 'dlss5_detail_form.dart';
@@ -279,39 +280,14 @@ class _Dlss5DetailDialogState extends State<Dlss5DetailDialog> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: <Widget>[
-              Row(
-                children: <Widget>[
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: <Widget>[
-                        Text(
-                          widget.game.name,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: Theme.of(context).textTheme.titleMedium,
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          displayPath(widget.game.targetDirectory),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            color: AppTokens.textSecondary,
-                            fontFamily: 'Consolas',
-                            fontSize: 12,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  IconButton(
-                    onPressed: () => Navigator.pop(context, _changed),
-                    icon: const Icon(Icons.close, size: 18),
-                  ),
-                ],
+              LegacyDialogHeader(
+                title: widget.game.name,
+                subtitle: displayPath(widget.game.targetDirectory),
+                onClose: () => Navigator.pop(context, _changed),
               ),
-              const SizedBox(height: 10),
+              const SizedBox(height: 14),
+              const Divider(height: 1, thickness: 1, color: AppTokens.border),
+              const SizedBox(height: 14),
               Flexible(
                 child: SingleChildScrollView(
                   child: Dlss5DetailForm(
@@ -331,6 +307,8 @@ class _Dlss5DetailDialogState extends State<Dlss5DetailDialog> {
                 ),
               ),
               const SizedBox(height: 14),
+              const Divider(height: 1, thickness: 1, color: AppTokens.border),
+              const SizedBox(height: 12),
               Row(
                 children: <Widget>[
                   TextButton(
