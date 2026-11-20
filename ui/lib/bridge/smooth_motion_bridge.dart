@@ -109,11 +109,27 @@ final class SmoothMotionBridge {
       if (decoded['ok'] != true) {
         return SmoothMotionStatus(
           code: decoded['code'] as String? ?? 'Internal',
+          detail: _contextDetail(decoded['context']),
         );
       }
       return SmoothMotionStatus.fromJson(Map<String, Object?>.from(decoded));
     } on FormatException {
       return const SmoothMotionStatus(code: 'InvalidReply');
     }
+  }
+
+  /// Renders the error envelope's `context` pairs so the dialog explains the
+  /// failure (which NVAPI call, which status) instead of only its code.
+  static String? _contextDetail(Object? context) {
+    if (context is! List) {
+      return null;
+    }
+    final List<String> parts = <String>[];
+    for (final Object? entry in context) {
+      if (entry is List && entry.length == 2) {
+        parts.add('${entry[0]}=${entry[1]}');
+      }
+    }
+    return parts.isEmpty ? null : parts.join(', ');
   }
 }

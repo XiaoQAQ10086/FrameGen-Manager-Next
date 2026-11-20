@@ -45,6 +45,7 @@
 5. 对每个 profile 写入 1，统一保存，**换新会话逐个读回**；同时用 `FindProfileForExe` 验证该 EXE 确实能解析到 profile 且值为 1。任一项不满足都算失败，回滚组件文件，避免出现“组件已部署但驱动未设置”。
 6. 如果 NVAPI 失败：回滚组件文件，返回 `NvApiCallFailed`。
 7. 找不到 `nvapi64.dll` → `NvApiUnavailable`。
+8. 任何一步失败都写 `sm enable failed` 日志，字段含 `game`、`code`、`reason`、`operation`、`status`；错误弹窗同时显示错误码与同一组上下文（`operation`/`status` 说明是哪一次 NVAPI 调用失败）。
 
 ## 关闭
 

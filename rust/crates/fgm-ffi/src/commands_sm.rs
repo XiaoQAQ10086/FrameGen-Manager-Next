@@ -2,6 +2,8 @@ use std::path::Path;
 
 use fgm_domain::error::{AppError, ErrorCode};
 use fgm_domain::version::VERSION;
+use fgm_infra::paths::AppPaths;
+use fgm_infra::smooth_motion::SmoothMotionChange;
 use serde::Deserialize;
 use serde_json::{Value, json};
 
@@ -58,7 +60,7 @@ pub(crate) fn sm_enable(request: &str) -> Result<Value, AppError> {
         AppError::new(ErrorCode::GpuUnsupported).with("reason", "NVIDIA GPU not detected")
     })?;
     let app_version = request.app_version.unwrap_or_else(|| VERSION.to_string());
-    let change = fgm_infra::smooth_motion::SmoothMotionFacade::enable(
+    let outcome = fgm_infra::smooth_motion::SmoothMotionFacade::enable(
         gpu.route,
         gpu.driver_supported,
         &request.game,
@@ -66,9 +68,8 @@ pub(crate) fn sm_enable(request: &str) -> Result<Value, AppError> {
         &target_directory,
         &app_version,
         &paths,
-    )?;
-    super::commands::log_event(&paths, "info", "sm enable", &[("game", &request.game)]);
-    Ok(change_json(change))
+    );
+    finish(&paths, "sm enable", &request.game, outcome)
 }
 
 pub(crate) fn sm_disable(request: &str) -> Result<Value, AppError> {
@@ -77,14 +78,13 @@ pub(crate) fn sm_disable(request: &str) -> Result<Value, AppError> {
     let target_directory = absolute(Path::new(&request.target_dir))?;
     let paths = data_paths(request.data_dir.as_deref())?;
     paths.ensure_created()?;
-    let change = fgm_infra::smooth_motion::SmoothMotionFacade::disable(
+    let outcome = fgm_infra::smooth_motion::SmoothMotionFacade::disable(
         &request.game,
         &executable,
         &target_directory,
         &paths,
-    )?;
-    super::commands::log_event(&paths, "info", "sm disable", &[("game", &request.game)]);
-    Ok(change_json(change))
+    );
+    finish(&paths, "sm disable", &request.game, outcome)
 }
 
 pub(crate) fn sm_restore(request: &str) -> Result<Value, AppError> {
@@ -93,14 +93,56 @@ pub(crate) fn sm_restore(request: &str) -> Result<Value, AppError> {
     let target_directory = absolute(Path::new(&request.target_dir))?;
     let paths = data_paths(request.data_dir.as_deref())?;
     paths.ensure_created()?;
-    let change = fgm_infra::smooth_motion::SmoothMotionFacade::restore(
+    let outcome = fgm_infra::smooth_motion::SmoothMotionFacade::restore(
         &request.game,
         &executable,
         &target_directory,
         &paths,
-    )?;
-    super::commands::log_event(&paths, "info", "sm restore", &[("game", &request.game)]);
-    Ok(change_json(change))
+    );
+    finish(&paths, "sm restore", &request.game, outcome)
+}
+
+fn finish(
+    paths: &AppPaths,
+    action: &str,
+    game: &str,
+    outcome: Result<SmoothMotionChange, AppError>,
+) -> Result<Value, AppError> {
+    match outcome {
+        Ok(change) => {
+            super::commands::log_event(paths, "info", action, &[("game", game)]);
+            Ok(change_json(change))
+        }
+        Err(error) => {
+            log_failure(paths, action, game, &error);
+            Err(error)
+        }
+    }
+}
+
+/// Records why a toggle failed; the dialog only shows the code, the log keeps
+/// the NVAPI status and reason that explain it.
+fn log_failure(paths: &AppPaths, action: &str, game: &str, error: &AppError) {
+    let code = format!("{:?}", error.code);
+    let field = |key: &str| {
+        error
+            .context
+            .iter()
+            .find(|(name, _)| name == key)
+            .map_or("", |(_, value)| value.as_str())
+    };
+    super::commands::log_event(
+        paths,
+        "warn",
+        &format!("{action} failed"),
+        &[
+            ("game", game),
+            ("code", code.as_str()),
+            ("reason", field("reason")),
+            ("operation", field("operation")),
+            ("status", field("status")),
+        ],
+    );
 }
 
 fn change_json(change: fgm_infra::smooth_motion::SmoothMotionChange) -> Value {
