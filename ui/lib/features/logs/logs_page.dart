@@ -7,7 +7,6 @@ import '../../bridge/diagnostics_result.dart';
 import '../../bridge/logs_bridge.dart';
 import '../../bridge/system_bridge.dart';
 import '../../design/app_tokens.dart';
-import '../../design/error_dialog.dart';
 import '../../design/legacy_toast.dart';
 import '../../l10n/app_localizations.dart';
 
@@ -72,11 +71,7 @@ class _LogsPageState extends State<LogsPage> {
     }
     setState(() => _clearing = false);
     if (removed == null) {
-      await ErrorDialog.show(
-        context,
-        message: l10n.diagnosticsFailed,
-        code: 'LogsClearFailed',
-      );
+      LegacyToast.show(context, "${l10n.diagnosticsFailed} ('LogsClearFailed')");
       return;
     }
     _load();
@@ -98,11 +93,7 @@ class _LogsPageState extends State<LogsPage> {
     }
     final AppLocalizations l10n = AppLocalizations.of(context);
     if (!result.ok || result.path == null) {
-      await ErrorDialog.show(
-        context,
-        message: l10n.diagnosticsFailed,
-        code: result.code ?? 'DiagnosticsExportFailed',
-      );
+      LegacyToast.show(context, "${l10n.diagnosticsFailed} (result.code ?? 'DiagnosticsExportFailed')");
       return;
     }
     LegacyToast.show(context, l10n.diagnosticsSaved(result.path!));

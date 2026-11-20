@@ -18,6 +18,7 @@ import '../../bridge/system_bridge.dart';
 import '../../design/app_tokens.dart';
 import '../../design/error_dialog.dart';
 import '../../design/legacy_panel.dart';
+import '../../design/legacy_toast.dart';
 import '../../design/library_list_head.dart';
 import '../../l10n/app_localizations.dart';
 import '../framegen/mode_source_panel.dart';
@@ -142,11 +143,7 @@ class _SmoothMotionPageState extends State<SmoothMotionPage> {
       return;
     }
     if (!added.ok) {
-      await ErrorDialog.show(
-        context,
-        message: l10n.addGameFailed,
-        code: added.code ?? 'AddGameFailed',
-      );
+      LegacyToast.show(context, "${l10n.addGameFailed} (added.code ?? 'AddGameFailed')");
       return;
     }
     final LibrarySnapshot snapshot = LibraryBridge.list(widget.core);
@@ -182,12 +179,7 @@ class _SmoothMotionPageState extends State<SmoothMotionPage> {
     setState(() => _busyGameId = null);
     final AppLocalizations l10n = AppLocalizations.of(context);
     if (status.code != null) {
-      await ErrorDialog.show(
-        context,
-        message: l10n.smOperationFailed,
-        code: status.code!,
-        detail: status.detail,
-      );
+      LegacyToast.show(context, "${l10n.smOperationFailed} (status.code!)");
       return;
     }
     setState(() {
@@ -202,11 +194,7 @@ class _SmoothMotionPageState extends State<SmoothMotionPage> {
   Future<void> _launch(LibraryGame game) async {
     final AppLocalizations l10n = AppLocalizations.of(context);
     if (!await LibraryBridge.launch(game) && mounted) {
-      await ErrorDialog.show(
-        context,
-        message: l10n.launchFailed,
-        code: 'LaunchFailed',
-      );
+      LegacyToast.show(context, "${l10n.launchFailed} ('LaunchFailed')");
     }
   }
 

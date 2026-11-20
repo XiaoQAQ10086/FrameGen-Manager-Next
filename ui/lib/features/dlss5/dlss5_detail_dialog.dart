@@ -9,7 +9,6 @@ import '../../bridge/path_display.dart';
 import '../../bridge/proxy_badge.dart';
 import '../../bridge/system_bridge.dart';
 import '../../design/app_tokens.dart';
-import '../../design/error_dialog.dart';
 import '../../design/legacy_button_styles.dart';
 import '../../design/legacy_dialog.dart';
 import '../../design/legacy_dialog_header.dart';
@@ -111,11 +110,7 @@ class _Dlss5DetailDialogState extends State<Dlss5DetailDialog> {
     final AppLocalizations l10n = AppLocalizations.of(context);
     final String api = _resolvedApi;
     if (api == 'unknown' || api.isEmpty) {
-      await ErrorDialog.show(
-        context,
-        message: l10n.deployFailed,
-        code: 'UnknownGraphicsApi',
-      );
+      LegacyToast.show(context, "${l10n.deployFailed} ('UnknownGraphicsApi')");
       return;
     }
     if (!await _confirm(
@@ -145,12 +140,7 @@ class _Dlss5DetailDialogState extends State<Dlss5DetailDialog> {
       return;
     }
     if (!result.ok) {
-      await ErrorDialog.show(
-        context,
-        message: l10n.deployFailed,
-        code: result.code ?? 'InstallFailed',
-        detail: result.detail,
-      );
+      LegacyToast.show(context, "${l10n.deployFailed} (result.code ?? 'InstallFailed')");
       return;
     }
     _changed = true;
@@ -179,11 +169,7 @@ class _Dlss5DetailDialogState extends State<Dlss5DetailDialog> {
       }
       if (removed == null) {
         setState(() => _busy = false);
-        await ErrorDialog.show(
-          context,
-          message: l10n.dlss5CleanFailed,
-          code: 'LegacyCleanupFailed',
-        );
+        LegacyToast.show(context, "${l10n.dlss5CleanFailed} ('LegacyCleanupFailed')");
         return;
       }
       _changed = true;
@@ -197,12 +183,7 @@ class _Dlss5DetailDialogState extends State<Dlss5DetailDialog> {
     }
     setState(() => _busy = false);
     if (!result.ok) {
-      await ErrorDialog.show(
-        context,
-        message: l10n.deployFailed,
-        code: result.code ?? 'UninstallFailed',
-        detail: result.detail,
-      );
+      LegacyToast.show(context, "${l10n.deployFailed} (result.code ?? 'UninstallFailed')");
       return;
     }
     _changed = true;

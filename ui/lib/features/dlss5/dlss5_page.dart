@@ -15,6 +15,7 @@ import '../../bridge/system_bridge.dart';
 import '../../design/app_tokens.dart';
 import '../../design/error_dialog.dart';
 import '../../design/legacy_dialog.dart';
+import '../../design/legacy_toast.dart';
 import '../../design/library_list_head.dart';
 import '../../l10n/app_localizations.dart';
 import '../framegen/mode_source_panel.dart';
@@ -135,11 +136,7 @@ class _Dlss5PageState extends State<Dlss5Page> {
       return;
     }
     if (!added.ok) {
-      await ErrorDialog.show(
-        context,
-        message: l10n.addGameFailed,
-        code: added.code ?? 'AddGameFailed',
-      );
+      LegacyToast.show(context, "${l10n.addGameFailed} (added.code ?? 'AddGameFailed')");
       return;
     }
     _games = LibraryBridge.list(widget.core).games;

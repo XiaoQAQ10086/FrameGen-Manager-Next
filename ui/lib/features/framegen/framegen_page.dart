@@ -159,11 +159,7 @@ class _FrameGenPageState extends State<FrameGenPage> {
       return;
     }
     if (!added.ok) {
-      await ErrorDialog.show(
-        context,
-        message: l10n.addGameFailed,
-        code: added.code ?? 'AddGameFailed',
-      );
+      LegacyToast.show(context, "${l10n.addGameFailed} (added.code ?? 'AddGameFailed')");
       return;
     }
     final LibrarySnapshot snapshot = LibraryBridge.list(widget.core);
@@ -229,11 +225,7 @@ class _FrameGenPageState extends State<FrameGenPage> {
       return;
     }
     if (!result.ok) {
-      await ErrorDialog.show(
-        context,
-        message: l10n.deployFailed,
-        code: result.code ?? 'DeployFailed',
-      );
+      LegacyToast.show(context, "${l10n.deployFailed} (result.code ?? 'DeployFailed')");
       return;
     }
     LegacyToast.show(context, '${l10n.deployComplete} ${game.name}');
@@ -257,11 +249,7 @@ class _FrameGenPageState extends State<FrameGenPage> {
     }
     setState(() => _busyGameId = null);
     if (!result.ok) {
-      await ErrorDialog.show(
-        context,
-        message: l10n.deployFailed,
-        code: result.code ?? 'RestoreFailed',
-      );
+      LegacyToast.show(context, "${l10n.deployFailed} (result.code ?? 'RestoreFailed')");
       return;
     }
     LegacyToast.show(
@@ -274,11 +262,7 @@ class _FrameGenPageState extends State<FrameGenPage> {
   Future<void> _launch(LibraryGame game) async {
     final AppLocalizations l10n = AppLocalizations.of(context);
     if (!await LibraryBridge.launch(game) && mounted) {
-      await ErrorDialog.show(
-        context,
-        message: l10n.launchFailed,
-        code: 'LaunchFailed',
-      );
+      LegacyToast.show(context, "${l10n.launchFailed} ('LaunchFailed')");
     }
   }
 

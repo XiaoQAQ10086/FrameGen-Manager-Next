@@ -5,12 +5,12 @@ import '../../bridge/gpu_spoof_state.dart';
 import '../../bridge/panel_cache.dart';
 import '../../bridge/system_bridge.dart';
 import '../../design/app_tokens.dart';
-import '../../design/error_dialog.dart';
 import '../../design/legacy_button_styles.dart';
 import '../../design/legacy_dialog.dart';
 import '../../design/legacy_panel.dart';
 import '../../design/legacy_pill.dart';
 import '../../design/legacy_select.dart';
+import '../../design/legacy_toast.dart';
 import '../../l10n/app_localizations.dart';
 
 /// Sidebar card: rename the adapter in the driver record.
@@ -83,11 +83,7 @@ class _SpoofPanelState extends State<SpoofPanel> {
     }
     setState(() => _busy = false);
     if (code != null) {
-      await ErrorDialog.show(
-        context,
-        message: l10n.gpuSpoofFailed,
-        code: code,
-      );
+      LegacyToast.show(context, "${l10n.gpuSpoofFailed} (code)");
       return;
     }
     await _load();
@@ -108,11 +104,7 @@ class _SpoofPanelState extends State<SpoofPanel> {
     }
     setState(() => _busy = false);
     if (code != null) {
-      await ErrorDialog.show(
-        context,
-        message: l10n.gpuSpoofFailed,
-        code: code,
-      );
+      LegacyToast.show(context, "${l10n.gpuSpoofFailed} (code)");
       return;
     }
     await _load();

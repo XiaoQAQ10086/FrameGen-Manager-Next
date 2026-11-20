@@ -10,7 +10,6 @@ import '../../bridge/system_paths.dart';
 import '../../bridge/update_bridge.dart';
 import '../../bridge/update_info.dart';
 import '../../design/app_tokens.dart';
-import '../../design/error_dialog.dart';
 import '../../design/legacy_button_styles.dart';
 import '../../design/legacy_dialog.dart';
 import '../../design/legacy_panel.dart';
@@ -55,11 +54,7 @@ class _AboutPageState extends State<AboutPage> {
       if (!mounted) {
         return;
       }
-      await ErrorDialog.show(
-        context,
-        message: AppLocalizations.of(context).settingsSaveFailed,
-        code: 'SettingsSaveFailed',
-      );
+      LegacyToast.show(context, "${AppLocalizations.of(context).settingsSaveFailed} ('SettingsSaveFailed')");
       setState(() => _settings = SettingsBridge.load(widget.core));
     }
   }
@@ -145,11 +140,7 @@ class _AboutPageState extends State<AboutPage> {
       return;
     }
     if (!downloaded.ok) {
-      await ErrorDialog.show(
-        context,
-        message: l10n.updateFailed(downloaded.code ?? ''),
-        code: downloaded.code ?? 'UpdateDownloadFailed',
-      );
+      LegacyToast.show(context, "${l10n.updateFailed(downloaded.code ?? '')} (downloaded.code ?? 'UpdateDownloadFailed')");
       return;
     }
     if (downloaded.portable) {
@@ -167,11 +158,7 @@ class _AboutPageState extends State<AboutPage> {
     if (started) {
       exit(0);
     }
-    await ErrorDialog.show(
-      context,
-      message: l10n.updateFailed('UpdateInstall'),
-      code: 'UpdateInstallFailed',
-    );
+    LegacyToast.show(context, "${l10n.updateFailed('UpdateInstall')} ('UpdateInstallFailed')");
   }
 
   @override
