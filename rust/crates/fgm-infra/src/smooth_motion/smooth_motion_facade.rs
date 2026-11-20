@@ -1,7 +1,7 @@
 use std::path::Path;
 
 use crate::paths::AppPaths;
-use fgm_domain::error::{AppError, ErrorCode};
+use fgm_domain::error::AppError;
 use fgm_domain::gpu::GpuRoute;
 
 use super::smooth_motion_change::SmoothMotionChange;
@@ -15,18 +15,13 @@ impl SmoothMotionFacade {
     #[allow(clippy::too_many_arguments)]
     pub fn enable(
         route: GpuRoute,
-        driver_supported: bool,
+        _driver_supported: bool,
         game: &str,
         executable: &Path,
         target_directory: &Path,
         app_version: &str,
         paths: &AppPaths,
     ) -> Result<SmoothMotionChange, AppError> {
-        if !driver_supported {
-            return Err(AppError::new(ErrorCode::GpuUnsupported)
-                .with("reason", "the installed NVIDIA driver is too old"));
-        }
-
         SmoothMotionComponents::deploy(
             route,
             target_directory,

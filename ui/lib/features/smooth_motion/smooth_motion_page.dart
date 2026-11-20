@@ -62,7 +62,6 @@ class _SmoothMotionPageState extends State<SmoothMotionPage> {
         await SmoothMotionBridge.inspectMany(_games);
     final List<MapEntry<String, String?>> covers = await Future.wait(
       _games
-          .where((LibraryGame game) => game.source == 'steam')
           .map(
             (LibraryGame game) async =>
                 MapEntry<String, String?>(game.id, await LibraryBridge.cover(game)),
@@ -196,12 +195,9 @@ class _SmoothMotionPageState extends State<SmoothMotionPage> {
   }
 
   bool _compatible(GpuInfo? gpu) {
-    if (gpu == null) {
-      return false;
-    }
-    final String route = gpu.route.toLowerCase();
-    return gpu.driverSupported &&
-        (route.contains('sm86') || route.contains('sm75'));
+    // Any NVIDIA adapter may attempt the deployment; the compatibility panel
+    // still reports model/driver recommendations as reference only.
+    return gpu != null && gpu.name.toUpperCase().contains('NVIDIA');
   }
 
   @override

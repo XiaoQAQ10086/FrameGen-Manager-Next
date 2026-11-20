@@ -78,7 +78,7 @@ class _PathBlock extends StatelessWidget {
           style: const TextStyle(
             color: AppTokens.textPrimary,
             fontSize: 12.5,
-            fontWeight: FontWeight.w600,
+            fontWeight: FontWeight.w700,
           ),
         ),
         const SizedBox(height: 2),

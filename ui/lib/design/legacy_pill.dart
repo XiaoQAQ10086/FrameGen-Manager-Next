@@ -33,7 +33,7 @@ class LegacyPill extends StatelessWidget {
       style: TextStyle(
         color: foreground,
         fontSize: fontSize,
-        fontWeight: FontWeight.w600,
+        fontWeight: FontWeight.w700,
       ),
     );
     return Container(

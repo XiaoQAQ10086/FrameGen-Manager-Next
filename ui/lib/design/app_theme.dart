@@ -60,6 +60,8 @@ abstract final class AppTheme {
       dialogTheme: DialogThemeData(
         backgroundColor: Colors.white,
         surfaceTintColor: Colors.transparent,
+        elevation: 18,
+        shadowColor: const Color(0x40101828),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20),
           side: const BorderSide(color: Color(0x1F14233C)),
@@ -75,7 +77,7 @@ abstract final class AppTheme {
         titleMedium: TextStyle(
           color: AppTokens.textPrimary,
           fontSize: 15,
-          fontWeight: FontWeight.w600,
+          fontWeight: FontWeight.w700,
         ),
         bodyMedium: TextStyle(
           color: AppTokens.textSecondary,
@@ -85,7 +87,7 @@ abstract final class AppTheme {
         labelMedium: TextStyle(
           color: AppTokens.textSecondary,
           fontSize: 12,
-          fontWeight: FontWeight.w500,
+          fontWeight: FontWeight.w400,
         ),
       ),
     );

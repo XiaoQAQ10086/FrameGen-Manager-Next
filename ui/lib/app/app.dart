@@ -1,3 +1,5 @@
+import 'dart:ui' show PointerDeviceKind;
+
 import 'package:material_ui/material_ui.dart';
 
 import '../bridge/app_settings.dart';
@@ -45,6 +47,7 @@ class _FgmAppState extends State<FgmApp> {
       locale: _locale,
       theme: AppTheme.light,
       themeMode: ThemeMode.light,
+      scrollBehavior: const _SmoothScrollBehavior(),
       localizationsDelegates: const <LocalizationsDelegate<dynamic>>[
         AppLocalizations.delegate,
         ...GlobalMaterialLocalizations.delegates,
@@ -54,6 +57,24 @@ class _FgmAppState extends State<FgmApp> {
         core: widget.core,
         onLanguageChanged: _setLanguage,
       ),
+    );
+  }
+}
+
+/// Elastic scrolling with mouse-drag support for the desktop shell.
+class _SmoothScrollBehavior extends MaterialScrollBehavior {
+  const _SmoothScrollBehavior();
+
+  @override
+  Set<PointerDeviceKind> get dragDevices => <PointerDeviceKind>{
+    ...super.dragDevices,
+    PointerDeviceKind.mouse,
+  };
+
+  @override
+  ScrollPhysics getScrollPhysics(BuildContext context) {
+    return const BouncingScrollPhysics(
+      parent: AlwaysScrollableScrollPhysics(),
     );
   }
 }

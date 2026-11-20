@@ -90,9 +90,9 @@ class _BlurBackdrop extends StatelessWidget {
           behavior: HitTestBehavior.opaque,
           onTap: dismissible ? onDismiss : null,
           child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 5 * t, sigmaY: 5 * t),
+            filter: ImageFilter.blur(sigmaX: 6 * t, sigmaY: 6 * t),
             child: ColoredBox(
-              color: Color.fromRGBO(16, 24, 40, 0.04 * t),
+              color: Color.fromRGBO(16, 24, 40, 0.10 * t),
             ),
           ),
         );

@@ -106,9 +106,6 @@ final class LibraryBridge {
 
   /// Returns the local cover path, downloading it on first use.
   static Future<String?> cover(LibraryGame game) async {
-    if (game.source != 'steam') {
-      return null;
-    }
     final String request = jsonEncode(<String, Object?>{'gameId': game.id});
     final String? reply = await Isolate.run(() {
       final CoreLibrary? core = CoreLibrary.tryOpen();

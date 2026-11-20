@@ -115,7 +115,7 @@ abstract final class LegacyButtonStyles {
         EdgeInsets.symmetric(horizontal: 18, vertical: 11),
       ),
       textStyle: WidgetStatePropertyAll<TextStyle>(
-        _textStyle(foreground, 13.5),
+        _textStyle(foreground, 13),
       ),
     );
   }
@@ -230,7 +230,7 @@ abstract final class LegacyButtonStyles {
         EdgeInsets.symmetric(horizontal: 18, vertical: 9),
       ),
       textStyle: WidgetStatePropertyAll<TextStyle>(
-        _textStyle(foreground, 13.5, strong: lightText),
+        _textStyle(foreground, 13, strong: lightText),
       ),
       shape: WidgetStatePropertyAll<OutlinedBorder>(
         RoundedRectangleBorder(
@@ -292,17 +292,7 @@ abstract final class LegacyButtonStyles {
     return TextStyle(
       color: color,
       fontSize: size,
-      fontWeight: strong ? FontWeight.w700 : FontWeight.w600,
-      letterSpacing: 0.2,
-      shadows: color == Colors.white
-          ? const <Shadow>[
-              Shadow(
-                color: Color(0x4D000000),
-                offset: Offset(0, 1),
-                blurRadius: 1,
-              ),
-            ]
-          : null,
+      fontWeight: strong ? FontWeight.w700 : FontWeight.w400,
     );
   }
 

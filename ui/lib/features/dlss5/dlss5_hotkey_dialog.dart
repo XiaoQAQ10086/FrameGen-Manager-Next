@@ -68,7 +68,7 @@ class _Dlss5HotkeyDialogState extends State<Dlss5HotkeyDialog> {
                 style: const TextStyle(
                   color: AppTokens.textPrimary,
                   fontSize: 16,
-                  fontWeight: FontWeight.w600,
+                  fontWeight: FontWeight.w700,
                 ),
               ),
             ),

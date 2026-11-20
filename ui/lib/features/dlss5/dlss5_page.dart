@@ -66,7 +66,6 @@ class _Dlss5PageState extends State<Dlss5Page> {
     );
     final List<MapEntry<String, String?>> covers = await Future.wait(
       _games
-          .where((LibraryGame game) => game.source == 'steam')
           .map(
             (LibraryGame game) async =>
                 MapEntry<String, String?>(game.id, await LibraryBridge.cover(game)),

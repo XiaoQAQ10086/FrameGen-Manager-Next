@@ -8,6 +8,7 @@ import '../../bridge/proxy_badge.dart';
 import '../../design/app_tokens.dart';
 import '../../design/legacy_button_styles.dart';
 import '../../design/legacy_pill.dart';
+import '../../design/legacy_select.dart';
 import '../../l10n/app_localizations.dart';
 import 'deploy_dialog_header.dart';
 import 'deploy_options_form.dart';
@@ -32,6 +33,8 @@ class FrameGenDeployDialog extends StatefulWidget {
   @override
   State<FrameGenDeployDialog> createState() => _FrameGenDeployDialogState();
 }
+
+const String _pickSentinel = '__pick__';
 
 class _FrameGenDeployDialogState extends State<FrameGenDeployDialog> {
   late DeployOptions _options = widget.initial;
@@ -154,49 +157,24 @@ class _FrameGenDeployDialogState extends State<FrameGenDeployDialog> {
   }
 
   Widget _targetRow(BuildContext context, AppLocalizations l10n) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: <Widget>[
-        Row(
-          children: <Widget>[
-            Text(
-              l10n.deployTargetLabel,
-              style: const TextStyle(
-                color: AppTokens.textSecondary,
-                fontSize: 12.5,
-              ),
-            ),
-            const Spacer(),
-            TextButton(
-              onPressed: _pickExe,
-              child: Text(l10n.deployChooseExe),
-            ),
-          ],
-        ),
-        Container(
-          width: double.infinity,
-          height: 34,
-          alignment: Alignment.centerLeft,
-          padding: const EdgeInsets.symmetric(horizontal: 11),
-          decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: <Color>[Color(0xFFFFFFFF), Color(0xFFF4F7FB)],
-            ),
-            borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
-            border: Border.all(color: const Color(0x2E14233C)),
-          ),
-          child: Text(
-            _gameExe ?? widget.game.targetDirectory,
-            style: const TextStyle(
-              color: AppTokens.textPrimary,
-              fontFamily: 'Consolas',
-              fontSize: 12,
-            ),
-          ),
-        ),
-      ],
+    final String current =
+        _gameExe ?? widget.game.renderExe ?? widget.game.targetDirectory;
+    return LegacySelect<String>(
+      label: l10n.deployTargetLabel,
+      value: current,
+      items: <String>[current, _pickSentinel],
+      labelFor: (String item) =>
+          item == _pickSentinel ? l10n.deployChooseExe : item,
+      onChanged: (String item) {
+        if (item == _pickSentinel) {
+          _pickExe();
+        } else {
+          setState(() {
+            _gameExe = item;
+            _exeChanged = item != widget.game.renderExe;
+          });
+        }
+      },
     );
   }
 }

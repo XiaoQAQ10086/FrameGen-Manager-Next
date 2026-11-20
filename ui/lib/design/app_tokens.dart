@@ -38,10 +38,6 @@ abstract final class AppTokens {
       offset: Offset(0, 12),
     ),
   ];
-  static const List<BoxShadow> cardShadow = <BoxShadow>[
-    BoxShadow(color: Color(0x1418274B), blurRadius: 22, offset: Offset(0, 8)),
-    BoxShadow(color: Color(0x0A18274B), blurRadius: 3, offset: Offset(0, 1)),
-  ];
   static const List<BoxShadow> strongShadow = <BoxShadow>[
     BoxShadow(
       color: Color(0x33181E3C),
@@ -60,6 +56,5 @@ abstract final class AppTokens {
     color: surfaceSolid,
     borderRadius: BorderRadius.all(Radius.circular(radius)),
     border: Border.fromBorderSide(BorderSide(color: cardBorder)),
-    boxShadow: cardShadow,
   );
 }

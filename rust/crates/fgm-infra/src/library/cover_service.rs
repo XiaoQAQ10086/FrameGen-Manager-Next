@@ -12,6 +12,16 @@ pub struct CoverService;
 
 impl CoverService {
     pub fn cover(paths: &AppPaths, game: &GameEntry) -> Result<Option<PathBuf>, AppError> {
+        if let Some(path) = steam_cover(paths, game)? {
+            return Ok(Some(path));
+        }
+        Ok(icon_cover(paths, game))
+    }
+}
+
+/// Steam store/local artwork; `None` when the game has no usable Steam art.
+fn steam_cover(paths: &AppPaths, game: &GameEntry) -> Result<Option<PathBuf>, AppError> {
+    {
         if game.source != LibrarySource::Steam {
             return Ok(None);
         }
@@ -61,6 +71,55 @@ impl CoverService {
         }
         Ok(None)
     }
+}
+
+/// Last resort: the executable's own icon, cached as PNG.
+fn icon_cover(paths: &AppPaths, game: &GameEntry) -> Option<PathBuf> {
+    let Some(executable) = game.render_exe.as_deref() else {
+        log_cover(paths, "missing render exe", game);
+        return None;
+    };
+    if !executable.is_file() {
+        log_cover(paths, "render exe not found", game);
+        return None;
+    }
+    let directory = paths.cache().join("icons");
+    std::fs::create_dir_all(&directory).ok()?;
+    let hash = path_hash(executable);
+    let destination = directory.join(format!("{hash}.png"));
+    if destination
+        .metadata()
+        .is_ok_and(|metadata| metadata.len() > 0)
+    {
+        return Some(destination);
+    }
+    if let Err(error) = crate::platform::extract_exe_icon(executable, &destination) {
+        log_cover(paths, &format!("icon extract failed: {error:?}"), game);
+        return None;
+    }
+    destination
+        .metadata()
+        .is_ok_and(|metadata| metadata.len() > 0)
+        .then_some(destination)
+}
+
+fn log_cover(paths: &AppPaths, reason: &str, game: &GameEntry) {
+    let log = crate::logging::OperationLog::new(paths.logs().join("fgm.log"));
+    let _ = log.append(
+        0,
+        "debug",
+        "cover fallback",
+        &[("game", &game.name), ("reason", reason)],
+    );
+}
+
+fn path_hash(path: &std::path::Path) -> String {
+    let mut hash: u64 = 0xcbf2_9ce4_8422_2325;
+    for byte in path.to_string_lossy().to_lowercase().bytes() {
+        hash ^= u64::from(byte);
+        hash = hash.wrapping_mul(0x100_0000_01b3);
+    }
+    format!("{hash:016x}")
 }
 
 /// Looks for artwork Steam already downloaded for this app (new per-app folder

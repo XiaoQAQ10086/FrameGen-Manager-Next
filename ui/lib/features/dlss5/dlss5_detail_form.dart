@@ -113,7 +113,7 @@ class Dlss5DetailForm extends StatelessWidget {
             style: const TextStyle(
               color: AppTokens.danger,
               fontSize: 12,
-              fontWeight: FontWeight.w600,
+              fontWeight: FontWeight.w700,
             ),
           ),
         ],

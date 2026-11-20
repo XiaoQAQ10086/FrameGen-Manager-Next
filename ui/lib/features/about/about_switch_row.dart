@@ -31,8 +31,8 @@ class AboutSwitchRow extends StatelessWidget {
                 title,
                 style: const TextStyle(
                   color: AppTokens.textPrimary,
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
+                  fontSize: 13.5,
+                  fontWeight: FontWeight.w700,
                 ),
               ),
               const SizedBox(height: 2),
@@ -40,7 +40,7 @@ class AboutSwitchRow extends StatelessWidget {
                 hint,
                 style: const TextStyle(
                   color: AppTokens.textSecondary,
-                  fontSize: 11.5,
+                  fontSize: 12,
                   height: 1.45,
                 ),
               ),

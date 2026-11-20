@@ -336,7 +336,7 @@ class _MenuRow extends StatelessWidget {
             style: TextStyle(
               color: selected ? AppTokens.accent : AppTokens.textPrimary,
               fontSize: 12.5,
-              fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+              fontWeight: selected ? FontWeight.w700 : FontWeight.w400,
             ),
           ),
         ),

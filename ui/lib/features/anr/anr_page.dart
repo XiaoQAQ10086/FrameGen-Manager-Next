@@ -69,7 +69,6 @@ class _AnrPageState extends State<AnrPage> {
     );
     final List<MapEntry<String, String?>> covers = await Future.wait(
       _games
-          .where((LibraryGame game) => game.source == 'steam')
           .map(
             (LibraryGame game) async =>
                 MapEntry<String, String?>(game.id, await LibraryBridge.cover(game)),

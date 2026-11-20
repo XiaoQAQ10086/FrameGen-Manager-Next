@@ -164,7 +164,7 @@ class _SpoofPanelState extends State<SpoofPanel> {
             style: const TextStyle(
               color: AppTokens.danger,
               fontSize: 12,
-              fontWeight: FontWeight.w600,
+              fontWeight: FontWeight.w700,
               height: 1.5,
             ),
           ),

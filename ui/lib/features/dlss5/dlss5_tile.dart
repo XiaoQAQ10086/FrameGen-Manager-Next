@@ -101,7 +101,7 @@ class Dlss5Tile extends StatelessWidget {
                               ? const Color(0xFF7BE3A9)
                               : const Color(0xD9FFFFFF),
                           fontSize: 11.5,
-                          fontWeight: FontWeight.w600,
+                          fontWeight: FontWeight.w700,
                         ),
                       ),
                     ],

@@ -151,7 +151,7 @@ class FrameGenGameCard extends StatelessWidget {
               style: const TextStyle(
                 color: AppTokens.danger,
                 fontSize: 12,
-                fontWeight: FontWeight.w600,
+                fontWeight: FontWeight.w700,
               ),
             ),
           ],
@@ -162,7 +162,7 @@ class FrameGenGameCard extends StatelessWidget {
               style: const TextStyle(
                 color: AppTokens.danger,
                 fontSize: 12,
-                fontWeight: FontWeight.w600,
+                fontWeight: FontWeight.w700,
               ),
             ),
           ],
@@ -188,7 +188,7 @@ class FrameGenGameCard extends StatelessWidget {
                     primaryLabel,
                     style: const TextStyle(
                       fontSize: 12.5,
-                      fontWeight: FontWeight.w600,
+                      fontWeight: FontWeight.w700,
                     ),
                   ),
                 ),
@@ -290,15 +290,21 @@ class _Cover extends StatelessWidget {
   Widget build(BuildContext context) {
     final String? cover = path;
     if (cover != null && cover.isNotEmpty) {
+      final bool icon = cover.contains('icons');
       return ClipRRect(
         borderRadius: BorderRadius.circular(10),
-        child: Image.file(
-          File(cover),
+        child: Container(
           width: 52,
           height: 70,
-          fit: BoxFit.cover,
-          errorBuilder: (BuildContext context, Object error, StackTrace? stack) =>
-              _placeholder(),
+          color: icon ? Colors.white : null,
+          padding: icon ? const EdgeInsets.all(6) : null,
+          child: Image.file(
+            File(cover),
+            fit: icon ? BoxFit.contain : BoxFit.cover,
+            errorBuilder:
+                (BuildContext context, Object error, StackTrace? stack) =>
+                    _placeholder(),
+          ),
         ),
       );
     }

@@ -144,7 +144,7 @@ class SmGameCard extends StatelessWidget {
               style: const TextStyle(
                 color: AppTokens.danger,
                 fontSize: 12,
-                fontWeight: FontWeight.w600,
+                fontWeight: FontWeight.w700,
               ),
             ),
           ],
@@ -227,16 +227,21 @@ class SmGameCard extends StatelessWidget {
   Widget _cover() {
     final String? path = coverPath;
     if (path != null && path.isNotEmpty) {
+      final bool icon = path.contains('icons');
       return ClipRRect(
         borderRadius: BorderRadius.circular(10),
-        child: Image.file(
-          File(path),
+        child: Container(
           width: 52,
           height: 70,
-          fit: BoxFit.cover,
-          errorBuilder:
-              (BuildContext context, Object error, StackTrace? stack) =>
-                  _placeholder(),
+          color: icon ? Colors.white : null,
+          padding: icon ? const EdgeInsets.all(6) : null,
+          child: Image.file(
+            File(path),
+            fit: icon ? BoxFit.contain : BoxFit.cover,
+            errorBuilder:
+                (BuildContext context, Object error, StackTrace? stack) =>
+                    _placeholder(),
+          ),
         ),
       );
     }
