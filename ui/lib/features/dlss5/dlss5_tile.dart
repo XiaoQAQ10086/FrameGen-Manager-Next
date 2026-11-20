@@ -41,6 +41,7 @@ class Dlss5Tile extends StatelessWidget {
         color: AppTokens.surfaceSolid,
         child: InkWell(
           onTap: onOpen,
+          mouseCursor: SystemMouseCursors.click,
           child: AspectRatio(
             aspectRatio: 0.72,
             child: Stack(
@@ -119,6 +120,7 @@ class Dlss5Tile extends StatelessWidget {
                     child: InkWell(
                       customBorder: const CircleBorder(),
                       onTap: onRemove,
+                      mouseCursor: SystemMouseCursors.click,
                       child: const Padding(
                         padding: EdgeInsets.all(6),
                         child: Icon(
