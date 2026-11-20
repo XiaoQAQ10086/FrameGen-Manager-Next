@@ -25,7 +25,7 @@ Future<void> _restoreWindow(CoreLibrary core) async {
     }
     await Future<void>.delayed(const Duration(milliseconds: 100));
   }
-  Timer.periodic(const Duration(seconds: 5), (_) => core.windowSaveJson());
+  Timer.periodic(const Duration(seconds: 1), (_) => core.windowSaveJson());
   Timer.periodic(
     const Duration(seconds: 30),
     (_) => core.dlss5ProcessHotkeyQueueJson(),

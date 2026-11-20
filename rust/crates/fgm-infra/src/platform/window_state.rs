@@ -11,6 +11,16 @@ const SW_MAXIMIZE: i32 = 3;
 const SWP_NOMOVE: u32 = 0x0002;
 const SWP_NOZORDER: u32 = 0x0004;
 const SWP_NOACTIVATE: u32 = 0x0010;
+const SPI_GETWORKAREA: u32 = 0x0030;
+
+/// Default window size used when the desktop cannot report a work area.
+const FALLBACK_SIZE: (i32, i32) = (1280, 850);
+/// Minimum size for a first launch, so the three-column layout still fits.
+const MIN_SIZE: (i32, i32) = (1180, 760);
+/// Share of the work area a first-launch window fills.
+const WORK_AREA_RATIO: f64 = 0.85;
+/// Gap kept between a window and the screen edge.
+const SCREEN_MARGIN: i32 = 48;
 
 #[repr(C)]
 struct Rect {
@@ -39,6 +49,12 @@ unsafe extern "system" {
         flags: u32,
     ) -> i32;
     fn ShowWindow(hwnd: Hwnd, command: i32) -> i32;
+    fn SystemParametersInfoW(
+        action: u32,
+        param: u32,
+        out: *mut core::ffi::c_void,
+        win_ini: u32,
+    ) -> i32;
 }
 
 #[link(name = "kernel32")]
@@ -59,15 +75,22 @@ pub struct WindowStateService;
 
 impl WindowStateService {
     /// Returns false while the window is not visible yet, so the caller can retry.
+    ///
+    /// With no saved state the first launch sizes itself from the desktop work
+    /// area instead of a hardcoded default, and saved bounds are pulled back
+    /// inside the current screen so a size remembered on a larger monitor does
+    /// not open off-screen.
     pub fn restore(paths: &AppPaths) -> Result<bool, AppError> {
-        let Some(state) = load(paths)? else {
-            return Ok(true);
-        };
+        let saved = load(paths)?;
         let Some(hwnd) = main_window() else {
             return Ok(false);
         };
+        let work = work_area();
         // Position is left to Windows so a saved size cannot open off-screen.
-        let state = sanitize(state);
+        let state = match saved {
+            Some(state) => fit_screen(sanitize(state), work),
+            None => first_launch(work),
+        };
         unsafe {
             SetWindowPos(
                 hwnd,
@@ -141,6 +164,68 @@ fn sanitize(state: WindowState) -> WindowState {
     }
 }
 
+/// Primary monitor work area (screen minus taskbar and docked bars).
+fn work_area() -> Option<(i32, i32)> {
+    let mut rect = Rect {
+        left: 0,
+        top: 0,
+        right: 0,
+        bottom: 0,
+    };
+    let ok = unsafe {
+        SystemParametersInfoW(SPI_GETWORKAREA, 0, std::ptr::addr_of_mut!(rect).cast(), 0)
+    };
+    if ok == 0 {
+        return None;
+    }
+    let width = rect.right - rect.left;
+    let height = rect.bottom - rect.top;
+    (width > 0 && height > 0).then_some((width, height))
+}
+
+fn first_launch(work: Option<(i32, i32)>) -> WindowState {
+    let (width, height) = match work {
+        Some(area) => (
+            fit_axis(
+                (f64::from(area.0) * WORK_AREA_RATIO) as i32,
+                area.0,
+                MIN_SIZE.0,
+            ),
+            fit_axis(
+                (f64::from(area.1) * WORK_AREA_RATIO) as i32,
+                area.1,
+                MIN_SIZE.1,
+            ),
+        ),
+        None => FALLBACK_SIZE,
+    };
+    WindowState {
+        width,
+        height,
+        maximized: false,
+    }
+}
+
+/// Keeps a remembered size inside the current screen.
+fn fit_screen(state: WindowState, work: Option<(i32, i32)>) -> WindowState {
+    let Some(area) = work else {
+        return state;
+    };
+    WindowState {
+        width: fit_axis(state.width, area.0, 800),
+        height: fit_axis(state.height, area.1, 600),
+        maximized: state.maximized,
+    }
+}
+
+/// Clamps a size to `[minimum, available - margin]`, keeping the floor below the
+/// ceiling on very small desktops.
+fn fit_axis(preferred: i32, available: i32, minimum: i32) -> i32 {
+    let ceiling = (available - SCREEN_MARGIN).max(480);
+    let floor = minimum.min(ceiling);
+    preferred.clamp(floor, ceiling)
+}
+
 fn main_window() -> Option<Hwnd> {
     struct Search {
         process_id: u32,
@@ -197,5 +282,55 @@ mod tests {
         });
         assert_eq!(state.width, 800);
         assert_eq!(state.height, 12_000);
+    }
+
+    #[test]
+    fn first_launch_scales_with_the_work_area() {
+        let state = first_launch(Some((1920, 1040)));
+        assert_eq!(state.width, 1632);
+        assert_eq!(state.height, 884);
+        assert!(!state.maximized);
+    }
+
+    #[test]
+    fn first_launch_never_exceeds_a_small_desktop() {
+        let state = first_launch(Some((1366, 728)));
+        assert_eq!(state.width, MIN_SIZE.0);
+        assert_eq!(state.height, 680);
+    }
+
+    #[test]
+    fn first_launch_falls_back_without_a_work_area() {
+        assert_eq!(first_launch(None).width, FALLBACK_SIZE.0);
+        assert_eq!(first_launch(None).height, FALLBACK_SIZE.1);
+    }
+
+    #[test]
+    fn remembered_size_is_pulled_inside_a_smaller_screen() {
+        let state = fit_screen(
+            WindowState {
+                width: 3800,
+                height: 2100,
+                maximized: false,
+            },
+            Some((1920, 1040)),
+        );
+        assert_eq!(state.width, 1872);
+        assert_eq!(state.height, 992);
+    }
+
+    #[test]
+    fn remembered_size_is_kept_when_it_already_fits() {
+        let state = fit_screen(
+            WindowState {
+                width: 1280,
+                height: 850,
+                maximized: true,
+            },
+            Some((1920, 1040)),
+        );
+        assert_eq!(state.width, 1280);
+        assert_eq!(state.height, 850);
+        assert!(state.maximized);
     }
 }
