@@ -108,6 +108,7 @@ button, select { font: inherit; }
 .kv2 > b { min-width: 0; flex: 0 0 auto; text-align: right; }
 .kv2.stacked { display: grid; gap: 4px; }
 .kv2.stacked > b { max-width: 100%; text-align: left; }
+.kv2.equal-values > b { flex: 0 0 108px; width: 108px; text-align: center; }
 .kv2.spoof-name > b { max-width: 72%; }
 .spoof-picker { display: grid; gap: 8px; margin-top: 10px; }
 .spoof-target-panel { display: grid; gap: 8px; margin-top: 16px; padding: 14px; border-radius: 13px; border: 1px solid rgba(0, 122, 255, .16); background: rgba(0, 122, 255, .055); }

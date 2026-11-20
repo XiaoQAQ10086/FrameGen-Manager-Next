@@ -1,5 +1,5 @@
-import { $, $$, call, state, toast } from './core.js';
-import { setLanguage, t } from './l10n.js';
+import { $, $$, applyChrome, call, state, toast } from './core.js';
+import { setLanguage } from './l10n.js';
 import { renderSm } from './sm.js';
 import { renderDlss5 } from './dlss5.js';
 import { renderAnr } from './anr.js';
@@ -9,18 +9,6 @@ import { renderDonate } from './donate.js';
 import { renderFramegen, refresh } from './framegen.js';
 import { loadCovers } from './covers.js';
 import { openDeployDialog } from './deploy.js';
-
-function applyChrome() {
-  document.querySelectorAll('[data-nav]').forEach((node) => {
-    node.textContent = t(node.dataset.nav);
-  });
-  const language = $('#lang-select');
-  if (language) {
-    language.options[0].textContent = t('languageSystem');
-    language.options[1].textContent = t('languageChinese');
-    language.options[2].textContent = t('languageEnglish');
-  }
-}
 
 function selectSection(section) {
   state.section = section;

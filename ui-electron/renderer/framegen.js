@@ -1,5 +1,5 @@
 import {
-  $, $$, apiLabel, call, esc, folderIcon, hagsClass, hagsLabel, hideProgress,
+  $, $$, apiLabel, applyChrome, call, esc, folderIcon, hagsClass, hagsLabel, hideProgress,
   prettyPath, showProgress, sourceLabel, state, stateLabel, toast, trashIcon,
 } from './core.js';
 import { t } from './l10n.js';
@@ -61,8 +61,8 @@ function renderGpuPanel() {
   panel.innerHTML = `
     <div class="ctitle">${t('gpuPanelTitle')}</div>
     <div class="chips"><span class="chip gpu-chip" title="${esc(gpu.name)}">${esc(gpu.name)}</span></div>
-    <div class="kv2"><span>${t('gpuDriverVersionLabel')}</span><b class="badge">${esc(gpu.driverVersion || '—')}</b></div>
-    <div class="kv2"><span>${t('gpuHagsLabel')}</span><b class="badge ${hagsClass(gpu.hags)}">${esc(hagsLabel(gpu.hags))}</b></div>
+    <div class="kv2 equal-values"><span>${t('gpuDriverVersionLabel')}</span><b class="badge">${esc(gpu.driverVersion || '—')}</b></div>
+    <div class="kv2 equal-values"><span>${t('gpuHagsLabel')}</span><b class="badge ${hagsClass(gpu.hags)}">${esc(hagsLabel(gpu.hags))}</b></div>
     <button class="btn wide" data-action="open-hags" type="button">${t('gpuOpenHags')}</button>`;
 }
 

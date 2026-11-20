@@ -59,6 +59,18 @@ export const hagsLabel = (hags) => ({
 export const hagsClass = (hags) =>
   (hags === 'on' ? 'ok' : (hags === 'off' || hags === 'pending' ? 'warn' : 'dim'));
 
+export function applyChrome() {
+  document.querySelectorAll('[data-nav]').forEach((node) => {
+    node.textContent = t(node.dataset.nav);
+  });
+  const language = $('#lang-select');
+  if (language) {
+    language.options[0].textContent = t('languageSystem');
+    language.options[1].textContent = t('languageChinese');
+    language.options[2].textContent = t('languageEnglish');
+  }
+}
+
 export async function call(name, payload) {
   const reply = await window.fgm.call(name, payload);
   if (!reply.ok) {
