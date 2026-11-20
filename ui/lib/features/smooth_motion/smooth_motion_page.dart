@@ -1,6 +1,7 @@
 import 'package:material_ui/material_ui.dart';
 
 import '../../bridge/core_library.dart';
+import '../../bridge/cover_cache.dart';
 import '../../bridge/game_modes.dart';
 import '../../bridge/gpu_bridge.dart';
 import '../../bridge/gpu_info.dart';
@@ -38,7 +39,7 @@ class _SmoothMotionPageState extends State<SmoothMotionPage> {
   Map<String, GameModes> _modes = const <String, GameModes>{};
   Map<String, SmoothMotionStatus> _statuses =
       const <String, SmoothMotionStatus>{};
-  Map<String, String?> _covers = const <String, String?>{};
+  Map<String, String?> _covers = CoverCache.snapshot();
   GpuInfo? _gpu;
   bool _scanning = false;
   bool _adding = false;
@@ -70,10 +71,14 @@ class _SmoothMotionPageState extends State<SmoothMotionPage> {
       _statuses = statuses;
     });
     for (final LibraryGame game in _games) {
+      if (CoverCache.knows(game.id)) {
+        continue;
+      }
       final String? cover = await LibraryBridge.cover(game);
       if (!mounted) {
         return;
       }
+      CoverCache.put(game.id, cover);
       setState(() => _covers = <String, String?>{..._covers, game.id: cover});
     }
   }

@@ -1,6 +1,7 @@
 import 'package:material_ui/material_ui.dart';
 
 import '../../bridge/core_library.dart';
+import '../../bridge/cover_cache.dart';
 import '../../bridge/dlss5_bridge.dart';
 import '../../bridge/dlss5_state.dart';
 import '../../bridge/library_add_result.dart';
@@ -34,7 +35,7 @@ class _Dlss5PageState extends State<Dlss5Page> {
   List<LibraryGame> _removed = const <LibraryGame>[];
   Map<String, Dlss5State> _states = const <String, Dlss5State>{};
   Map<String, List<ProxyBadge>> _proxies = const <String, List<ProxyBadge>>{};
-  Map<String, String?> _covers = const <String, String?>{};
+  Map<String, String?> _covers = CoverCache.snapshot();
   bool _scanning = false;
   bool _adding = false;
   bool _loaded = false;
@@ -73,10 +74,14 @@ class _Dlss5PageState extends State<Dlss5Page> {
       _proxies = Map<String, List<ProxyBadge>>.fromEntries(proxies);
     });
     for (final LibraryGame game in _games) {
+      if (CoverCache.knows(game.id)) {
+        continue;
+      }
       final String? cover = await LibraryBridge.cover(game);
       if (!mounted) {
         return;
       }
+      CoverCache.put(game.id, cover);
       setState(() => _covers = <String, String?>{..._covers, game.id: cover});
     }
   }

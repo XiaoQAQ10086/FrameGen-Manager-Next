@@ -4,6 +4,7 @@ import '../../bridge/anr_bridge.dart';
 import '../../bridge/anr_package.dart';
 import '../../bridge/anr_result.dart';
 import '../../bridge/core_library.dart';
+import '../../bridge/cover_cache.dart';
 import '../../bridge/game_modes.dart';
 import '../../bridge/library_add_result.dart';
 import '../../bridge/library_bridge.dart';
@@ -39,7 +40,7 @@ class _AnrPageState extends State<AnrPage> {
   List<LibraryGame> _removed = const <LibraryGame>[];
   Map<String, GameModes> _modes = const <String, GameModes>{};
   Map<String, List<ProxyBadge>> _proxies = const <String, List<ProxyBadge>>{};
-  Map<String, String?> _covers = const <String, String?>{};
+  Map<String, String?> _covers = CoverCache.snapshot();
   AnrPackage? _package;
   bool _scanning = false;
   bool _adding = false;
@@ -77,10 +78,14 @@ class _AnrPageState extends State<AnrPage> {
       _package = AnrBridge.current(widget.core);
     });
     for (final LibraryGame game in _games) {
+      if (CoverCache.knows(game.id)) {
+        continue;
+      }
       final String? cover = await LibraryBridge.cover(game);
       if (!mounted) {
         return;
       }
+      CoverCache.put(game.id, cover);
       setState(() => _covers = <String, String?>{..._covers, game.id: cover});
     }
   }

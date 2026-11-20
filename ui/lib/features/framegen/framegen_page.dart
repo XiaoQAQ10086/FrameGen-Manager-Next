@@ -2,6 +2,7 @@ import 'package:material_ui/material_ui.dart';
 
 import '../../bridge/app_settings.dart';
 import '../../bridge/core_library.dart';
+import '../../bridge/cover_cache.dart';
 import '../../bridge/deploy_dialog_result.dart';
 import '../../bridge/deploy_options.dart';
 import '../../bridge/deployment_bridge.dart';
@@ -38,7 +39,7 @@ class _FrameGenPageState extends State<FrameGenPage> {
   List<LibraryGame> _removed = const <LibraryGame>[];
   Map<String, GameModes> _modes = const <String, GameModes>{};
   Map<String, List<ProxyBadge>> _proxies = const <String, List<ProxyBadge>>{};
-  Map<String, String?> _covers = const <String, String?>{};
+  Map<String, String?> _covers = CoverCache.snapshot();
   GpuInfo? _gpu;
   bool _showCovers = true;
   bool _scanning = false;
@@ -89,10 +90,14 @@ class _FrameGenPageState extends State<FrameGenPage> {
 
   Future<void> _loadCovers() async {
     for (final LibraryGame game in _games) {
+      if (CoverCache.knows(game.id)) {
+        continue;
+      }
       final String? cover = await LibraryBridge.cover(game);
       if (!mounted) {
         return;
       }
+      CoverCache.put(game.id, cover);
       setState(() => _covers = <String, String?>{..._covers, game.id: cover});
     }
   }
