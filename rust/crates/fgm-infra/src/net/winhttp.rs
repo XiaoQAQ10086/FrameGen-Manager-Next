@@ -189,18 +189,7 @@ fn download_with_access(
             continue;
         }
         if status != 200 {
-            // A 404 means "this URL exists but has nothing at it", which update
-            // sources answer before anything is published. Keep it apart from
-            // transport failures so callers can report "no update" instead of
-            // "network error".
-            let code = if status == 404 {
-                ErrorCode::FileNotFound
-            } else {
-                ErrorCode::NetworkError
-            };
-            return Err(AppError::new(code)
-                .with("status", status.to_string())
-                .with("reason", format!("HTTP status {status}")));
+            return Err(super::status_error(status));
         }
 
         return write_body(request.0, destination, cancelled, progress);
