@@ -41,7 +41,8 @@
 
 ## 界面
 
-- 顶栏：品牌图标/名称/版本/标语、7 个导航项、语言下拉；导航右侧对齐，白色胶囊由 JS 按选中项定位，300ms 贝塞尔滑动。
+- 顶栏：品牌图标/名称/版本/标语、7 个导航项、语言标签 + 下拉、最小化/最大化/关闭；无系统标题栏（`frame:false`），顶栏空白处可拖动，双击空白处最大化/还原，按钮区 `no-drag`。导航右侧对齐，白色胶囊由 JS 按选中项定位，300ms 贝塞尔滑动。
+- 下拉选择器使用旧版 `custom-select` 行为：隐藏原生 `<select>`，用胶囊按钮 + body 级浮层菜单；选中项加粗并显示 ✓，点击外部/Esc/滚动关闭。
 - 帧生成页：列表头 + 340px 侧栏（GPU/HAGS、显卡型号伪装、资产文件夹、来源）+ 游戏卡片。
 - 游戏卡片：52×70 封面/首字母、名称、来源/API/状态徽章、盘符大写路径、部署/启动/打开目录/移除。
 - 部署弹窗：旧版样式（封面头部、左标签 + 右下拉）、背景 6px 模糊 + 10% 遮罩、淡入缩放；选项暂只把代理槽传给后端。
@@ -49,8 +50,8 @@
 
 ## 打包与体积
 
-- `npm run package`：裁剪 Electron locale（仅 en-US/zh-CN）、移除 `default_app.asar`、应用文件打进 `resources/app.asar`（原生插件 `native/*` unpack），复制 `packs/` 与 `licenses/`，用 rcedit 写入品牌图标与版本。
-- 当前基线：解压约 312MB，zip（Deflate）约 144MB，Inno LZMA2 安装包约 101MB。Electron 运行时是体积下限。
+- `npm run package`：裁剪 Electron locale（仅 en-US/zh-CN）、移除 `default_app.asar`、应用文件打进 `resources/app.asar`（原生插件 `native/*` unpack），复制 `packs/` 清单并把 `assets/packs/` 的载荷叠加进去（不覆盖清单），复制 `licenses/`，用 rcedit 写入品牌图标与版本。
+- 当前基线（含全部资产载荷）：解压约 1081MB，zip（Deflate）约 489MB，Inno LZMA2 安装包约 376MB。Electron 运行时约 312MB，其余为帧生成/DLSS5/SM/REFramework 资产。
 - 内存基线：主/渲染/GPU/utility 合计 WorkingSet 约 380MB、Private 约 300MB；后续通过禁用无用特性、减少 DOM/IPC、延迟加载页面继续压。
 
 ## 测试与门禁

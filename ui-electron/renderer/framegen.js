@@ -1,5 +1,5 @@
 import {
-  $, $$, apiLabel, applyChrome, call, esc, folderIcon, hagsClass, hagsLabel, hideProgress,
+  $, $$, apiLabel, applyChrome, call, esc, folderIcon, githubIcon, hagsClass, hagsLabel, hideProgress,
   prettyPath, showProgress, sourceLabel, state, stateLabel, toast, trashIcon,
 } from './core.js';
 import { t } from './l10n.js';
@@ -31,7 +31,7 @@ export function renderFramegen() {
           <section class="panel">
             <div class="ctitle">${t('modeSourceTitle')}</div>
             <div class="chips"><span class="chip gpu-chip">${t('modeGpusFramegen')}</span></div>
-            <a class="source-link" data-action="github" href="#">${t('modeSourceLink')}</a>
+            <a class="source-link" data-action="github" href="#">${githubIcon}<span>${t('modeSourceLink')}</span></a>
           </section>
         </aside>
         <section class="content">

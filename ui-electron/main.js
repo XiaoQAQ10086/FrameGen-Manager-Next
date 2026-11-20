@@ -16,6 +16,7 @@ process.env.FGM_PACKS_DIR ||= packaged
 const native = require(path.join(__dirname, 'native', 'fgm_node.node'));
 
 const windowStatePath = () => path.join(process.env.FGM_DATA_DIR, 'config', 'window.json');
+const normalBounds = new WeakMap();
 
 function savedBounds() {
   try {
@@ -40,7 +41,7 @@ function visibleBounds(bounds) {
 }
 
 function saveBounds(window) {
-  if (window.isMinimized() || window.isMaximized()) return;
+  if (normalBounds.has(window) || window.isMinimized() || window.isMaximized()) return;
   const bounds = window.getBounds();
   try {
     fs.mkdirSync(path.dirname(windowStatePath()), { recursive: true });
@@ -57,6 +58,7 @@ function createWindow() {
     minWidth: 1100,
     minHeight: 700,
     backgroundColor: '#F3F6FB',
+    frame: false,
     show: false,
     title: 'FrameGen Manager-Next',
     icon: path.join(__dirname, 'renderer', 'app.png'),
@@ -98,6 +100,16 @@ ipcMain.handle('fgm:call', async (_event, name, payload) => {
     }
     const text = await native.invoke(name, payload || {});
     const data = JSON.parse(text);
+    if (data && data.ok === false) {
+      return {
+        ok: false,
+        error: {
+          code: data.code || 'BridgeError',
+          message: data.message || data.code || 'operation failed',
+          context: data.context || [],
+        },
+      };
+    }
     if (name === 'cover' && data.path) {
       data.url = pathToFileURL(data.path).href;
     }
@@ -111,6 +123,29 @@ ipcMain.handle('fgm:call', async (_event, name, payload) => {
 });
 
 ipcMain.handle('fgm:openUrl', (_event, url) => shell.openExternal(String(url)));
+
+ipcMain.handle('fgm:window', (event, action) => {
+  const window = BrowserWindow.fromWebContents(event.sender);
+  if (!window) return;
+  if (action === 'minimize') {
+    window.minimize();
+  } else if (action === 'maximize') {
+    if (normalBounds.has(window)) {
+      window.setBounds(normalBounds.get(window));
+      normalBounds.delete(window);
+    } else {
+      normalBounds.set(window, window.getBounds());
+      window.setBounds(screen.getDisplayMatching(window.getBounds()).workArea);
+    }
+  } else if (action === 'unmaximize') {
+    if (normalBounds.has(window)) {
+      window.setBounds(normalBounds.get(window));
+      normalBounds.delete(window);
+    }
+  } else if (action === 'close') {
+    window.close();
+  }
+});
 
 app.whenReady().then(() => {
   createWindow();

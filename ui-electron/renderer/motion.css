@@ -102,16 +102,6 @@
 /* The legacy page-host already provides the page padding. */
 .view > .page { padding: 0; }
 
-/* Prototype uses native <select> elements (legacy custom-select.js is not
-   wired yet), so override the hidden native control used by the custom one. */
-.select-wrap > select {
-  position: static;
-  inset: auto;
-  opacity: 1;
-  pointer-events: auto;
-  width: 100%;
-}
-
 .gp-cancel {
   border: 0;
   background: transparent;

@@ -9,9 +9,9 @@
 ## 便携版
 
 - 输出：`artifacts/portable-electron/FrameGen-Manager-Next/` 和同名 zip。
-- 内容：`FrameGen-Manager-Next.exe`、Electron 运行时（裁剪 locale）、`resources/app.asar`（`native/*.node` unpack）、`packs/`、`licenses/`。
+- 内容：`FrameGen-Manager-Next.exe`、Electron 运行时（裁剪 locale）、`resources/app.asar`（`native/*.node` unpack）、`packs/`（清单 + `assets/packs/` 载荷）、`licenses/`。
 - 数据目录：exe 同目录 `userdata/`；`packs/` 位于 exe 同目录。
-- 复制的 `packs/` 只包含仓库中已存在的文件；发布前必须先把实际资产放进 `packs/`（资产本身不进 git）。
+- `packs/` 先复制仓库清单，再把 `assets/packs/` 的载荷叠加进去；载荷不进 git，但发布包必须包含，否则部署会报 `FileNotFound`。
 - 打包时会删除除 `en-US.pak`、`zh-CN.pak` 外的 locale，移除 `resources/default_app.asar`。
 
 ## 安装包
@@ -20,7 +20,7 @@
 - 每用户安装：`{localappdata}\Programs\{AppName}`。
 - 输出：`artifacts/installer-electron/releases/FrameGenManagerNext-2.3.4-win-Setup.exe`；每次编译前清空 releases，只保留最新安装包。
 - 安装包从 `ui-electron/dist/FrameGen-Manager-Next` 取文件，排除 `userdata`。
-- 当前实测：解压约 312MB、便携 zip 约 144MB、安装包约 101MB。
+- 当前实测（含资产载荷）：解压约 1081MB、便携 zip 约 489MB、安装包约 376MB。不含载荷时约 312MB / 144MB / 101MB，但部署与 SM/DLSS5/ANR 会失败。
 
 ## 更新清单
 

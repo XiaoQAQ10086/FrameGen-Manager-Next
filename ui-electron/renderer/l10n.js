@@ -130,6 +130,7 @@ const ZH = {
   "smOperationFailed": "Smooth Motion 操作失败。",
   "smRestoreDone": "Smooth Motion 已还原。",
   "settingsLanguage": "语言",
+  "languageLabel": "语言",
   "languageSystem": "跟随系统",
   "languageChinese": "简体中文",
   "languageEnglish": "English",
@@ -460,6 +461,7 @@ const EN = {
   "smOperationFailed": "Smooth Motion operation failed.",
   "smRestoreDone": "Smooth Motion restored.",
   "settingsLanguage": "Language",
+  "languageLabel": "Language",
   "languageSystem": "System",
   "languageChinese": "Simplified Chinese",
   "languageEnglish": "English",
@@ -663,7 +665,10 @@ const EN = {
 let current = 'zh';
 
 export function setLanguage(language) {
-  current = language === 'english' ? 'en' : 'zh';
+  const value = String(language || 'system').toLowerCase();
+  if (value === 'en' || value === 'english') current = 'en';
+  else if (value === 'zh' || value === 'chinesesimplified') current = 'zh';
+  else current = (navigator.language || '').toLowerCase().startsWith('zh') ? 'zh' : 'en';
 }
 
 export function language() {

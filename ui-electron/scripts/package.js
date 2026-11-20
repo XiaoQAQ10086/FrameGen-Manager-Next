@@ -61,6 +61,14 @@ async function main() {
       fs.cpSync(source, path.join(stage, name), { recursive: true });
     }
   }
+  const payloads = path.join(root, '..', 'assets', 'packs');
+  if (fs.existsSync(payloads)) {
+    fs.mkdirSync(path.join(stage, 'packs'), { recursive: true });
+    fs.cpSync(payloads, path.join(stage, 'packs'), {
+      recursive: true,
+      filter: (source) => path.basename(source) !== 'pack.json',
+    });
+  }
 
   const size = directorySize(stage);
   console.log(`portable folder: ${stage}`);

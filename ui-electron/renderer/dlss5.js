@@ -1,4 +1,4 @@
-import { $, call, esc, hideProgress, prettyPath, showProgress, state, toast } from './core.js';
+import { $, call, esc, githubIcon, hideProgress, prettyPath, showProgress, state, toast } from './core.js';
 import { t } from './l10n.js';
 import { showRemoved } from './removed.js';
 
@@ -28,7 +28,7 @@ export async function renderDlss5(root) {
           <section class="panel">
             <div class="ctitle">${t('modeSourceTitle')}</div>
             <div class="chips"><span class="chip gpu-chip">${t('modeGpusFramegen')}</span></div>
-            <a class="source-link" data-action="github" href="#">${t('modeSourceLink')}</a>
+            <a class="source-link" data-action="github" href="#">${githubIcon}<span>${t('modeSourceLink')}</span></a>
           </section>
         </aside>
         <section class="content">

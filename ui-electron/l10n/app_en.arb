@@ -158,6 +158,7 @@
   "smOperationFailed": "Smooth Motion operation failed.",
   "smRestoreDone": "Smooth Motion restored.",
   "settingsLanguage": "Language",
+  "languageLabel": "Language",
   "languageSystem": "System",
   "languageChinese": "Simplified Chinese",
   "languageEnglish": "English",

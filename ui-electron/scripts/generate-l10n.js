@@ -18,7 +18,10 @@ const EN = ${JSON.stringify(en, null, 2)};
 let current = 'zh';
 
 export function setLanguage(language) {
-  current = language === 'english' ? 'en' : 'zh';
+  const value = String(language || 'system').toLowerCase();
+  if (value === 'en' || value === 'english') current = 'en';
+  else if (value === 'zh' || value === 'chinesesimplified') current = 'zh';
+  else current = (navigator.language || '').toLowerCase().startsWith('zh') ? 'zh' : 'en';
 }
 
 export function language() {

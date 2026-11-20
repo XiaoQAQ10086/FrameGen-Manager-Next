@@ -101,6 +101,9 @@ button, select { font: inherit; }
 .chip.gpu-chip { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--ink); background: rgba(0, 122, 255, .09); border: 1px solid rgba(0, 122, 255, .2); font-size: 12.5px; padding: 4px 10px; }
 .mode-source { display: flex; align-items: center; gap: 8px; margin-top: 10px; padding: 0; border: 0; background: transparent; color: var(--accent); font: inherit; font-size: 12.5px; cursor: pointer; text-align: left; }
 .mode-source:hover span { text-decoration: underline; }
+.source-link { display: inline-flex; align-items: center; gap: 7px; margin-top: 10px; color: var(--accent); font-size: 12.5px; text-decoration: none; }
+.source-link:hover { text-decoration: underline; }
+.source-link .github-icon { color: #24292f; }
 .github-icon { width: 16px; height: 16px; object-fit: contain; display: block; }
 .dlss-wall-scroll { min-height: 0; flex: 1 1 auto; overflow: auto; padding-right: 4px; }
 .kv2 { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 9px 0; color: var(--muted); font-size: 12.5px; }
@@ -474,7 +477,21 @@ select:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(0, 122, 2
   border-bottom: 1px solid rgba(24, 39, 75, 0.08);
   backdrop-filter: blur(18px) saturate(1.35);
   box-shadow: 0 1px 0 rgba(255, 255, 255, 0.7);
+  -webkit-app-region: drag;
+  user-select: none;
 }
+.topbar button, .topbar select, .topbar .nav, .topbar .lang-box { -webkit-app-region: no-drag; }
+.brand img { -webkit-user-drag: none; }
+.lang-box { display: flex; align-items: center; gap: 7px; flex: 0 0 auto; }
+.lang-label { color: var(--muted); font-size: 12.5px; white-space: nowrap; }
+.window-controls { display: flex; align-items: center; gap: 2px; margin-left: 2px; }
+.window-btn {
+  width: 38px; height: 32px; border: 0; border-radius: 7px; padding: 0;
+  display: grid; place-items: center; color: #48536a; background: transparent; cursor: pointer;
+}
+.window-btn svg { pointer-events: none; }
+.window-btn:hover { background: rgba(24, 39, 75, .08); color: var(--ink); }
+.window-btn.close:hover { background: #e81123; color: #fff; }
 .brand { display: flex; align-items: center; gap: 10px; flex: 0 0 auto; min-width: 0; }
 .brand-mark { width: 34px; height: 34px; border-radius: 9px; object-fit: cover; box-shadow: 0 4px 12px rgba(24,39,75,.16); }
 .brand-name { font-size: 12.5px; font-weight: 650; line-height: 1.2; white-space: nowrap; }

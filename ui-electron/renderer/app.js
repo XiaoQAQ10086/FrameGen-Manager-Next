@@ -9,6 +9,10 @@ import { renderDonate } from './donate.js';
 import { renderFramegen, refresh } from './framegen.js';
 import { loadCovers } from './covers.js';
 import { openDeployDialog } from './deploy.js';
+import { enhanceSelects, observeSelects } from './select.js';
+
+enhanceSelects();
+observeSelects();
 
 function selectSection(section) {
   state.section = section;
@@ -91,16 +95,18 @@ document.addEventListener('click', async (event) => {
 
 
 $$('.nav-item').forEach((item) => item.addEventListener('click', () => selectSection(item.dataset.page)));
+$('.window-controls')?.addEventListener('click', (event) => {
+  const button = event.target.closest('[data-window]');
+  if (!button) return;
+  window.fgm.windowControl(button.dataset.window);
+});
+$('.topbar')?.addEventListener('dblclick', (event) => {
+  if (event.target.closest('button, select, .lang-box, .window-controls')) return;
+  window.fgm.windowControl('maximize');
+});
 $('#lang-select').addEventListener('change', (event) => {
   const value = event.target.value;
-  const language = value === 'english'
-    ? 'english'
-    : value === 'chineseSimplified'
-      ? 'chineseSimplified'
-      : (navigator.language || '').toLowerCase().startsWith('zh')
-        ? 'chineseSimplified'
-        : 'english';
-  setLanguage(language);
+  setLanguage(value);
   state.settings = { ...state.settings, language: value };
   call('settings.set', state.settings).catch(() => {});
   applyChrome();
