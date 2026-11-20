@@ -97,6 +97,8 @@
   "deployTargetLabel": "部署目标",
   "deployChooseExe": "选择实际启动 EXE…",
   "deployGraphicsApi": "图形 API",
+  "deployToHint": "部署到：{path}",
+  "deployOptionsHint": "以下选项只影响本次部署，请确认游戏已关闭。",
   "deployCloseGameHint": "部署前请关闭游戏",
   "deployProxyNote": "已占用的代理入口：{list}；将自动跳过。",
   "deployXeSSNote": "优化档位与 DLSS-G 预设仅对 DLSS 引擎生效；XeSS 使用光流分辨率与无 HUD 设置。",

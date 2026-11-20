@@ -4,6 +4,7 @@ import '../../bridge/dlss5_state.dart';
 import '../../bridge/graphics_api_label.dart';
 import '../../bridge/library_game.dart';
 import '../../design/app_tokens.dart';
+import '../../design/legacy_field_row.dart';
 import '../../design/legacy_pill.dart';
 import '../../design/legacy_select.dart';
 import '../../l10n/app_localizations.dart';
@@ -198,13 +199,15 @@ class Dlss5DetailForm extends StatelessWidget {
     required ValueChanged<String> onChanged,
     required String Function(String value) labelFor,
   }) {
-    return LegacySelect<String>(
+    return LegacyFieldRow(
       label: label,
-      value: values.contains(value) ? value : values.first,
-      items: values,
-      labelFor: labelFor,
-      enabled: !busy,
-      onChanged: onChanged,
+      child: LegacySelect<String>(
+        value: values.contains(value) ? value : values.first,
+        items: values,
+        labelFor: labelFor,
+        enabled: !busy,
+        onChanged: onChanged,
+      ),
     );
   }
 

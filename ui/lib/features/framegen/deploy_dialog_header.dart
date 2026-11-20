@@ -6,6 +6,7 @@ import '../../bridge/library_game.dart';
 import '../../bridge/path_display.dart';
 import '../../design/app_tokens.dart';
 
+/// Cover, game name and install path shown at the top of the deploy modal.
 class DeployDialogHeader extends StatelessWidget {
   const DeployDialogHeader({
     super.key,
@@ -13,6 +14,8 @@ class DeployDialogHeader extends StatelessWidget {
     required this.coverPath,
     required this.onClose,
   });
+
+  static const double _coverSize = 48;
 
   final LibraryGame game;
   final String? coverPath;
@@ -24,12 +27,12 @@ class DeployDialogHeader extends StatelessWidget {
     return Row(
       children: <Widget>[
         ClipRRect(
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(12),
           child: cover != null && cover.isNotEmpty
               ? Image(
-                  image: ResizeImage(FileImage(File(cover)), width: 132),
-                  width: 44,
-                  height: 58,
+                  image: ResizeImage(FileImage(File(cover)), width: 144),
+                  width: _coverSize,
+                  height: _coverSize,
                   fit: BoxFit.cover,
                   errorBuilder:
                       (BuildContext context, Object error, StackTrace? stack) =>
@@ -37,16 +40,22 @@ class DeployDialogHeader extends StatelessWidget {
                 )
               : _placeholder(),
         ),
-        const SizedBox(width: 12),
+        const SizedBox(width: 14),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
             children: <Widget>[
               Text(
                 game.name,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: Theme.of(context).textTheme.titleMedium,
+                style: const TextStyle(
+                  color: AppTokens.textPrimary,
+                  fontSize: 20,
+                  fontWeight: FontWeight.w700,
+                  height: 1.25,
+                ),
               ),
               const SizedBox(height: 2),
               Text(
@@ -55,25 +64,22 @@ class DeployDialogHeader extends StatelessWidget {
                 overflow: TextOverflow.ellipsis,
                 style: const TextStyle(
                   color: AppTokens.textSecondary,
-                  fontFamily: 'Consolas',
                   fontSize: 12,
                 ),
               ),
             ],
           ),
         ),
-        IconButton(
-          onPressed: onClose,
-          icon: const Icon(Icons.close, size: 18),
-        ),
+        const SizedBox(width: 8),
+        _CloseButton(onPressed: onClose),
       ],
     );
   }
 
   Widget _placeholder() {
     return Container(
-      width: 44,
-      height: 58,
+      width: _coverSize,
+      height: _coverSize,
       color: AppTokens.accentSoft,
       alignment: Alignment.center,
       child: Text(
@@ -82,6 +88,39 @@ class DeployDialogHeader extends StatelessWidget {
           color: AppTokens.monogram,
           fontSize: 20,
           fontWeight: FontWeight.w600,
+        ),
+      ),
+    );
+  }
+}
+
+/// Circular close button matching the legacy modal's corner control.
+class _CloseButton extends StatelessWidget {
+  const _CloseButton({required this.onPressed});
+
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: 32,
+      height: 32,
+      child: Material(
+        color: Colors.transparent,
+        shape: const CircleBorder(
+          side: BorderSide(color: AppTokens.border),
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: onPressed,
+          splashFactory: NoSplash.splashFactory,
+          hoverColor: const Color(0x0F007AFF),
+          mouseCursor: SystemMouseCursors.click,
+          child: const Icon(
+            Icons.close,
+            size: 16,
+            color: AppTokens.textSecondary,
+          ),
         ),
       ),
     );

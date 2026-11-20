@@ -111,6 +111,8 @@
   "deployTargetLabel": "Deployment target",
   "deployChooseExe": "Choose the actual launch EXE...",
   "deployGraphicsApi": "Graphics API",
+  "deployToHint": "Deploys to: {path}",
+  "deployOptionsHint": "These options apply to this deployment only. Close the game first.",
   "deployCloseGameHint": "Close the game before deploying",
   "deployProxyNote": "Occupied proxy entries: {list}; skipped automatically.",
   "deployXeSSNote": "Optimization level and the DLSS-G preset only apply to the DLSS engine; XeSS uses its flow-resolution and HUD-less settings.",
@@ -132,6 +134,13 @@
   "@deployConfirmBody": {
     "placeholders": {
       "game": {
+        "type": "String"
+      }
+    }
+  },
+  "@deployToHint": {
+    "placeholders": {
+      "path": {
         "type": "String"
       }
     }

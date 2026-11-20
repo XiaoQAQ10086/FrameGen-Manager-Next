@@ -9,7 +9,7 @@ import '../../bridge/path_display.dart';
 import '../../bridge/proxy_badge.dart';
 import '../../design/app_tokens.dart';
 import '../../design/legacy_button_styles.dart';
-import '../../design/legacy_pill.dart';
+import '../../design/legacy_field_row.dart';
 import '../../design/legacy_select.dart';
 import '../../l10n/app_localizations.dart';
 import 'deploy_dialog_header.dart';
@@ -80,32 +80,52 @@ class _FrameGenDeployDialogState extends State<FrameGenDeployDialog> {
                 onClose: () => Navigator.pop(context),
               ),
               const SizedBox(height: 14),
+              const Divider(height: 1, thickness: 1, color: AppTokens.border),
+              const SizedBox(height: 14),
               Flexible(
                 child: SingleChildScrollView(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: <Widget>[
                       _targetRow(context, l10n),
-                      const SizedBox(height: 8),
-                      Row(
-                        children: <Widget>[
-                          Text(
-                            l10n.deployGraphicsApi,
-                            style: const TextStyle(
-                              color: AppTokens.textSecondary,
-                              fontSize: 13,
-                            ),
+                      const SizedBox(height: 6),
+                      Padding(
+                        padding: const EdgeInsets.only(
+                          left: LegacyFieldRow.labelWidth + 10,
+                        ),
+                        child: Text(
+                          l10n.deployToHint(displayPath(_currentExe)),
+                          style: const TextStyle(
+                            color: AppTokens.textSecondary,
+                            fontSize: 12,
                           ),
-                          const SizedBox(width: 8),
-                          LegacyPill(
-                            label: GraphicsApiLabel.of(widget.game.graphicsApi),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      LegacyFieldRow(
+                        label: l10n.deployGraphicsApi,
+                        child: Text(
+                          GraphicsApiLabel.of(widget.game.graphicsApi),
+                          style: const TextStyle(
+                            color: AppTokens.textPrimary,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
                           ),
-                        ],
+                        ),
+                      ),
+                      const SizedBox(height: 14),
+                      const Divider(
+                        height: 1,
+                        thickness: 1,
+                        color: AppTokens.border,
                       ),
                       const SizedBox(height: 12),
                       Text(
-                        l10n.deployConfirmBody(widget.game.name),
-                        style: Theme.of(context).textTheme.bodyMedium,
+                        l10n.deployOptionsHint,
+                        style: const TextStyle(
+                          color: AppTokens.textSecondary,
+                          fontSize: 12,
+                        ),
                       ),
                       const SizedBox(height: 14),
                       DeployOptionsForm(
@@ -118,6 +138,8 @@ class _FrameGenDeployDialogState extends State<FrameGenDeployDialog> {
                 ),
               ),
               const SizedBox(height: 14),
+              const Divider(height: 1, thickness: 1, color: AppTokens.border),
+              const SizedBox(height: 12),
               Row(
                 children: <Widget>[
                   Text(
@@ -163,25 +185,29 @@ class _FrameGenDeployDialogState extends State<FrameGenDeployDialog> {
     );
   }
 
+  String get _currentExe =>
+      _gameExe ?? widget.game.renderExe ?? widget.game.targetDirectory;
+
   Widget _targetRow(BuildContext context, AppLocalizations l10n) {
-    final String current =
-        _gameExe ?? widget.game.renderExe ?? widget.game.targetDirectory;
-    return LegacySelect<String>(
+    final String current = _currentExe;
+    return LegacyFieldRow(
       label: l10n.deployTargetLabel,
-      value: current,
-      items: <String>[current, _pickSentinel],
-      labelFor: (String item) =>
-          item == _pickSentinel ? l10n.deployChooseExe : displayPath(item),
-      onChanged: (String item) {
-        if (item == _pickSentinel) {
-          _pickExe();
-        } else {
-          setState(() {
-            _gameExe = item;
-            _exeChanged = item != widget.game.renderExe;
-          });
-        }
-      },
+      child: LegacySelect<String>(
+        value: current,
+        items: <String>[current, _pickSentinel],
+        labelFor: (String item) =>
+            item == _pickSentinel ? l10n.deployChooseExe : displayPath(item),
+        onChanged: (String item) {
+          if (item == _pickSentinel) {
+            _pickExe();
+          } else {
+            setState(() {
+              _gameExe = item;
+              _exeChanged = item != widget.game.renderExe;
+            });
+          }
+        },
+      ),
     );
   }
 }

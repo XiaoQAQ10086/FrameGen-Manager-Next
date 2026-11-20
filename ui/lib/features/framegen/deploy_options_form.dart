@@ -3,10 +3,11 @@ import 'package:material_ui/material_ui.dart';
 import '../../bridge/deploy_options.dart';
 import '../../bridge/proxy_badge.dart';
 import '../../design/app_tokens.dart';
+import '../../design/legacy_field_row.dart';
 import '../../design/legacy_select.dart';
 import '../../l10n/app_localizations.dart';
 
-/// Option grid inside the deploy modal.
+/// Option list inside the deploy modal, one labelled row per option.
 class DeployOptionsForm extends StatelessWidget {
   const DeployOptionsForm({
     super.key,
@@ -46,116 +47,85 @@ class DeployOptionsForm extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: <Widget>[
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: <Widget>[
-            _field<String>(
-              l10n,
-              width: double.infinity,
-              label: l10n.optionProxySlot,
-              value: options.proxySlot,
-              values: _proxySlots,
-              labelFor: (String slot) => _proxyLabel(slot, l10n),
-              enabled: (String slot) =>
-                  !_occupied.contains(slot.toLowerCase()),
-              onChanged: (String value) =>
-                  onChanged(options.copyWith(proxySlot: value)),
-            ),
-            const SizedBox(height: 10),
-            _field<String>(
-              l10n,
-              width: double.infinity,
-              label: l10n.optionEngine,
-              value: options.engine,
-              values: const <String>['DLSS', 'XeSS'],
-              onChanged: (String value) {
-                final int frames = value == 'XeSS' &&
-                        options.maxGeneratedFrames > 3
-                    ? 3
-                    : options.maxGeneratedFrames;
-                onChanged(
-                  options.copyWith(
-                    engine: value,
-                    maxGeneratedFrames: frames,
-                  ),
-                );
-              },
-            ),
-            const SizedBox(height: 10),
-            _field<int>(
-              l10n,
-              width: double.infinity,
-              label: l10n.optionFrames,
-              value: options.maxGeneratedFrames,
-              values: _xeSS ? const <int>[1, 2, 3] : const <int>[1, 2, 3, 5],
-              labelFor: (int value) => '${value + 1}X',
-              onChanged: (int value) =>
-                  onChanged(options.copyWith(maxGeneratedFrames: value)),
-            ),
-            const SizedBox(height: 10),
-            _field<int>(
-              l10n,
-              width: double.infinity,
-              label: l10n.optionOptimized,
-              value: options.optimized,
-              values: const <int>[0, 1, 2, 3],
-              labelFor: (int value) => _tierLabel(l10n, value),
-              enabled: (_) => !_xeSS,
-              onChanged: (int value) =>
-                  onChanged(options.copyWith(optimized: value)),
-            ),
-            const SizedBox(height: 10),
-            _field<String>(
-              l10n,
-              width: double.infinity,
-              label: l10n.optionPreset,
-              value: options.preset,
-              values: _presets,
-              enabled: (_) => !_xeSS,
-              onChanged: (String value) =>
-                  onChanged(options.copyWith(preset: value)),
-            ),
-            const SizedBox(height: 10),
-            _field<String>(
-              l10n,
-              width: double.infinity,
-              label: l10n.optionSuperResolution,
-              value: options.superResolution,
-              values: _srModes,
-              labelFor: (String value) =>
-                  value == 'Off' ? l10n.optionOff : value,
-              onChanged: (String value) =>
-                  onChanged(options.copyWith(superResolution: value)),
-            ),
-            if (_xeSS) ...<Widget>[
-              const SizedBox(height: 10),
-              _field<String>(
-                l10n,
-                width: double.infinity,
-                label: l10n.optionFlowResolution,
-                value: options.xeSSFlowResolution,
-                values: const <String>[
-                  'Coarse',
-                  'Middle',
-                  'Fine',
-                  'CoarseAt4K',
-                ],
-                onChanged: (String value) =>
-                    onChanged(options.copyWith(xeSSFlowResolution: value)),
-              ),
-              const SizedBox(height: 10),
-              _field<String>(
-                l10n,
-                width: double.infinity,
-                label: l10n.optionUseHudless,
-                value: options.xeSSUseHudless,
-                values: const <String>['Auto', '1', '0'],
-                onChanged: (String value) =>
-                    onChanged(options.copyWith(xeSSUseHudless: value)),
-              ),
-            ],
-          ],
+        _field<String>(
+          label: l10n.optionProxySlot,
+          value: options.proxySlot,
+          values: _proxySlots,
+          labelFor: (String slot) => _proxyLabel(slot, l10n),
+          enabled: (String slot) => !_occupied.contains(slot.toLowerCase()),
+          onChanged: (String value) =>
+              onChanged(options.copyWith(proxySlot: value)),
         ),
+        const SizedBox(height: 10),
+        _field<int>(
+          label: l10n.optionOptimized,
+          value: options.optimized,
+          values: const <int>[0, 1, 2, 3],
+          labelFor: (int value) => _tierLabel(l10n, value),
+          enabled: (_) => !_xeSS,
+          onChanged: (int value) =>
+              onChanged(options.copyWith(optimized: value)),
+        ),
+        const SizedBox(height: 10),
+        _field<int>(
+          label: l10n.optionFrames,
+          value: options.maxGeneratedFrames,
+          values: _xeSS ? const <int>[1, 2, 3] : const <int>[1, 2, 3, 5],
+          labelFor: (int value) => '${value + 1}X',
+          onChanged: (int value) =>
+              onChanged(options.copyWith(maxGeneratedFrames: value)),
+        ),
+        const SizedBox(height: 10),
+        _field<String>(
+          label: l10n.optionPreset,
+          value: options.preset,
+          values: _presets,
+          enabled: (_) => !_xeSS,
+          onChanged: (String value) =>
+              onChanged(options.copyWith(preset: value)),
+        ),
+        const SizedBox(height: 10),
+        _field<String>(
+          label: l10n.optionEngine,
+          value: options.engine,
+          values: const <String>['DLSS', 'XeSS'],
+          onChanged: (String value) {
+            final int frames =
+                value == 'XeSS' && options.maxGeneratedFrames > 3
+                ? 3
+                : options.maxGeneratedFrames;
+            onChanged(
+              options.copyWith(engine: value, maxGeneratedFrames: frames),
+            );
+          },
+        ),
+        const SizedBox(height: 10),
+        _field<String>(
+          label: l10n.optionSuperResolution,
+          value: options.superResolution,
+          values: _srModes,
+          labelFor: (String value) => value == 'Off' ? l10n.optionOff : value,
+          onChanged: (String value) =>
+              onChanged(options.copyWith(superResolution: value)),
+        ),
+        if (_xeSS) ...<Widget>[
+          const SizedBox(height: 10),
+          _field<String>(
+            label: l10n.optionFlowResolution,
+            value: options.xeSSFlowResolution,
+            values: const <String>['Coarse', 'Middle', 'Fine', 'CoarseAt4K'],
+            onChanged: (String value) =>
+                onChanged(options.copyWith(xeSSFlowResolution: value)),
+          ),
+          const SizedBox(height: 10),
+          _field<String>(
+            label: l10n.optionUseHudless,
+            value: options.xeSSUseHudless,
+            values: const <String>['Auto', '1', '0'],
+            onChanged: (String value) =>
+                onChanged(options.copyWith(xeSSUseHudless: value)),
+          ),
+        ],
         if (_xeSS) ...<Widget>[
           const SizedBox(height: 8),
           Text(
@@ -165,22 +135,28 @@ class DeployOptionsForm extends StatelessWidget {
         ],
         if (_occupied.isNotEmpty) ...<Widget>[
           const SizedBox(height: 8),
-          Text(
-            l10n.deployProxyNote(
-              _proxySlots
-                  .where((String slot) => _occupied.contains(slot.toLowerCase()))
-                  .join(', '),
+          Padding(
+            padding: const EdgeInsets.only(left: LegacyFieldRow.labelWidth + 10),
+            child: Text(
+              l10n.deployProxyNote(
+                _proxySlots
+                    .where(
+                      (String slot) => _occupied.contains(slot.toLowerCase()),
+                    )
+                    .join(', '),
+              ),
+              style: const TextStyle(
+                color: AppTokens.warningText,
+                fontSize: 12,
+              ),
             ),
-            style: const TextStyle(color: AppTokens.warning, fontSize: 12),
           ),
         ],
       ],
     );
   }
 
-  Widget _field<T>(
-    AppLocalizations l10n, {
-    required double width,
+  Widget _field<T>({
     required String label,
     required T value,
     required List<T> values,
@@ -194,10 +170,9 @@ class DeployOptionsForm extends StatelessWidget {
     final T selected = available.contains(value)
         ? value
         : (available.isEmpty ? value : available.first);
-    return SizedBox(
-      width: width,
+    return LegacyFieldRow(
+      label: label,
       child: LegacySelect<T>(
-        label: label,
         value: selected,
         items: available,
         labelFor: labelFor ?? (T item) => '$item',
