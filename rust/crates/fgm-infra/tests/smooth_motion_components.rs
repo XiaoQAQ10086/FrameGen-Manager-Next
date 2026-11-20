@@ -55,6 +55,27 @@ fn refuses_when_frame_generation_is_installed() {
     assert_eq!(error.code, ErrorCode::Conflict);
 }
 
+#[test]
+fn allows_smooth_motion_once_frame_generation_is_restored() {
+    let fixture = Fixture::new("sm-after-restore");
+    let paths = fixture.paths();
+    fixture.install_framegen(&paths);
+    DeploymentEngine::restore(
+        "framegen.sm86",
+        &fixture.target,
+        &paths.backups(),
+        &paths.state().join("locks"),
+    )
+    .unwrap();
+
+    let report =
+        SmoothMotionComponents::deploy_from(&fixture.pack, &fixture.target, None, "2.3.4", &paths)
+            .unwrap();
+
+    assert_eq!(report.files_written, 1);
+    SmoothMotionComponents::restore(&fixture.target, &paths).unwrap();
+}
+
 struct Fixture {
     root: PathBuf,
     pack: PathBuf,
@@ -110,7 +131,7 @@ impl Fixture {
         DeploymentEngine::apply(
             &[file],
             &self.target,
-            "framegen",
+            "framegen.sm86",
             "framegen.sm86",
             "0.4.2",
             &BTreeMap::new(),

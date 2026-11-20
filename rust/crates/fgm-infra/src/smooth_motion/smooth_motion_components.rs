@@ -6,8 +6,12 @@ use crate::deployment::{
 use crate::pack_json::PackJson;
 use crate::packs::PackLocator;
 use crate::paths::AppPaths;
+use fgm_domain::deployment::DeploymentState;
 use fgm_domain::error::{AppError, ErrorCode};
 use fgm_domain::gpu::GpuRoute;
+
+/// Deployment families that own a frame-generation install.
+const FRAMEGEN_FAMILIES: [&str; 1] = ["framegen.sm86"];
 
 /// Deploys and restores the Smooth Motion component files through the shared engine.
 pub struct SmoothMotionComponents;
@@ -53,14 +57,20 @@ impl SmoothMotionComponents {
         app_version: &str,
         paths: &AppPaths,
     ) -> Result<DeploymentReport, AppError> {
-        if let Ok(inspection) =
-            DeploymentInspector::inspect("framegen", target_directory, &paths.backups(), None)
-            && inspection.has_manifest
-        {
-            return Err(AppError::new(ErrorCode::Conflict).with(
-                "reason",
-                "frame generation is already deployed to this directory",
-            ));
+        // Frame generation records its manifest under its pack id, so the guard
+        // has to look there instead of the bare `framegen` name.
+        for family in FRAMEGEN_FAMILIES {
+            let Ok(inspection) =
+                DeploymentInspector::inspect(family, target_directory, &paths.backups(), None)
+            else {
+                continue;
+            };
+            if inspection.has_manifest && inspection.state != DeploymentState::NotDeployed {
+                return Err(AppError::new(ErrorCode::Conflict).with(
+                    "reason",
+                    "frame generation is already deployed to this directory",
+                ));
+            }
         }
 
         let pack = PackJson::load(&pack_directory.join("pack.json"))?;
