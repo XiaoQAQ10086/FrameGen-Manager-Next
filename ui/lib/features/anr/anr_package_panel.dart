@@ -53,62 +53,69 @@ class _AnrPackagePanelState extends State<AnrPackagePanel> {
     }
   }
 
+  ///
+  /// The busy flag is cleared in `finally` so a thrown action can never leave
+  /// the button disabled for the rest of the session.
   Future<void> _download() async {
     setState(() => _downloading = true);
-    final AnrResult? result = await OperationProgressDialog.run<AnrResult>(
-      context: context,
-      title: AppLocalizations.of(context).operationDownloading,
-      action: () => AnrBridge.downloadLatest(widget.core),
-    );
-    if (!mounted || result == null) {
+    try {
+      final AnrResult? result = await OperationProgressDialog.run<AnrResult>(
+        context: context,
+        title: AppLocalizations.of(context).operationDownloading,
+        action: () => AnrBridge.downloadLatest(widget.core),
+      );
+      if (!mounted || result == null) {
+        return;
+      }
+      if (result.code == 'OperationCancelled') {
+        return;
+      }
+      if (!result.ok) {
+        await ErrorDialog.show(
+          context,
+          message: AppLocalizations.of(context).deployFailed,
+          code: result.code ?? 'AnrDownloadFailed',
+        );
+        return;
+      }
+      await _load();
+      widget.onChanged?.call();
+    } finally {
       if (mounted) {
         setState(() => _downloading = false);
       }
-      return;
     }
-    setState(() => _downloading = false);
-    if (result.code == 'OperationCancelled') {
-      return;
-    }
-    if (!result.ok) {
-      await ErrorDialog.show(
-        context,
-        message: AppLocalizations.of(context).deployFailed,
-        code: result.code ?? 'AnrDownloadFailed',
-      );
-      return;
-    }
-    await _load();
-    widget.onChanged?.call();
   }
 
   Future<void> _import() async {
     setState(() => _importing = true);
-    final AnrResult? result = await OperationProgressDialog.run<AnrResult>(
-      context: context,
-      title: AppLocalizations.of(context).operationDownloading,
-      action: () => AnrBridge.importPackage(widget.core),
-    );
-    if (!mounted || result == null) {
+    try {
+      final AnrResult? result = await OperationProgressDialog.run<AnrResult>(
+        context: context,
+        title: AppLocalizations.of(context).operationDownloading,
+        action: () => AnrBridge.importPackage(widget.core),
+      );
+      if (!mounted || result == null) {
+        return;
+      }
+      if (result.cancelled) {
+        return;
+      }
+      if (!result.ok) {
+        await ErrorDialog.show(
+          context,
+          message: AppLocalizations.of(context).deployFailed,
+          code: result.code ?? 'AnrImportFailed',
+        );
+        return;
+      }
+      await _load();
+      widget.onChanged?.call();
+    } finally {
       if (mounted) {
         setState(() => _importing = false);
       }
-      return;
     }
-    setState(() => _importing = false);
-    if (result.cancelled) {
-      return;
-    }
-    if (!result.ok) {
-      await ErrorDialog.show(
-        context,
-        message: AppLocalizations.of(context).deployFailed,
-        code: result.code ?? 'AnrImportFailed',
-      );
-      return;
-    }
-    await _load();
-    widget.onChanged?.call();
   }
 
   @override

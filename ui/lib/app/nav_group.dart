@@ -177,8 +177,11 @@ class _NavItem extends StatelessWidget {
                     color: selected
                         ? AppTokens.accent
                         : AppTokens.textSecondary,
-                    fontSize: 13,
-                    fontWeight: FontWeight.w700,
+                    // 500 rather than 700: the system face only ships Regular
+                    // and Bold, and Bold at this size closes up dense glyphs
+                    // such as 赏.
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
                   ),
                   child: Text(label),
                 ),

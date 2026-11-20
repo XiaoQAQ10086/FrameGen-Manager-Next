@@ -157,21 +157,15 @@ class AnrGameCard extends StatelessWidget {
                   style: LegacyButtonStyles.compact(LegacyButtonStyles.danger),
                   child: Text(l10n.restore),
                 )
-              else if (package != null)
+              else
                 FilledButton(
-                  onPressed: canDeploy ? onDeploy : null,
+                  // Shown even without an imported package, greyed out, so the
+                  // action list looks the same on every card.
+                  onPressed: package != null && canDeploy ? onDeploy : null,
                   style: LegacyButtonStyles.compact(
                     LegacyButtonStyles.success,
                   ),
                   child: Text(l10n.deploy),
-                )
-              else
-                Text(
-                  l10n.anrPackageNeeded,
-                  style: const TextStyle(
-                    color: AppTokens.textSecondary,
-                    fontSize: 13,
-                  ),
                 ),
               const Spacer(),
               OutlinedButton.icon(
