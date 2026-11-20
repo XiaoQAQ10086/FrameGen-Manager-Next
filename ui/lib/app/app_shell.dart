@@ -16,6 +16,7 @@ import '../features/logs/logs_page.dart';
 import '../features/smooth_motion/smooth_motion_page.dart';
 import '../l10n/app_localizations.dart';
 import 'app_section.dart';
+import 'nav_group.dart';
 
 /// Root layout mirroring the legacy topbar, navigation and page host.
 class AppShell extends StatefulWidget {
@@ -204,24 +205,20 @@ class _TopBar extends StatelessWidget {
                     Flexible(
                       child: SingleChildScrollView(
                         scrollDirection: Axis.horizontal,
-                        child: Container(
-                          padding: const EdgeInsets.all(3),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFEEF1F5),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: <Widget>[
-                              for (final AppSection section in AppSection.values)
-                                _NavItem(
-                                  section: section,
-                                  label: _sectionLabel(l10n, section),
-                                  selected: section == selected,
-                                  onTap: () => onSelected(section),
-                                ),
-                            ],
-                          ),
+                        // The selection pill's shadow is wider than the group
+                        // padding; clipping here squared off its right edge.
+                        clipBehavior: Clip.none,
+                        child: NavGroup(
+                          entries: <({String glyph, String label})>[
+                            for (final AppSection section in AppSection.values)
+                              (
+                                glyph: _glyphFor(section),
+                                label: _sectionLabel(l10n, section),
+                              ),
+                          ],
+                          selected: selected.index,
+                          onSelected: (int index) =>
+                              onSelected(AppSection.values[index]),
                         ),
                       ),
                     ),
@@ -239,97 +236,6 @@ class _TopBar extends StatelessWidget {
             ],
           );
         },
-      ),
-    );
-  }
-}
-
-class _NavItem extends StatelessWidget {
-  const _NavItem({
-    required this.section,
-    required this.label,
-    required this.selected,
-    required this.onTap,
-  });
-
-  final AppSection section;
-  final String label;
-  final bool selected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final String glyph = switch (section) {
-      AppSection.logs => '≡',
-      AppSection.about => 'ⓘ',
-      AppSection.donate => '♡',
-      _ => '',
-    };
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 2),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          borderRadius: BorderRadius.circular(999),
-          onTap: onTap,
-          splashFactory: NoSplash.splashFactory,
-          highlightColor: Colors.transparent,
-          hoverColor: const Color(0x14007AFF),
-          focusColor: Colors.transparent,
-          mouseCursor: SystemMouseCursors.click,
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
-            decoration: BoxDecoration(
-              color: selected ? Colors.white : Colors.transparent,
-              borderRadius: BorderRadius.circular(999),
-              boxShadow: selected
-                  ? const <BoxShadow>[
-                      BoxShadow(
-                        color: Color(0x1A18274B),
-                        blurRadius: 8,
-                        offset: Offset(0, 2),
-                      ),
-                      BoxShadow(
-                        color: Color(0x0F18274B),
-                        blurRadius: 2,
-                        offset: Offset(0, 1),
-                      ),
-                    ]
-                  : null,
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: <Widget>[
-                if (glyph.isNotEmpty) ...<Widget>[
-                  AnimatedDefaultTextStyle(
-                    duration: MotionTokens.standard,
-                    curve: MotionTokens.enterCurve,
-                    style: TextStyle(
-                      color: selected
-                          ? AppTokens.accent
-                          : AppTokens.textSecondary,
-                      fontSize: 14,
-                    ),
-                    child: Text(glyph),
-                  ),
-                  const SizedBox(width: 4),
-                ],
-                AnimatedDefaultTextStyle(
-                  duration: MotionTokens.standard,
-                  curve: MotionTokens.enterCurve,
-                  style: TextStyle(
-                    color: selected
-                        ? AppTokens.accent
-                        : AppTokens.textSecondary,
-                    fontSize: 13,
-                    fontWeight: FontWeight.w700,
-                  ),
-                  child: Text(label),
-                ),
-              ],
-            ),
-          ),
-        ),
       ),
     );
   }
@@ -365,6 +271,16 @@ class _LanguageSelect extends StatelessWidget {
       },
     );
   }
+}
+
+/// Leading glyph for the sections that have one; the workspace pages do not.
+String _glyphFor(AppSection section) {
+  return switch (section) {
+    AppSection.logs => '≡',
+    AppSection.about => 'ⓘ',
+    AppSection.donate => '♡',
+    _ => '',
+  };
 }
 
 String _sectionLabel(AppLocalizations l10n, AppSection section) {
