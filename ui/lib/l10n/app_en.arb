@@ -111,6 +111,8 @@
   "deployTargetLabel": "Deployment target",
   "deployChooseExe": "Choose the actual launch EXE...",
   "deployGraphicsApi": "Graphics API",
+  "deployAnrTitle": "Deploy ANR frame generation",
+  "anrProxyHint": "Only one proxy DLL is deployed; occupied entries cannot be chosen.",
   "deployToHint": "Deploys to: {path}",
   "deployOptionsHint": "These options apply to this deployment only. Close the game first.",
   "deployCloseGameHint": "Close the game before deploying",
@@ -468,7 +470,7 @@
   "anrProxy": "Proxy: {proxy}",
   "anrRenderExeMissing": "Render EXE not found",
   "anrPackageNeeded": "Download or import ANR first",
-  "anrOptiScalerNeeded": "This game needs OptiScaler; use the addon package.",
+  "anrOptiScalerNeeded": "This folder already has OptiScaler.ini; the full package would overwrite it. Use the addon package.",
   "anrProxySlotsBusy": "All three proxy slots are occupied.",
   "anrOptiScalerIniMissing": "Addon packages need an OptiScaler.ini in the game folder.",
   "@libraryStatusLoaded": {

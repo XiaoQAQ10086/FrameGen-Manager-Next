@@ -167,7 +167,7 @@ class AnrGameCard extends StatelessWidget {
                   ),
                   child: Text(l10n.deploy),
                 ),
-              const Spacer(),
+              const SizedBox(width: 10),
               OutlinedButton.icon(
                 onPressed: game.canLaunch ? onLaunch : null,
                 icon: const Icon(Icons.play_arrow, size: 16),

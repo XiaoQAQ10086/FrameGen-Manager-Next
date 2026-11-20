@@ -55,7 +55,7 @@ final class AnrBridge {
     return AnrResult.parse(reply);
   }
 
-  static Future<AnrResult> deploy(LibraryGame game) async {
+  static Future<AnrResult> deploy(LibraryGame game, {String? proxy}) async {
     final String? exe = game.renderExe;
     if (exe == null) {
       return const AnrResult(ok: false, code: 'NoRenderExe');
@@ -63,6 +63,7 @@ final class AnrBridge {
     final String request = jsonEncode(<String, Object?>{
       'targetDir': game.targetDirectory,
       'exePath': exe,
+      if (proxy != null) 'proxy': proxy,
     });
     final String? reply = await Isolate.run(() {
       final CoreLibrary? core = CoreLibrary.tryOpen();

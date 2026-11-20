@@ -25,6 +25,8 @@ struct AnrDeployRequest {
     #[serde(default)]
     exe_path: Option<String>,
     #[serde(default)]
+    proxy: Option<String>,
+    #[serde(default)]
     data_dir: Option<String>,
 }
 
@@ -81,6 +83,7 @@ pub(crate) fn anr_deploy(request: &str) -> Result<Value, AppError> {
         &paths,
         &operation.cancelled,
         Some(operation.as_ref()),
+        request.proxy.as_deref(),
     );
     super::commands_operation::finish();
     let report = result?;

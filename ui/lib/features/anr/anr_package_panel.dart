@@ -9,10 +9,10 @@ import '../../bridge/gpu_info.dart';
 import '../../bridge/system_bridge.dart';
 import '../../bridge/system_paths.dart';
 import '../../design/app_tokens.dart';
-import '../../design/error_dialog.dart';
 import '../../design/legacy_button_styles.dart';
 import '../../design/legacy_panel.dart';
 import '../../design/legacy_pill.dart';
+import '../../design/legacy_toast.dart';
 import '../../design/operation_progress_dialog.dart';
 import '../../l10n/app_localizations.dart';
 
@@ -71,11 +71,7 @@ class _AnrPackagePanelState extends State<AnrPackagePanel> {
         return;
       }
       if (!result.ok) {
-        await ErrorDialog.show(
-          context,
-          message: AppLocalizations.of(context).deployFailed,
-          code: result.code ?? 'AnrDownloadFailed',
-        );
+        LegacyToast.show(context, "${AppLocalizations.of(context).deployFailed} (result.code ?? 'AnrDownloadFailed')");
         return;
       }
       await _load();
@@ -102,11 +98,7 @@ class _AnrPackagePanelState extends State<AnrPackagePanel> {
         return;
       }
       if (!result.ok) {
-        await ErrorDialog.show(
-          context,
-          message: AppLocalizations.of(context).deployFailed,
-          code: result.code ?? 'AnrImportFailed',
-        );
+        LegacyToast.show(context, "${AppLocalizations.of(context).deployFailed} (result.code ?? 'AnrImportFailed')");
         return;
       }
       await _load();

@@ -37,6 +37,7 @@ impl AnrDeploymentService {
         paths: &AppPaths,
         cancelled: &AtomicBool,
         progress: Option<&dyn DeploymentProgress>,
+        proxy: Option<&str>,
     ) -> Result<AnrReport, AppError> {
         if game_exe.is_some_and(crate::process::GameProcessProbe::is_running) {
             return Err(
@@ -52,6 +53,7 @@ impl AnrDeploymentService {
                 paths,
                 cancelled,
                 progress,
+                proxy,
             ),
             AnrPackageKind::Addon => deploy_addon(
                 package,
@@ -62,6 +64,27 @@ impl AnrDeploymentService {
                 progress,
             ),
         }
+    }
+
+    /// Honours a caller-chosen slot, refusing one that is already taken.
+    fn resolve_proxy(target_directory: &Path, proxy: Option<&str>) -> Result<String, AppError> {
+        let Some(proxy) = proxy.filter(|value| !value.is_empty()) else {
+            return Ok(AnrDeploymentService::select_proxy(target_directory)?.to_string());
+        };
+        let allowed = PROXY_CANDIDATES
+            .iter()
+            .any(|candidate| candidate.eq_ignore_ascii_case(proxy));
+        if !allowed {
+            return Err(
+                AppError::new(ErrorCode::InvalidArgument).with("reason", "unknown proxy slot")
+            );
+        }
+        if target_directory.join(proxy).is_file() {
+            return Err(AppError::new(ErrorCode::Conflict)
+                .with("module", proxy)
+                .with("reason", "the chosen proxy slot is already occupied"));
+        }
+        Ok(proxy.to_string())
     }
 
     pub fn restore(target_directory: &Path, paths: &AppPaths) -> Result<(), AppError> {
@@ -100,13 +123,14 @@ fn deploy_full(
     paths: &AppPaths,
     cancelled: &AtomicBool,
     progress: Option<&dyn DeploymentProgress>,
+    proxy: Option<&str>,
 ) -> Result<AnrReport, AppError> {
-    let proxy = AnrDeploymentService::select_proxy(target_directory)?;
+    let proxy = AnrDeploymentService::resolve_proxy(target_directory, proxy)?;
     let files = collect_files(&package.payload_directory)?
         .into_iter()
         .map(|(relative, source)| {
             let target = if relative.eq_ignore_ascii_case("dxgi.dll") {
-                proxy.to_string()
+                proxy.clone()
             } else {
                 relative
             };
@@ -125,7 +149,7 @@ fn deploy_full(
     Ok(AnrReport {
         kind: AnrPackageKind::Full,
         files_written: files.len(),
-        proxy_module: Some(proxy.to_string()),
+        proxy_module: Some(proxy),
     })
 }
 

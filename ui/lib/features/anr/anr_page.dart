@@ -24,6 +24,7 @@ import '../../l10n/app_localizations.dart';
 import '../framegen/mode_source_panel.dart';
 import '../framegen/remove_game_dialog.dart';
 import '../framegen/removed_games_dialog.dart';
+import 'anr_deploy_dialog.dart';
 import 'anr_game_card.dart';
 import 'anr_package_panel.dart';
 import 'anr_requirements_panel.dart';
@@ -140,11 +141,7 @@ class _AnrPageState extends State<AnrPage> {
       return;
     }
     if (!added.ok) {
-      await ErrorDialog.show(
-        context,
-        message: l10n.addGameFailed,
-        code: added.code ?? 'AddGameFailed',
-      );
+      LegacyToast.show(context, "${l10n.addGameFailed} (added.code ?? 'AddGameFailed')");
       return;
     }
     _games = LibraryBridge.list(widget.core).games;
@@ -168,11 +165,23 @@ class _AnrPageState extends State<AnrPage> {
 
   Future<void> _deploy(LibraryGame game) async {
     final AppLocalizations l10n = AppLocalizations.of(context);
+    final String? choice = await AnrDeployDialog.show(
+      context,
+      game,
+      _proxies[game.id] ?? const <ProxyBadge>[],
+      chooseProxy: (_package?.kind ?? 'full') == 'full',
+    );
+    if (choice == null || !mounted) {
+      return;
+    }
     setState(() => _busyGameId = game.id);
     final AnrResult? result = await OperationProgressDialog.run<AnrResult>(
       context: context,
       title: l10n.operationDeployingAnr,
-      action: () => AnrBridge.deploy(game),
+      action: () => AnrBridge.deploy(
+        game,
+        proxy: choice == AnrDeployDialog.auto ? null : choice,
+      ),
     );
     if (!mounted || result == null) {
       if (mounted) {
@@ -185,11 +194,7 @@ class _AnrPageState extends State<AnrPage> {
       return;
     }
     if (!result.ok) {
-      await ErrorDialog.show(
-        context,
-        message: l10n.deployFailed,
-        code: result.code ?? 'DeployFailed',
-      );
+      LegacyToast.show(context, "${l10n.deployFailed} (result.code ?? 'DeployFailed')");
       return;
     }
     LegacyToast.show(context, l10n.anrDeployDone(result.proxyModule ?? '-'));
@@ -205,11 +210,7 @@ class _AnrPageState extends State<AnrPage> {
     }
     setState(() => _busyGameId = null);
     if (!result.ok) {
-      await ErrorDialog.show(
-        context,
-        message: l10n.deployFailed,
-        code: result.code ?? 'RestoreFailed',
-      );
+      LegacyToast.show(context, "${l10n.deployFailed} (result.code ?? 'RestoreFailed')");
       return;
     }
     LegacyToast.show(context, l10n.anrRestored);
@@ -219,11 +220,7 @@ class _AnrPageState extends State<AnrPage> {
   Future<void> _launch(LibraryGame game) async {
     final AppLocalizations l10n = AppLocalizations.of(context);
     if (!await LibraryBridge.launch(game) && mounted) {
-      await ErrorDialog.show(
-        context,
-        message: l10n.launchFailed,
-        code: 'LaunchFailed',
-      );
+      LegacyToast.show(context, "${l10n.launchFailed} ('LaunchFailed')");
     }
   }
 

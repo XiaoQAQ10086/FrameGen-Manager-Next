@@ -9,11 +9,12 @@
   - 导入 zip，识别 full（`game/dxgi.dll` + `game/OptiScaler.ini`）或 addon（`Apex Neural Rendering FG/dlssg/nvngx_dlssg.dll`）。
   - 读取 `nr_fg_package.json` 的 `version`；缓存到 `packs/anr-fg/<version>/payload/`，写 `current.json`。
 - `fgm-infra/src/anr/anr_deployment_service.rs`：
-  - full：按 `dxgi.dll` → `winmm.dll` → `version.dll` 选空闲代理，`dxgi.dll` 改名为代理槽，其余文件保持布局。
+  - full：按 `dxgi.dll` → `winmm.dll` → `version.dll` 选空闲代理，`dxgi.dll` 改名为代理槽，其余文件保持布局。调用方可以指定槽位（界面弹窗里的“代理入口”）；指定的槽位已被占用时返回 `Conflict`，不认识的槽位名返回 `InvalidArgument`。
   - addon：要求已有 `OptiScaler.ini`；写入 `OptiScaler/custom/Apex Neural Rendering FG/` 并设置 `FGInput=nvngxfg`、`FGNvngxReplacement=Apex Neural Rendering FG`。
+  - 在线下载：先走 GitHub API（带大小与 SHA-256）；API 失败（典型是未认证请求 60 次/小时 的 403 限流）时退回 `releases.atom` 取最新 tag，再从 `releases/expanded_assets/<tag>` 页面挑 `-full.zip`（其次 `-addon.zip`）直接下载。页面路径拿不到大小，进度条退化为不确定态。
   - 游戏运行中返回 `GameRunning`；全部走统一部署引擎备份/写入/校验。
   - 还原后清理本次 addon 的 custom 目录；有冲突时不清理。
-- 尚未迁移：在线下载/导入 UI、版本检查、addon 已有自定义 provider 冲突的完整判定、OptiScaler 运行时日志清理、跨模式徽章/启动游戏。
+- 尚未迁移：版本检查、addon 已有自定义 provider 冲突的完整判定、OptiScaler 运行时日志清理。
 - 测试：`tests/anr_package.rs`、`tests/anr_deployment.rs`、`tests/zip_archive.rs`。
 
 ## 支持范围

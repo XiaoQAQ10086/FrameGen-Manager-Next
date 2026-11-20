@@ -28,6 +28,7 @@ fn deploys_and_restores_a_full_package() {
         &fixture.paths(),
         &std::sync::atomic::AtomicBool::new(false),
         None,
+        None,
     )
     .unwrap();
 
@@ -67,6 +68,7 @@ fn deploys_and_restores_an_addon_package() {
         &fixture.paths(),
         &std::sync::atomic::AtomicBool::new(false),
         None,
+        None,
     )
     .unwrap();
 
@@ -91,6 +93,63 @@ fn deploys_and_restores_an_addon_package() {
         fs::read_to_string(fixture.target.join("OptiScaler.ini")).unwrap(),
         "[FrameGen]\nFGInput=old\n"
     );
+}
+
+#[test]
+fn deploys_into_the_requested_proxy_slot() {
+    let fixture = Fixture::new("anr-proxy-choice");
+    let zip = fixture.zip(
+        "full.zip",
+        &[
+            ("game/dxgi.dll", b"proxy", false),
+            ("game/OptiScaler.ini", b"[FrameGen]\nFGInput=old\n", false),
+            ("nr_fg_package.json", br#"{"version":"1.0.0"}"#, false),
+        ],
+    );
+    let package = AnrPackageService::import(&zip, &fixture.data).unwrap();
+
+    let report = AnrDeploymentService::deploy(
+        &package,
+        &fixture.target,
+        None,
+        &fixture.paths(),
+        &std::sync::atomic::AtomicBool::new(false),
+        None,
+        Some("winmm.dll"),
+    )
+    .unwrap();
+
+    assert_eq!(report.proxy_module.as_deref(), Some("winmm.dll"));
+    assert!(fixture.target.join("winmm.dll").is_file());
+    assert!(!fixture.target.join("dxgi.dll").is_file());
+}
+
+#[test]
+fn refuses_a_proxy_slot_that_is_already_taken() {
+    let fixture = Fixture::new("anr-proxy-taken");
+    fs::write(fixture.target.join("winmm.dll"), b"someone else").unwrap();
+    let zip = fixture.zip(
+        "full.zip",
+        &[
+            ("game/dxgi.dll", b"proxy", false),
+            ("game/OptiScaler.ini", b"[FrameGen]\nFGInput=old\n", false),
+            ("nr_fg_package.json", br#"{"version":"1.0.0"}"#, false),
+        ],
+    );
+    let package = AnrPackageService::import(&zip, &fixture.data).unwrap();
+
+    let error = AnrDeploymentService::deploy(
+        &package,
+        &fixture.target,
+        None,
+        &fixture.paths(),
+        &std::sync::atomic::AtomicBool::new(false),
+        None,
+        Some("winmm.dll"),
+    )
+    .unwrap_err();
+
+    assert_eq!(error.code, fgm_domain::error::ErrorCode::Conflict);
 }
 
 struct Fixture {
