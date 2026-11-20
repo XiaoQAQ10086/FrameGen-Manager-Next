@@ -556,5 +556,10 @@
       }
     }
   },
-  "footerPlatform": "Windows x64"
+  "footerPlatform": "Windows x64",
+  "smEnabledDone": "Smooth Motion enabled.",
+  "smDisabledDone": "Smooth Motion disabled.",
+  "forget": "Forget",
+  "removedRestored": "Restored to the library.",
+  "removedForgotten": "Record cleared."
 }

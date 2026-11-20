@@ -15,19 +15,19 @@
         <img src="app.png" alt="" class="brand-mark" />
         <div>
           <div class="brand-name">FrameGen Manager-Next</div>
-          <div class="brand-version"><span id="app-version">v2.3.4</span><span class="brand-tagline">一键为20和30系显卡用户部署帧生成及DLSS5</span></div>
+          <div class="brand-version"><span id="app-version">v2.3.4</span><span class="brand-tagline" data-nav="appTagline"></span></div>
         </div>
       </div>
 
       <nav class="nav" id="nav">
         <span class="nav-indicator" aria-hidden="true"></span>
-        <button type="button" data-page="framegen" class="nav-item active">DLSS-G 帧生成</button>
-        <button type="button" data-page="smooth-motion" class="nav-item">Smooth Motion</button>
-        <button type="button" data-page="dlss5" class="nav-item">DLSS5 / ReShade</button>
-        <button type="button" data-page="anr" class="nav-item">ANR 帧生成</button>
-        <button type="button" data-page="logs" class="nav-item"><span class="nav-icon">≡</span>日志</button>
-        <button type="button" data-page="about" class="nav-item"><span class="nav-icon">ⓘ</span>关于</button>
-        <button type="button" data-page="donate" class="nav-item"><span class="nav-icon">♡</span>打赏赞助</button>
+        <button type="button" data-page="framegen" class="nav-item active"><span data-nav="navFrameGeneration"></span></button>
+        <button type="button" data-page="smooth-motion" class="nav-item"><span data-nav="navSmoothMotion"></span></button>
+        <button type="button" data-page="dlss5" class="nav-item"><span data-nav="navDlss5"></span></button>
+        <button type="button" data-page="anr" class="nav-item"><span data-nav="navAnr"></span></button>
+        <button type="button" data-page="logs" class="nav-item"><span class="nav-icon">≡</span><span data-nav="navLogs"></span></button>
+        <button type="button" data-page="about" class="nav-item"><span class="nav-icon">ⓘ</span><span data-nav="navAbout"></span></button>
+        <button type="button" data-page="donate" class="nav-item"><span class="nav-icon">♡</span><span data-nav="navDonate"></span></button>
       </nav>
       <select class="lang-select" id="lang-select" aria-label="Language">
         <option value="system">跟随系统</option>
@@ -37,7 +37,7 @@
     </header>
 
     <div class="global-progress hidden" id="global-progress" role="status" aria-live="polite">
-      <div class="gp-head"><span class="gp-phase"></span><span class="gp-percent"></span></div>
+      <div class="gp-head"><span class="gp-phase"></span><span class="gp-percent"></span><button class="gp-cancel" data-action="cancel-op" type="button">取消</button></div>
       <div class="gp-subject"></div>
       <div class="gp-track"><i></i></div>
     </div>

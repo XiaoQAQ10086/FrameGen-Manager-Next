@@ -1,9 +1,12 @@
+import { t } from './l10n.js';
+
 export const state = {
   games: [],
   modes: {},
   gpu: null,
   spoof: null,
   paths: null,
+  settings: {},
   covers: {},
   section: 'framegen',
   busy: false,
@@ -28,22 +31,30 @@ export const prettyPath = (value) => {
 
 export const apiLabel = (value) => {
   const text = String(value ?? 'unknown');
-  return text.toLowerCase() === 'unknown' ? '未知' : text.toUpperCase();
+  return text.toLowerCase() === 'unknown' ? t('smUnknown') : text.toUpperCase();
 };
 
 export const sourceLabel = (source) => ({
-  steam: 'Steam', epic: 'Epic', xbox: 'Xbox', manual: '手动', loose: '散装',
-}[source] || source || '未知');
+  steam: t('sourceSteam'),
+  epic: t('sourceEpic'),
+  xbox: t('sourceXbox'),
+  manual: t('sourceManual'),
+  loose: t('sourceLoose'),
+}[source] || source || t('smUnknown'));
 
 export const stateLabel = (state) => ({
-  installed: '已部署', outdated: '需更新', partial: '部分部署',
-  conflict: '冲突', installedWithoutManifest: '旧版部署', notDeployed: '未部署',
-}[state] || '未部署');
+  installed: t('frameGenStateInstalled'),
+  outdated: t('frameGenStateOutdated'),
+  partial: t('frameGenStatePartial'),
+  conflict: t('frameGenStateConflict'),
+  installedWithoutManifest: t('frameGenStateNoManifest'),
+  notDeployed: t('frameGenStateNotDeployed'),
+}[state] || t('frameGenStateNotDeployed'));
 
 export const hagsLabel = (hags) => ({
-  on: '已开启', off: '已关闭', pending: '待重启生效',
-  unsupported: '不支持', unknown: '未知',
-}[hags] || '未知');
+  on: t('gpuHagsOn'), off: t('gpuHagsOff'), pending: t('gpuHagsPending'),
+  unsupported: t('gpuHagsUnsupported'), unknown: t('gpuHagsUnknown'),
+}[hags] || t('gpuHagsUnknown'));
 
 export const hagsClass = (hags) =>
   (hags === 'on' ? 'ok' : (hags === 'off' || hags === 'pending' ? 'warn' : 'dim'));
@@ -67,6 +78,8 @@ export function toast(message, kind = '') {
   toastTimer = setTimeout(() => node.classList.add('hidden'), 2600);
 }
 
+let progressTimer = null;
+
 export function showProgress(title) {
   const node = $('#global-progress');
   node.classList.remove('hidden');
@@ -74,8 +87,27 @@ export function showProgress(title) {
   $('.gp-subject', node).textContent = '';
   $('.gp-percent', node).textContent = '…';
   $('.gp-track > i', node).style.width = '35%';
+  clearInterval(progressTimer);
+  progressTimer = setInterval(async () => {
+    try {
+      const reply = await call('operation.progress');
+      const progress = reply.progress || reply;
+      const total = Number(progress.total || 0);
+      const done = Number(progress.done || 0);
+      const fraction = total > 0 ? Math.min(1, done / total) : 0;
+      $('.gp-percent', node).textContent = total > 0
+        ? `${Math.round(fraction * 100)}%`
+        : '…';
+      $('.gp-subject', node).textContent = total > 0 ? `${done} / ${total}` : '';
+      $('.gp-track > i', node).style.width = total > 0
+        ? `${Math.max(2, fraction * 100)}%`
+        : '35%';
+    } catch {}
+  }, 300);
 }
 
 export function hideProgress() {
+  clearInterval(progressTimer);
+  progressTimer = null;
   $('#global-progress').classList.add('hidden');
 }

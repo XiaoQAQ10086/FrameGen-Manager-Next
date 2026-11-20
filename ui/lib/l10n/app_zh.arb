@@ -323,5 +323,10 @@
   "sourceWeGame": "WeGame",
   "sourceXbox": "Xbox",
   "footerCore": "Rust 核心 {version}",
-  "footerPlatform": "Windows x64"
+  "footerPlatform": "Windows x64",
+  "smEnabledDone": "Smooth Motion 已开启。",
+  "smDisabledDone": "Smooth Motion 已关闭。",
+  "forget": "忘记",
+  "removedRestored": "已恢复到游戏库。",
+  "removedForgotten": "记录已清除。"
 }

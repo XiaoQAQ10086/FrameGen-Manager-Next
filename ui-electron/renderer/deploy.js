@@ -39,10 +39,10 @@ export function openDeployDialog(game, refresh) {
           <option>dinput8.dll</option><option>dxgi.dll</option><option>d3d12.dll</option>
         </select></div></label>
         <label><span>插帧引擎</span><div class="select-wrap"><select data-option="engine"><option>DLSS</option><option>XeSS</option></select></div></label>
-        <label><span>生成帧数</span><div class="select-wrap"><select data-option="frames"><option>4X</option><option>3X</option><option>2X</option></select></div></label>
-        <label><span>优化档位</span><div class="select-wrap"><select data-option="optimized"><option>1 · 加速，与官方逐位一致</option><option>0 · 原版内核</option><option>2 · 更快，轻微损失</option><option>3 · 最快，全部损失</option></select></div></label>
-        <label><span>渲染预设</span><div class="select-wrap"><select data-option="preset"><option>A</option><option>B</option><option>C</option></select></div></label>
-        <label><span>超分辨率</span><div class="select-wrap"><select data-option="superResolution"><option>关闭</option><option>M-INT8</option><option>L-INT8</option><option>M-FP16</option><option>L-FP16</option></select></div></label>
+        <label><span>生成帧数</span><div class="select-wrap"><select data-option="frames"><option value="3">4X</option><option value="2">3X</option><option value="1">2X</option></select></div></label>
+        <label><span>优化档位</span><div class="select-wrap"><select data-option="optimized"><option value="1">1 · 加速，与官方逐位一致</option><option value="0">0 · 原版内核</option><option value="2">2 · 更快，轻微损失</option><option value="3">3 · 最快，全部损失</option></select></div></label>
+        <label><span>渲染预设</span><div class="select-wrap"><select data-option="preset"><option value="A">A</option><option value="B">B</option><option value="C">C</option></select></div></label>
+        <label><span>超分辨率</span><div class="select-wrap"><select data-option="superResolution"><option value="Off">关闭</option><option value="M-INT8">M-INT8</option><option value="L-INT8">L-INT8</option><option value="M-FP16">M-FP16</option><option value="L-FP16">L-FP16</option></select></div></label>
       </div>
       <footer class="modal-foot">
         <span class="muted small">部署前请关闭游戏</span>
@@ -68,6 +68,11 @@ export function openDeployDialog(game, refresh) {
 
 async function deployGame(game, modal, refresh) {
   const proxySlot = $('[data-option="proxy"]', modal)?.value || 'version.dll';
+  const engine = $('[data-option="engine"]', modal)?.value || 'DLSS';
+  const frames = Number($('[data-option="frames"]', modal)?.value || 3);
+  const optimized = Number($('[data-option="optimized"]', modal)?.value || 1);
+  const preset = $('[data-option="preset"]', modal)?.value || 'A';
+  const superResolution = $('[data-option="superResolution"]', modal)?.value || 'Off';
   showProgress('正在部署帧生成组件');
   try {
     await call('deploy', {
@@ -77,6 +82,15 @@ async function deployGame(game, modal, refresh) {
       proxySlot,
       gameExe: game.renderExe,
       gameId: game.id,
+      ini: [
+        { section: 'FrameGeneration', key: 'Engine', value: engine },
+        { section: 'FrameGeneration', key: 'MaxGeneratedFrames', value: String(frames) },
+        { section: 'DLSSG', key: 'Optimized', value: String(optimized) },
+        { section: 'DLSSG', key: 'Preset', value: preset },
+        { section: 'SuperResolution', key: 'Mode', value: superResolution },
+        { section: 'XeSSFG', key: 'FlowResolution', value: 'Coarse' },
+        { section: 'XeSSFG', key: 'UseHudless', value: 'Auto' },
+      ],
     });
     await refresh();
     toast(`已部署 ${game.name}`);
