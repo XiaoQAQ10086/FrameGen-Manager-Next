@@ -19,7 +19,7 @@
   - `inspect` 返回部署状态、清单版本、代理槽（安装在清单 options 里记录 `proxySlot`）、ReShade 是否在位，以及根目录旧版 RenoDX 残留（`renodx-dlss*`、覆盖旧布局的 `nvngx_dlssnr.dll`）。ReShade 判定优先认清单里的代理记录，其次用 PE `ProductName` 探测。
 - `fgm-ffi/src/commands_dlss5.rs`：`fgm_dlss5_install_json`、`fgm_dlss5_inspect_json`、`fgm_dlss5_set_hotkey_json`、`fgm_dlss5_uninstall_json`；卸载返回 `restored`/`removed`/`conflicts`/`warnings`；inspect 在没有显式 pack 时静默尝试本地 `dlss5.reshade-gitc`，缺 pack 也照样报告清单状态；inspect 同时返回当前 `hotkeyVk`。
 - `fgm-cli/src/dlss5.rs`：`dlss5 install|inspect|uninstall|hotkey`；`install` 未给 `--api` 时用 `GraphicsApiDetector` 自动判定。
-- Flutter：DLSS5 页每局游戏显示状态标签（未安装/已安装/需更新/不完整/冲突/无清单）、ReShade 标签、旧版残留提示，并提供安装、更新、快捷键、卸载按钮；操作后自动刷新状态。快捷键按钮打开录制对话框（Esc 取消），把 USB HID 映射为 Windows 虚拟键后调用 `fgm_dlss5_set_hotkey_json`，成功后刷新显示当前键；返回“已排队”时提示游戏退出后自动写入。主界面每 30 秒调用 `fgm_dlss5_process_hotkey_queue_json` 重试队列。卸载有冲突时按数量提示，不误报成功。
+- Electron：DLSS5 页每局游戏显示状态标签（未安装/已安装/需更新/不完整/冲突/无清单）、ReShade 标签、旧版残留提示，并提供安装、更新、快捷键、卸载按钮；操作后自动刷新状态。快捷键按钮打开录制弹窗（Esc 取消），把 USB HID 映射为 Windows 虚拟键后调用 `fgm_dlss5_set_hotkey_json`，成功后刷新显示当前键；返回“已排队”时提示游戏退出后自动写入。主界面每 30 秒调用 `fgm_dlss5_process_hotkey_queue_json` 重试队列。卸载有冲突时按数量提示，不误报成功。
 - 旧版残留：`Dlss5Service::clean_legacy` 删除根目录 `renodx-dlss*` 与旧布局 `nvngx_dlssnr.dll`（只删这两类，其他文件不动）；存在残留时 `install` 返回 `Conflict` 并要求先清理，界面在残留标签旁显示“清理旧版文件”按钮与确认框。
 - Vulkan layer 安装/卸载已实测：安装登记 `C:\ProgramData\ReShade` 与 `HKLM\SOFTWARE\Khronos\Vulkan\ImplicitLayers`；卸载用 `<game.exe> --headless --elevated --api vulkan --state uninstall` 并清理 `ReShade.ini`/`.log`/`Preset`，随后删除 114 个 pack 文件，只留下游戏 EXE。清单记录 `api`/`packDir`/`gameExe` 供卸载使用。
 - 尚未迁移：GITC 选项/INI 的其余项（`StartEnabled` 默认值切换）。

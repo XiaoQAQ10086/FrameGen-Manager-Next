@@ -93,7 +93,7 @@
   - `SmoothMotionFacade::disable`：先把设置写 0，再还原组件；`restore` 先恢复旧 profile 值，再还原组件。
 - `fgm-infra/src/gpu/gpu_detector.rs`：`nvidia-smi` 提供名称/驱动，`GpuDetector::classify` 提供路由和 `driver_supported`。
 - FFI：`fgm_sm_inspect_many_json`、`fgm_sm_enable_json`、`fgm_sm_disable_json`、`fgm_sm_restore_json`。
-- Flutter：Smooth Motion 页批量读取状态，逐游戏开关和还原；失败显示 SnackBar。
+- Electron：Smooth Motion 页批量读取状态，逐游戏开关和还原；失败显示 Toast。
 - 尚未迁移：反作弊目录提示、BattlEye/EAC 误判规则、旧版无 manifest 的组件清理、真实游戏回归。
 - 真机验证（RTX 3070）：会话可打开，基础 profile 的 Smooth Motion 设置为 `Some(0)`；对测试 EXE 的枚举查找返回 0 个 profile，无崩溃。
 - 测试：`rust/crates/fgm-infra/tests/nvapi_session.rs`、`smooth_motion.rs`、`smooth_motion_components.rs`。

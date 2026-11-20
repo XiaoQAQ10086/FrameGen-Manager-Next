@@ -9,7 +9,7 @@
   - 读取 `config/app.json`；缺失返回默认；损坏隔离为 `app.json.bad`；写入原子替换。
   - 默认 `schemaVersion=3`、`language=system`、`theme=light`、`autoScanOnStartup=false`、`showCovers=true`、`autoInstallReframework=true`。
 - FFI：`fgm_settings_get_json`、`fgm_settings_set_json`。
-- Flutter：设置页语言下拉 + 三个开关；语言切换立即更新 `MaterialApp.locale`，其余设置立即保存。
+- Electron：顶栏语言下拉 + 关于页开关；语言切换立即重渲染文案，其余设置立即保存。
 - 尚未迁移：旧 schema 迁移、封面、系统语言检测细节、设置页的 GPU/日志入口。
 - 测试：`rust/crates/fgm-infra/tests/settings_store.rs`。
 

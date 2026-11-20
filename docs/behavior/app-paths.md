@@ -43,7 +43,7 @@ Rust 实现：`rust/crates/fgm-infra/src/paths/app_paths.rs`。
 
 - 不做旧版数据迁移；新目录与 2.x 可并存。
 - 不读取便携版注册表标记；只认 `portable.flag`。
-- 便携版状态放在 `userdata`，与 Flutter 引擎的 `data/flutter_assets` 分开；旧版把状态写在 `data` 下，启动时一次性把 `config`/`library`/`logs`/`state`/`cache`/`backups` 迁移到 `userdata`，引擎资源不动。
+- 便携版状态放在 exe 同目录 `userdata`；Flutter 时代的 `data/flutter_assets` 已随树删除，早期 Flutter 便携版曾把 `config`/`library`/`logs`/`state`/`cache`/`backups` 从 `data` 一次性迁到 `userdata`。Electron 版直接读写 `userdata`，不再迁移。
 - 不自动清理旧目录。
 
 ## 测试
