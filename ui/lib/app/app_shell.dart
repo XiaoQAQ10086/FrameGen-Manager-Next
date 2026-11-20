@@ -5,6 +5,7 @@ import '../bridge/core_library.dart';
 import '../bridge/settings_bridge.dart';
 import '../design/app_tokens.dart';
 import '../design/legacy_select.dart';
+import '../design/motion_tokens.dart';
 import '../design/shell_background.dart';
 import '../features/about/about_page.dart';
 import '../features/anr/anr_page.dart';
@@ -66,9 +67,9 @@ class _AppShellState extends State<AppShell> {
               ),
               Expanded(
                 child: AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 300),
-                  switchInCurve: const Cubic(0.22, 0.61, 0.36, 1),
-                  switchOutCurve: const Cubic(0.55, 0.06, 0.68, 0.19),
+                  duration: MotionTokens.page,
+                  switchInCurve: MotionTokens.pageInCurve,
+                  switchOutCurve: MotionTokens.pageOutCurve,
                   transitionBuilder: _fadeThrough,
                   layoutBuilder:
                       (Widget? current, List<Widget> previous) {
@@ -298,8 +299,8 @@ class _NavItem extends StatelessWidget {
               children: <Widget>[
                 if (glyph.isNotEmpty) ...<Widget>[
                   AnimatedDefaultTextStyle(
-                    duration: const Duration(milliseconds: 180),
-                    curve: Curves.easeOutCubic,
+                    duration: MotionTokens.standard,
+                    curve: MotionTokens.enterCurve,
                     style: TextStyle(
                       color: selected
                           ? AppTokens.accent
@@ -311,8 +312,8 @@ class _NavItem extends StatelessWidget {
                   const SizedBox(width: 4),
                 ],
                 AnimatedDefaultTextStyle(
-                  duration: const Duration(milliseconds: 180),
-                  curve: Curves.easeOutCubic,
+                  duration: MotionTokens.standard,
+                  curve: MotionTokens.enterCurve,
                   style: TextStyle(
                     color: selected
                         ? AppTokens.accent

@@ -1,5 +1,7 @@
 import 'package:material_ui/material_ui.dart';
 
+import 'motion_tokens.dart';
+
 /// Fixed-size pill switch: white knob, grey/blue track, identical knob in both
 /// states (Material 3 changes the thumb size between states).
 class LegacySwitch extends StatelessWidget {
@@ -21,8 +23,8 @@ class LegacySwitch extends StatelessWidget {
         child: Opacity(
           opacity: enabled ? 1 : 0.5,
           child: AnimatedContainer(
-            duration: const Duration(milliseconds: 180),
-            curve: Curves.easeOutCubic,
+            duration: MotionTokens.standard,
+            curve: MotionTokens.enterCurve,
             width: 56,
             height: 32,
             padding: const EdgeInsets.all(3),
@@ -31,8 +33,8 @@ class LegacySwitch extends StatelessWidget {
               borderRadius: BorderRadius.circular(999),
             ),
             child: AnimatedAlign(
-              duration: const Duration(milliseconds: 180),
-              curve: Curves.easeOutCubic,
+              duration: MotionTokens.standard,
+              curve: MotionTokens.enterCurve,
               alignment: value ? Alignment.centerRight : Alignment.centerLeft,
               child: Container(
                 width: 26,

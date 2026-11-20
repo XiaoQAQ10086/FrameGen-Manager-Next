@@ -1,6 +1,7 @@
 import 'package:material_ui/material_ui.dart';
 
 import 'app_tokens.dart';
+import 'motion_tokens.dart';
 
 /// Legacy WebView2 button surfaces reused through Material button styles.
 ///
@@ -237,7 +238,7 @@ abstract final class LegacyButtonStyles {
           borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
         ),
       ),
-      animationDuration: const Duration(milliseconds: 160),
+      animationDuration: MotionTokens.standard,
     );
   }
 

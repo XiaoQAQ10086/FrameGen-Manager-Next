@@ -3,6 +3,8 @@ import 'dart:ui' show ImageFilter;
 import 'package:flutter/services.dart' show LogicalKeyboardKey;
 import 'package:material_ui/material_ui.dart';
 
+import 'motion_tokens.dart';
+
 /// Shows a modal dialog with the page behind it smoothly blurred and dimmed.
 ///
 /// The blur radius and dim alpha animate together with the dialog, matching the
@@ -17,7 +19,7 @@ Future<T?> showLegacyDialog<T>({
     barrierDismissible: barrierDismissible,
     barrierLabel: MaterialLocalizations.of(context).modalBarrierDismissLabel,
     barrierColor: Colors.transparent,
-    transitionDuration: const Duration(milliseconds: 220),
+    transitionDuration: MotionTokens.enter,
     pageBuilder:
         (
           BuildContext pageContext,
@@ -26,8 +28,8 @@ Future<T?> showLegacyDialog<T>({
         ) {
           final Animation<double> curved = CurvedAnimation(
             parent: animation,
-            curve: Curves.easeOutCubic,
-            reverseCurve: Curves.easeInCubic,
+            curve: MotionTokens.enterCurve,
+            reverseCurve: MotionTokens.exitCurve,
           );
           return Stack(
             fit: StackFit.expand,

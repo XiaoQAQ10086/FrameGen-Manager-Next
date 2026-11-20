@@ -1,6 +1,7 @@
 import 'package:material_ui/material_ui.dart';
 
 import 'app_tokens.dart';
+import 'motion_tokens.dart';
 
 /// Legacy `.select` control: centered framed trigger with a fast custom menu.
 class LegacySelect<T> extends StatefulWidget {
@@ -198,7 +199,7 @@ class _SelectOverlayState<T> extends State<_SelectOverlay<T>>
     with SingleTickerProviderStateMixin {
   late final AnimationController _controller = AnimationController(
     vsync: this,
-    duration: const Duration(milliseconds: 120),
+    duration: MotionTokens.quick,
   )..forward();
 
   @override
@@ -211,7 +212,7 @@ class _SelectOverlayState<T> extends State<_SelectOverlay<T>>
   Widget build(BuildContext context) {
     final CurvedAnimation curve = CurvedAnimation(
       parent: _controller,
-      curve: Curves.easeOutCubic,
+      curve: MotionTokens.enterCurve,
     );
     return Stack(
       children: <Widget>[
