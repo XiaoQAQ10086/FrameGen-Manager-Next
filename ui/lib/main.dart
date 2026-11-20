@@ -5,10 +5,17 @@ import 'package:material_ui/material_ui.dart';
 
 import 'app/app.dart';
 import 'bridge/core_library.dart';
+import 'bridge/cover_cache.dart';
+import 'bridge/system_paths.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
   final CoreLibrary? core = CoreLibrary.tryOpen();
+  if (core != null) {
+    CoverCache.load(
+      SystemPaths.parse(core.invokeJson('fgm_paths_json')).dataRoot,
+    );
+  }
   runApp(FgmApp(core: core));
   if (core == null) {
     return;

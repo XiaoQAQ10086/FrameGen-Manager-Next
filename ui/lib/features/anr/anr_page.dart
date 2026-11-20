@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:material_ui/material_ui.dart';
 
 import '../../bridge/anr_bridge.dart';
@@ -77,17 +79,29 @@ class _AnrPageState extends State<AnrPage> {
       _proxies = Map<String, List<ProxyBadge>>.fromEntries(proxies);
       _package = AnrBridge.current(widget.core);
     });
-    for (final LibraryGame game in _games) {
-      if (CoverCache.knows(game.id)) {
-        continue;
-      }
-      final String? cover = await LibraryBridge.cover(game);
-      if (!mounted) {
-        return;
-      }
-      CoverCache.put(game.id, cover);
-      setState(() => _covers = <String, String?>{..._covers, game.id: cover});
+    unawaited(_loadCovers());
+  }
+
+  /// Covers resolve outside the badge refresh: a slow lookup must not delay the
+  /// deployment state the page is waiting on.
+  Future<void> _loadCovers() async {
+    final List<LibraryGame> pending = _games
+        .where((LibraryGame game) => !CoverCache.knows(game.id))
+        .toList(growable: false);
+    if (pending.isEmpty) {
+      return;
     }
+    final List<String?> paths = await Future.wait(
+      pending.map(LibraryBridge.cover),
+    );
+    if (!mounted) {
+      return;
+    }
+    for (var index = 0; index < pending.length; index++) {
+      CoverCache.put(pending[index].id, paths[index]);
+    }
+    CoverCache.save();
+    setState(() => _covers = CoverCache.snapshot());
   }
 
   Future<void> _scan() async {

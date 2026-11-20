@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:material_ui/material_ui.dart';
 
 import '../../bridge/app_settings.dart';
@@ -63,19 +65,27 @@ class _FrameGenPageState extends State<FrameGenPage> {
     }
   }
 
+  /// The four lookups are independent, so they run together: the card badges
+  /// should not queue behind each other.
   Future<void> _loadExtras() async {
-    final Map<String, GameModes> modes = await LibraryBridge.modes();
-    final LibrarySnapshot removed = await LibraryBridge.removed();
-    final GpuInfo? gpu = await GpuBridge.load(widget.core);
-    final List<MapEntry<String, List<ProxyBadge>>> proxies = await Future.wait(
-      _games.map(
-        (LibraryGame game) async =>
-            MapEntry<String, List<ProxyBadge>>(
-              game.id,
-              await SystemBridge.proxyStatus(game),
-            ),
+    final (
+      Map<String, GameModes> modes,
+      LibrarySnapshot removed,
+      GpuInfo? gpu,
+      List<MapEntry<String, List<ProxyBadge>>> proxies,
+    ) = await (
+      LibraryBridge.modes(),
+      LibraryBridge.removed(),
+      GpuBridge.load(widget.core),
+      Future.wait(
+        _games.map(
+          (LibraryGame game) async => MapEntry<String, List<ProxyBadge>>(
+            game.id,
+            await SystemBridge.proxyStatus(game),
+          ),
+        ),
       ),
-    );
+    ).wait;
     if (!mounted) {
       return;
     }
@@ -85,21 +95,29 @@ class _FrameGenPageState extends State<FrameGenPage> {
       _gpu = gpu;
       _proxies = Map<String, List<ProxyBadge>>.fromEntries(proxies);
     });
-    await _loadCovers();
+    unawaited(_loadCovers());
   }
 
+  /// Covers resolve outside the badge refresh: a slow lookup must not delay the
+  /// deployment state the page is waiting on.
   Future<void> _loadCovers() async {
-    for (final LibraryGame game in _games) {
-      if (CoverCache.knows(game.id)) {
-        continue;
-      }
-      final String? cover = await LibraryBridge.cover(game);
-      if (!mounted) {
-        return;
-      }
-      CoverCache.put(game.id, cover);
-      setState(() => _covers = <String, String?>{..._covers, game.id: cover});
+    final List<LibraryGame> pending = _games
+        .where((LibraryGame game) => !CoverCache.knows(game.id))
+        .toList(growable: false);
+    if (pending.isEmpty) {
+      return;
     }
+    final List<String?> paths = await Future.wait(
+      pending.map(LibraryBridge.cover),
+    );
+    if (!mounted) {
+      return;
+    }
+    for (var index = 0; index < pending.length; index++) {
+      CoverCache.put(pending[index].id, paths[index]);
+    }
+    CoverCache.save();
+    setState(() => _covers = CoverCache.snapshot());
   }
 
   Future<void> _scan() async {

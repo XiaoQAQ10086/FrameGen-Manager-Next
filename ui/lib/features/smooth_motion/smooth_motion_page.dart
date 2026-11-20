@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:material_ui/material_ui.dart';
 
 import '../../bridge/core_library.dart';
@@ -55,12 +57,20 @@ class _SmoothMotionPageState extends State<SmoothMotionPage> {
     _loadExtras();
   }
 
+  /// The four lookups are independent, so they run together: the card badges
+  /// should not queue behind each other.
   Future<void> _loadExtras() async {
-    final Map<String, GameModes> modes = await LibraryBridge.modes();
-    final LibrarySnapshot removed = await LibraryBridge.removed();
-    final GpuInfo? gpu = await GpuBridge.load(widget.core);
-    final Map<String, SmoothMotionStatus> statuses =
-        await SmoothMotionBridge.inspectMany(_games);
+    final (
+      Map<String, GameModes> modes,
+      LibrarySnapshot removed,
+      GpuInfo? gpu,
+      Map<String, SmoothMotionStatus> statuses,
+    ) = await (
+      LibraryBridge.modes(),
+      LibraryBridge.removed(),
+      GpuBridge.load(widget.core),
+      SmoothMotionBridge.inspectMany(_games),
+    ).wait;
     if (!mounted) {
       return;
     }
@@ -70,17 +80,29 @@ class _SmoothMotionPageState extends State<SmoothMotionPage> {
       _gpu = gpu;
       _statuses = statuses;
     });
-    for (final LibraryGame game in _games) {
-      if (CoverCache.knows(game.id)) {
-        continue;
-      }
-      final String? cover = await LibraryBridge.cover(game);
-      if (!mounted) {
-        return;
-      }
-      CoverCache.put(game.id, cover);
-      setState(() => _covers = <String, String?>{..._covers, game.id: cover});
+    unawaited(_loadCovers());
+  }
+
+  /// Covers resolve outside the badge refresh: a slow lookup must not delay the
+  /// deployment state the page is waiting on.
+  Future<void> _loadCovers() async {
+    final List<LibraryGame> pending = _games
+        .where((LibraryGame game) => !CoverCache.knows(game.id))
+        .toList(growable: false);
+    if (pending.isEmpty) {
+      return;
     }
+    final List<String?> paths = await Future.wait(
+      pending.map(LibraryBridge.cover),
+    );
+    if (!mounted) {
+      return;
+    }
+    for (var index = 0; index < pending.length; index++) {
+      CoverCache.put(pending[index].id, paths[index]);
+    }
+    CoverCache.save();
+    setState(() => _covers = CoverCache.snapshot());
   }
 
   Future<void> _scan() async {
