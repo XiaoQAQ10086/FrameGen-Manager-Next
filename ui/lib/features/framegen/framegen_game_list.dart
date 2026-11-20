@@ -57,6 +57,14 @@ class FrameGenGameList extends StatelessWidget {
         ),
       );
     }
+    // Probed once per rebuild rather than per item build: a synchronous stat
+    // on every card that scrolls into view is the wrong place for file IO.
+    final List<bool> missing = games
+        .map(
+          (LibraryGame game) =>
+              !Directory(game.installDirectory).existsSync(),
+        )
+        .toList(growable: false);
     return ListView.separated(
       padding: const EdgeInsets.only(right: 4, bottom: 4),
       itemCount: games.length,
@@ -64,17 +72,21 @@ class FrameGenGameList extends StatelessWidget {
           const SizedBox(height: 12),
       itemBuilder: (BuildContext context, int index) {
         final LibraryGame game = games[index];
-        return FrameGenGameCard(
-          game: game,
-          modes: modes[game.id],
-          proxies: proxies[game.id] ?? const <ProxyBadge>[],
-          coverPath: showCovers ? covers[game.id] : null,
-          busy: busyGameId == game.id,
-          unavailable: !Directory(game.installDirectory).existsSync(),
-          onPrimary: () => onPrimary(game),
-          onLaunch: () => onLaunch(game),
-          onOpenFolder: () => onOpenFolder(game),
-          onRemove: () => onRemove(game),
+        // One boundary per card keeps a hover/press animation from repainting
+        // its neighbours.
+        return RepaintBoundary(
+          child: FrameGenGameCard(
+            game: game,
+            modes: modes[game.id],
+            proxies: proxies[game.id] ?? const <ProxyBadge>[],
+            coverPath: showCovers ? covers[game.id] : null,
+            busy: busyGameId == game.id,
+            unavailable: missing[index],
+            onPrimary: () => onPrimary(game),
+            onLaunch: () => onLaunch(game),
+            onOpenFolder: () => onOpenFolder(game),
+            onRemove: () => onRemove(game),
+          ),
         );
       },
     );

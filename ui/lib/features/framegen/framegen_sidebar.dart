@@ -17,21 +17,25 @@ class FrameGenSidebar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: <Widget>[
-          GpuPanel(gpu: gpu, onOpenHags: () => SystemBridge.openHags()),
-          const SizedBox(height: AppTokens.gap),
-          const SpoofPanel(),
-          const SizedBox(height: AppTokens.gap),
-          const AssetsPanel(),
-          const SizedBox(height: AppTokens.gap),
-          ModeSourcePanel(
-            gpuLabel: gpuLabel,
-            sourceUrl: 'https://github.com/sdli1995/dlssg_for_sm86',
-          ),
-        ],
+    // Isolated so scrolling the sidebar does not repaint the game list and the
+    // surrounding page chrome.
+    return RepaintBoundary(
+      child: SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: <Widget>[
+            GpuPanel(gpu: gpu, onOpenHags: () => SystemBridge.openHags()),
+            const SizedBox(height: AppTokens.gap),
+            const SpoofPanel(),
+            const SizedBox(height: AppTokens.gap),
+            const AssetsPanel(),
+            const SizedBox(height: AppTokens.gap),
+            ModeSourcePanel(
+              gpuLabel: gpuLabel,
+              sourceUrl: 'https://github.com/sdli1995/dlssg_for_sm86',
+            ),
+          ],
+        ),
       ),
     );
   }
