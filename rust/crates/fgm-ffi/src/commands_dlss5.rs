@@ -62,6 +62,15 @@ pub(crate) fn dlss5_install(request: &str) -> Result<Value, AppError> {
     if let Some(hotkey) = request.hotkey {
         let _ = Dlss5Service::set_hotkey(&target_directory, hotkey, Some(&executable), &paths);
     }
+    super::commands::log_event(
+        &paths,
+        "info",
+        "dlss5 install",
+        &[
+            ("target", &request.target_dir),
+            ("files", &report.files_written.to_string()),
+        ],
+    );
 
     Ok(json!({
         "ok": true,

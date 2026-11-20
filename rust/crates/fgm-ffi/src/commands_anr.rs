@@ -84,6 +84,15 @@ pub(crate) fn anr_deploy(request: &str) -> Result<Value, AppError> {
     );
     super::commands_operation::finish();
     let report = result?;
+    super::commands::log_event(
+        &paths,
+        "info",
+        "anr deploy",
+        &[
+            ("target", &request.target_dir),
+            ("files", &report.files_written.to_string()),
+        ],
+    );
     Ok(json!({
         "ok": true,
         "kind": report.kind,
@@ -98,6 +107,12 @@ pub(crate) fn anr_restore(request: &str) -> Result<Value, AppError> {
     let paths = data_paths(request.data_dir.as_deref())?;
     paths.ensure_created()?;
     AnrDeploymentService::restore(&target, &paths)?;
+    super::commands::log_event(
+        &paths,
+        "info",
+        "anr restore",
+        &[("target", &request.target_dir)],
+    );
     Ok(json!({ "ok": true }))
 }
 

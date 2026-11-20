@@ -62,7 +62,7 @@ class _FrameGenDeployDialogState extends State<FrameGenDeployDialog> {
         side: const BorderSide(color: Color(0x1F14233C)),
       ),
       child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 660, maxHeight: 680),
+        constraints: const BoxConstraints(maxWidth: 720, maxHeight: 740),
         child: Padding(
           padding: const EdgeInsets.all(22),
           child: Column(

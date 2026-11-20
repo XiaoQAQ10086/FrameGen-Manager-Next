@@ -31,3 +31,5 @@ Rust 实现：`fgm-infra/src/logging/operation_log.rs`。
 - 日志滚动/大小上限。
 - 诊断包打包。
 - 所有 Core 操作统一带 operation id（目前 FFI 层按时间戳记录关键操作）。
+
+- 已接入事件：`library scan`、`deploy`、`restore`、`sm enable/disable/restore`、`dlss5 install`、`anr deploy/restore`；每条包含 operation id、级别、英文消息和结构化字段。

@@ -6,8 +6,6 @@ use std::sync::LazyLock;
 
 use fgm_core::operation::OperationPhase;
 use fgm_domain::error::{AppError, ErrorCode};
-use fgm_infra::library::LibraryService;
-use fgm_infra::paths::AppPaths;
 use serde_json::{Value, json};
 
 mod commands;
@@ -62,7 +60,7 @@ pub extern "C" fn fgm_operation_phase_name(phase: u32) -> *const c_char {
 /// `{"ok":true,"games":[...]}` or `{"ok":false,"code":"...","context":[...]}`.
 #[unsafe(no_mangle)]
 pub extern "C" fn fgm_library_scan_json() -> *mut c_char {
-    execute(|| match scan_library() {
+    execute(|| match commands_library::scan_library() {
         Ok(games) => json!({ "ok": true, "games": games }),
         Err(error) => error_json(&error),
     })
@@ -71,7 +69,7 @@ pub extern "C" fn fgm_library_scan_json() -> *mut c_char {
 /// Returns the cached library without scanning.
 #[unsafe(no_mangle)]
 pub extern "C" fn fgm_library_list_json() -> *mut c_char {
-    execute(|| match list_library() {
+    execute(|| match commands_library::list_library() {
         Ok(games) => json!({ "ok": true, "games": games }),
         Err(error) => error_json(&error),
     })
@@ -322,17 +320,6 @@ pub unsafe extern "C" fn fgm_string_free(value: *mut c_char) {
     unsafe {
         drop(CString::from_raw(value));
     }
-}
-
-fn scan_library() -> Result<Vec<fgm_domain::library::GameEntry>, AppError> {
-    let paths = AppPaths::create_default(None)?;
-    paths.ensure_created()?;
-    LibraryService::scan(&paths)
-}
-
-fn list_library() -> Result<Vec<fgm_domain::library::GameEntry>, AppError> {
-    let paths = AppPaths::create_default(None)?;
-    Ok(LibraryService::list(&paths))
 }
 
 fn execute(action: impl FnOnce() -> Value) -> *mut c_char {

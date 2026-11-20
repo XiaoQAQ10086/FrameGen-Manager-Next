@@ -22,6 +22,26 @@ struct AddManualRequest {
     data_dir: Option<String>,
 }
 
+/// Scans Steam, Epic, Xbox and loose folders and refreshes the cache.
+pub(crate) fn scan_library() -> Result<Vec<fgm_domain::library::GameEntry>, AppError> {
+    let paths = data_paths(None)?;
+    paths.ensure_created()?;
+    let games = LibraryService::scan(&paths)?;
+    super::commands::log_event(
+        &paths,
+        "info",
+        "library scan",
+        &[("games", &games.len().to_string())],
+    );
+    Ok(games)
+}
+
+/// Returns the cached library without scanning.
+pub(crate) fn list_library() -> Result<Vec<fgm_domain::library::GameEntry>, AppError> {
+    let paths = data_paths(None)?;
+    Ok(LibraryService::list(&paths))
+}
+
 pub(crate) fn add_manual(request: &str) -> Result<Value, AppError> {
     let request: AddManualRequest = parse(request)?;
     let executable = match request.exe_path {

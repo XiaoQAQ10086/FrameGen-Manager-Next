@@ -35,6 +35,19 @@ abstract final class AppTheme {
       iconButtonTheme: IconButtonThemeData(
         style: LegacyButtonStyles.iconButton,
       ),
+      switchTheme: SwitchThemeData(
+        thumbColor: const WidgetStatePropertyAll<Color>(Colors.white),
+        trackColor: WidgetStateProperty.resolveWith<Color>(
+          (Set<WidgetState> states) => states.contains(WidgetState.selected)
+              ? const Color(0xFF8FAB98)
+              : const Color(0xFFC8CEC6),
+        ),
+        trackOutlineColor: const WidgetStatePropertyAll<Color>(
+          Colors.transparent,
+        ),
+        trackOutlineWidth: const WidgetStatePropertyAll<double>(0),
+        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+      ),
       popupMenuTheme: PopupMenuThemeData(
         color: const Color(0xFFFDFDFE),
         surfaceTintColor: Colors.transparent,

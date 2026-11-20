@@ -70,6 +70,16 @@ class _AppShellState extends State<AppShell> {
                   switchInCurve: const Cubic(0.22, 0.61, 0.36, 1),
                   switchOutCurve: const Cubic(0.55, 0.06, 0.68, 0.19),
                   transitionBuilder: _fadeThrough,
+                  layoutBuilder:
+                      (Widget? current, List<Widget> previous) {
+                        return Stack(
+                          fit: StackFit.expand,
+                          children: <Widget>[
+                            ...previous,
+                            if (current != null) current,
+                          ],
+                        );
+                      },
                   child: KeyedSubtree(
                     key: ValueKey<AppSection>(_section),
                     child: switch (_section) {
@@ -253,8 +263,9 @@ class _NavItem extends StatelessWidget {
           onTap: onTap,
           splashFactory: NoSplash.splashFactory,
           highlightColor: Colors.transparent,
-          hoverColor: Colors.transparent,
+          hoverColor: const Color(0x14007AFF),
           focusColor: Colors.transparent,
+          mouseCursor: SystemMouseCursors.click,
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
             decoration: BoxDecoration(

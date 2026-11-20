@@ -47,7 +47,10 @@ class AboutSwitchRow extends StatelessWidget {
           ),
         ),
         const SizedBox(width: 12),
-        Switch(value: value, onChanged: onChanged),
+        Transform.scale(
+          scale: 1.12,
+          child: Switch(value: value, onChanged: onChanged),
+        ),
       ],
     );
   }

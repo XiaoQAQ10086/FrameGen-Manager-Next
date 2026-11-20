@@ -67,6 +67,7 @@ pub(crate) fn sm_enable(request: &str) -> Result<Value, AppError> {
         &app_version,
         &paths,
     )?;
+    super::commands::log_event(&paths, "info", "sm enable", &[("game", &request.game)]);
     Ok(change_json(change))
 }
 
@@ -82,6 +83,7 @@ pub(crate) fn sm_disable(request: &str) -> Result<Value, AppError> {
         &target_directory,
         &paths,
     )?;
+    super::commands::log_event(&paths, "info", "sm disable", &[("game", &request.game)]);
     Ok(change_json(change))
 }
 
@@ -97,6 +99,7 @@ pub(crate) fn sm_restore(request: &str) -> Result<Value, AppError> {
         &target_directory,
         &paths,
     )?;
+    super::commands::log_event(&paths, "info", "sm restore", &[("game", &request.game)]);
     Ok(change_json(change))
 }
 

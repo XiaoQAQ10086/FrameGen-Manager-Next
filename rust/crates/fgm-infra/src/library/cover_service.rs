@@ -34,15 +34,28 @@ impl CoverService {
                 .with("path", directory.display().to_string())
                 .with("reason", error.to_string())
         })?;
-        let url = format!(
-            "https://shared.steamstatic.com/store_item_assets/steam/apps/{app_id}/library_600x900.jpg"
-        );
-        match Downloader::download(&url, &path, &AtomicBool::new(false)) {
-            Ok(_) => Ok(Some(path)),
-            Err(_) => {
-                let _ = std::fs::remove_file(&path);
-                Ok(None)
+        // Portrait library art first, then landscape store art for games that
+        // never received a `library_600x900` asset (older titles and demos).
+        let urls = [
+            format!(
+                "https://shared.steamstatic.com/store_item_assets/steam/apps/{app_id}/library_600x900.jpg"
+            ),
+            format!("https://cdn.cloudflare.steamstatic.com/steam/apps/{app_id}/header.jpg"),
+            format!(
+                "https://shared.steamstatic.com/store_item_assets/steam/apps/{app_id}/header.jpg"
+            ),
+            format!(
+                "https://cdn.cloudflare.steamstatic.com/steam/apps/{app_id}/capsule_616x353.jpg"
+            ),
+        ];
+        for url in urls {
+            if Downloader::download(&url, &path, &AtomicBool::new(false)).is_ok()
+                && path.metadata().is_ok_and(|metadata| metadata.len() > 1024)
+            {
+                return Ok(Some(path));
             }
+            let _ = std::fs::remove_file(&path);
         }
+        Ok(None)
     }
 }
