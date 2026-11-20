@@ -134,18 +134,19 @@ class _LegacySelectState<T> extends State<LegacySelect<T>> {
                     ],
                   ),
                   child: Stack(
-                    alignment: Alignment.center,
+                    alignment: Alignment.centerLeft,
                     children: <Widget>[
                       Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 28),
+                        padding: const EdgeInsets.only(left: 12, right: 30),
                         child: Text(
                           _text,
                           maxLines: 1,
-                          textAlign: TextAlign.center,
+                          textAlign: TextAlign.start,
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(
                             color: AppTokens.textPrimary,
                             fontSize: widget.dense ? 12 : 13,
+                            fontWeight: FontWeight.w600,
                           ),
                         ),
                       ),

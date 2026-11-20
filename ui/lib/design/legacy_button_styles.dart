@@ -14,6 +14,15 @@ abstract final class LegacyButtonStyles {
   static const Color _neutralFace = Color(0xFFF6F9FE);
   static const Color _accentBorder = Color(0x8C007AFF);
 
+  /// Hand cursor on every enabled button so the pointer matches the hover
+  /// feedback instead of looking inert.
+  static final WidgetStateProperty<MouseCursor> _cursor =
+      WidgetStateProperty.resolveWith<MouseCursor>(
+        (Set<WidgetState> states) => states.contains(WidgetState.disabled)
+            ? SystemMouseCursors.basic
+            : SystemMouseCursors.click,
+      );
+
   /// Default `.btn`: quiet blue-grey face with a dark label.
   static ButtonStyle get standard => _style(
     top: const Color(0xFFF0F6FE),
@@ -83,13 +92,14 @@ abstract final class LegacyButtonStyles {
           : AppTokens.accent,
     ),
     overlayColor: const WidgetStatePropertyAll<Color>(AppTokens.accentSoft),
+    mouseCursor: _cursor,
     elevation: const WidgetStatePropertyAll<double>(0),
     minimumSize: const WidgetStatePropertyAll<Size>(Size(0, 30)),
     padding: const WidgetStatePropertyAll<EdgeInsetsGeometry>(
       EdgeInsets.symmetric(horizontal: 10, vertical: 6),
     ),
     textStyle: WidgetStatePropertyAll<TextStyle>(
-      _textStyle(AppTokens.accent, 12.5),
+      _textStyle(AppTokens.accent, 13),
     ),
     shape: WidgetStatePropertyAll<OutlinedBorder>(
       RoundedRectangleBorder(
@@ -163,6 +173,7 @@ abstract final class LegacyButtonStyles {
       foregroundColor: _stateColor(foreground),
       iconColor: _stateColor(foreground),
       overlayColor: const WidgetStatePropertyAll<Color>(Colors.transparent),
+      mouseCursor: _cursor,
       side: const WidgetStatePropertyAll<BorderSide>(BorderSide.none),
       elevation: const WidgetStatePropertyAll<double>(0),
       shadowColor: const WidgetStatePropertyAll<Color>(Colors.transparent),
@@ -220,6 +231,7 @@ abstract final class LegacyButtonStyles {
         Colors.transparent,
       ),
       overlayColor: const WidgetStatePropertyAll<Color>(Colors.transparent),
+      mouseCursor: _cursor,
       elevation: WidgetStateProperty.resolveWith<double>((Set<WidgetState> s) {
         if (s.contains(WidgetState.disabled)) {
           return 0;
@@ -265,6 +277,7 @@ abstract final class LegacyButtonStyles {
       foregroundColor: _stateColor(foreground),
       iconColor: _stateColor(foreground),
       overlayColor: const WidgetStatePropertyAll<Color>(AppTokens.accentSoft),
+      mouseCursor: _cursor,
       side: WidgetStateProperty.resolveWith<BorderSide>(
         (Set<WidgetState> states) => BorderSide(
           color: states.contains(WidgetState.hovered) ? _accentBorder : border,
