@@ -24,8 +24,15 @@ impl AnrOnlineService {
         data_root: &Path,
         cancelled: &AtomicBool,
         progress: impl FnMut(u64),
+        on_total: impl FnMut(u64),
     ) -> Result<AnrPackageInfo, AppError> {
-        Self::download_from(DEFAULT_RELEASE_API, data_root, cancelled, progress)
+        Self::download_from(
+            DEFAULT_RELEASE_API,
+            data_root,
+            cancelled,
+            progress,
+            on_total,
+        )
     }
 
     pub fn download_from(
@@ -33,6 +40,7 @@ impl AnrOnlineService {
         data_root: &Path,
         cancelled: &AtomicBool,
         progress: impl FnMut(u64),
+        mut on_total: impl FnMut(u64),
     ) -> Result<AnrPackageInfo, AppError> {
         let release_path = release_json_path(data_root);
         if let Some(parent) = release_path.parent() {
@@ -58,6 +66,9 @@ impl AnrOnlineService {
             .trim_start_matches(['v', 'V'])
             .to_string();
         let installer = select_installer(&release)?;
+        // The UI needs a denominator to draw a determinate bar; the release
+        // manifest already carries the package size.
+        on_total(installer.size);
         let zip = UpdateDownloader::download(&installer, &tag, cancelled, progress)?;
         let info = AnrPackageService::import(&zip, data_root)?;
         let _ = std::fs::remove_file(zip);

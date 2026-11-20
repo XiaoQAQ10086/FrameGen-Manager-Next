@@ -58,7 +58,8 @@ fn downloads_and_imports_the_latest_full_package() {
     let data = dir.path().join("data");
     let api = format!("http://127.0.0.1:{port}/latest");
     let info =
-        AnrOnlineService::download_from(&api, &data, &AtomicBool::new(false), |_| {}).unwrap();
+        AnrOnlineService::download_from(&api, &data, &AtomicBool::new(false), |_| {}, |_| {})
+            .unwrap();
 
     assert_eq!(info.kind, AnrPackageKind::Full);
     assert_eq!(info.version, "9.9.9");

@@ -132,6 +132,7 @@ pub(crate) fn anr_download(request: &str) -> Result<Value, AppError> {
         paths.root(),
         &operation.cancelled,
         |done| super::commands_operation::report_bytes(&operation, done),
+        |total| super::commands_operation::report_total(&operation, total),
     );
     super::commands_operation::finish();
     let info = result?;

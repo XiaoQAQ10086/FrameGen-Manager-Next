@@ -84,6 +84,9 @@ pub(crate) fn download_to(
     cancelled: &AtomicBool,
     mut progress: impl FnMut(u64),
 ) -> Result<u64, AppError> {
+    if cancelled.load(Ordering::Relaxed) {
+        return Err(AppError::new(ErrorCode::OperationCancelled));
+    }
     let mut last_error = None;
     let mut attempts: Vec<(u32, Option<String>)> = Vec::new();
     if let Some(proxy) = crate::platform::system_proxy() {
@@ -101,7 +104,14 @@ pub(crate) fn download_to(
             &mut progress,
         ) {
             Ok(bytes) => return Ok(bytes),
-            Err(error) => last_error = Some(error),
+            Err(error) => {
+                // Cancelling is the user's decision, not a transport failure;
+                // retrying the other proxy modes would keep the dialog waiting.
+                if error.code == ErrorCode::OperationCancelled {
+                    return Err(error);
+                }
+                last_error = Some(error);
+            }
         }
     }
     Err(last_error.unwrap_or_else(|| network("download failed")))

@@ -48,16 +48,27 @@ class _OperationDialogState<T> extends State<_OperationDialog<T>> {
   Timer? _timer;
   OperationProgress _progress = const OperationProgress(active: true);
   bool _cancelling = false;
+  int _lastDone = 0;
+  Duration _lastSample = Duration.zero;
+  double _bytesPerSecond = 0;
+
+  /// Downloads count bytes; deploy-style operations count files.
+  bool get _isDownload =>
+      _progress.kind == 'anrDownload' || _progress.kind == 'updateDownload';
 
   @override
   void initState() {
     super.initState();
+    _lastSample = _now();
     _timer = Timer.periodic(
       const Duration(milliseconds: 200),
       (_) => _poll(),
     );
     _run();
   }
+
+  static Duration _now() =>
+      Duration(milliseconds: DateTime.now().millisecondsSinceEpoch);
 
   @override
   void dispose() {
@@ -73,16 +84,28 @@ class _OperationDialogState<T> extends State<_OperationDialog<T>> {
     if (!mounted) {
       return;
     }
+    final Duration now = _now();
+    final double seconds =
+        (now - _lastSample).inMilliseconds / Duration.millisecondsPerSecond;
+    if (seconds > 0.05) {
+      final int delta = progress.done - _lastDone;
+      _bytesPerSecond = delta >= 0 ? delta / seconds : 0;
+      _lastDone = progress.done;
+      _lastSample = now;
+    }
     setState(() => _progress = progress);
   }
 
   Future<void> _run() async {
-    final T result = await widget.action();
-    _timer?.cancel();
-    if (!mounted) {
-      return;
+    T? result;
+    try {
+      result = await widget.action();
+    } finally {
+      _timer?.cancel();
+      if (mounted) {
+        Navigator.of(context).pop(result);
+      }
     }
-    Navigator.of(context).pop(result);
   }
 
   void _cancel() {
@@ -106,14 +129,19 @@ class _OperationDialogState<T> extends State<_OperationDialog<T>> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
-            LinearProgressIndicator(value: fraction, minHeight: 4),
+            LinearProgressIndicator(value: fraction, minHeight: 6),
             const SizedBox(height: 10),
             Text(
-              _progress.total > 0
-                  ? '${_progress.done} / ${_progress.total}'
-                  : '…',
+              _detail(),
               style: Theme.of(context).textTheme.labelMedium,
             ),
+            if (_isDownload && _progress.done > 0) ...<Widget>[
+              const SizedBox(height: 2),
+              Text(
+                '${_formatBytes(_bytesPerSecond.round())} / s',
+                style: Theme.of(context).textTheme.labelSmall,
+              ),
+            ],
           ],
         ),
       ),
@@ -129,4 +157,26 @@ class _OperationDialogState<T> extends State<_OperationDialog<T>> {
           : null,
     );
   }
+
+  String _detail() {
+    if (_progress.total <= 0) {
+      return _progress.done > 0 ? _formatBytes(_progress.done) : '…';
+    }
+    if (_isDownload) {
+      return '${_formatBytes(_progress.done)} / ${_formatBytes(_progress.total)}';
+    }
+    return '${_progress.done} / ${_progress.total}';
+  }
+}
+
+/// Byte counts for the download progress line; units are symbols, not prose.
+String _formatBytes(int bytes) {
+  const List<String> units = <String>['B', 'KB', 'MB', 'GB'];
+  double value = bytes.toDouble();
+  var index = 0;
+  while (value >= 1024 && index < units.length - 1) {
+    value /= 1024;
+    index += 1;
+  }
+  return '${value.toStringAsFixed(index == 0 ? 0 : 1)} ${units[index]}';
 }

@@ -52,6 +52,13 @@ impl UpdateDownloader {
             let downloaded =
                 Downloader::download_with_progress(&url, &part, cancelled, &mut progress);
             if let Err(error) = downloaded {
+                // A cancel is the user's decision, not a broken mirror; walking
+                // the remaining mirrors would keep the dialog on "cancelling"
+                // until every one of them timed out.
+                if error.code == ErrorCode::OperationCancelled {
+                    let _ = std::fs::remove_file(&part);
+                    return Err(error);
+                }
                 last_error = Some(error);
                 continue;
             }
