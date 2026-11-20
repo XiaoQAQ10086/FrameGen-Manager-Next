@@ -20,6 +20,8 @@ pub enum ErrorCode {
     NvApiCallFailed,
     OperationCancelled,
     OperationTimedOut,
+    /// The update source answered, but has no manifest published yet.
+    UpdateNotFound,
     Internal,
 }
 

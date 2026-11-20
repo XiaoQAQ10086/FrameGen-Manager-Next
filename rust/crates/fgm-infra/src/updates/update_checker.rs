@@ -18,6 +18,7 @@ impl UpdateChecker {
         cancelled: &AtomicBool,
     ) -> Result<UpdateInfo, AppError> {
         let mut last_error = None;
+        let mut missing = 0_usize;
         for url in urls {
             let path = manifest_path();
             match Downloader::download(url, &path, cancelled).and_then(|_| {
@@ -42,9 +43,16 @@ impl UpdateChecker {
                 }
                 Err(error) => {
                     let _ = std::fs::remove_file(&path);
+                    if error.code == ErrorCode::FileNotFound {
+                        missing += 1;
+                    }
                     last_error = Some(error);
                 }
             }
+        }
+        if !urls.is_empty() && missing == urls.len() {
+            return Err(AppError::new(ErrorCode::UpdateNotFound)
+                .with("reason", "no update manifest published"));
         }
         Err(last_error.unwrap_or_else(|| {
             AppError::new(ErrorCode::NetworkError).with("reason", "no update source")
