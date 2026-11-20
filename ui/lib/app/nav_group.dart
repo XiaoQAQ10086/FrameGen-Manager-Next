@@ -177,11 +177,12 @@ class _NavItem extends StatelessWidget {
                     color: selected
                         ? AppTokens.accent
                         : AppTokens.textSecondary,
-                    // 500 rather than 700: the system face only ships Regular
-                    // and Bold, and Bold at this size closes up dense glyphs
-                    // such as 赏.
+                    // Regular weight: Flutter synthesises bold for weights the
+                    // system face lacks, and the smear welds the top strokes of
+                    // dense glyphs such as 赏 together. Selection reads from
+                    // the colour and the pill instead.
                     fontSize: 14,
-                    fontWeight: FontWeight.w500,
+                    fontWeight: FontWeight.w400,
                   ),
                   child: Text(label),
                 ),

@@ -162,6 +162,11 @@ class _OperationDialogState<T> extends State<_OperationDialog<T>> {
     if (_progress.total <= 0) {
       return _progress.done > 0 ? _formatBytes(_progress.done) : '…';
     }
+    // The first bytes can take twenty seconds to arrive while the connection
+    // is negotiated; showing "0 B / 11.2 MB" the whole time reads as frozen.
+    if (_isDownload && _progress.done <= 0) {
+      return '…';
+    }
     if (_isDownload) {
       return '${_formatBytes(_progress.done)} / ${_formatBytes(_progress.total)}';
     }

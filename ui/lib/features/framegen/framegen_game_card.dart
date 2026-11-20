@@ -122,7 +122,9 @@ class FrameGenGameCard extends StatelessWidget {
                             background: AppTokens.accentSoft,
                           ),
                         for (final ProxyBadge proxy in proxies)
-                          if (!proxy.ownedByFramegen)
+                          // Only slots taken by one of our own features are
+                          // actionable; a foreign DLL in the folder is noise.
+                          if (!proxy.ownedByFramegen && proxy.owner != 'other')
                             LegacyPill(
                               label:
                                   '${proxy.module} · ${_ownerLabel(l10n, proxy.owner)}',
