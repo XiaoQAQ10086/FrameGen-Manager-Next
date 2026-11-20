@@ -5,6 +5,9 @@ import { showRemoved } from './removed.js';
 let inspections = {};
 let selected = null;
 let detail = null;
+let detailApi = 'auto';
+let detailProxy = 'auto';
+let recording = false;
 
 export async function renderDlss5(root) {
   root.innerHTML = `
@@ -116,6 +119,8 @@ function bind(root) {
           await load();
           renderWall(root);
         }
+      } else if (action === 'record-hotkey' && selected) {
+        await recordHotkey(selected);
       } else if (action === 'install' && selected) {
         await install(root, selected);
       } else if (action === 'uninstall' && selected) {
@@ -134,6 +139,8 @@ function bind(root) {
 
 function openDetail(root, game) {
   selected = game;
+  detailApi = 'auto';
+  detailProxy = 'auto';
   const reply = inspections[game.id] || {};
   detail?.remove();
   detail = document.createElement('div');
@@ -145,8 +152,21 @@ function openDetail(root, game) {
         <button class="icon-btn" data-action="close-detail" type="button">✕</button>
       </header>
       <div class="dlss-detail">
-        <div class="kv2"><span>${t('deployGraphicsApi')}</span><b class="badge">${esc(String(game.graphicsApi || 'unknown').toUpperCase())}</b></div>
-        <div class="kv2"><span>${t('dlss5OverlayKey')}</span><b class="badge">${reply.hotkeyVk ?? '-'}</b></div>
+        <div class="options">
+          <label><span>${t('deployGraphicsApi')}</span><div class="select-wrap"><select data-detail="api">
+            <option value="auto">${esc(t('dlss5ApiAuto', { api: String(game.graphicsApi || 'dx12').toUpperCase() }))}</option>
+            <option value="dx12">DX12</option><option value="dx11">DX11</option><option value="dx10">DX10</option>
+            <option value="dx9">DX9</option><option value="vulkan">Vulkan</option><option value="opengl">OpenGL</option>
+          </select></div></label>
+          <label><span>${t('optionProxySlot')}</span><div class="select-wrap"><select data-detail="proxy">
+            <option value="auto">${esc(t('dlss5ProxyAuto', { proxy: autoProxy(game) }))}</option>
+            <option value="dxgi.dll">dxgi.dll</option><option value="d3d12.dll">d3d12.dll</option>
+            <option value="d3d11.dll">d3d11.dll</option><option value="d3d10.dll">d3d10.dll</option>
+            <option value="d3d9.dll">d3d9.dll</option><option value="opengl32.dll">opengl32.dll</option>
+          </select></div></label>
+        </div>
+        <div class="kv2"><span>${t('dlss5OverlayKey')}</span><b class="badge">${reply.hotkeyVk ?? '-'}</b>
+          <button class="btn small" data-action="record-hotkey" type="button">${t('dlss5RecordHotkey')}</button></div>
         <p class="hint">${t('dlss5DetailSubtitle')}</p>
       </div>
       <footer class="modal-foot">
@@ -159,6 +179,10 @@ function openDetail(root, game) {
       </footer>
     </section>`;
   $('#modal-root').appendChild(detail);
+  detail.onchange = (event) => {
+    if (event.target.dataset.detail === 'api') detailApi = event.target.value;
+    if (event.target.dataset.detail === 'proxy') detailProxy = event.target.value;
+  };
   detail.onclick = (event) => {
     if (event.target === detail) {
       detail.remove();
@@ -167,15 +191,33 @@ function openDetail(root, game) {
   };
 }
 
+function autoProxy(game) {
+  const api = String(game.graphicsApi || '').toLowerCase();
+  if (api === 'vulkan') return t('optionOff');
+  if (api === 'dx9') return 'd3d9.dll';
+  if (api === 'opengl') return 'opengl32.dll';
+  return 'dxgi.dll';
+}
+
+function resolveApi(game) {
+  return detailApi === 'auto'
+    ? (String(game.graphicsApi || 'dx12').toLowerCase() === 'unknown'
+        ? 'dx12'
+        : String(game.graphicsApi).toLowerCase())
+    : detailApi;
+}
+
 async function install(root, game) {
   if (!confirm(t('dlss5ConfirmBody', { game: game.name }))) return;
-  const api = String(game.graphicsApi || 'dx12').toLowerCase();
+  const api = resolveApi(game);
+  const proxy = detailProxy === 'auto' ? undefined : detailProxy;
   showProgress(t('dlss5Install'));
   try {
     const reply = await call('dlss5.install', {
       exePath: game.renderExe,
       targetDir: game.targetDirectory,
-      api: api === 'unknown' ? 'dx12' : api,
+      api,
+      proxy,
     });
     detail?.remove();
     detail = null;
@@ -204,4 +246,43 @@ async function uninstall(root, game) {
   } finally {
     hideProgress();
   }
+}
+
+
+async function recordHotkey(game) {
+  if (recording) return;
+  recording = true;
+  toast(t('dlss5RecordHotkey'));
+  const handler = async (event) => {
+    event.preventDefault();
+    window.removeEventListener('keydown', handler, true);
+    recording = false;
+    const virtualKey = keyToVirtualKey(event);
+    if (!virtualKey) {
+      toast(t('smUnknown'), 'warn');
+      return;
+    }
+    try {
+      await call('dlss5.setHotkey', {
+        targetDir: game.targetDirectory,
+        virtualKey,
+        exePath: game.renderExe,
+      });
+      await load();
+      renderWall(document.querySelector('#view'));
+      detail?.remove();
+      detail = null;
+    } catch (error) {
+      toast(error.message, 'error');
+    }
+  };
+  window.addEventListener('keydown', handler, true);
+}
+
+function keyToVirtualKey(event) {
+  const key = event.key;
+  if (/^[a-zA-Z]$/.test(key)) return key.toUpperCase().charCodeAt(0);
+  if (/^[0-9]$/.test(key)) return key.charCodeAt(0);
+  if (/^F([1-9]|1[0-2])$/.test(key)) return 0x70 + Number(key.slice(1)) - 1;
+  return { Escape: 0x1b, ' ': 0x20, Tab: 0x09, Enter: 0x0d }[key] || null;
 }

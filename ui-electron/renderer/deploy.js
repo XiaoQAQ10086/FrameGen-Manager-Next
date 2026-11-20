@@ -1,15 +1,16 @@
 import {
   $, apiLabel, call, esc, hideProgress, prettyPath, showProgress, state, toast,
 } from './core.js';
+import { t } from './l10n.js';
 
 export async function restoreGame(game, refresh) {
-  showProgress('正在还原');
+  showProgress(t('restore'));
   try {
     await call('restore', { family: 'framegen.sm86', targetDir: game.targetDirectory });
     await refresh();
-    toast(`已还原 ${game.name}`);
+    toast(`${t('restore')}: ${game.name}`);
   } catch (error) {
-    toast(`还原失败：${error.message}`, 'error');
+    toast(`${t('restore')}: ${error.message}`, 'error');
   } finally {
     hideProgress();
   }
@@ -30,29 +31,46 @@ export function openDeployDialog(game, refresh) {
         <button class="icon-btn" data-close type="button">✕</button>
       </header>
       <div class="deploy-meta">
-        <div class="kv2"><span>图形 API</span><b class="badge">${esc(apiLabel(game.graphicsApi))}</b></div>
+        <div class="kv2"><span>${t('deployGraphicsApi')}</span><b class="badge">${esc(apiLabel(game.graphicsApi))}</b></div>
       </div>
-      <p class="hint">确定为 ${esc(game.name)} 部署帧生成组件吗？</p>
+      <p class="hint">${t('deployConfirmBody', { game: esc(game.name) })}</p>
       <div class="options">
-        <label><span>代理入口</span><div class="select-wrap"><select data-option="proxy">
+        <label><span>${t('optionProxySlot')}</span><div class="select-wrap"><select data-option="proxy">
           <option>version.dll</option><option>winmm.dll</option><option>dbghelp.dll</option>
           <option>dinput8.dll</option><option>dxgi.dll</option><option>d3d12.dll</option>
         </select></div></label>
-        <label><span>插帧引擎</span><div class="select-wrap"><select data-option="engine"><option>DLSS</option><option>XeSS</option></select></div></label>
-        <label><span>生成帧数</span><div class="select-wrap"><select data-option="frames"><option value="3">4X</option><option value="2">3X</option><option value="1">2X</option></select></div></label>
-        <label><span>优化档位</span><div class="select-wrap"><select data-option="optimized"><option value="1">1 · 加速，与官方逐位一致</option><option value="0">0 · 原版内核</option><option value="2">2 · 更快，轻微损失</option><option value="3">3 · 最快，全部损失</option></select></div></label>
-        <label><span>渲染预设</span><div class="select-wrap"><select data-option="preset"><option value="A">A</option><option value="B">B</option><option value="C">C</option></select></div></label>
-        <label><span>超分辨率</span><div class="select-wrap"><select data-option="superResolution"><option value="Off">关闭</option><option value="M-INT8">M-INT8</option><option value="L-INT8">L-INT8</option><option value="M-FP16">M-FP16</option><option value="L-FP16">L-FP16</option></select></div></label>
+        <label><span>${t('optionEngine')}</span><div class="select-wrap"><select data-option="engine"><option>DLSS</option><option>XeSS</option></select></div></label>
+        <label><span>${t('optionFrames')}</span><div class="select-wrap"><select data-option="frames"><option value="3">4X</option><option value="2">3X</option><option value="1">2X</option></select></div></label>
+        <label><span>${t('optionOptimized')}</span><div class="select-wrap"><select data-option="optimized"><option value="1">1 · 加速，与官方逐位一致</option><option value="0">0 · 原版内核</option><option value="2">2 · 更快，轻微损失</option><option value="3">3 · 最快，全部损失</option></select></div></label>
+        <label><span>${t('optionPreset')}</span><div class="select-wrap"><select data-option="preset"><option value="A">A</option><option value="B">B</option><option value="C">C</option></select></div></label>
+        <label><span>${t('optionSuperResolution')}</span><div class="select-wrap"><select data-option="superResolution"><option value="Off">关闭</option><option value="M-INT8">M-INT8</option><option value="L-INT8">L-INT8</option><option value="M-FP16">M-FP16</option><option value="L-FP16">L-FP16</option></select></div></label>
+        <label data-xess class="hidden"><span>${t('optionFlowResolution')}</span><div class="select-wrap"><select data-option="xessFlow"><option>Coarse</option><option>Middle</option><option>Fine</option><option>CoarseAt4K</option></select></div></label>
+        <label data-xess class="hidden"><span>${t('optionUseHudless')}</span><div class="select-wrap"><select data-option="xessHudless"><option>Auto</option><option value="1">1</option><option value="0">0</option></select></div></label>
       </div>
+      <p class="option-note hidden" data-xess-note>${t('deployXeSSNote')}</p>
       <footer class="modal-foot">
-        <span class="muted small">部署前请关闭游戏</span>
+        <span class="muted small">${t('deployCloseGameHint')}</span>
         <div class="foot-actions">
-          <button class="btn" data-restore type="button" ${deployed ? '' : 'disabled'}>还原</button>
-          <button class="btn success" data-deploy type="button">部署</button>
+          <button class="btn" data-restore type="button" ${deployed ? '' : 'disabled'}>${t('restore')}</button>
+          <button class="btn success" data-deploy type="button">${t('deploy')}</button>
         </div>
       </footer>
     </section>`;
   $('#modal-root').appendChild(modal);
+  const syncXess = () => {
+    const engine = $('[data-option="engine"]', modal)?.value || 'DLSS';
+    const xess = engine === 'XeSS';
+    modal.querySelectorAll('[data-xess]').forEach((node) => node.classList.toggle('hidden', !xess));
+    const note = $('[data-xess-note]', modal);
+    if (note) note.classList.toggle('hidden', !xess);
+    const optimized = $('[data-option="optimized"]', modal);
+    const preset = $('[data-option="preset"]', modal);
+    if (optimized) optimized.disabled = xess;
+    if (preset) preset.disabled = xess;
+  };
+  const engineSelect = $('[data-option="engine"]', modal);
+  if (engineSelect) engineSelect.onchange = syncXess;
+  syncXess();
   const close = () => modal.remove();
   $('[data-close]', modal).onclick = close;
   modal.onclick = (event) => { if (event.target === modal) close(); };
@@ -73,7 +91,9 @@ async function deployGame(game, modal, refresh) {
   const optimized = Number($('[data-option="optimized"]', modal)?.value || 1);
   const preset = $('[data-option="preset"]', modal)?.value || 'A';
   const superResolution = $('[data-option="superResolution"]', modal)?.value || 'Off';
-  showProgress('正在部署帧生成组件');
+  const xessFlow = $('[data-option="xessFlow"]', modal)?.value || 'Coarse';
+  const xessHudless = $('[data-option="xessHudless"]', modal)?.value || 'Auto';
+  showProgress(t('deploy'));
   try {
     await call('deploy', {
       packId: 'framegen.sm86',
@@ -88,14 +108,14 @@ async function deployGame(game, modal, refresh) {
         { section: 'DLSSG', key: 'Optimized', value: String(optimized) },
         { section: 'DLSSG', key: 'Preset', value: preset },
         { section: 'SuperResolution', key: 'Mode', value: superResolution },
-        { section: 'XeSSFG', key: 'FlowResolution', value: 'Coarse' },
-        { section: 'XeSSFG', key: 'UseHudless', value: 'Auto' },
+        { section: 'XeSSFG', key: 'FlowResolution', value: xessFlow },
+        { section: 'XeSSFG', key: 'UseHudless', value: xessHudless },
       ],
     });
     await refresh();
-    toast(`已部署 ${game.name}`);
+    toast(`${t('deploy')}: ${game.name}`);
   } catch (error) {
-    toast(`部署失败：${error.message}`, 'error');
+    toast(`${t('deploy')}: ${error.message}`, 'error');
   } finally {
     hideProgress();
   }

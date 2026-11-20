@@ -7,7 +7,7 @@
   "scripts": {
     "start": "electron .",
     "build:native": "cargo build --release -p fgm-node --manifest-path ../rust/Cargo.toml && node scripts/copy-native.js",
-    "check": "node --check main.js && node --check preload.js && node --check renderer/app.js && node --check renderer/core.js && node --check renderer/deploy.js",
+    "check": "node --check main.js && node --check preload.js && node --check renderer/app.js && node --check renderer/core.js && node --check renderer/covers.js && node --check renderer/framegen.js && node --check renderer/deploy.js && node --check renderer/removed.js && node --check renderer/sm.js && node --check renderer/dlss5.js && node --check renderer/anr.js && node --check renderer/logs.js && node --check renderer/about.js && node --check renderer/donate.js",
     "package": "npm run build:native && node scripts/package.js",
     "test": "node --test"
   },

@@ -102,6 +102,32 @@ document.addEventListener('click', async (event) => {
 }
 
 
+$$('.nav-item').forEach((item) => item.addEventListener('click', () => selectSection(item.dataset.page)));
+$('#lang-select').addEventListener('change', (event) => {
+  const value = event.target.value;
+  const language = value === 'english'
+    ? 'english'
+    : value === 'chineseSimplified'
+      ? 'chineseSimplified'
+      : (navigator.language || '').toLowerCase().startsWith('zh')
+        ? 'chineseSimplified'
+        : 'english';
+  setLanguage(language);
+  state.settings = { ...state.settings, language: value };
+  call('settings.set', state.settings).catch(() => {});
+  applyChrome();
+  selectSection(state.section);
+});
+document.addEventListener('click', async (event) => {
+  if (!event.target.closest('[data-action="cancel-op"]')) return;
+  try {
+    await call('operation.cancel');
+    event.target.textContent = '取消中…';
+  } catch (error) {
+    toast(error.message, 'error');
+  }
+});
+
 boot().then(() => {
   const params = new URLSearchParams(location.search);
   const page = params.get('page');
