@@ -6,8 +6,10 @@ import { showRemoved } from './removed.js';
 
 let statuses = [];
 let modes = {};
+let serial = 0;
 
 export async function renderSm(root) {
+  const current = ++serial;
   root.innerHTML = `
     <section class="page">
       <header class="listhead">
@@ -44,6 +46,7 @@ export async function renderSm(root) {
 
   renderCompat($('[data-role="compat"]', root));
   await load();
+  if (current !== serial || state.section !== 'smooth-motion') return;
   renderGames(root);
   bind(root);
 }
@@ -83,6 +86,7 @@ function statusFor(game) {
 }
 
 function renderGames(root) {
+  if (state.section !== 'smooth-motion') return;
   const list = $('[data-role="games"]', root);
   if (!state.games.length) {
     list.innerHTML = '';

@@ -8,6 +8,7 @@ import { openDeployDialog, restoreGame } from './deploy.js';
 import { showRemoved } from './removed.js';
 
 export function renderFramegen() {
+  if (state.section !== 'framegen') return;
   const view = $('#view');
   view.innerHTML = `
     <section class="page">
@@ -205,7 +206,7 @@ function bindFramegenActions() {
 }
 
 async function scan() {
-  showProgress('正在扫描游戏库');
+  showProgress('正在扫描游戏库', false);
   try {
     await call('library.scan');
     await refresh();
@@ -235,6 +236,7 @@ async function applySpoof() {
 }
 
 export async function refresh() {
+  if (state.section !== 'framegen') return;
   const [gpu, modes, games, spoof] = await Promise.all([
     call('gpu'),
     call('gameModes', {}),

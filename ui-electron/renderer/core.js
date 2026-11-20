@@ -93,13 +93,14 @@ export function toast(message, kind = '') {
 
 let progressTimer = null;
 
-export function showProgress(title) {
+export function showProgress(title, cancellable = true) {
   const node = $('#global-progress');
   node.classList.remove('hidden');
   $('.gp-phase', node).textContent = title;
   $('.gp-subject', node).textContent = '';
   $('.gp-percent', node).textContent = '…';
   $('.gp-track > i', node).style.width = '35%';
+  $('.gp-cancel', node)?.classList.toggle('hidden', !cancellable);
   clearInterval(progressTimer);
   progressTimer = setInterval(async () => {
     try {

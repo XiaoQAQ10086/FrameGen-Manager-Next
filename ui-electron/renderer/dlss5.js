@@ -8,8 +8,10 @@ let detail = null;
 let detailApi = 'auto';
 let detailProxy = 'auto';
 let recording = false;
+let serial = 0;
 
 export async function renderDlss5(root) {
+  const current = ++serial;
   root.innerHTML = `
     <section class="page">
       <header class="listhead">
@@ -41,6 +43,7 @@ export async function renderDlss5(root) {
     </section>`;
 
   await load();
+  if (current !== serial || state.section !== 'dlss5') return;
   renderWall(root);
   bind(root);
 }
@@ -64,6 +67,7 @@ function deployed(reply) {
 }
 
 function renderWall(root) {
+  if (state.section !== 'dlss5') return;
   const wall = $('[data-role="games"]', root);
   if (!state.games.length) {
     wall.innerHTML = '';

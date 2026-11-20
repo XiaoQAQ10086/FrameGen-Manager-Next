@@ -6,8 +6,10 @@ import { showRemoved } from './removed.js';
 
 let packageInfo = null;
 let modes = {};
+let serial = 0;
 
 export async function renderAnr(root) {
+  const current = ++serial;
   root.innerHTML = `
     <section class="page">
       <header class="listhead">
@@ -45,6 +47,7 @@ export async function renderAnr(root) {
     </section>`;
 
   await load();
+  if (current !== serial || state.section !== 'anr') return;
   renderPackage(root);
   renderGames(root);
   bind(root);
@@ -64,6 +67,7 @@ async function load() {
 }
 
 function renderPackage(root) {
+  if (state.section !== 'anr') return;
   const gpu = state.gpu;
   $('[data-role="package"]', root).innerHTML = `
     <div class="ctitle">${t('anrPackageTitle')}</div>
@@ -81,6 +85,7 @@ function renderPackage(root) {
 }
 
 function renderGames(root) {
+  if (state.section !== 'anr') return;
   const list = $('[data-role="games"]', root);
   if (!state.games.length) {
     list.innerHTML = '';

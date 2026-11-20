@@ -235,7 +235,8 @@ button, select { font: inherit; }
 .tile.static { animation: none; }
 .skeleton-tile { background: rgba(96,107,125,.1); animation: shimmer 1.2s ease-in-out infinite; }
 .deploy-meta { display: grid; gap: 10px; margin-top: 0; }
-.deploy-meta .kv2 { margin: 0; }
+.deploy-meta .kv2 { display: flex; justify-content: flex-start; gap: 14px; margin: 0; }
+.deploy-meta .kv2 > b { justify-self: start; text-align: left; }
 .target-field { width: 100%; max-width: 400px; display: grid; gap: 5px; }
 .deploy-meta .kv2.inline { min-height: 34px; }
 .dlss-modal { width: min(580px, 92vw); }
@@ -665,7 +666,7 @@ select:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(0, 122, 2
   from { transform: translateX(-110%); }
   to { transform: translateX(320%); }
 }
-.view { min-height: 0; flex: 1; overflow: auto; padding: 18px 20px 24px; }
+.view { min-height: 0; flex: 1; overflow: auto; padding: 28px 20px 24px; }
 .page-host { min-height: 100%; height: 100%; }
 .page-host > .page { height: 100%; padding: 0; animation: none; }
 .page-head { animation: riseIn .28s var(--ease) both; }
