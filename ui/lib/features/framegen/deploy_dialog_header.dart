@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:material_ui/material_ui.dart';
 
 import '../../bridge/library_game.dart';
+import '../../bridge/path_display.dart';
 import '../../design/app_tokens.dart';
 
 class DeployDialogHeader extends StatelessWidget {
@@ -49,7 +50,7 @@ class DeployDialogHeader extends StatelessWidget {
               ),
               const SizedBox(height: 2),
               Text(
-                game.targetDirectory,
+                displayPath(game.targetDirectory),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: const TextStyle(

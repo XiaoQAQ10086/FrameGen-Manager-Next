@@ -4,6 +4,7 @@ import 'package:material_ui/material_ui.dart';
 
 import '../../bridge/game_modes.dart';
 import '../../bridge/library_game.dart';
+import '../../bridge/path_display.dart';
 import '../../bridge/proxy_badge.dart';
 import '../../design/app_tokens.dart';
 import '../../design/legacy_button_styles.dart';
@@ -136,7 +137,7 @@ class FrameGenGameCard extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            game.targetDirectory,
+            displayPath(game.targetDirectory),
             style: const TextStyle(
               color: AppTokens.textSecondary,
               fontFamily: 'Consolas',

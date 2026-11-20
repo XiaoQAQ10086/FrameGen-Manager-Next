@@ -60,13 +60,6 @@ class _SmoothMotionPageState extends State<SmoothMotionPage> {
     final GpuInfo? gpu = await GpuBridge.load(widget.core);
     final Map<String, SmoothMotionStatus> statuses =
         await SmoothMotionBridge.inspectMany(_games);
-    final List<MapEntry<String, String?>> covers = await Future.wait(
-      _games
-          .map(
-            (LibraryGame game) async =>
-                MapEntry<String, String?>(game.id, await LibraryBridge.cover(game)),
-          ),
-    );
     if (!mounted) {
       return;
     }
@@ -75,8 +68,14 @@ class _SmoothMotionPageState extends State<SmoothMotionPage> {
       _removed = removed.games;
       _gpu = gpu;
       _statuses = statuses;
-      _covers = Map<String, String?>.fromEntries(covers);
     });
+    for (final LibraryGame game in _games) {
+      final String? cover = await LibraryBridge.cover(game);
+      if (!mounted) {
+        return;
+      }
+      setState(() => _covers = <String, String?>{..._covers, game.id: cover});
+    }
   }
 
   Future<void> _scan() async {

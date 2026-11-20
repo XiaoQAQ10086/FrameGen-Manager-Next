@@ -4,6 +4,7 @@ import '../../bridge/deploy_dialog_result.dart';
 import '../../bridge/deploy_options.dart';
 import '../../bridge/library_bridge.dart';
 import '../../bridge/library_game.dart';
+import '../../bridge/path_display.dart';
 import '../../bridge/proxy_badge.dart';
 import '../../design/app_tokens.dart';
 import '../../design/legacy_button_styles.dart';
@@ -65,7 +66,7 @@ class _FrameGenDeployDialogState extends State<FrameGenDeployDialog> {
         side: const BorderSide(color: Color(0x1F14233C)),
       ),
       child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 720, maxHeight: 740),
+        constraints: const BoxConstraints(maxWidth: 800, maxHeight: 780),
         child: Padding(
           padding: const EdgeInsets.all(22),
           child: Column(
@@ -131,6 +132,9 @@ class _FrameGenDeployDialogState extends State<FrameGenDeployDialog> {
                             const DeployDialogResult.restore(),
                           )
                         : null,
+                    style: LegacyButtonStyles.tall(
+                      LegacyButtonStyles.standard,
+                    ),
                     child: Text(l10n.restore),
                   ),
                   const SizedBox(width: 8),
@@ -144,7 +148,7 @@ class _FrameGenDeployDialogState extends State<FrameGenDeployDialog> {
                         ),
                       ),
                     ),
-                    style: LegacyButtonStyles.success,
+                    style: LegacyButtonStyles.tall(LegacyButtonStyles.success),
                     child: Text(l10n.deploy),
                   ),
                 ],
@@ -164,7 +168,7 @@ class _FrameGenDeployDialogState extends State<FrameGenDeployDialog> {
       value: current,
       items: <String>[current, _pickSentinel],
       labelFor: (String item) =>
-          item == _pickSentinel ? l10n.deployChooseExe : item,
+          item == _pickSentinel ? l10n.deployChooseExe : displayPath(item),
       onChanged: (String item) {
         if (item == _pickSentinel) {
           _pickExe();

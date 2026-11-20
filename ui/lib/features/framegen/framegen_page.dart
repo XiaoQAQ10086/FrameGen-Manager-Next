@@ -18,9 +18,9 @@ import '../../bridge/settings_bridge.dart';
 import '../../bridge/system_bridge.dart';
 import '../../design/app_tokens.dart';
 import '../../design/error_dialog.dart';
+import '../../design/floating_progress.dart';
 import '../../design/library_list_head.dart';
 import '../../design/library_notice.dart';
-import '../../design/operation_progress_dialog.dart';
 import '../../l10n/app_localizations.dart';
 import 'assets_panel.dart';
 import 'frame_gen_actions.dart';
@@ -34,13 +34,10 @@ import 'spoof_panel.dart';
 /// Legacy frame-generation workspace: list header, sidebar and game cards.
 class FrameGenPage extends StatefulWidget {
   const FrameGenPage({super.key, this.core});
-
   final CoreLibrary? core;
-
   @override
   State<FrameGenPage> createState() => _FrameGenPageState();
 }
-
 class _FrameGenPageState extends State<FrameGenPage> {
   List<LibraryGame> _games = const <LibraryGame>[];
   List<LibraryGame> _removed = const <LibraryGame>[];
@@ -74,13 +71,6 @@ class _FrameGenPageState extends State<FrameGenPage> {
     final Map<String, GameModes> modes = await LibraryBridge.modes();
     final LibrarySnapshot removed = await LibraryBridge.removed();
     final GpuInfo? gpu = await GpuBridge.load(widget.core);
-    final List<MapEntry<String, String?>> covers = await Future.wait(
-      _games
-          .map(
-            (LibraryGame game) async =>
-                MapEntry<String, String?>(game.id, await LibraryBridge.cover(game)),
-          ),
-    );
     final List<MapEntry<String, List<ProxyBadge>>> proxies = await Future.wait(
       _games.map(
         (LibraryGame game) async =>
@@ -97,9 +87,19 @@ class _FrameGenPageState extends State<FrameGenPage> {
       _modes = modes;
       _removed = removed.games;
       _gpu = gpu;
-      _covers = Map<String, String?>.fromEntries(covers);
       _proxies = Map<String, List<ProxyBadge>>.fromEntries(proxies);
     });
+    await _loadCovers();
+  }
+
+  Future<void> _loadCovers() async {
+    for (final LibraryGame game in _games) {
+      final String? cover = await LibraryBridge.cover(game);
+      if (!mounted) {
+        return;
+      }
+      setState(() => _covers = <String, String?>{..._covers, game.id: cover});
+    }
   }
 
   Future<void> _scan() async {
@@ -153,7 +153,6 @@ class _FrameGenPageState extends State<FrameGenPage> {
     await _loadExtras();
   }
 
-
   Future<void> _openRemoved() async {
     final LibrarySnapshot snapshot = await LibraryBridge.removed();
     if (!mounted) {
@@ -193,7 +192,7 @@ class _FrameGenPageState extends State<FrameGenPage> {
     }
     setState(() => _busyGameId = game.id);
     final DeploymentResult? result =
-        await OperationProgressDialog.run<DeploymentResult>(
+        await FloatingProgress.run<DeploymentResult>(
           context: context,
           title: l10n.operationDeploying,
           action: () => DeploymentBridge.deploy(game: game, options: options),
@@ -227,6 +226,10 @@ class _FrameGenPageState extends State<FrameGenPage> {
       setState(() => _games = snapshot.games);
     }
     await _loadExtras();
+    await Future<void>.delayed(const Duration(milliseconds: 250));
+    if (mounted) {
+      await _loadExtras();
+    }
   }
 
   Future<void> _restore(LibraryGame game) async {

@@ -47,12 +47,13 @@ class DeployOptionsForm extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: <Widget>[
         Wrap(
-          spacing: 12,
-          runSpacing: 12,
+          alignment: WrapAlignment.center,
+          spacing: 14,
+          runSpacing: 14,
           children: <Widget>[
             _field<String>(
               l10n,
-              width: 300,
+              width: 340,
               label: l10n.optionProxySlot,
               value: options.proxySlot,
               values: _proxySlots,
@@ -64,7 +65,7 @@ class DeployOptionsForm extends StatelessWidget {
             ),
             _field<String>(
               l10n,
-              width: 300,
+              width: 340,
               label: l10n.optionEngine,
               value: options.engine,
               values: const <String>['DLSS', 'XeSS'],
@@ -83,7 +84,7 @@ class DeployOptionsForm extends StatelessWidget {
             ),
             _field<int>(
               l10n,
-              width: 300,
+              width: 340,
               label: l10n.optionFrames,
               value: options.maxGeneratedFrames,
               values: _xeSS ? const <int>[1, 2, 3] : const <int>[1, 2, 3, 5],
@@ -93,7 +94,7 @@ class DeployOptionsForm extends StatelessWidget {
             ),
             _field<int>(
               l10n,
-              width: 300,
+              width: 340,
               label: l10n.optionOptimized,
               value: options.optimized,
               values: const <int>[0, 1, 2, 3],
@@ -104,7 +105,7 @@ class DeployOptionsForm extends StatelessWidget {
             ),
             _field<String>(
               l10n,
-              width: 300,
+              width: 340,
               label: l10n.optionPreset,
               value: options.preset,
               values: _presets,
@@ -114,7 +115,7 @@ class DeployOptionsForm extends StatelessWidget {
             ),
             _field<String>(
               l10n,
-              width: 300,
+              width: 340,
               label: l10n.optionSuperResolution,
               value: options.superResolution,
               values: _srModes,
@@ -126,7 +127,7 @@ class DeployOptionsForm extends StatelessWidget {
             if (_xeSS) ...<Widget>[
               _field<String>(
                 l10n,
-                width: 300,
+                width: 340,
                 label: l10n.optionFlowResolution,
                 value: options.xeSSFlowResolution,
                 values: const <String>[
@@ -140,7 +141,7 @@ class DeployOptionsForm extends StatelessWidget {
               ),
               _field<String>(
                 l10n,
-                width: 300,
+                width: 340,
                 label: l10n.optionUseHudless,
                 value: options.xeSSUseHudless,
                 values: const <String>['Auto', '1', '0'],

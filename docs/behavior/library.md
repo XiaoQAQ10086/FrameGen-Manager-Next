@@ -98,7 +98,7 @@ Steam junk 跳过（精确名称）：`steamworks common redistributables`、`st
 - `fgm-infra/src/library/epic_locator.rs`：`%ProgramData%\Epic\EpicGamesLauncher\Data\Manifests`。
 - `fgm-infra/src/library/library_scanner.rs`：聚合 Steam → Epic → 散装，按安装目录大小写不敏感去重。
 - `fgm-infra/src/library/library_service.rs`：扫描时保留手动条目（手动优先，按安装目录去重）、丢弃 `ignoredIds`、写回缓存；`add_manual` 用文件选择器结果建条目（名称优先 PE `ProductName`，否则文件名；id 为路径哈希），同一目录重复添加会替换旧条目；`launch` 从缓存按 id 取游戏，Steam/Epic 走协议，散装/手动/WeGame 直接启动渲染 EXE，Xbox 返回不支持。
-- `fgm-infra/src/library/cover_service.rs`：先找 Steam 已下载的本地素材（`appcache/librarycache/<appid>/` 的 `library_600x900`/`header`/`library_hero`、旧扁平缓存与 `userdata/*/config/grid`），再依次尝试 `library_600x900`、旧 CDN header、`store_item_assets` header、`capsule_616x353`，成功后缓存到 `cache/covers/<appid>.jpg`；Epic/散装或没有任何商店素材的游戏最后会提取可执行文件自身图标（含通用 exe 图标）缓存到 `cache/icons/<hash>.png`，卡片以 contain 方式展示；只有连 exe 都没有时才显示首字母占位。Dart 侧不再只对 Steam 请求封面。
+- `fgm-infra/src/library/cover_service.rs`：先找 Steam 已下载的本地素材（`appcache/librarycache/<appid>/` 的 `library_600x900`/`header`/`library_hero`、旧扁平缓存与 `userdata/*/config/grid`），Windows 上改用 WinINET（跟随系统代理）下载，再依次尝试 `library_600x900`、旧 CDN header、`store_item_assets` header、`capsule_616x353`，成功后缓存到 `cache/covers/<appid>.jpg`；没有 Steam id 或商店素材缺失时，会用游戏名、去掉 “Demo” 的名称以及 EXE 的 ProductName 调用 Steam 商店搜索取封面；仍找不到才提取可执行文件自身图标（含通用 exe 图标）缓存到 `cache/icons/<hash>.png`，卡片以 contain 方式展示；只有连 exe 都没有时才显示首字母占位。Dart 侧不再只对 Steam 请求封面。
 - `fgm-infra/src/platform/drive_roots.rs`：固定/可移动盘符枚举。
 - `fgm-ffi/src/commands_library.rs`：`fgm_library_add_manual_json`（无路径时打开原生选择器，取消返回 `cancelled`）、`fgm_launch_game_json`、`fgm_cover_json`。
 - CLI：`fgm-next library scan [--root <dir>]...`、`fgm-next library list`。

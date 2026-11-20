@@ -318,7 +318,7 @@ class _NavItem extends StatelessWidget {
                         ? AppTokens.accent
                         : AppTokens.textSecondary,
                     fontSize: 13,
-                    fontWeight: selected ? FontWeight.w700 : FontWeight.w400,
+                    fontWeight: FontWeight.w700,
                   ),
                   child: Text(label),
                 ),

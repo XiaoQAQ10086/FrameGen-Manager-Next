@@ -1,5 +1,4 @@
 use std::path::PathBuf;
-use std::sync::atomic::AtomicBool;
 
 use fgm_domain::error::AppError;
 use fgm_domain::library::{GameEntry, LibrarySource};
@@ -10,9 +9,18 @@ use crate::paths::AppPaths;
 /// Downloads and caches Steam library covers.
 pub struct CoverService;
 
+/// Serializes downloads/icon extraction; urlmon and GDI+ are happier when
+/// cover requests do not run concurrently on many isolate threads.
+static COVER_LOCK: std::sync::Mutex<()> = std::sync::Mutex::new(());
+
 impl CoverService {
     pub fn cover(paths: &AppPaths, game: &GameEntry) -> Result<Option<PathBuf>, AppError> {
+        let _guard = COVER_LOCK.lock().unwrap_or_else(|error| error.into_inner());
+        log_cover(paths, "request", game);
         if let Some(path) = steam_cover(paths, game)? {
+            return Ok(Some(path));
+        }
+        if let Some(path) = search_cover(paths, game) {
             return Ok(Some(path));
         }
         Ok(icon_cover(paths, game))
@@ -41,6 +49,9 @@ fn steam_cover(paths: &AppPaths, game: &GameEntry) -> Result<Option<PathBuf>, Ap
         if let Some(local) = find_local_cover(game, app_id) {
             return Ok(Some(local));
         }
+        if let Some(path) = appdetails_cover(paths, app_id) {
+            return Ok(Some(path));
+        }
 
         std::fs::create_dir_all(&directory).map_err(|error| {
             AppError::new(fgm_domain::error::ErrorCode::Internal)
@@ -62,7 +73,7 @@ fn steam_cover(paths: &AppPaths, game: &GameEntry) -> Result<Option<PathBuf>, Ap
             ),
         ];
         for url in urls {
-            if Downloader::download(&url, &path, &AtomicBool::new(false)).is_ok()
+            if Downloader::download_wininet(&url, &path).is_ok()
                 && path.metadata().is_ok_and(|metadata| metadata.len() > 1024)
             {
                 return Ok(Some(path));
@@ -71,6 +82,117 @@ fn steam_cover(paths: &AppPaths, game: &GameEntry) -> Result<Option<PathBuf>, Ap
         }
         Ok(None)
     }
+}
+
+/// Store search by title, used when the launcher id has no usable artwork.
+fn search_cover(paths: &AppPaths, game: &GameEntry) -> Option<PathBuf> {
+    let mut names = vec![game.name.clone()];
+    let trimmed = game
+        .name
+        .trim_end_matches(" Demo")
+        .trim_end_matches(" demo")
+        .trim()
+        .to_string();
+    if trimmed != game.name && trimmed.len() > 3 {
+        names.push(trimmed);
+    }
+    if let Some(executable) = game.render_exe.as_deref()
+        && let Some(product) = crate::platform::product_name(executable)
+    {
+        let product = product.trim().to_string();
+        let lower = product.to_lowercase();
+        if product.len() > 3
+            && lower != "game"
+            && lower != "launcher"
+            && !product.contains('%')
+            && !names.contains(&product)
+        {
+            names.push(product);
+        }
+    }
+    for name in names {
+        if let Some(path) = search_cover_name(paths, &name) {
+            return Some(path);
+        }
+    }
+    None
+}
+
+fn search_cover_name(paths: &AppPaths, name: &str) -> Option<PathBuf> {
+    let name = name.trim();
+    if name.len() < 3 {
+        return None;
+    }
+    let directory = paths.cache().join("covers");
+    std::fs::create_dir_all(&directory).ok()?;
+    let key = text_hash(name);
+    let destination = directory.join(format!("search-{key}.jpg"));
+    if destination
+        .metadata()
+        .is_ok_and(|metadata| metadata.len() > 1024)
+    {
+        return Some(destination);
+    }
+    let query = percent_encode(name);
+    let json_path = directory.join(format!("search-{key}.json"));
+    let url =
+        format!("https://store.steampowered.com/api/storesearch/?term={query}&l=english&cc=US");
+    if Downloader::download_wininet(&url, &json_path).is_err() {
+        let _ = std::fs::remove_file(&json_path);
+        return None;
+    }
+    let search = std::fs::read_to_string(&json_path)
+        .ok()
+        .and_then(|text| serde_json::from_str::<serde_json::Value>(&text).ok())
+        .and_then(|value| {
+            value
+                .get("items")
+                .and_then(|items| items.as_array())
+                .and_then(|items| items.first())
+                .cloned()
+        });
+    let _ = std::fs::remove_file(&json_path);
+    let search = search?;
+    let app_id = search.get("id").and_then(|id| id.as_u64())?;
+    let urls = [
+        format!(
+            "https://shared.steamstatic.com/store_item_assets/steam/apps/{app_id}/library_600x900.jpg"
+        ),
+        format!("https://cdn.cloudflare.steamstatic.com/steam/apps/{app_id}/header.jpg"),
+        format!("https://shared.steamstatic.com/store_item_assets/steam/apps/{app_id}/header.jpg"),
+    ];
+    for url in urls {
+        if Downloader::download_wininet(&url, &destination).is_ok()
+            && destination
+                .metadata()
+                .is_ok_and(|metadata| metadata.len() > 1024)
+        {
+            return Some(destination);
+        }
+        let _ = std::fs::remove_file(&destination);
+    }
+    None
+}
+
+fn text_hash(value: &str) -> String {
+    let mut hash: u64 = 0xcbf2_9ce4_8422_2325;
+    for byte in value.trim().to_lowercase().bytes() {
+        hash ^= u64::from(byte);
+        hash = hash.wrapping_mul(0x100_0000_01b3);
+    }
+    format!("{hash:016x}")
+}
+
+fn percent_encode(value: &str) -> String {
+    let mut output = String::new();
+    for byte in value.bytes() {
+        if byte.is_ascii_alphanumeric() || matches!(byte, b'-' | b'_' | b'.' | b'~') {
+            output.push(char::from(byte));
+        } else {
+            output.push_str(&format!("%{byte:02X}"));
+        }
+    }
+    output
 }
 
 /// Last resort: the executable's own icon, cached as PNG.
@@ -120,6 +242,47 @@ fn path_hash(path: &std::path::Path) -> String {
         hash = hash.wrapping_mul(0x100_0000_01b3);
     }
     format!("{hash:016x}")
+}
+
+/// Uses the public appdetails endpoint, which exposes hashed CDN paths that
+/// still work for demos (their plain `header.jpg` URLs 404).
+fn appdetails_cover(paths: &AppPaths, app_id: &str) -> Option<PathBuf> {
+    let directory = paths.cache().join("covers");
+    std::fs::create_dir_all(&directory).ok()?;
+    let destination = directory.join(format!("{app_id}.jpg"));
+    if destination
+        .metadata()
+        .is_ok_and(|metadata| metadata.len() > 1024)
+    {
+        return Some(destination);
+    }
+    let json_path = directory.join(format!("appdetails-{app_id}.json"));
+    let url =
+        format!("https://store.steampowered.com/api/appdetails?appids={app_id}&filters=basic");
+    if Downloader::download_wininet(&url, &json_path).is_err() {
+        let _ = std::fs::remove_file(&json_path);
+        return None;
+    }
+    let data = std::fs::read_to_string(&json_path)
+        .ok()
+        .and_then(|text| serde_json::from_str::<serde_json::Value>(&text).ok())
+        .and_then(|value| value.get(app_id).cloned())
+        .and_then(|entry| entry.get("data").cloned());
+    let _ = std::fs::remove_file(&json_path);
+    let data = data?;
+    for key in ["header_image", "capsule_image", "capsule_imagev5"] {
+        if let Some(url) = data.get(key).and_then(|value| value.as_str())
+            && url.starts_with("http")
+            && Downloader::download_wininet(url, &destination).is_ok()
+            && destination
+                .metadata()
+                .is_ok_and(|metadata| metadata.len() > 1024)
+        {
+            return Some(destination);
+        }
+        let _ = std::fs::remove_file(&destination);
+    }
+    None
 }
 
 /// Looks for artwork Steam already downloaded for this app (new per-app folder

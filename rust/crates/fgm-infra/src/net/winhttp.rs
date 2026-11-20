@@ -7,6 +7,7 @@ use fgm_domain::error::{AppError, ErrorCode};
 
 const WINHTTP_ACCESS_TYPE_DEFAULT_PROXY: u32 = 0;
 const WINHTTP_ACCESS_TYPE_NO_PROXY: u32 = 1;
+const WINHTTP_ACCESS_TYPE_NAMED_PROXY: u32 = 3;
 const WINHTTP_FLAG_SECURE: u32 = 0x0080_0000;
 const WINHTTP_QUERY_STATUS_CODE: u32 = 19;
 const WINHTTP_QUERY_LOCATION: u32 = 33;
@@ -62,6 +63,13 @@ unsafe extern "system" {
         read: *mut u32,
     ) -> i32;
     fn WinHttpCloseHandle(handle: *mut c_void) -> i32;
+    fn WinHttpSetTimeouts(
+        session: *mut c_void,
+        resolve: i32,
+        connect: i32,
+        send: i32,
+        receive: i32,
+    ) -> i32;
 }
 
 #[link(name = "kernel32")]
@@ -77,11 +85,21 @@ pub(crate) fn download_to(
     mut progress: impl FnMut(u64),
 ) -> Result<u64, AppError> {
     let mut last_error = None;
-    for access in [
-        WINHTTP_ACCESS_TYPE_DEFAULT_PROXY,
-        WINHTTP_ACCESS_TYPE_NO_PROXY,
-    ] {
-        match download_with_access(url, destination, cancelled, access, &mut progress) {
+    let mut attempts: Vec<(u32, Option<String>)> = Vec::new();
+    if let Some(proxy) = crate::platform::system_proxy() {
+        attempts.push((WINHTTP_ACCESS_TYPE_NAMED_PROXY, Some(proxy)));
+    }
+    attempts.push((WINHTTP_ACCESS_TYPE_DEFAULT_PROXY, None));
+    attempts.push((WINHTTP_ACCESS_TYPE_NO_PROXY, None));
+    for (access, proxy) in attempts {
+        match download_with_access(
+            url,
+            destination,
+            cancelled,
+            access,
+            proxy.as_deref(),
+            &mut progress,
+        ) {
             Ok(bytes) => return Ok(bytes),
             Err(error) => last_error = Some(error),
         }
@@ -94,17 +112,26 @@ fn download_with_access(
     destination: &Path,
     cancelled: &AtomicBool,
     access: u32,
+    proxy: Option<&str>,
     progress: &mut impl FnMut(u64),
 ) -> Result<u64, AppError> {
+    let agent = wide("FrameGen-Manager-Next");
+    let proxy = proxy.map(wide);
     let session = Handle::new(unsafe {
         WinHttpOpen(
-            wide("FrameGen-Manager-Next").as_ptr(),
+            agent.as_ptr(),
             access,
-            std::ptr::null(),
+            proxy
+                .as_ref()
+                .map_or(std::ptr::null(), |value| value.as_ptr()),
             std::ptr::null(),
             0,
         )
     })?;
+    unsafe {
+        // Keep a dead endpoint from blocking cover/update work for a minute.
+        let _ = WinHttpSetTimeouts(session.0, 2_000, 3_000, 5_000, 10_000);
+    }
 
     let mut current = url.to_string();
     for _ in 0..=MAX_REDIRECTS {

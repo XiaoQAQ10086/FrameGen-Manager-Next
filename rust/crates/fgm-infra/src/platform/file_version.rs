@@ -14,7 +14,7 @@ unsafe extern "system" {
 }
 
 /// Reads the `ProductName` string from a PE version resource.
-pub(crate) fn product_name(path: &Path) -> Option<String> {
+pub fn product_name(path: &Path) -> Option<String> {
     let path = wide(&path.display().to_string());
     let mut handle = 0_u32;
     let size = unsafe { GetFileVersionInfoSizeW(path.as_ptr(), &mut handle) };

@@ -67,13 +67,6 @@ class _AnrPageState extends State<AnrPage> {
         ),
       ),
     );
-    final List<MapEntry<String, String?>> covers = await Future.wait(
-      _games
-          .map(
-            (LibraryGame game) async =>
-                MapEntry<String, String?>(game.id, await LibraryBridge.cover(game)),
-          ),
-    );
     if (!mounted) {
       return;
     }
@@ -81,9 +74,15 @@ class _AnrPageState extends State<AnrPage> {
       _modes = modes;
       _removed = removed.games;
       _proxies = Map<String, List<ProxyBadge>>.fromEntries(proxies);
-      _covers = Map<String, String?>.fromEntries(covers);
       _package = AnrBridge.current(widget.core);
     });
+    for (final LibraryGame game in _games) {
+      final String? cover = await LibraryBridge.cover(game);
+      if (!mounted) {
+        return;
+      }
+      setState(() => _covers = <String, String?>{..._covers, game.id: cover});
+    }
   }
 
   Future<void> _scan() async {

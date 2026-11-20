@@ -5,6 +5,7 @@ import '../../bridge/dlss5_hotkey_result.dart';
 import '../../bridge/dlss5_result.dart';
 import '../../bridge/dlss5_state.dart';
 import '../../bridge/library_game.dart';
+import '../../bridge/path_display.dart';
 import '../../bridge/proxy_badge.dart';
 import '../../bridge/system_bridge.dart';
 import '../../design/app_tokens.dart';
@@ -292,7 +293,7 @@ class _Dlss5DetailDialogState extends State<Dlss5DetailDialog> {
                         ),
                         const SizedBox(height: 2),
                         Text(
-                          widget.game.targetDirectory,
+                          displayPath(widget.game.targetDirectory),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: const TextStyle(

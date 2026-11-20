@@ -64,13 +64,6 @@ class _Dlss5PageState extends State<Dlss5Page> {
         ),
       ),
     );
-    final List<MapEntry<String, String?>> covers = await Future.wait(
-      _games
-          .map(
-            (LibraryGame game) async =>
-                MapEntry<String, String?>(game.id, await LibraryBridge.cover(game)),
-          ),
-    );
     if (!mounted) {
       return;
     }
@@ -78,8 +71,14 @@ class _Dlss5PageState extends State<Dlss5Page> {
       _removed = removed.games;
       _states = Map<String, Dlss5State>.fromEntries(states);
       _proxies = Map<String, List<ProxyBadge>>.fromEntries(proxies);
-      _covers = Map<String, String?>.fromEntries(covers);
     });
+    for (final LibraryGame game in _games) {
+      final String? cover = await LibraryBridge.cover(game);
+      if (!mounted) {
+        return;
+      }
+      setState(() => _covers = <String, String?>{..._covers, game.id: cover});
+    }
   }
 
   Future<void> _scan() async {

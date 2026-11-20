@@ -292,7 +292,7 @@ abstract final class LegacyButtonStyles {
     return TextStyle(
       color: color,
       fontSize: size,
-      fontWeight: strong ? FontWeight.w700 : FontWeight.w400,
+      fontWeight: FontWeight.w700,
     );
   }
 
