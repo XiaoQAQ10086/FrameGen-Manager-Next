@@ -3,14 +3,13 @@
 param(
     [string]$Tag = "",
     [string]$Notes = "",
-    [string]$Flutter = "",
     [string]$InnoCompiler = ""
 )
 
 $ErrorActionPreference = "Stop"
 $root = Split-Path -Parent $PSScriptRoot
 
-& (Join-Path $PSScriptRoot "publish-installer-next.ps1") -Flutter $Flutter -InnoCompiler $InnoCompiler
+& (Join-Path $PSScriptRoot "publish-electron.ps1") -InnoCompiler $InnoCompiler
 if ($LASTEXITCODE -ne 0) {
     throw "installer build failed"
 }
@@ -25,7 +24,7 @@ if ([string]::IsNullOrWhiteSpace($Tag)) {
     $Tag = "v$version"
 }
 
-$installer = Get-ChildItem (Join-Path $root "artifacts/installer-next/releases") -Filter "*.exe" |
+$installer = Get-ChildItem (Join-Path $root "artifacts/installer-electron/releases") -Filter "*.exe" |
     Sort-Object LastWriteTime -Descending |
     Select-Object -First 1
 if ($null -eq $installer) {

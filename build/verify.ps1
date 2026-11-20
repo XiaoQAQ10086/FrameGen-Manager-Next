@@ -5,7 +5,7 @@ param(
 )
 
 $ErrorActionPreference = 'Stop'
-& (Join-Path $PSScriptRoot 'verify-rust-flutter.ps1')
+& (Join-Path $PSScriptRoot 'verify-rust-electron.ps1')
 if ($LASTEXITCODE -ne 0) {
-    throw "Rust + Flutter verification failed with exit code $LASTEXITCODE"
+    throw "Rust + Electron verification failed with exit code $LASTEXITCODE"
 }

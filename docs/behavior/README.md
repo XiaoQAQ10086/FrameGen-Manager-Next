@@ -1,6 +1,6 @@
 # 行为规格（Behavior Specs）
 
-本目录是“旧版行为的唯一文字来源”。实现任何模块之前，先把规则写进对应的 `.md`，再写实现和测试。当前表格中的“新位置”仍指向冻结的 2.x C# 树；Rust/Flutter 对等过程中按切片迁移，迁移后的规格在文件内标注。
+本目录是“旧版行为的唯一文字来源”。实现任何模块之前，先把规则写进对应的 `.md`，再写实现和测试。当前表格中的“新位置”仍指向冻结的 2.x C# 树；Rust 核心 + Electron 迁移过程中按切片更新，迁移后的规格在文件内标注。
 
 ## 为什么需要
 
@@ -46,7 +46,7 @@
 | 资产包 schema/payload | 旧版 `deploy.rs` / `sm.rs` / `dlss5.rs` 的文件表 | `Domain/Packs`、`Infrastructure/Packs`；Rust Phase 1 | [已实现](asset-pack.md) |
 | 内置资产升级 | 旧版升级时自动清理部署 | `Infrastructure/Deployment` + `Infrastructure/Packs` | [已实现](pack-upgrades.md) |
 | 资产更新清除 | 无（新增） | `Core/Features/Maintenance` | [已实现](asset-maintenance.md) |
-| Flutter 外壳 | 无（新增） | `ui/lib/app`、`ui/lib/bridge`、`ui/lib/features` | [已实现（全部页面）](flutter-shell.md) |
+| Electron 外壳 | 无（新增） | `ui-electron/main.js`、`renderer/`、`rust/crates/fgm-node` | [已实现（全部页面）](electron-shell.md) |
 
 ## 模板
 

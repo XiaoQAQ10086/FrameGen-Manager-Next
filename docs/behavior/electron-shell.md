@@ -1,6 +1,6 @@
 # Electron 外壳
 
-本规格描述 Rust 核心 + Electron 桌面外壳。Flutter 版冻结在 `ui/`，不再新增功能；对等后删除。架构决策见 `docs/decisions/ADR-0017-electron-ui.md`。
+本规格描述 Rust 核心 + Electron 桌面外壳。Flutter 版已从仓库删除；架构决策见 `docs/decisions/ADR-0017-electron-ui.md`。
 
 ## 运行形态
 
@@ -50,7 +50,7 @@
 ## 打包与体积
 
 - `npm run package`：裁剪 Electron locale（仅 en-US/zh-CN）、移除 `default_app.asar`、应用文件打进 `resources/app.asar`（原生插件 `native/*` unpack），复制 `packs/` 与 `licenses/`，用 rcedit 写入品牌图标与版本。
-- 当前基线：解压约 312MB，zip（Deflate）约 141MB；Inno LZMA2 预计 90–110MB。Electron 运行时是体积下限。
+- 当前基线：解压约 312MB，zip（Deflate）约 144MB，Inno LZMA2 安装包约 101MB。Electron 运行时是体积下限。
 - 内存基线：主/渲染/GPU/utility 合计 WorkingSet 约 380MB、Private 约 300MB；后续通过禁用无用特性、减少 DOM/IPC、延迟加载页面继续压。
 
 ## 测试与门禁
@@ -79,4 +79,5 @@
 - 帧生成部署支持 XeSS 光流分辨率/无 HUD 选项；切到 XeSS 时优化档位与预设禁用。
 - ANR 下载进度依赖全局进度轮询，连接阶段可能长时间显示不确定态。
 - 更新源 `update.json` 尚未发布，更新检查会显示“已是最新”或错误。
-- 真实游戏回归、删除 Flutter/C# 遗留树、正式发布流程仍未进行。
+- 真实游戏回归已完成帧生成部署/还原一轮（Worst Class Ever，部署 8 个文件后还原，1424 个文件哈希快照前后完全一致，2026-11-20）；启动/画面回归以及 SM/DLSS5/ANR 的真机回归仍未进行。
+- 删除冻结的 C# 遗留树、正式发布流程仍未进行。
