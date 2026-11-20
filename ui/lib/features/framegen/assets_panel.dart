@@ -1,5 +1,6 @@
 import 'package:material_ui/material_ui.dart';
 
+import '../../bridge/panel_cache.dart';
 import '../../bridge/system_bridge.dart';
 import '../../bridge/system_paths.dart';
 import '../../design/app_tokens.dart';
@@ -16,7 +17,7 @@ class AssetsPanel extends StatefulWidget {
 }
 
 class _AssetsPanelState extends State<AssetsPanel> {
-  SystemPaths _paths = const SystemPaths();
+  SystemPaths _paths = PanelCache.paths ?? const SystemPaths();
 
   @override
   void initState() {
@@ -26,6 +27,7 @@ class _AssetsPanelState extends State<AssetsPanel> {
 
   Future<void> _load() async {
     final SystemPaths paths = await SystemBridge.paths();
+    PanelCache.paths = paths;
     if (mounted) {
       setState(() => _paths = paths);
     }

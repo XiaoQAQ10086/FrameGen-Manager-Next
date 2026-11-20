@@ -16,6 +16,7 @@ import '../../bridge/library_add_result.dart';
 import '../../bridge/library_bridge.dart';
 import '../../bridge/library_game.dart';
 import '../../bridge/library_snapshot.dart';
+import '../../bridge/panel_cache.dart';
 import '../../bridge/proxy_badge.dart';
 import '../../bridge/settings_bridge.dart';
 import '../../bridge/system_bridge.dart';
@@ -42,7 +43,7 @@ class _FrameGenPageState extends State<FrameGenPage> {
   Map<String, GameModes> _modes = const <String, GameModes>{};
   Map<String, List<ProxyBadge>> _proxies = const <String, List<ProxyBadge>>{};
   Map<String, String?> _covers = CoverCache.snapshot();
-  GpuInfo? _gpu;
+  GpuInfo? _gpu = PanelCache.gpu;
   bool _showCovers = true;
   bool _scanning = false;
   bool _adding = false;
@@ -89,6 +90,7 @@ class _FrameGenPageState extends State<FrameGenPage> {
     if (!mounted) {
       return;
     }
+    PanelCache.gpu = gpu;
     setState(() {
       _modes = modes;
       _removed = removed.games;

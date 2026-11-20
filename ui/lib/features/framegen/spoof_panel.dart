@@ -2,6 +2,7 @@ import 'package:material_ui/material_ui.dart';
 
 import '../../bridge/gpu_spoof_bridge.dart';
 import '../../bridge/gpu_spoof_state.dart';
+import '../../bridge/panel_cache.dart';
 import '../../bridge/system_bridge.dart';
 import '../../design/app_tokens.dart';
 import '../../design/error_dialog.dart';
@@ -28,11 +29,17 @@ class _SpoofPanelState extends State<SpoofPanel> {
   @override
   void initState() {
     super.initState();
+    final GpuSpoofState? cached = PanelCache.spoof;
+    if (cached != null) {
+      _state = cached;
+      _preset = cached.presets.isEmpty ? null : cached.presets.first;
+    }
     _load();
   }
 
   Future<void> _load() async {
     final GpuSpoofState state = await GpuSpoofBridge.inspect();
+    PanelCache.spoof = state;
     if (!mounted) {
       return;
     }

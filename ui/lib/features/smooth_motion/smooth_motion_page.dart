@@ -11,6 +11,7 @@ import '../../bridge/library_add_result.dart';
 import '../../bridge/library_bridge.dart';
 import '../../bridge/library_game.dart';
 import '../../bridge/library_snapshot.dart';
+import '../../bridge/panel_cache.dart';
 import '../../bridge/smooth_motion_bridge.dart';
 import '../../bridge/smooth_motion_status.dart';
 import '../../bridge/system_bridge.dart';
@@ -42,7 +43,7 @@ class _SmoothMotionPageState extends State<SmoothMotionPage> {
   Map<String, SmoothMotionStatus> _statuses =
       const <String, SmoothMotionStatus>{};
   Map<String, String?> _covers = CoverCache.snapshot();
-  GpuInfo? _gpu;
+  GpuInfo? _gpu = PanelCache.gpu;
   bool _scanning = false;
   bool _adding = false;
   bool _loaded = false;
@@ -74,6 +75,7 @@ class _SmoothMotionPageState extends State<SmoothMotionPage> {
     if (!mounted) {
       return;
     }
+    PanelCache.gpu = gpu;
     setState(() {
       _modes = modes;
       _removed = removed.games;
