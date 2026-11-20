@@ -16,20 +16,15 @@ import '../../bridge/library_snapshot.dart';
 import '../../bridge/proxy_badge.dart';
 import '../../bridge/settings_bridge.dart';
 import '../../bridge/system_bridge.dart';
-import '../../design/app_tokens.dart';
 import '../../design/error_dialog.dart';
 import '../../design/floating_progress.dart';
-import '../../design/library_list_head.dart';
-import '../../design/library_notice.dart';
 import '../../l10n/app_localizations.dart';
-import 'assets_panel.dart';
 import 'frame_gen_actions.dart';
 import 'framegen_game_list.dart';
-import 'gpu_panel.dart';
-import 'mode_source_panel.dart';
+import 'framegen_sidebar.dart';
+import 'framegen_workspace.dart';
 import 'remove_game_dialog.dart';
 import 'removed_games_dialog.dart';
-import 'spoof_panel.dart';
 
 /// Legacy frame-generation workspace: list header, sidebar and game cards.
 class FrameGenPage extends StatefulWidget {
@@ -290,82 +285,21 @@ class _FrameGenPageState extends State<FrameGenPage> {
     final int outdated = _modes.values
         .where((GameModes modes) => modes.framegenOutdated)
         .length;
-    return Padding(
-      padding: AppTokens.pagePadding,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: <Widget>[
-          LibraryListHead(
-            title: l10n.libraryTitle,
-            status: _loaded
-                ? l10n.libraryStatusLoaded(_games.length)
-                : l10n.libraryStatusLoading,
-            removedCount: _removed.length,
-            scanning: _scanning,
-            adding: _adding,
-            onAdd: _addGame,
-            onRemoved: _openRemoved,
-            onScan: _scan,
-          ),
-          if (_error != null) LibraryNotice(
-            message: '${l10n.libraryLoadFailed} $_error',
-            tone: AppTokens.warning,
-            background: AppTokens.warningSoft,
-          ),
-          if (outdated > 0)
-            LibraryNotice(
-              message: l10n.outdatedAssetNotice(outdated),
-              tone: AppTokens.accent,
-              background: AppTokens.accentSoft,
-            ),
-          const SizedBox(height: 14),
-          Expanded(
-            child: LayoutBuilder(
-              builder: (BuildContext context, BoxConstraints constraints) {
-                final bool wide = constraints.maxWidth >= 980;
-                final Widget sidebar = SingleChildScrollView(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: <Widget>[
-                      GpuPanel(
-                        gpu: _gpu,
-                        onOpenHags: () => SystemBridge.openHags(),
-                      ),
-                      const SizedBox(height: AppTokens.gap),
-                      const SpoofPanel(),
-                      const SizedBox(height: AppTokens.gap),
-                      const AssetsPanel(),
-                      const SizedBox(height: AppTokens.gap),
-                      ModeSourcePanel(
-                        gpuLabel: l10n.modeGpusFramegen,
-                        sourceUrl: 'https://github.com/sdli1995/dlssg_for_sm86',
-                      ),
-                    ],
-                  ),
-                );
-                final Widget content = _content(context, l10n);
-                if (!wide) {
-                  return ListView(
-                    children: <Widget>[
-                      sidebar,
-                      const SizedBox(height: AppTokens.gap),
-                      SizedBox(height: 460, child: content),
-                    ],
-                  );
-                }
-                return Row(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: <Widget>[
-                    SizedBox(width: 340, child: sidebar),
-                    const SizedBox(width: 18),
-                    Expanded(child: content),
-                  ],
-                );
-              },
-            ),
-          ),
-        ],
-      ),
+    return FrameGenWorkspace(
+      title: l10n.libraryTitle,
+      status: _loaded
+          ? l10n.libraryStatusLoaded(_games.length)
+          : l10n.libraryStatusLoading,
+      removedCount: _removed.length,
+      scanning: _scanning,
+      adding: _adding,
+      errorNotice: _error == null ? null : '${l10n.libraryLoadFailed} $_error',
+      outdatedNotice: outdated == 0 ? null : l10n.outdatedAssetNotice(outdated),
+      sidebar: FrameGenSidebar(gpu: _gpu, gpuLabel: l10n.modeGpusFramegen),
+      content: _content(context, l10n),
+      onAdd: _addGame,
+      onRemoved: _openRemoved,
+      onScan: _scan,
     );
   }
 
