@@ -65,7 +65,7 @@ class Dlss5Tile extends StatelessWidget {
                       foreground: AppTokens.warning,
                       background: AppTokens.warningSoft,
                       border: AppTokens.warning.withValues(alpha: 0.4),
-                      fontSize: 10.5,
+                      fontSize: 11,
                     ),
                   ),
                 Positioned(
@@ -90,7 +90,7 @@ class Dlss5Tile extends StatelessWidget {
                         l10n.dlss5ApiLabel(game.graphicsApi.toUpperCase()),
                         style: const TextStyle(
                           color: Color(0xD9FFFFFF),
-                          fontSize: 11.5,
+                          fontSize: 12,
                         ),
                       ),
                       const SizedBox(height: 2),
@@ -100,7 +100,7 @@ class Dlss5Tile extends StatelessWidget {
                           color: deployed
                               ? const Color(0xFF7BE3A9)
                               : const Color(0xD9FFFFFF),
-                          fontSize: 11.5,
+                          fontSize: 12,
                           fontWeight: FontWeight.w700,
                         ),
                       ),
@@ -156,9 +156,9 @@ class Dlss5Tile extends StatelessWidget {
       child: Text(
         game.name.isEmpty ? '?' : game.name.substring(0, 1).toUpperCase(),
         style: const TextStyle(
-          color: Color(0xFF4E6F9D),
+          color: AppTokens.monogram,
           fontSize: 44,
-          fontWeight: FontWeight.w800,
+          fontWeight: FontWeight.w600,
         ),
       ),
     );

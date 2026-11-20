@@ -31,7 +31,7 @@ class AboutSwitchRow extends StatelessWidget {
                 title,
                 style: const TextStyle(
                   color: AppTokens.textPrimary,
-                  fontSize: 13.5,
+                  fontSize: 14,
                   fontWeight: FontWeight.w700,
                 ),
               ),

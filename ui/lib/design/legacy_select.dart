@@ -145,7 +145,7 @@ class _LegacySelectState<T> extends State<LegacySelect<T>> {
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(
                             color: AppTokens.textPrimary,
-                            fontSize: widget.dense ? 12 : 12.5,
+                            fontSize: widget.dense ? 12 : 13,
                           ),
                         ),
                       ),
@@ -336,7 +336,7 @@ class _MenuRow extends StatelessWidget {
             overflow: TextOverflow.ellipsis,
             style: TextStyle(
               color: selected ? AppTokens.accent : AppTokens.textPrimary,
-              fontSize: 12.5,
+              fontSize: 13,
               fontWeight: selected ? FontWeight.w700 : FontWeight.w400,
             ),
           ),

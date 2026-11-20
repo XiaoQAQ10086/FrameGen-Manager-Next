@@ -165,7 +165,7 @@ class _TopBar extends StatelessWidget {
                     'FrameGen Manager-Next',
                     style: TextStyle(
                       color: AppTokens.textPrimary,
-                      fontSize: 15,
+                      fontSize: 14,
                       fontWeight: FontWeight.w700,
                     ),
                   ),
@@ -176,7 +176,7 @@ class _TopBar extends StatelessWidget {
                         'v${core?.version ?? '2.3.4'}',
                         style: const TextStyle(
                           color: AppTokens.textSecondary,
-                          fontSize: 11.5,
+                          fontSize: 12,
                         ),
                       ),
                       if (showTagline) ...<Widget>[
@@ -185,7 +185,7 @@ class _TopBar extends StatelessWidget {
                           l10n.appTagline,
                           style: const TextStyle(
                             color: AppTokens.textSecondary,
-                            fontSize: 11.5,
+                            fontSize: 12,
                           ),
                         ),
                       ],

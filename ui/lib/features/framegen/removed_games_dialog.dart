@@ -150,7 +150,7 @@ class _RemovedGamesDialogState extends State<RemovedGamesDialog> {
                                     overflow: TextOverflow.ellipsis,
                                     style: const TextStyle(
                                       color: AppTokens.textPrimary,
-                                      fontSize: 13.5,
+                                      fontSize: 14,
                                       fontWeight: FontWeight.w700,
                                     ),
                                   ),
@@ -162,7 +162,7 @@ class _RemovedGamesDialogState extends State<RemovedGamesDialog> {
                                     style: const TextStyle(
                                       color: AppTokens.textSecondary,
                                       fontFamily: 'Consolas',
-                                      fontSize: 11.5,
+                                      fontSize: 12,
                                     ),
                                   ),
                                   const SizedBox(height: 4),

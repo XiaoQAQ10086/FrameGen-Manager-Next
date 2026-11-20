@@ -77,7 +77,7 @@ class _PathBlock extends StatelessWidget {
           label,
           style: const TextStyle(
             color: AppTokens.textPrimary,
-            fontSize: 12.5,
+            fontSize: 13,
             fontWeight: FontWeight.w700,
           ),
         ),
@@ -87,7 +87,7 @@ class _PathBlock extends StatelessWidget {
           style: const TextStyle(
             color: AppTokens.textSecondary,
             fontFamily: 'Consolas',
-            fontSize: 11.5,
+            fontSize: 12,
             height: 1.45,
           ),
         ),

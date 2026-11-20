@@ -142,7 +142,7 @@ class _AnrPackagePanelState extends State<AnrPackagePanel> {
                   (addon ? l10n.anrPackageAddon : ''),
               style: const TextStyle(
                 color: AppTokens.textPrimary,
-                fontSize: 12.5,
+                fontSize: 13,
                 fontWeight: FontWeight.w700,
               ),
             ),
@@ -153,7 +153,7 @@ class _AnrPackagePanelState extends State<AnrPackagePanel> {
                 : l10n.anrCurrentGpu(_gpu!.name, _gpu!.driverVersion),
             style: const TextStyle(
               color: AppTokens.textSecondary,
-              fontSize: 11.5,
+              fontSize: 12,
             ),
           ),
           const SizedBox(height: 10),

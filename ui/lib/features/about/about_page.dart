@@ -222,7 +222,7 @@ class _AboutPageState extends State<AboutPage> {
                       l10n.aboutDescription,
                       style: const TextStyle(
                         color: AppTokens.textSecondary,
-                        fontSize: 12.5,
+                        fontSize: 13,
                       ),
                     ),
                     const SizedBox(height: 12),

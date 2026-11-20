@@ -70,7 +70,7 @@ class AnrGameCard extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
                         color: AppTokens.textPrimary,
-                        fontSize: 15,
+                        fontSize: 14,
                         fontWeight: FontWeight.w700,
                       ),
                     ),
@@ -170,7 +170,7 @@ class AnrGameCard extends StatelessWidget {
                   l10n.anrPackageNeeded,
                   style: const TextStyle(
                     color: AppTokens.textSecondary,
-                    fontSize: 12.5,
+                    fontSize: 13,
                   ),
                 ),
               const Spacer(),
@@ -290,9 +290,9 @@ class AnrGameCard extends StatelessWidget {
       child: Text(
         game.name.isEmpty ? '?' : game.name.substring(0, 1).toUpperCase(),
         style: const TextStyle(
-          color: Color(0xFF4E6F9D),
+          color: AppTokens.monogram,
           fontSize: 20,
-          fontWeight: FontWeight.w800,
+          fontWeight: FontWeight.w600,
         ),
       ),
     );

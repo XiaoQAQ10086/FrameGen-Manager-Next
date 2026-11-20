@@ -13,14 +13,24 @@ abstract final class AppTokens {
   static const Color textSecondary = Color(0xFF606B7D);
   static const Color accent = Color(0xFF007AFF);
   static const Color accentSoft = Color(0x1A007AFF);
+
+  /// Accent text on [accentSoft]; darker than [accent] so small labels clear
+  /// the WCAG AA 4.5:1 contrast floor.
+  static const Color accentText = Color(0xFF0062CC);
   static const Color success = Color(0xFF0B6B3A);
   static const Color successSoft = Color(0xFFE8F6EE);
   static const Color warning = Color(0xFFB25A00);
   static const Color warningSoft = Color(0xFFFDF0E1);
+
+  /// Warning text on [warningSoft]; darker than [warning] for the same reason.
+  static const Color warningText = Color(0xFF8F4800);
   static const Color danger = Color(0xFFA52222);
   static const Color dangerSoft = Color(0xFFFBEAEA);
   static const Color scanGreen = Color(0xFF1B9D57);
   static const Color launchYellow = Color(0xFFF4C542);
+
+  /// Muted initials drawn on the light monogram tile of game cards.
+  static const Color monogram = Color(0xFF4E6F9D);
 
   static const double radius = 16;
   static const double radiusLarge = 16;

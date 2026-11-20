@@ -3,6 +3,10 @@ import 'package:material_ui/material_ui.dart';
 import 'app_tokens.dart';
 
 /// Rounded legacy badge used for states, launchers and proxy owners.
+///
+/// When a soft tonal background is used, the label is darkened to the matching
+/// text token so small pill text stays legible; the border keeps the original
+/// accent tone.
 class LegacyPill extends StatelessWidget {
   const LegacyPill({
     super.key,
@@ -10,7 +14,7 @@ class LegacyPill extends StatelessWidget {
     this.foreground = AppTokens.textSecondary,
     this.background = AppTokens.surfaceMuted,
     this.border,
-    this.fontSize = 11.5,
+    this.fontSize = 12,
     this.maxWidth,
     this.textAlign = TextAlign.start,
   });
@@ -25,13 +29,14 @@ class LegacyPill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final Color labelColor = _labelColor();
     final Widget text = Text(
       label,
       maxLines: 1,
       textAlign: textAlign,
       overflow: TextOverflow.ellipsis,
       style: TextStyle(
-        color: foreground,
+        color: labelColor,
         fontSize: fontSize,
         fontWeight: FontWeight.w700,
       ),
@@ -50,5 +55,15 @@ class LegacyPill extends StatelessWidget {
           ? text
           : Tooltip(message: label, child: text),
     );
+  }
+
+  Color _labelColor() {
+    if (foreground == AppTokens.accent && background == AppTokens.accentSoft) {
+      return AppTokens.accentText;
+    }
+    if (foreground == AppTokens.warning && background == AppTokens.warningSoft) {
+      return AppTokens.warningText;
+    }
+    return foreground;
   }
 }

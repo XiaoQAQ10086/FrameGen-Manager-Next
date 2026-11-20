@@ -26,7 +26,7 @@ class LibraryNotice extends StatelessWidget {
       ),
       child: Text(
         message,
-        style: TextStyle(color: tone, fontSize: 12.5),
+        style: TextStyle(color: tone, fontSize: 13),
       ),
     );
   }

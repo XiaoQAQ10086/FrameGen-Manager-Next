@@ -56,7 +56,7 @@ class DeployDialogHeader extends StatelessWidget {
                 style: const TextStyle(
                   color: AppTokens.textSecondary,
                   fontFamily: 'Consolas',
-                  fontSize: 11.5,
+                  fontSize: 12,
                 ),
               ),
             ],
@@ -79,9 +79,9 @@ class DeployDialogHeader extends StatelessWidget {
       child: Text(
         game.name.isEmpty ? '?' : game.name.substring(0, 1).toUpperCase(),
         style: const TextStyle(
-          color: Color(0xFF4E6F9D),
-          fontSize: 18,
-          fontWeight: FontWeight.w800,
+          color: AppTokens.monogram,
+          fontSize: 20,
+          fontWeight: FontWeight.w600,
         ),
       ),
     );

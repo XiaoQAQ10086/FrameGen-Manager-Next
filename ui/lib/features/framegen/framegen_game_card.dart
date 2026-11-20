@@ -79,7 +79,7 @@ class FrameGenGameCard extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
                         color: AppTokens.textPrimary,
-                        fontSize: 15,
+                        fontSize: 14,
                         fontWeight: FontWeight.w700,
                       ),
                     ),
@@ -188,7 +188,7 @@ class FrameGenGameCard extends StatelessWidget {
                   child: Text(
                     primaryLabel,
                     style: const TextStyle(
-                      fontSize: 12.5,
+                      fontSize: 13,
                       fontWeight: FontWeight.w700,
                     ),
                   ),
@@ -327,9 +327,9 @@ class _Cover extends StatelessWidget {
       child: Text(
         initial,
         style: const TextStyle(
-          color: Color(0xFF4E6F9D),
+          color: AppTokens.monogram,
           fontSize: 20,
-          fontWeight: FontWeight.w800,
+          fontWeight: FontWeight.w600,
         ),
       ),
     );

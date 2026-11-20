@@ -85,7 +85,7 @@ class SmCompatibilityPanel extends StatelessWidget {
               label,
               style: const TextStyle(
                 color: AppTokens.textSecondary,
-                fontSize: 12.5,
+                fontSize: 13,
               ),
             ),
           ),

@@ -5,6 +5,7 @@ import 'package:material_ui/material_ui.dart';
 import '../bridge/core_library.dart';
 import '../bridge/operation_progress.dart';
 import '../l10n/app_localizations.dart';
+import 'app_tokens.dart';
 
 /// Non-blocking progress card that sits in the bottom-left corner, letting the
 /// user keep interacting with the page while a native operation runs.
@@ -139,7 +140,7 @@ class _FloatingCardState<T> extends State<_FloatingCard<T>> {
                     child: Text(
                       widget.title,
                       style: const TextStyle(
-                        color: Color(0xFF172033),
+                        color: AppTokens.textPrimary,
                         fontSize: 13,
                         fontWeight: FontWeight.w700,
                       ),
@@ -167,8 +168,8 @@ class _FloatingCardState<T> extends State<_FloatingCard<T>> {
                     ? '${_progress.done} / ${_progress.total}'
                     : '…',
                 style: const TextStyle(
-                  color: Color(0xFF606B7D),
-                  fontSize: 11.5,
+                  color: AppTokens.textSecondary,
+                  fontSize: 12,
                 ),
               ),
             ],

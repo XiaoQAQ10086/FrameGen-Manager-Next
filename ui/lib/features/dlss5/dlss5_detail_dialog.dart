@@ -299,7 +299,7 @@ class _Dlss5DetailDialogState extends State<Dlss5DetailDialog> {
                           style: const TextStyle(
                             color: AppTokens.textSecondary,
                             fontFamily: 'Consolas',
-                            fontSize: 11.5,
+                            fontSize: 12,
                           ),
                         ),
                       ],

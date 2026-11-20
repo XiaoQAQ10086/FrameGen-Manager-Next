@@ -68,26 +68,58 @@ abstract final class AppTheme {
         ),
       ),
       textTheme: const TextTheme(
+        displaySmall: TextStyle(
+          color: AppTokens.textPrimary,
+          fontSize: 28,
+          fontWeight: FontWeight.w700,
+          height: 1.25,
+        ),
         headlineSmall: TextStyle(
           color: AppTokens.textPrimary,
           fontSize: 20,
           fontWeight: FontWeight.w700,
           letterSpacing: 0.2,
+          height: 1.25,
+        ),
+        titleLarge: TextStyle(
+          color: AppTokens.textPrimary,
+          fontSize: 16,
+          fontWeight: FontWeight.w600,
+          height: 1.25,
         ),
         titleMedium: TextStyle(
           color: AppTokens.textPrimary,
-          fontSize: 15,
+          fontSize: 14,
           fontWeight: FontWeight.w700,
+          height: 1.35,
         ),
         bodyMedium: TextStyle(
           color: AppTokens.textSecondary,
           fontSize: 14,
           height: 1.5,
         ),
+        bodySmall: TextStyle(
+          color: AppTokens.textSecondary,
+          fontSize: 13,
+          height: 1.5,
+        ),
+        labelLarge: TextStyle(
+          color: AppTokens.textPrimary,
+          fontSize: 13,
+          fontWeight: FontWeight.w500,
+          height: 1.4,
+        ),
         labelMedium: TextStyle(
           color: AppTokens.textSecondary,
           fontSize: 12,
-          fontWeight: FontWeight.w400,
+          fontWeight: FontWeight.w500,
+          height: 1.4,
+        ),
+        labelSmall: TextStyle(
+          color: AppTokens.textSecondary,
+          fontSize: 11,
+          fontWeight: FontWeight.w500,
+          height: 1.35,
         ),
       ),
     );

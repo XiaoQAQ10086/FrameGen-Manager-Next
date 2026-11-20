@@ -92,7 +92,7 @@ class _FrameGenDeployDialogState extends State<FrameGenDeployDialog> {
                             l10n.deployGraphicsApi,
                             style: const TextStyle(
                               color: AppTokens.textSecondary,
-                              fontSize: 12.5,
+                              fontSize: 13,
                             ),
                           ),
                           const SizedBox(width: 8),

@@ -57,7 +57,7 @@ class LibraryListHead extends StatelessWidget {
                 overflow: TextOverflow.ellipsis,
                 style: const TextStyle(
                   color: AppTokens.textSecondary,
-                  fontSize: 12.5,
+                  fontSize: 13,
                 ),
               ),
             ],
