@@ -489,6 +489,8 @@ $RECYCLE.BIN/
 artifacts/
 publish/
 logs/
+!ui/lib/features/logs/
+!ui/lib/features/logs/**
 packs/*
 !packs/README.md
 !packs/*/
