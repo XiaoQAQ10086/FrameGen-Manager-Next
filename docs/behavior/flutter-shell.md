@@ -1,3 +1,5 @@
+> 已冻结：Flutter UI 不再开发，新外壳见 [electron-shell.md](electron-shell.md) 与 ADR-0017。
+
 # Flutter 外壳
 
 本规格描述 Rust + Flutter 版本的外壳。旧版 [app-shell.md](app-shell.md) 是 2.x 的行为对照；本文件覆盖新壳已实现的全部页面与交互。

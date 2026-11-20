@@ -514,3 +514,9 @@ build/tools/
 
 # Local scratch (portable test data, screenshots)
 /target/
+
+# Electron app artifacts
+ui-electron/node_modules/
+ui-electron/native/*.node
+ui-electron/dist/
+ui-electron/data/

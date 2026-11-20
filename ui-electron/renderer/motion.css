@@ -1,0 +1,113 @@
+/* Electron prototype: extra motion on top of the legacy WebAssets stylesheet. */
+
+:root {
+  --motion-quick: 120ms;
+  --motion-standard: 180ms;
+  --motion-enter: 220ms;
+  --motion-page: 300ms;
+  --motion-ease: cubic-bezier(.22, 1, .36, 1);
+}
+
+.nav-indicator {
+  transition:
+    left var(--motion-page) var(--motion-ease),
+    width var(--motion-page) var(--motion-ease),
+    top var(--motion-standard) var(--motion-ease),
+    height var(--motion-standard) var(--motion-ease);
+  will-change: left, width;
+}
+
+.nav-item {
+  transition: color var(--motion-standard) var(--motion-ease), transform var(--motion-standard) var(--motion-ease);
+}
+
+.btn {
+  transition:
+    transform var(--motion-quick) var(--motion-ease),
+    box-shadow var(--motion-standard) var(--motion-ease),
+    background var(--motion-standard) var(--motion-ease),
+    border-color var(--motion-standard) var(--motion-ease);
+}
+
+.btn:active {
+  transform: translateY(0) scale(.975);
+}
+
+.gcard {
+  transition:
+    transform var(--motion-standard) var(--motion-ease),
+    box-shadow var(--motion-standard) var(--motion-ease),
+    background var(--motion-standard) var(--motion-ease),
+    border-color var(--motion-standard) var(--motion-ease);
+}
+
+.gcard img.thumb {
+  animation: thumbIn var(--motion-enter) var(--motion-ease) both;
+}
+
+@keyframes thumbIn {
+  from { opacity: 0; transform: scale(.94); }
+  to { opacity: 1; transform: none; }
+}
+
+.panel {
+  animation: cardIn var(--motion-page) var(--motion-ease) both;
+}
+
+.side .panel:nth-child(2) { animation-delay: 25ms; }
+.side .panel:nth-child(3) { animation-delay: 50ms; }
+.side .panel:nth-child(4) { animation-delay: 75ms; }
+
+#modal-root .overlay {
+  background: rgba(16, 24, 40, .10);
+  backdrop-filter: blur(6px) saturate(1.02);
+  animation: overlayIn var(--motion-enter) var(--motion-ease) both;
+}
+
+#modal-root .modal {
+  animation: modalIn var(--motion-enter) var(--motion-ease) both;
+  box-shadow: 0 28px 70px rgba(18, 30, 52, .22), 0 4px 12px rgba(18, 30, 52, .08);
+}
+
+@keyframes overlayIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes modalIn {
+  from { opacity: 0; transform: translateY(10px) scale(.985); }
+  to { opacity: 1; transform: none; }
+}
+
+.global-progress {
+  animation: progressIn var(--motion-enter) var(--motion-ease) both;
+}
+
+@keyframes progressIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: none; }
+}
+
+.toast {
+  animation: toastIn var(--motion-enter) var(--motion-ease) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: .01ms !important;
+    transition-duration: .01ms !important;
+  }
+}
+
+/* The legacy page-host already provides the page padding. */
+.view > .page { padding: 0; }
+
+/* Prototype uses native <select> elements (legacy custom-select.js is not
+   wired yet), so override the hidden native control used by the custom one. */
+.select-wrap > select {
+  position: static;
+  inset: auto;
+  opacity: 1;
+  pointer-events: auto;
+  width: 100%;
+}

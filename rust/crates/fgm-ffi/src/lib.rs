@@ -21,6 +21,7 @@ mod commands_sm;
 mod commands_system;
 mod commands_update;
 mod commands_window;
+pub mod rust_api;
 
 static VERSION: LazyLock<Vec<u8>> = LazyLock::new(|| {
     let mut bytes = fgm_domain::version::VERSION.as_bytes().to_vec();

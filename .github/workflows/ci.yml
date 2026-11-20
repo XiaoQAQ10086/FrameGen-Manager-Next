@@ -12,7 +12,7 @@ permissions:
 
 jobs:
   verify:
-    name: Rust and Flutter gates
+    name: Rust and Electron gates
     runs-on: windows-latest
     timeout-minutes: 60
 
@@ -24,13 +24,17 @@ jobs:
         shell: pwsh
         run: rustup toolchain install nightly-2026-11-17 --profile minimal --component rustfmt --component clippy
 
-      - name: Set up Flutter
-        uses: subosito/flutter-action@v2
+      - name: Set up Node
+        uses: actions/setup-node@v6
         with:
-          channel: master
-          flutter-version: afad7960e1f4dafdb28a4c45e5e001d4a1994000
-          cache: true
+          node-version: 24
+          cache: npm
+          cache-dependency-path: ui-electron/package-lock.json
+
+      - name: Install Electron dependencies
+        working-directory: ui-electron
+        run: npm ci --no-audit --no-fund
 
       - name: Verify
         shell: pwsh
-        run: ./build/verify-rust-flutter.ps1
+        run: ./build/verify-rust-electron.ps1

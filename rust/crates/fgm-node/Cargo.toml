@@ -1,0 +1,18 @@
+[package]
+name = "fgm-node"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+fgm-domain = { path = "../fgm-domain" }
+fgm-ffi = { path = "../fgm-ffi" }
+napi = { version = "3.16.2", features = ["napi9", "serde-json"] }
+napi-derive = "3.7.1"
+serde_json.workspace = true
+
+[build-dependencies]
+napi-build = "2.6.0"

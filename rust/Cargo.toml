@@ -5,6 +5,7 @@ members = [
     "crates/fgm-core",
     "crates/fgm-infra",
     "crates/fgm-ffi",
+    "crates/fgm-node",
     "crates/fgm-cli",
 ]
 
