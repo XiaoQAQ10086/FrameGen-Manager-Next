@@ -13,6 +13,7 @@ import '../../design/error_dialog.dart';
 import '../../design/legacy_button_styles.dart';
 import '../../design/legacy_dialog.dart';
 import '../../design/legacy_dialog_header.dart';
+import '../../design/legacy_toast.dart';
 import '../../design/operation_progress_dialog.dart';
 import '../../l10n/app_localizations.dart';
 import 'dlss5_detail_form.dart';
@@ -157,12 +158,7 @@ class _Dlss5DetailDialogState extends State<Dlss5DetailDialog> {
     if (!mounted) {
       return;
     }
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(l10n.dlss5Complete(result.proxyModule ?? '')),
-        behavior: SnackBarBehavior.floating,
-      ),
-    );
+    LegacyToast.show(context, l10n.dlss5Complete(result.proxyModule ?? ''));
   }
 
   Future<void> _uninstall() async {
@@ -214,15 +210,11 @@ class _Dlss5DetailDialogState extends State<Dlss5DetailDialog> {
     if (!mounted) {
       return;
     }
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          result.conflicts.isEmpty
-              ? l10n.dlss5Uninstalled
-              : l10n.dlss5UninstallConflicts(result.conflicts.length),
-        ),
-        behavior: SnackBarBehavior.floating,
-      ),
+    LegacyToast.show(
+      context,
+      result.conflicts.isEmpty
+          ? l10n.dlss5Uninstalled
+          : l10n.dlss5UninstallConflicts(result.conflicts.length),
     );
   }
 
@@ -247,19 +239,13 @@ class _Dlss5DetailDialogState extends State<Dlss5DetailDialog> {
     if (!mounted) {
       return;
     }
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          outcome == HotkeyOutcome.failed
-              ? '${l10n.deployFailed} SetHotkey'
-              : (outcome == HotkeyOutcome.queued
-                    ? l10n.dlss5HotkeyQueued
-                    : l10n.dlss5HotkeySaved(
-                        Dlss5Hotkey.label(virtualKey),
-                      )),
-        ),
-        behavior: SnackBarBehavior.floating,
-      ),
+    LegacyToast.show(
+      context,
+      outcome == HotkeyOutcome.failed
+          ? '${l10n.deployFailed} SetHotkey'
+          : (outcome == HotkeyOutcome.queued
+                ? l10n.dlss5HotkeyQueued
+                : l10n.dlss5HotkeySaved(Dlss5Hotkey.label(virtualKey))),
     );
     _changed = true;
     await _refresh();

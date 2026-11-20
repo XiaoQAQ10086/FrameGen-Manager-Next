@@ -8,6 +8,7 @@ import '../bridge/logs_bridge.dart';
 import '../l10n/app_localizations.dart';
 import 'app_tokens.dart';
 import 'legacy_dialog.dart';
+import 'legacy_toast.dart';
 
 /// Failure dialog with the error code and a diagnostics copy button.
 final class ErrorDialog {
@@ -68,12 +69,7 @@ final class ErrorDialog {
               if (!context.mounted) {
                 return;
               }
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(l10n.errorCopied),
-                  behavior: SnackBarBehavior.floating,
-                ),
-              );
+              LegacyToast.show(context, l10n.errorCopied);
             },
             icon: const Icon(Icons.copy, size: 16),
             label: Text(l10n.errorCopy),

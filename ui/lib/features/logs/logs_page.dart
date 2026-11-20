@@ -8,6 +8,7 @@ import '../../bridge/logs_bridge.dart';
 import '../../bridge/system_bridge.dart';
 import '../../design/app_tokens.dart';
 import '../../design/error_dialog.dart';
+import '../../design/legacy_toast.dart';
 import '../../l10n/app_localizations.dart';
 
 /// Formats one JSON log line as `time LEVEL message key=value ...`.
@@ -79,13 +80,9 @@ class _LogsPageState extends State<LogsPage> {
       return;
     }
     _load();
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          removed > 0 ? l10n.logsCleared(removed) : l10n.logsNothingCleared,
-        ),
-        behavior: SnackBarBehavior.floating,
-      ),
+    LegacyToast.show(
+      context,
+      removed > 0 ? l10n.logsCleared(removed) : l10n.logsNothingCleared,
     );
   }
 
@@ -108,12 +105,7 @@ class _LogsPageState extends State<LogsPage> {
       );
       return;
     }
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(l10n.diagnosticsSaved(result.path!)),
-        behavior: SnackBarBehavior.floating,
-      ),
-    );
+    LegacyToast.show(context, l10n.diagnosticsSaved(result.path!));
   }
 
   @override

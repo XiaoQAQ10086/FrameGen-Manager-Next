@@ -17,6 +17,7 @@ import '../../bridge/system_bridge.dart';
 import '../../design/app_tokens.dart';
 import '../../design/error_dialog.dart';
 import '../../design/legacy_pill.dart';
+import '../../design/legacy_toast.dart';
 import '../../design/library_list_head.dart';
 import '../../design/operation_progress_dialog.dart';
 import '../../l10n/app_localizations.dart';
@@ -191,12 +192,7 @@ class _AnrPageState extends State<AnrPage> {
       );
       return;
     }
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(l10n.anrDeployDone(result.proxyModule ?? '-')),
-        behavior: SnackBarBehavior.floating,
-      ),
-    );
+    LegacyToast.show(context, l10n.anrDeployDone(result.proxyModule ?? '-'));
     await _loadExtras();
   }
 
@@ -216,12 +212,7 @@ class _AnrPageState extends State<AnrPage> {
       );
       return;
     }
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(l10n.anrRestored),
-        behavior: SnackBarBehavior.floating,
-      ),
-    );
+    LegacyToast.show(context, l10n.anrRestored);
     await _loadExtras();
   }
 

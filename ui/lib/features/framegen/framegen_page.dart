@@ -22,6 +22,7 @@ import '../../bridge/settings_bridge.dart';
 import '../../bridge/system_bridge.dart';
 import '../../design/error_dialog.dart';
 import '../../design/floating_progress.dart';
+import '../../design/legacy_toast.dart';
 import '../../l10n/app_localizations.dart';
 import 'frame_gen_actions.dart';
 import 'framegen_game_list.dart';
@@ -235,12 +236,7 @@ class _FrameGenPageState extends State<FrameGenPage> {
       );
       return;
     }
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('${l10n.deployComplete} ${game.name}'),
-        behavior: SnackBarBehavior.floating,
-      ),
-    );
+    LegacyToast.show(context, '${l10n.deployComplete} ${game.name}');
     if (options.persistExe) {
       final LibrarySnapshot snapshot = LibraryBridge.list(widget.core);
       setState(() => _games = snapshot.games);
@@ -268,15 +264,9 @@ class _FrameGenPageState extends State<FrameGenPage> {
       );
       return;
     }
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          result.conflicts.isEmpty
-              ? l10n.restoreComplete
-              : l10n.restoreConflicts,
-        ),
-        behavior: SnackBarBehavior.floating,
-      ),
+    LegacyToast.show(
+      context,
+      result.conflicts.isEmpty ? l10n.restoreComplete : l10n.restoreConflicts,
     );
     await _loadExtras();
   }

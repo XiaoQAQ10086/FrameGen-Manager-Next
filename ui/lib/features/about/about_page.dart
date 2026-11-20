@@ -14,6 +14,7 @@ import '../../design/error_dialog.dart';
 import '../../design/legacy_button_styles.dart';
 import '../../design/legacy_dialog.dart';
 import '../../design/legacy_panel.dart';
+import '../../design/legacy_toast.dart';
 import '../../design/operation_progress_dialog.dart';
 import '../../l10n/app_localizations.dart';
 import 'about_link_row.dart';
@@ -72,20 +73,18 @@ class _AboutPageState extends State<AboutPage> {
     }
     setState(() => _checking = false);
     if (!info.ok) {
-      await ErrorDialog.show(
+      // A source that has published nothing yet is not something the user can
+      // act on, so it does not deserve a modal.
+      LegacyToast.show(
         context,
-        message: l10n.updateFailed(info.code ?? ''),
-        code: info.code ?? 'UpdateCheckFailed',
+        info.code == 'UpdateNotFound'
+            ? l10n.updateLatest
+            : l10n.updateFailed(info.code ?? ''),
       );
       return;
     }
     if (!info.available) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(l10n.updateLatest),
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
+      LegacyToast.show(context, l10n.updateLatest);
       return;
     }
     await _showUpdate(info);
@@ -154,12 +153,7 @@ class _AboutPageState extends State<AboutPage> {
       return;
     }
     if (downloaded.portable) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(l10n.updatePortableHint),
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
+      LegacyToast.show(context, l10n.updatePortableHint);
       return;
     }
     final String? path = downloaded.path;
