@@ -5,10 +5,10 @@ import 'package:material_ui/material_ui.dart';
 
 import 'motion_tokens.dart';
 
-/// Shows a modal dialog with the page behind it smoothly blurred and dimmed.
+/// Shows a modal dialog with the page behind it blurred and dimmed.
 ///
-/// The blur radius and dim alpha animate together with the dialog, matching the
-/// legacy WebView modal instead of snapping to a pre-blurred backdrop.
+/// The backdrop blur is a fixed radius that fades in with the dialog, matching
+/// the legacy WebView modal without re-filtering the page every frame.
 Future<T?> showLegacyDialog<T>({
   required BuildContext context,
   required WidgetBuilder builder,
@@ -70,7 +70,11 @@ Future<T?> showLegacyDialog<T>({
   );
 }
 
-/// Backdrop that ramps blur and dim from zero with the dialog animation.
+/// Backdrop that fades in already blurred.
+///
+/// The blur radius is fixed: animating sigma re-ran the filter every frame and
+/// dropped frames on weaker GPUs. Fading a pre-blurred, repaint-isolated layer
+/// costs one blur per dialog instead of one per frame.
 class _BlurBackdrop extends StatelessWidget {
   const _BlurBackdrop({
     required this.animation,
@@ -78,27 +82,26 @@ class _BlurBackdrop extends StatelessWidget {
     required this.onDismiss,
   });
 
+  static const double _sigma = 6;
+
   final Animation<double> animation;
   final bool dismissible;
   final VoidCallback onDismiss;
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: animation,
-      builder: (BuildContext context, Widget? child) {
-        final double t = animation.value.clamp(0.0, 1.0);
-        return GestureDetector(
-          behavior: HitTestBehavior.opaque,
-          onTap: dismissible ? onDismiss : null,
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: dismissible ? onDismiss : null,
+      child: RepaintBoundary(
+        child: FadeTransition(
+          opacity: animation,
           child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 6 * t, sigmaY: 6 * t),
-            child: ColoredBox(
-              color: Color.fromRGBO(16, 24, 40, 0.10 * t),
-            ),
+            filter: ImageFilter.blur(sigmaX: _sigma, sigmaY: _sigma),
+            child: const ColoredBox(color: Color.fromRGBO(16, 24, 40, 0.10)),
           ),
-        );
-      },
+        ),
+      ),
     );
   }
 }

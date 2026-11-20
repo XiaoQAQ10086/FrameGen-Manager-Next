@@ -66,34 +66,36 @@ class _AppShellState extends State<AppShell> {
                 onLanguage: _selectLanguage,
               ),
               Expanded(
-                child: AnimatedSwitcher(
-                  duration: MotionTokens.page,
-                  switchInCurve: MotionTokens.pageInCurve,
-                  switchOutCurve: MotionTokens.pageOutCurve,
-                  transitionBuilder: _fadeThrough,
-                  layoutBuilder:
-                      (Widget? current, List<Widget> previous) {
-                        return Stack(
-                          fit: StackFit.expand,
-                          children: <Widget>[
-                            ...previous,
-                            if (current != null) current,
-                          ],
-                        );
+                child: RepaintBoundary(
+                  child: AnimatedSwitcher(
+                    duration: MotionTokens.page,
+                    switchInCurve: MotionTokens.pageInCurve,
+                    switchOutCurve: MotionTokens.pageOutCurve,
+                    transitionBuilder: _fadeThrough,
+                    layoutBuilder:
+                        (Widget? current, List<Widget> previous) {
+                          return Stack(
+                            fit: StackFit.expand,
+                            children: <Widget>[
+                              ...previous,
+                              if (current != null) current,
+                            ],
+                          );
+                        },
+                    child: KeyedSubtree(
+                      key: ValueKey<AppSection>(_section),
+                      child: switch (_section) {
+                        AppSection.frameGeneration =>
+                          FrameGenPage(core: widget.core),
+                        AppSection.smoothMotion =>
+                          SmoothMotionPage(core: widget.core),
+                        AppSection.dlss5 => Dlss5Page(core: widget.core),
+                        AppSection.anr => AnrPage(core: widget.core),
+                        AppSection.logs => LogsPage(core: widget.core),
+                        AppSection.about => AboutPage(core: widget.core),
+                        AppSection.donate => const DonatePage(),
                       },
-                  child: KeyedSubtree(
-                    key: ValueKey<AppSection>(_section),
-                    child: switch (_section) {
-                      AppSection.frameGeneration =>
-                        FrameGenPage(core: widget.core),
-                      AppSection.smoothMotion =>
-                        SmoothMotionPage(core: widget.core),
-                      AppSection.dlss5 => Dlss5Page(core: widget.core),
-                      AppSection.anr => AnrPage(core: widget.core),
-                      AppSection.logs => LogsPage(core: widget.core),
-                      AppSection.about => AboutPage(core: widget.core),
-                      AppSection.donate => const DonatePage(),
-                    },
+                    ),
                   ),
                 ),
               ),
@@ -153,6 +155,7 @@ class _TopBar extends StatelessWidget {
                   'assets/app.png',
                   width: 34,
                   height: 34,
+                  cacheWidth: 102,
                   fit: BoxFit.cover,
                 ),
               ),

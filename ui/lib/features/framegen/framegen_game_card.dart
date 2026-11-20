@@ -299,8 +299,8 @@ class _Cover extends StatelessWidget {
           height: 70,
           color: icon ? Colors.white : null,
           padding: icon ? const EdgeInsets.all(6) : null,
-          child: Image.file(
-            File(cover),
+          child: Image(
+            image: ResizeImage(FileImage(File(cover)), width: 156),
             fit: icon ? BoxFit.contain : BoxFit.cover,
             errorBuilder:
                 (BuildContext context, Object error, StackTrace? stack) =>

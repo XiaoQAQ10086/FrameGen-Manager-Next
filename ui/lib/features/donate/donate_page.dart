@@ -68,7 +68,7 @@ class _QrCard extends StatelessWidget {
           ),
           child: AspectRatio(
             aspectRatio: 3 / 4,
-            child: Image.asset(image, fit: BoxFit.contain),
+            child: Image.asset(image, fit: BoxFit.contain, cacheWidth: 600),
           ),
         ),
         const SizedBox(height: 10),

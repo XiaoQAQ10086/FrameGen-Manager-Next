@@ -26,8 +26,8 @@ class DeployDialogHeader extends StatelessWidget {
         ClipRRect(
           borderRadius: BorderRadius.circular(8),
           child: cover != null && cover.isNotEmpty
-              ? Image.file(
-                  File(cover),
+              ? Image(
+                  image: ResizeImage(FileImage(File(cover)), width: 132),
                   width: 44,
                   height: 58,
                   fit: BoxFit.cover,

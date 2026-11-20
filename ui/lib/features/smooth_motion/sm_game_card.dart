@@ -236,8 +236,8 @@ class SmGameCard extends StatelessWidget {
           height: 70,
           color: icon ? Colors.white : null,
           padding: icon ? const EdgeInsets.all(6) : null,
-          child: Image.file(
-            File(path),
+          child: Image(
+            image: ResizeImage(FileImage(File(path)), width: 156),
             fit: icon ? BoxFit.contain : BoxFit.cover,
             errorBuilder:
                 (BuildContext context, Object error, StackTrace? stack) =>

@@ -77,7 +77,7 @@ FFI 只暴露稳定键和一次性 JSON DTO，不返回用户文案（见 ADR-00
 - DLSS5 使用 168px 封面墙；ANR 使用与帧生成相同的卡片样式。
 - 全局滚动使用 `BouncingScrollPhysics` 并允许鼠标拖拽滚动，减轻滚轮生硬感。
 - 页面切换使用 `MotionTokens.page` 淡入 + 2% 垂直位移，进入曲线 `MotionTokens.pageInCurve`，退出曲线 `MotionTokens.pageOutCurve`；动效常量见 [ui-design.md](ui-design.md)。
-- 弹窗统一走 `showLegacyDialog`：背景模糊半径 6px 与 10% 遮罩随 `MotionTokens.enter` 动画从 0 平滑增长，弹窗白底 + 18 投影并以 `MotionTokens.enterCurve` 淡入；Esc 与点击遮罩可关闭。
+- 弹窗统一走 `showLegacyDialog`：背景固定 6px 模糊 + 10% 遮罩随 `MotionTokens.enter` 整体淡入（模糊半径不再逐帧变化，见 [ui-design.md](ui-design.md)），弹窗白底 + 18 投影并以 `MotionTokens.enterCurve` 淡入；Esc 与点击遮罩可关闭。
 - 卡片操作按钮 38px 高、最小宽 72（部署比启动短）；打开文件夹/删除为无边框 38px 图标按钮，图标 21px，悬停浅蓝底。
 
 ## 本地化

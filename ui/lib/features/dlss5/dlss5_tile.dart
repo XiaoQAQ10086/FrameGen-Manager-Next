@@ -138,8 +138,8 @@ class Dlss5Tile extends StatelessWidget {
   Widget _cover() {
     final String? path = coverPath;
     if (path != null && path.isNotEmpty) {
-      return Image.file(
-        File(path),
+      return Image(
+        image: ResizeImage(FileImage(File(path)), width: 336),
         fit: BoxFit.cover,
         errorBuilder:
             (BuildContext context, Object error, StackTrace? stack) =>
