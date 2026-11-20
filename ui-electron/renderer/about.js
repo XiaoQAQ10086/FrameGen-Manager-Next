@@ -26,10 +26,18 @@ export async function renderAbout(root) {
             <button class="btn success" data-action="update" type="button">${t('aboutCheckUpdates')}</button>
             <button class="btn" data-action="quark" type="button">${t('aboutQuark')}</button>
           </div>
-          <div class="kv2"><span>${t('aboutGithub')}</span><b class="muted">${esc(paths.repository || '')}</b></div>
-          <div class="about-actions"><button class="btn" data-action="github" type="button">${t('aboutOpenRepo')}</button></div>
-          <div class="kv2"><span>${t('aboutLicenses')}</span><b class="muted">${t('aboutLicensesHint')}</b></div>
-          <div class="about-actions"><button class="btn" data-action="licenses" type="button">${t('aboutOpenLicenses')}</button></div>
+          <div class="about-links">
+            <section class="panel about-link">
+              <div class="ctitle">${t('aboutGithub')}</div>
+              <div class="path" title="${esc(paths.repository || '')}">${esc(paths.repository || '')}</div>
+              <button class="btn wide" data-action="github" type="button">${t('aboutOpenRepo')}</button>
+            </section>
+            <section class="panel about-link">
+              <div class="ctitle">${t('aboutLicenses')}</div>
+              <p class="hint">${t('aboutLicensesHint')}</p>
+              <button class="btn wide" data-action="licenses" type="button">${t('aboutOpenLicenses')}</button>
+            </section>
+          </div>
         </section>
         <section class="panel">
           <div class="ctitle">${t('aboutStartup')}</div>

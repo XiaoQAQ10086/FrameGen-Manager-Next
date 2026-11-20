@@ -30,18 +30,16 @@ export function openDeployDialog(game, refresh) {
         </div>
         <button class="icon-btn" data-close type="button">✕</button>
       </header>
-      <div class="deploy-meta">
-        <div class="kv2"><span>${t('deployGraphicsApi')}</span><b class="badge">${esc(apiLabel(game.graphicsApi))}</b></div>
-      </div>
       <p class="hint">${t('deployConfirmBody', { game: esc(game.name) })}</p>
       <div class="options">
+        <div class="deploy-api"><span>${t('deployGraphicsApi')}</span><b class="badge">${esc(apiLabel(game.graphicsApi))}</b></div>
         <label><span>${t('optionProxySlot')}</span><div class="select-wrap"><select data-option="proxy">
           <option>version.dll</option><option>winmm.dll</option><option>dbghelp.dll</option>
           <option>dinput8.dll</option><option>dxgi.dll</option><option>d3d12.dll</option>
         </select></div></label>
         <label><span>${t('optionEngine')}</span><div class="select-wrap"><select data-option="engine"><option>DLSS</option><option>XeSS</option></select></div></label>
         <label><span>${t('optionFrames')}</span><div class="select-wrap"><select data-option="frames"><option value="3">4X</option><option value="2">3X</option><option value="1">2X</option></select></div></label>
-        <label><span>${t('optionOptimized')}</span><div class="select-wrap"><select data-option="optimized"><option value="1">1 · 加速，与官方逐位一致</option><option value="0">0 · 原版内核</option><option value="2">2 · 更快，轻微损失</option><option value="3">3 · 最快，全部损失</option></select></div></label>
+        <label><span>${t('optionOptimized')}</span><div class="select-wrap"><select data-option="optimized"><option value="0">${t('optionOptimized0')}</option><option value="1" selected>${t('optionOptimized1')}</option><option value="2">${t('optionOptimized2')}</option><option value="3">${t('optionOptimized3')}</option></select></div></label>
         <label><span>${t('optionPreset')}</span><div class="select-wrap"><select data-option="preset"><option value="A">A</option><option value="B">B</option><option value="C">C</option></select></div></label>
         <label><span>${t('optionSuperResolution')}</span><div class="select-wrap"><select data-option="superResolution"><option value="Off">关闭</option><option value="M-INT8">M-INT8</option><option value="L-INT8">L-INT8</option><option value="M-FP16">M-FP16</option><option value="L-FP16">L-FP16</option></select></div></label>
         <label data-xess class="hidden"><span>${t('optionFlowResolution')}</span><div class="select-wrap"><select data-option="xessFlow"><option>Coarse</option><option>Middle</option><option>Fine</option><option>CoarseAt4K</option></select></div></label>
