@@ -10,8 +10,6 @@ abstract final class LegacyButtonStyles {
   static const Color _ink = Color(0xFF1D2A3F);
   static const Color _shadow = Color(0x24101828);
   static const Color _borderLight = Color(0xFFC2D2E6);
-  static const Color _dangerBorder = Color(0xFFE6C2C2);
-  static const Color _dangerFace = Color(0xFFFEF7F7);
   static const Color _neutralFace = Color(0xFFF6F9FE);
   static const Color _accentBorder = Color(0x8C007AFF);
 
@@ -139,9 +137,9 @@ abstract final class LegacyButtonStyles {
 
   /// Compact `.btn.small` used inside game cards.
   static ButtonStyle compact(ButtonStyle base) => base.copyWith(
-    minimumSize: const WidgetStatePropertyAll<Size>(Size(108, 38)),
+    minimumSize: const WidgetStatePropertyAll<Size>(Size(72, 38)),
     padding: const WidgetStatePropertyAll<EdgeInsetsGeometry>(
-      EdgeInsets.symmetric(horizontal: 18, vertical: 8),
+      EdgeInsets.symmetric(horizontal: 16, vertical: 8),
     ),
     textStyle: WidgetStatePropertyAll<TextStyle>(
       _textStyle(_foregroundOf(base), 13),
@@ -152,16 +150,31 @@ abstract final class LegacyButtonStyles {
     elevation: const WidgetStatePropertyAll<double>(0),
   );
 
-  /// `.btn.small.icon-only`: flat 34px square for card actions.
+  /// Borderless 38px icon action: the glyph itself is the hit target.
   static ButtonStyle compactIcon(ButtonStyle base) {
     final Color foreground = _foregroundOf(base);
-    final bool danger = foreground == AppTokens.danger;
-    return _flat(
-      background: danger ? _dangerFace : _neutralFace,
-      border: danger ? _dangerBorder : _borderLight,
-      foreground: foreground,
-      size: 38,
-      iconSize: 17,
+    return ButtonStyle(
+      backgroundColor: WidgetStateProperty.resolveWith<Color>(
+        (Set<WidgetState> states) => states.contains(WidgetState.hovered)
+            ? AppTokens.accentSoft
+            : Colors.transparent,
+      ),
+      foregroundColor: _stateColor(foreground),
+      iconColor: _stateColor(foreground),
+      overlayColor: const WidgetStatePropertyAll<Color>(Colors.transparent),
+      side: const WidgetStatePropertyAll<BorderSide>(BorderSide.none),
+      elevation: const WidgetStatePropertyAll<double>(0),
+      shadowColor: const WidgetStatePropertyAll<Color>(Colors.transparent),
+      surfaceTintColor: const WidgetStatePropertyAll<Color>(
+        Colors.transparent,
+      ),
+      minimumSize: const WidgetStatePropertyAll<Size>(Size.square(38)),
+      maximumSize: const WidgetStatePropertyAll<Size>(Size.square(38)),
+      padding: const WidgetStatePropertyAll<EdgeInsetsGeometry>(EdgeInsets.zero),
+      iconSize: const WidgetStatePropertyAll<double>(21),
+      shape: WidgetStatePropertyAll<OutlinedBorder>(
+        RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      ),
     );
   }
 

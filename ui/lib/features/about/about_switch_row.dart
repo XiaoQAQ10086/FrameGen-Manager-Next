@@ -1,6 +1,7 @@
 import 'package:material_ui/material_ui.dart';
 
 import '../../design/app_tokens.dart';
+import '../../design/legacy_switch.dart';
 
 /// Title / hint row with a trailing switch, used by the About panels.
 class AboutSwitchRow extends StatelessWidget {
@@ -47,10 +48,7 @@ class AboutSwitchRow extends StatelessWidget {
           ),
         ),
         const SizedBox(width: 12),
-        Transform.scale(
-          scale: 1.12,
-          child: Switch(value: value, onChanged: onChanged),
-        ),
+        LegacySwitch(value: value, onChanged: onChanged),
       ],
     );
   }

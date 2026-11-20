@@ -12,6 +12,8 @@ use fgm_infra::reframework::ReframeworkService;
 use serde::Deserialize;
 use serde_json::{Value, json};
 
+pub(crate) use super::commands_logging::log_event;
+
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct DeployRequest {
@@ -233,6 +235,7 @@ pub(crate) fn settings_get() -> Result<Value, AppError> {
     let paths = AppPaths::create_default(None)?;
     let store = fgm_infra::settings::SettingsStore::new(paths.config().join("app.json"));
     let settings = store.load()?;
+    super::commands_logging::log_startup(&paths, &settings);
     Ok(json!({ "ok": true, "settings": settings }))
 }
 
@@ -242,6 +245,12 @@ pub(crate) fn settings_set(request: &str) -> Result<Value, AppError> {
     paths.ensure_created()?;
     let store = fgm_infra::settings::SettingsStore::new(paths.config().join("app.json"));
     store.save(&settings)?;
+    log_event(
+        &paths,
+        "info",
+        "settings saved",
+        &[("theme", &settings.theme)],
+    );
     Ok(json!({ "ok": true, "settings": settings }))
 }
 
@@ -286,14 +295,6 @@ pub(crate) fn logs_tail(request: &str) -> Result<Value, AppError> {
     let log = fgm_infra::logging::OperationLog::new(paths.logs().join("fgm.log"));
     let lines = log.tail(request.max_lines.min(5_000))?;
     Ok(json!({ "ok": true, "lines": lines }))
-}
-
-pub(crate) fn log_event(paths: &AppPaths, level: &str, message: &str, fields: &[(&str, &str)]) {
-    let operation_id = std::time::SystemTime::now()
-        .duration_since(std::time::UNIX_EPOCH)
-        .map_or(0, |value| value.as_millis() as u64);
-    let log = fgm_infra::logging::OperationLog::new(paths.logs().join("fgm.log"));
-    let _ = log.append(operation_id, level, message, fields);
 }
 
 #[cfg(test)]

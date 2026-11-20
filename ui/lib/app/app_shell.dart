@@ -200,17 +200,24 @@ class _TopBar extends StatelessWidget {
                     Flexible(
                       child: SingleChildScrollView(
                         scrollDirection: Axis.horizontal,
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: <Widget>[
-                            for (final AppSection section in AppSection.values)
-                              _NavItem(
-                                section: section,
-                                label: _sectionLabel(l10n, section),
-                                selected: section == selected,
-                                onTap: () => onSelected(section),
-                              ),
-                          ],
+                        child: Container(
+                          padding: const EdgeInsets.all(3),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFEEF1F5),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: <Widget>[
+                              for (final AppSection section in AppSection.values)
+                                _NavItem(
+                                  section: section,
+                                  label: _sectionLabel(l10n, section),
+                                  selected: section == selected,
+                                  onTap: () => onSelected(section),
+                                ),
+                            ],
+                          ),
                         ),
                       ),
                     ),

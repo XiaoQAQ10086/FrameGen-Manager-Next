@@ -14,6 +14,7 @@ mod commands_diagnostics;
 mod commands_dlss5;
 mod commands_gpu_spoof;
 mod commands_library;
+mod commands_logging;
 mod commands_logs;
 mod commands_operation;
 mod commands_sm;

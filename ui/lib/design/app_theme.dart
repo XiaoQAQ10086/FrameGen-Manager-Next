@@ -39,8 +39,8 @@ abstract final class AppTheme {
         thumbColor: const WidgetStatePropertyAll<Color>(Colors.white),
         trackColor: WidgetStateProperty.resolveWith<Color>(
           (Set<WidgetState> states) => states.contains(WidgetState.selected)
-              ? const Color(0xFF8FAB98)
-              : const Color(0xFFC8CEC6),
+              ? AppTokens.accent
+              : const Color(0xFFD9DDE3),
         ),
         trackOutlineColor: const WidgetStatePropertyAll<Color>(
           Colors.transparent,

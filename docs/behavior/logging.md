@@ -32,4 +32,5 @@ Rust 实现：`fgm-infra/src/logging/operation_log.rs`。
 - 诊断包打包。
 - 所有 Core 操作统一带 operation id（目前 FFI 层按时间戳记录关键操作）。
 
+- 启动时写入 `app start`（版本、便携标记、数据目录、Windows 版本）、`gpu detected`（名称/驱动/路由/HAGS）、`settings loaded`、`library cache loaded`；日志页把这些 JSON 行格式化为 `时间 级别 消息 字段=值`。
 - 已接入事件：`library scan`、`deploy`、`restore`、`sm enable/disable/restore`、`dlss5 install`、`anr deploy/restore`；每条包含 operation id、级别、英文消息和结构化字段。
