@@ -119,38 +119,29 @@ class Dlss5DetailForm extends StatelessWidget {
           ),
         ],
         const SizedBox(height: 12),
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: <Widget>[
-            Expanded(
-              child: _field(
-                label: l10n.deployGraphicsApi,
-                value: api,
-                values: apis,
-                labelFor: (String value) => value == 'auto'
-                    ? l10n.dlss5ApiAuto(game.graphicsApi)
-                    : value.toUpperCase(),
-                onChanged: onApiChanged,
-              ),
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: _field(
-                label: l10n.optionProxySlot,
-                value: proxy,
-                values: _proxyChoices,
-                labelFor: (String value) {
-                  if (value != 'auto') {
-                    return value;
-                  }
-                  return _autoProxy.isEmpty
-                      ? l10n.optionOff
-                      : l10n.dlss5ProxyAuto(_autoProxy);
-                },
-                onChanged: onProxyChanged,
-              ),
-            ),
-          ],
+        _field(
+          label: l10n.deployGraphicsApi,
+          value: api,
+          values: apis,
+          labelFor: (String value) => value == 'auto'
+              ? l10n.dlss5ApiAuto(game.graphicsApi)
+              : value.toUpperCase(),
+          onChanged: onApiChanged,
+        ),
+        const SizedBox(height: 10),
+        _field(
+          label: l10n.optionProxySlot,
+          value: proxy,
+          values: _proxyChoices,
+          labelFor: (String value) {
+            if (value != 'auto') {
+              return value;
+            }
+            return _autoProxy.isEmpty
+                ? l10n.optionOff
+                : l10n.dlss5ProxyAuto(_autoProxy);
+          },
+          onChanged: onProxyChanged,
         ),
         const SizedBox(height: 10),
         Row(
