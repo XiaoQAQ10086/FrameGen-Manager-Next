@@ -31,9 +31,12 @@ class LibraryListHead extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final AppLocalizations l10n = AppLocalizations.of(context);
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.end,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: <Widget>[
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: <Widget>[
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -103,8 +106,21 @@ class LibraryListHead extends StatelessWidget {
                     : Text(l10n.scanGames),
               ),
             ),
+              ],
+            ),
           ],
         ),
+        if (scanning) ...<Widget>[
+          const SizedBox(height: 10),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(2),
+            child: const LinearProgressIndicator(
+              minHeight: 3,
+              backgroundColor: AppTokens.border,
+              color: AppTokens.accent,
+            ),
+          ),
+        ],
       ],
     );
   }

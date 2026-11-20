@@ -34,8 +34,8 @@ Future<T?> showLegacyDialog<T>({
                     ? () => Navigator.of(pageContext).maybePop()
                     : null,
                 child: BackdropFilter(
-                  filter: ImageFilter.blur(sigmaX: 6, sigmaY: 6),
-                  child: const ColoredBox(color: Color(0x2E101828)),
+                  filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
+                  child: const ColoredBox(color: Color(0x0A101828)),
                 ),
               ),
               Center(

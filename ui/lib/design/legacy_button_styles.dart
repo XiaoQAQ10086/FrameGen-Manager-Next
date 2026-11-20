@@ -17,9 +17,9 @@ abstract final class LegacyButtonStyles {
 
   /// Default `.btn`: quiet blue-grey face with a dark label.
   static ButtonStyle get standard => _style(
-    top: const Color(0xFFFBFDFF),
-    bottom: const Color(0xFFE8F0FA),
-    border: _borderLight,
+    top: const Color(0xFFF0F6FE),
+    bottom: const Color(0xFFD2E0F2),
+    border: const Color(0xFF8FA9C9),
     foreground: _ink,
     shadow: Colors.transparent,
     elevation: 0,
@@ -139,12 +139,12 @@ abstract final class LegacyButtonStyles {
 
   /// Compact `.btn.small` used inside game cards.
   static ButtonStyle compact(ButtonStyle base) => base.copyWith(
-    minimumSize: const WidgetStatePropertyAll<Size>(Size(88, 34)),
+    minimumSize: const WidgetStatePropertyAll<Size>(Size(108, 38)),
     padding: const WidgetStatePropertyAll<EdgeInsetsGeometry>(
-      EdgeInsets.symmetric(horizontal: 16, vertical: 7),
+      EdgeInsets.symmetric(horizontal: 18, vertical: 8),
     ),
     textStyle: WidgetStatePropertyAll<TextStyle>(
-      _textStyle(_foregroundOf(base), 12.5),
+      _textStyle(_foregroundOf(base), 13),
     ),
     shape: WidgetStatePropertyAll<OutlinedBorder>(
       RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
@@ -160,8 +160,8 @@ abstract final class LegacyButtonStyles {
       background: danger ? _dangerFace : _neutralFace,
       border: danger ? _dangerBorder : _borderLight,
       foreground: foreground,
-      size: 34,
-      iconSize: 16,
+      size: 38,
+      iconSize: 17,
     );
   }
 
@@ -187,7 +187,7 @@ abstract final class LegacyButtonStyles {
   }) {
     final bool lightText = foreground.computeLuminance() > 0.6;
     return ButtonStyle(
-      backgroundBuilder: _surface(top: top, bottom: bottom),
+      backgroundBuilder: _surface(top: top, bottom: bottom, border: border),
       foregroundColor: _stateColor(foreground),
       iconColor: _stateColor(foreground),
       side: WidgetStateProperty.resolveWith<BorderSide>(
@@ -196,9 +196,9 @@ abstract final class LegacyButtonStyles {
             return BorderSide(color: border.withValues(alpha: 0.45));
           }
           if (states.contains(WidgetState.hovered)) {
-            return const BorderSide(color: _accentBorder);
+            return const BorderSide(color: _accentBorder, width: 1.4);
           }
-          return BorderSide(color: border);
+          return BorderSide(color: border, width: 1.4);
         },
       ),
       shadowColor: WidgetStatePropertyAll<Color>(shadow ?? _shadow),
@@ -217,7 +217,7 @@ abstract final class LegacyButtonStyles {
         EdgeInsets.symmetric(horizontal: 18, vertical: 9),
       ),
       textStyle: WidgetStatePropertyAll<TextStyle>(
-        _textStyle(foreground, 13, strong: lightText),
+        _textStyle(foreground, 13.5, strong: lightText),
       ),
       shape: WidgetStatePropertyAll<OutlinedBorder>(
         RoundedRectangleBorder(
@@ -308,6 +308,7 @@ abstract final class LegacyButtonStyles {
   static ButtonLayerBuilder _surface({
     required Color top,
     required Color bottom,
+    required Color border,
   }) {
     return (BuildContext context, Set<WidgetState> states, Widget? child) {
       final bool disabled = states.contains(WidgetState.disabled);
@@ -334,6 +335,14 @@ abstract final class LegacyButtonStyles {
               colors: colors,
             ),
             borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
+            border: Border.all(
+              color: disabled
+                  ? border.withValues(alpha: 0.45)
+                  : hovered
+                  ? _accentBorder
+                  : border,
+              width: 1.4,
+            ),
           ),
           child: child,
         ),

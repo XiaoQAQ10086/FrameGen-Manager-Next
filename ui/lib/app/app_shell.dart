@@ -255,9 +255,7 @@ class _NavItem extends StatelessWidget {
           highlightColor: Colors.transparent,
           hoverColor: Colors.transparent,
           focusColor: Colors.transparent,
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 180),
-            curve: Curves.easeOutCubic,
+          child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
             decoration: BoxDecoration(
               color: selected ? Colors.white : Colors.transparent,
@@ -298,7 +296,9 @@ class _NavItem extends StatelessWidget {
                   duration: const Duration(milliseconds: 180),
                   curve: Curves.easeOutCubic,
                   style: TextStyle(
-                    color: selected ? AppTokens.accent : AppTokens.textPrimary,
+                    color: selected
+                        ? AppTokens.accent
+                        : AppTokens.textSecondary,
                     fontSize: 13,
                     fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
                   ),
