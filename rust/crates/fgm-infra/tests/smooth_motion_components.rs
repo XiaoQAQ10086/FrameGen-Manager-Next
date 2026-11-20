@@ -76,6 +76,30 @@ fn allows_smooth_motion_once_frame_generation_is_restored() {
     SmoothMotionComponents::restore(&fixture.target, &paths).unwrap();
 }
 
+#[test]
+fn removes_orphaned_components_that_match_the_pack() {
+    let fixture = Fixture::new("sm-orphaned");
+    fs::write(fixture.target.join("version.dll"), b"runtime").unwrap();
+
+    let removed =
+        SmoothMotionComponents::restore_orphaned_from(&fixture.pack, &fixture.target).unwrap();
+
+    assert_eq!(removed, 1);
+    assert!(!fixture.target.join("version.dll").exists());
+}
+
+#[test]
+fn keeps_a_component_the_user_replaced() {
+    let fixture = Fixture::new("sm-orphaned-modified");
+    fs::write(fixture.target.join("version.dll"), b"not ours").unwrap();
+
+    let removed =
+        SmoothMotionComponents::restore_orphaned_from(&fixture.pack, &fixture.target).unwrap();
+
+    assert_eq!(removed, 0);
+    assert!(fixture.target.join("version.dll").exists());
+}
+
 struct Fixture {
     root: PathBuf,
     pack: PathBuf,

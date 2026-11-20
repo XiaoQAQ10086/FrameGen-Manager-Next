@@ -3,9 +3,10 @@ use std::path::Path;
 use crate::deployment::{
     DeploymentEngine, DeploymentInspector, DeploymentReport, PackDeploymentPlanner, RestoreReport,
 };
+use crate::hashing::FileHasher;
 use crate::pack_json::PackJson;
 use crate::packs::PackLocator;
-use crate::paths::AppPaths;
+use crate::paths::{AppPaths, TargetPath};
 use fgm_domain::deployment::DeploymentState;
 use fgm_domain::error::{AppError, ErrorCode};
 use fgm_domain::gpu::GpuRoute;
@@ -106,5 +107,54 @@ impl SmoothMotionComponents {
             &paths.backups(),
             &paths.state().join("locks"),
         )
+    }
+
+    /// Removes component files that are byte-identical to a Smooth Motion pack.
+    ///
+    /// Used when the manifest lives in another data directory (a portable build
+    /// next to an installed one, or a wiped cache). Only files whose hash still
+    /// matches the pack are deleted, so a DLL the user replaced is never
+    /// touched.
+    pub fn restore_orphaned(target_directory: &Path) -> Result<usize, AppError> {
+        let mut removed = 0;
+        for route in [GpuRoute::Sm86, GpuRoute::Sm75] {
+            let Some(pack_id) = Self::pack_id(route) else {
+                continue;
+            };
+            let Some(pack_directory) = PackLocator::find(pack_id) else {
+                continue;
+            };
+            removed += Self::restore_orphaned_from(&pack_directory, target_directory)?;
+        }
+        Ok(removed)
+    }
+
+    pub fn restore_orphaned_from(
+        pack_directory: &Path,
+        target_directory: &Path,
+    ) -> Result<usize, AppError> {
+        let pack = PackJson::load(&pack_directory.join("pack.json"))?;
+        let mut removed = 0;
+        for file in pack.files.iter().flatten() {
+            let Some(expected) = file.sha256.as_deref() else {
+                continue;
+            };
+            let Ok(target) = TargetPath::combine(target_directory, &file.target) else {
+                continue;
+            };
+            if !target.is_file() {
+                continue;
+            }
+            let Ok(actual) = FileHasher::sha256_file(&target) else {
+                continue;
+            };
+            if !actual.eq_ignore_ascii_case(expected) {
+                continue;
+            }
+            if std::fs::remove_file(&target).is_ok() {
+                removed += 1;
+            }
+        }
+        Ok(removed)
     }
 }

@@ -1,7 +1,7 @@
 use std::path::Path;
 
 use crate::paths::AppPaths;
-use fgm_domain::error::AppError;
+use fgm_domain::error::{AppError, ErrorCode};
 use fgm_domain::gpu::GpuRoute;
 
 use super::smooth_motion_change::SmoothMotionChange;
@@ -46,7 +46,7 @@ impl SmoothMotionFacade {
         paths: &AppPaths,
     ) -> Result<SmoothMotionChange, AppError> {
         let change = SmoothMotionService::set(game, executable, false, paths.root())?;
-        SmoothMotionComponents::restore(target_directory, paths)?;
+        remove_components(target_directory, paths)?;
         Ok(change)
     }
 
@@ -57,7 +57,64 @@ impl SmoothMotionFacade {
         paths: &AppPaths,
     ) -> Result<SmoothMotionChange, AppError> {
         let change = SmoothMotionService::restore(game, executable, paths.root())?;
-        SmoothMotionComponents::restore(target_directory, paths)?;
+        remove_components(target_directory, paths)?;
         Ok(change)
+    }
+}
+
+/// Removes the deployed components, falling back to pack-hash matching.
+///
+/// Component files can have been deployed from a different data directory (a
+/// portable build next to an installed one, or a wiped cache). The manifest
+/// then lives elsewhere, so the files are matched against the pack instead. The
+/// driver setting is global; refusing the whole toggle here would leave Smooth
+/// Motion switched on with no way to switch it off.
+fn remove_components(target_directory: &Path, paths: &AppPaths) -> Result<(), AppError> {
+    let restored =
+        tolerate_missing_manifest(SmoothMotionComponents::restore(target_directory, paths))?;
+    if restored.is_none() {
+        let _ = SmoothMotionComponents::restore_orphaned(target_directory);
+    }
+    Ok(())
+}
+
+/// Turns "this data directory has no component manifest" into "nothing to
+/// remove".
+///
+/// Component files can have been deployed from a different data directory (a
+/// portable build next to an installed one, or a wiped cache). The driver
+/// setting is global, so a hard failure here would leave Smooth Motion switched
+/// on with no way to switch it off.
+fn tolerate_missing_manifest<T>(result: Result<T, AppError>) -> Result<Option<T>, AppError> {
+    match result {
+        Ok(value) => Ok(Some(value)),
+        Err(error) if error.code == ErrorCode::ManifestMissing => Ok(None),
+        Err(error) => Err(error),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn a_missing_manifest_counts_as_nothing_to_restore() {
+        let error = AppError::new(ErrorCode::ManifestMissing);
+        assert!(
+            tolerate_missing_manifest::<()>(Err(error))
+                .unwrap()
+                .is_none()
+        );
+    }
+
+    #[test]
+    fn other_failures_still_fail_the_toggle() {
+        let error = AppError::new(ErrorCode::AccessDenied);
+        assert_eq!(
+            tolerate_missing_manifest::<()>(Err(error))
+                .unwrap_err()
+                .code,
+            ErrorCode::AccessDenied
+        );
     }
 }
