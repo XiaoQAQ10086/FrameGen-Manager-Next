@@ -29,7 +29,7 @@ export async function renderDlss5(root) {
         <aside class="side">
           <section class="panel">
             <div class="ctitle">${t('modeSourceTitle')}</div>
-            <div class="chips"><span class="chip gpu-chip">${t('modeGpusFramegen')}</span></div>
+            <div class="chips"><span class="chip gpu-chip">${t('modeGpusSmDlss5')}</span></div>
             <a class="source-link" data-action="github" href="#">${githubIcon}<span>${t('modeSourceLink')}</span></a>
           </section>
         </aside>
@@ -109,7 +109,7 @@ function bind(root) {
         openDetail(root, game);
       } else if (action === 'github') {
         event.preventDefault();
-        window.fgm.openUrl('https://github.com/apex-compute/DLSS5');
+        window.fgm.openUrl('https://github.com/ghostinthecamera/GITC-Uplift');
       } else if (action === 'scan') {
         await call('library.scan');
         state.games = (await call('library.list')).games || [];
@@ -146,6 +146,8 @@ function openDetail(root, game) {
   detailApi = 'auto';
   detailProxy = 'auto';
   const reply = inspections[game.id] || {};
+  const route = String(state.gpu?.route || '').toLowerCase();
+  const gpuBlocked = !['sm86', 'sm75'].includes(route);
   detail?.remove();
   detail = document.createElement('div');
   detail.className = 'overlay';
@@ -176,13 +178,14 @@ function openDetail(root, game) {
           </div>
         </div>
         <p class="hint">${t('dlss5DetailSubtitle')}</p>
+        ${gpuBlocked ? `<p class="hint danger">${t('gpuIncompatible')}</p>` : ''}
       </div>
       <footer class="modal-foot">
         <span class="muted small">${t('deployCloseGameHint')}</span>
         <div class="foot-actions">
           <button class="btn" data-action="open-folder" type="button">${t('openFolder')}</button>
           <button class="btn danger" data-action="uninstall" type="button" ${deployed(reply) ? '' : 'disabled'}>${t('dlss5Uninstall')}</button>
-          <button class="btn success" data-action="install" type="button">${t('dlss5Install')}</button>
+          <button class="btn success" data-action="install" type="button" ${gpuBlocked ? 'disabled' : ''} ${gpuBlocked ? `title="${esc(t('gpuIncompatible'))}"` : ''}>${t('dlss5Install')}</button>
         </div>
       </footer>
     </section>`;

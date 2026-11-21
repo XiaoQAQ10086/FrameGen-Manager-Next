@@ -1,7 +1,9 @@
 use std::path::Path;
 
 use fgm_domain::error::{AppError, ErrorCode};
+use fgm_domain::gpu::GpuRoute;
 use fgm_infra::anr::{AnrDeploymentService, AnrPackageService};
+use fgm_infra::gpu::GpuDetector;
 use fgm_infra::paths::AppPaths;
 use fgm_infra::platform::FilePicker;
 use serde::Deserialize;
@@ -72,6 +74,19 @@ pub(crate) fn anr_deploy(request: &str) -> Result<Value, AppError> {
         .transpose()?;
     let paths = data_paths(request.data_dir.as_deref())?;
     paths.ensure_created()?;
+    if let Some(gpu) = GpuDetector::detect()
+        && !matches!(
+            gpu.route,
+            GpuRoute::Sm86 | GpuRoute::Sm75 | GpuRoute::NotNeeded | GpuRoute::Gtx16
+        )
+    {
+        return Err(AppError::new(ErrorCode::GpuUnsupported)
+            .with("route", format!("{:?}", gpu.route))
+            .with(
+                "reason",
+                "ANR requires a supported NVIDIA, AMD or Intel GPU",
+            ));
+    }
     let package = AnrPackageService::load_current(paths.root()).ok_or_else(|| {
         AppError::new(ErrorCode::PackNotFound).with("reason", "no ANR package imported")
     })?;

@@ -30,7 +30,7 @@ export async function renderSm(root) {
           <section class="panel" data-role="compat"></section>
           <section class="panel">
             <div class="ctitle">${t('modeSourceTitle')}</div>
-            <div class="chips"><span class="chip gpu-chip">${t('modeGpusFramegen')}</span></div>
+            <div class="chips"><span class="chip gpu-chip">${t('modeGpusSmDlss5')}</span></div>
             <a class="source-link" data-action="github" href="#">${githubIcon}<span>${t('modeSourceLink')}</span></a>
           </section>
           <section class="panel">
@@ -67,14 +67,16 @@ export async function renderSm(root) {
 
 function renderCompat(panel) {
   const gpu = state.gpu;
-  const ready = Boolean(gpu?.driverSupported);
+  const route = String(gpu?.route || '').toLowerCase();
+  const routeOk = ['sm86', 'sm75'].includes(route);
+  const ready = Boolean(gpu?.driverSupported) && routeOk;
   panel.innerHTML = `
     <div class="ctitle">${t('smCompatibilityTitle')}</div>
     <div class="chips"><span class="chip ${ready ? 'ok' : 'warn'}">${ready ? t('smReady') : t('smUpdate')}</span></div>
     <div class="kv2"><span>${t('smGpuLabel')}</span><b class="badge">${esc(gpu?.name || '—')}</b></div>
     <div class="kv2"><span>${t('gpuDriverVersionLabel')}</span><b class="badge">${esc(gpu?.driverVersion || '—')}</b></div>
     <div class="kv2"><span>${t('smMinimum')}</span><b class="badge">616.64</b></div>
-    <p class="hint">${gpu ? (ready ? t('smDriverOk') : t('smDriverTooOld', { current: gpu.driverVersion, min: '616.64' })) : t('gpuMissing')}</p>`;
+    <p class="hint">${gpu ? (ready ? t('smDriverOk') : (routeOk ? t('smDriverTooOld', { current: gpu.driverVersion, min: '616.64' }) : t('gpuIncompatible'))) : t('gpuMissing')}</p>`;
 }
 
 async function load() {
@@ -120,8 +122,11 @@ function cardMarkup(game, index) {
   const enabled = status.enabled === true;
   const framegenOn = (mode.framegen || 'notDeployed') !== 'notDeployed';
   const outdated = component === 'outdated';
-  const driverBlocked = !state.gpu?.driverSupported;
+  const route = String(state.gpu?.route || '').toLowerCase();
+  const routeBlocked = !['sm86', 'sm75'].includes(route);
+  const driverBlocked = routeBlocked || !state.gpu?.driverSupported;
   const blocked = (framegenOn && !enabled) || (driverBlocked && !enabled);
+  const blockedTitle = framegenOn ? t('smConflict') : (routeBlocked ? t('gpuIncompatible') : t('smDriverTooOld', { current: state.gpu?.driverVersion || '—', min: '616.64' }));
   const cover = state.covers[game.id];
   const initial = game.name ? game.name.slice(0, 1) : '?';
   return `
@@ -141,7 +146,7 @@ function cardMarkup(game, index) {
       ${status.detail ? `<div class="hint">${esc(status.detail)}</div>` : ''}
       ${(status.profiles || []).length ? `<div class="hint">${t('smProfileLabel')}: ${esc(status.profiles.join(' / '))}</div>` : ''}
       <div class="gactions">
-        <button class="btn small ${enabled ? 'danger' : 'success'}" data-action="${enabled ? 'disable' : 'enable'}" data-id="${esc(game.id)}" type="button" ${blocked ? 'disabled' : ''} ${blocked ? `title="${esc(framegenOn ? t('smConflict') : t('smDriverTooOld', { current: state.gpu?.driverVersion || '—', min: '616.64' }))}"` : ''}>${enabled ? t('smDisable') : (outdated ? t('smUpdate') : t('smEnable'))}</button>
+        <button class="btn small ${enabled ? 'danger' : 'success'}" data-action="${enabled ? 'disable' : 'enable'}" data-id="${esc(game.id)}" type="button" ${blocked ? 'disabled' : ''} ${blocked ? `title="${esc(blockedTitle)}"` : ''}>${enabled ? t('smDisable') : (outdated ? t('smUpdate') : t('smEnable'))}</button>
         <button class="btn small launch" data-action="launch" data-id="${esc(game.id)}" type="button">${t('launchGame')}</button>
         <span class="spacer"></span>
         <button class="btn small icon-only" data-action="folder" data-id="${esc(game.id)}" type="button" title="${esc(t('openFolder'))}">${folderIcon}</button>
@@ -230,7 +235,7 @@ function bind(root) {
         }
       } else if (action === 'github') {
         event.preventDefault();
-        window.fgm.openUrl('https://github.com/apex-compute/ANR');
+        window.fgm.openUrl('https://github.com/pipotoufikxyz-lgtm/dlssg_for_sm86-MFG-version');
       }
     } catch (error) {
       toast(error.message, 'error');

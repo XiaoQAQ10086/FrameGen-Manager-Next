@@ -28,7 +28,7 @@ export async function renderAnr(root) {
           <section class="panel" data-role="package"></section>
           <section class="panel">
             <div class="ctitle">${t('modeSourceTitle')}</div>
-            <div class="chips"><span class="chip gpu-chip">${t('modeGpusFramegen')}</span></div>
+            <div class="chips"><span class="chip gpu-chip">${t('modeGpusAnr')}</span></div>
             <a class="source-link" data-action="github" href="#">${githubIcon}<span>${t('modeSourceLink')}</span></a>
           </section>
           <section class="panel">
@@ -97,6 +97,9 @@ function renderGames(root) {
 function cardMarkup(game, index) {
   const anr = (modes[game.id] || {}).anr || 'notDeployed';
   const deployed = anr !== 'notDeployed';
+  const route = String(state.gpu?.route || '').toLowerCase();
+  const gpuBlocked = Boolean(state.gpu) && !['sm86', 'sm75', 'notneeded', 'gtx16'].includes(route);
+  const blocked = !packageInfo || gpuBlocked;
   const cover = state.covers[game.id];
   return `
     <article class="gcard" style="animation-delay:${Math.min(index * 35, 350)}ms">
@@ -106,6 +109,7 @@ function cardMarkup(game, index) {
           <div class="gname">${esc(game.name)}</div>
           <div class="badges">
             <span class="badge ${deployed ? (anr === 'needsRepair' ? 'warn' : 'ok') : 'dim'}">${esc(anrLabel(anr))}</span>
+            ${gpuBlocked ? `<span class="badge danger">${esc(t('gpuIncompatible'))}</span>` : ''}
           </div>
         </div>
       </div>
@@ -113,7 +117,7 @@ function cardMarkup(game, index) {
       <div class="gactions">
         ${deployed
           ? `<button class="btn small danger" data-action="restore" data-id="${esc(game.id)}" type="button">${t('restore')}</button>`
-          : `<button class="btn small success" data-action="deploy" data-id="${esc(game.id)}" type="button" ${packageInfo ? '' : 'disabled'}>${t('deploy')}</button>`}
+          : `<button class="btn small success" data-action="deploy" data-id="${esc(game.id)}" type="button" ${blocked ? 'disabled' : ''} ${blocked ? `title="${esc(t('gpuIncompatible'))}"` : ''}>${t('deploy')}</button>`}
         <button class="btn small launch" data-action="launch" data-id="${esc(game.id)}" type="button">${t('launchGame')}</button>
         <span class="spacer"></span>
         <button class="btn small icon-only" data-action="folder" data-id="${esc(game.id)}" type="button" title="${esc(t('openFolder'))}">${folderIcon}</button>

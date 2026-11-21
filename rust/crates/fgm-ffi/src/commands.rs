@@ -3,11 +3,13 @@ use std::path::{Path, PathBuf};
 
 use fgm_domain::deployment::DeploymentState;
 use fgm_domain::error::{AppError, ErrorCode};
+use fgm_domain::gpu::GpuRoute;
 use fgm_domain::pack::IniSetting;
 use fgm_domain::version::VERSION;
 use fgm_infra::deployment::{
     DeploymentEngine, DeploymentInspector, PackDeploymentPlanner, ProxyOwner, ProxyStatus,
 };
+use fgm_infra::gpu::GpuDetector;
 use fgm_infra::pack_json::PackJson;
 use fgm_infra::packs::PackLocator;
 use fgm_infra::paths::AppPaths;
@@ -89,6 +91,17 @@ pub(crate) fn deploy(request: &str) -> Result<Value, AppError> {
     }
 
     if pack.id.starts_with("framegen.") {
+        let gpu = GpuDetector::detect().ok_or_else(|| {
+            AppError::new(ErrorCode::GpuUnsupported).with("reason", "NVIDIA GPU not detected")
+        })?;
+        if !matches!(
+            gpu.route,
+            GpuRoute::Sm86 | GpuRoute::Sm75 | GpuRoute::NotNeeded
+        ) {
+            return Err(AppError::new(ErrorCode::GpuUnsupported)
+                .with("route", format!("{:?}", gpu.route))
+                .with("reason", "frame generation requires an RTX 20-50 GPU"));
+        }
         if let Some(slot) = request.proxy_slot.as_deref() {
             let entries = ProxyStatus::inspect(&target_directory, &paths.backups())?;
             if let Some(entry) = entries

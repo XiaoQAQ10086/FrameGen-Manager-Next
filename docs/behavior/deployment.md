@@ -70,6 +70,7 @@ manifest 状态：`Installing → Installed / RolledBack / Partial`，还原后 
 
 ## 部署流程
 
+- 软件拦截门槛：帧生成仅允许 NVIDIA 路由 Sm86 / Sm75 / NotNeeded（RTX 20–50）；DLSS5 仅允许 Sm86 / Sm75（RTX 20/30）；SM 仅允许 Sm86 / Sm75 且驱动 ≥616.64；ANR 对已识别的 NVIDIA Pascal/Unsupported 路由拒绝，GTX 16 与 RTX 20–50 允许，AMD/Intel（未识别）不拦截。
 0. 与 Smooth Motion 互斥：部署前读取目标 EXE 的驱动 profile，`Smooth Motion - Enable` 为 1 时返回 `Conflict`，界面显示红色徽章“冲突：已开启 Smooth Motion”并锁死部署/更新按钮；已部署的帧生成仍可还原/清理，用于解除冲突。
 1. 校验目标：绝对路径、目录存在、不是盘符根/Windows/Program Files 等受保护目录。
 2. 通过 `FGM_PACKS_DIR`、`<exe>/packs`、数据目录 `packs` 或仓库 `packs`/`assets/packs` 定位 pack；同名 pack 取版本最高且满足 `minAppVersion` 的一份。

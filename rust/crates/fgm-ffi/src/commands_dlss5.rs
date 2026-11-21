@@ -2,9 +2,11 @@ use std::ffi::c_char;
 use std::path::{Path, PathBuf};
 
 use fgm_domain::error::{AppError, ErrorCode};
+use fgm_domain::gpu::GpuRoute;
 use fgm_domain::library::GraphicsApi;
 use fgm_domain::version::VERSION;
 use fgm_infra::dlss5::Dlss5Service;
+use fgm_infra::gpu::GpuDetector;
 use fgm_infra::pack_json::PackJson;
 use fgm_infra::packs::PackLocator;
 use serde::Deserialize;
@@ -42,6 +44,14 @@ pub(crate) fn dlss5_install(request: &str) -> Result<Value, AppError> {
     let target_directory = absolute(Path::new(&request.target_dir))?;
     let paths = data_paths(request.data_dir.as_deref())?;
     paths.ensure_created()?;
+    let gpu = GpuDetector::detect().ok_or_else(|| {
+        AppError::new(ErrorCode::GpuUnsupported).with("reason", "NVIDIA GPU not detected")
+    })?;
+    if !matches!(gpu.route, GpuRoute::Sm86 | GpuRoute::Sm75) {
+        return Err(AppError::new(ErrorCode::GpuUnsupported)
+            .with("route", format!("{:?}", gpu.route))
+            .with("reason", "DLSS5 requires an RTX 20 or 30 GPU"));
+    }
     let api = parse_api(&request.api)?;
     let app_version = request.app_version.unwrap_or_else(|| VERSION.to_string());
 
