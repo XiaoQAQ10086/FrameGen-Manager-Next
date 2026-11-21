@@ -10,7 +10,7 @@
                   ],
     "files":  [
                   {
-                      "source":  "gitc-uplift.addon64",
+                      "source":  "Addons/gitc-uplift.addon64",
                       "target":  "gitc-uplift.addon64",
                       "role":  "addon",
                       "required":  true,
@@ -19,7 +19,7 @@
                       "size":  6373376
                   },
                   {
-                      "source":  "gitc-uplift.addon32",
+                      "source":  "Addons/gitc-uplift.addon32",
                       "target":  "gitc-uplift.addon32",
                       "role":  "addon",
                       "required":  true,
@@ -28,7 +28,7 @@
                       "size":  3087360
                   },
                   {
-                      "source":  "gitc-uplift-helper64.exe",
+                      "source":  "Addons/gitc-uplift-helper64.exe",
                       "target":  "gitc-uplift-helper64.exe",
                       "role":  "other",
                       "required":  true,
@@ -37,7 +37,7 @@
                       "size":  3346944
                   },
                   {
-                      "source":  "Uplift.fx",
+                      "source":  "Shaders/Uplift.fx",
                       "target":  "reshade-shaders/Shaders/GITC-Uplift/Uplift.fx",
                       "role":  "shader",
                       "required":  true,
@@ -46,7 +46,7 @@
                       "size":  10219
                   },
                   {
-                      "source":  "UpliftMask.fx",
+                      "source":  "Shaders/UpliftMask.fx",
                       "target":  "reshade-shaders/Shaders/GITC-Uplift/UpliftMask.fx",
                       "role":  "shader",
                       "required":  true,

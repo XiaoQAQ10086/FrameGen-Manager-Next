@@ -260,6 +260,8 @@ async function install(root, game) {
     await load();
     renderWall(root);
     toast(t('dlss5Complete', { proxy: reply.proxyModule || '—' }));
+  } catch (error) {
+    toast(`${t('dlss5Install')}: ${error.message}`, 'error');
   } finally {
     hideProgress();
   }
@@ -279,6 +281,8 @@ async function uninstall(root, game) {
         ? t('dlss5UninstallConflicts', { count: reply.conflicts.length })
         : t('dlss5Uninstalled'),
     );
+  } catch (error) {
+    toast(`${t('dlss5Uninstall')}: ${error.message}`, 'error');
   } finally {
     hideProgress();
   }
