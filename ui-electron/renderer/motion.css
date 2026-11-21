@@ -14,7 +14,6 @@
     width var(--motion-page) var(--motion-ease),
     top var(--motion-standard) var(--motion-ease),
     height var(--motion-standard) var(--motion-ease);
-  will-change: left, width;
 }
 
 .nav-item {

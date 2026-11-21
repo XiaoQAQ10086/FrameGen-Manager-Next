@@ -7,9 +7,9 @@ import { loadCovers } from './covers.js';
 import { openDeployDialog, restoreGame } from './deploy.js';
 import { showRemoved } from './removed.js';
 
-export function renderFramegen({ preserveScroll = false } = {}) {
+export function renderFramegen({ preserveScroll = false, root = null } = {}) {
   if (state.section !== 'framegen') return;
-  const view = $('#view');
+  const view = root || $('.page-host') || $('#view');
   view.innerHTML = `
     <section class="page">
       <header class="listhead">
@@ -45,7 +45,8 @@ export function renderFramegen({ preserveScroll = false } = {}) {
   renderSpoofPanel();
   renderAssetsPanel();
   renderGames();
-  bindFramegenActions();
+  bindFramegenActions(view);
+  view.dataset.ready = '1';
   if (!preserveScroll) {
     requestAnimationFrame(() => {
       const side = $('.side');
@@ -122,9 +123,14 @@ function cardMarkup(game, index) {
   const smBlocked = smOn && !deployed;
   const anrOn = mode.anr && mode.anr !== 'notDeployed';
   const route = String(state.gpu?.route || '').toLowerCase();
-  const gpuBlocked = !['sm86', 'sm75', 'notneeded'].includes(route);
-  const blocked = smBlocked || (anrOn && !deployed) || (gpuBlocked && !deployed);
-  const blockedTitle = smBlocked ? t('smConflict') : (anrOn ? t('anrConflict') : t('gpuIncompatible'));
+  const gpuPending = !state.gpu;
+  const gpuBlocked = !gpuPending && !['sm86', 'sm75', 'notneeded'].includes(route);
+  const modesPending = !state.modesReady;
+  const blocked = smBlocked || (anrOn && !deployed) || (gpuBlocked && !deployed)
+    || ((gpuPending || modesPending) && !deployed);
+  const blockedTitle = smBlocked ? t('smConflict')
+    : (anrOn ? t('anrConflict')
+      : (gpuPending || modesPending ? t('libraryStatusLoading') : t('gpuIncompatible')));
   const occupied = (mode.proxies || []).filter((entry) => !entry.ownedByFramegen);
   return `
     <article class="gcard" style="animation-delay:${Math.min(index * 35, 350)}ms">
@@ -137,7 +143,9 @@ function cardMarkup(game, index) {
           <div class="badges">
             <span class="badge">${esc(sourceLabel(game.source))}</span>
             <span class="badge">${esc(apiLabel(game.graphicsApi))}</span>
-            ${deployed ? `<span class="badge state ${stateClass}">${esc(stateBadge)}</span>` : ''}
+            ${deployed
+              ? `<span class="badge state ${stateClass}">${esc(stateBadge)}</span>`
+              : (modesPending ? `<span class="badge dim">${esc(t('libraryStatusLoading'))}</span>` : '')}
             ${smOn ? `<span class="badge danger">${esc(t('smConflict'))}</span>` : ''}
             ${occupied.map((entry) => `<span class="badge warn">${esc(entry.module)} · ${esc(proxyOwnerLabel(entry.owner))}</span>`).join('')}
             ${anrOn ? `<span class="badge danger">${esc(t('anrConflict'))}</span>` : ''}
@@ -171,8 +179,7 @@ function gameById(id) {
   return state.games.find((game) => game.id === id);
 }
 
-function bindFramegenActions() {
-  const view = $('#view');
+function bindFramegenActions(view = $('.page-host') || $('#view')) {
   view.onclick = async (event) => {
     const target = event.target.closest('[data-action]');
     if (!target) return;
@@ -243,7 +250,6 @@ async function scan() {
     });
     $('.gp-percent').textContent = '100%';
     $('.gp-track > i').style.width = '100%';
-    await new Promise((resolve) => setTimeout(resolve, 450));
     await refresh();
     toast('扫描完成');
   } catch (error) {
@@ -286,12 +292,13 @@ export async function refresh() {
   ]);
   state.gpu = gpu.gpu;
   state.modes = Object.fromEntries((modes.modes || []).map((mode) => [mode.gameId, mode]));
+  state.modesReady = true;
   state.games = games.games || [];
   state.spoof = spoof;
   applyChrome();
   const languageSelect = $('#lang-select');
   if (languageSelect) languageSelect.value = state.settings.language || 'system';
-  const view = $('#view');
+  const view = $('.page-host') || $('#view');
   const list = $('[data-role="games"]');
   const side = $('.side');
   const scroll = {
@@ -299,7 +306,7 @@ export async function refresh() {
     list: list?.scrollTop || 0,
     side: side?.scrollTop || 0,
   };
-  renderFramegen({ preserveScroll: true });
+  renderFramegen({ preserveScroll: true, root: view });
   requestAnimationFrame(() => {
     const nextView = $('#view');
     const nextList = $('[data-role="games"]');

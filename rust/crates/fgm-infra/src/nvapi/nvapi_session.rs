@@ -237,6 +237,75 @@ impl NvApiSession {
         Ok(matches)
     }
 
+    /// Indexes every driver profile's applications once for a batch of EXEs.
+    pub fn profiles_for_executables(
+        &self,
+        executables: &[std::path::PathBuf],
+    ) -> Result<Vec<Vec<NvApiProfile>>, AppError> {
+        let targets = executables
+            .iter()
+            .map(|path| absolute(path))
+            .collect::<Result<Vec<_>, _>>()?;
+        let mut result = vec![Vec::new(); targets.len()];
+        let mut buffer = vec![0_u8; APPLICATION_SLOTS * APPLICATION_BUFFER_SIZE];
+        let mut index = 0_u32;
+        loop {
+            let mut profile = ptr::null_mut();
+            let status =
+                unsafe { (self.functions.enum_profiles)(self.session, index, &mut profile) };
+            if status != 0 || profile.is_null() {
+                break;
+            }
+            let profile = NvApiProfile::from_raw(profile);
+            index += 1;
+            if self.is_base_profile(profile) {
+                continue;
+            }
+            let applications = self.profile_applications(profile, &mut buffer);
+            if applications.is_empty() {
+                continue;
+            }
+            for (slot, executable) in targets.iter().enumerate() {
+                if applications
+                    .iter()
+                    .any(|stored| matches_executable(stored, executable))
+                {
+                    result[slot].push(profile);
+                }
+            }
+        }
+        Ok(result)
+    }
+
+    fn profile_applications(&self, profile: NvApiProfile, buffer: &mut [u8]) -> Vec<String> {
+        initialize_application_slots(buffer);
+        let mut count = APPLICATION_SLOTS as u32;
+        let result = unsafe {
+            (self.functions.enum_applications)(
+                self.session,
+                profile.as_ptr(),
+                0,
+                &mut count,
+                buffer.as_mut_ptr(),
+            )
+        };
+        if result != 0 {
+            return Vec::new();
+        }
+        let limit = (count as usize).min(APPLICATION_SLOTS);
+        let mut found = Vec::new();
+        for index in 0..limit {
+            let slot = index * APPLICATION_BUFFER_SIZE;
+            for offset in [8, 4_104, 8_200, 12_296] {
+                let stored = read_wide(buffer, slot + offset, 2_048);
+                if !stored.is_empty() {
+                    found.push(stored);
+                }
+            }
+        }
+        found
+    }
+
     pub fn is_base_profile(&self, profile: NvApiProfile) -> bool {
         self.base_profile().is_ok_and(|base| base == profile)
     }

@@ -3,6 +3,7 @@ import {
   toast, trashIcon,
 } from './core.js';
 import { t } from './l10n.js';
+import { loadCovers } from './covers.js';
 import { showRemoved } from './removed.js';
 
 let packageInfo = null;
@@ -52,6 +53,7 @@ export async function renderAnr(root) {
   renderPackage(root);
   renderGames(root);
   bind(root);
+  root.dataset.ready = '1';
 }
 
 async function load() {
@@ -93,6 +95,7 @@ function renderGames(root) {
     return;
   }
   list.innerHTML = state.games.map((game, index) => cardMarkup(game, index)).join('');
+  loadCovers();
 }
 
 function cardMarkup(game, index) {
@@ -110,7 +113,9 @@ function cardMarkup(game, index) {
   return `
     <article class="gcard" style="animation-delay:${Math.min(index * 35, 350)}ms">
       <div class="gtop">
-        ${cover ? `<img class="thumb" src="${esc(cover)}" alt="">` : `<div class="thumb ph2">${esc(game.name.slice(0, 1))}</div>`}
+        ${cover
+          ? `<img class="thumb" data-cover="${esc(game.id)}" src="${esc(cover)}" alt="" decoding="async">`
+          : `<div class="thumb ph2" data-cover="${esc(game.id)}">${esc(game.name.slice(0, 1))}</div>`}
         <div class="ginfo">
           <div class="gname">${esc(game.name)}</div>
           <div class="badges">

@@ -1,5 +1,6 @@
 import { $, call, confirmAction, esc, githubIcon, hideProgress, prettyPath, showProgress, state, toast } from './core.js';
 import { t } from './l10n.js';
+import { loadCovers } from './covers.js';
 import { showRemoved } from './removed.js';
 
 let inspections = {};
@@ -11,6 +12,8 @@ let recording = false;
 let serial = 0;
 let cachedKey = '';
 let cachedAt = 0;
+const CACHE_MS = 60000;
+const INSPECT_WORKERS = 4;
 
 export async function renderDlss5(root) {
   const current = ++serial;
@@ -48,32 +51,39 @@ export async function renderDlss5(root) {
   if (Object.keys(inspections).length && key === cachedKey) {
     renderWall(root);
     bind(root);
-    if (Date.now() - cachedAt < 10000) return;
-    load().then(() => {
+    root.dataset.ready = '1';
+    if (Date.now() - cachedAt < CACHE_MS) return;
+    load(root).then(() => {
       if (current === serial && state.section === 'dlss5') renderWall(root);
     });
     return;
   }
-  await load();
+  await load(root);
   cachedKey = key;
   cachedAt = Date.now();
   if (current !== serial || state.section !== 'dlss5') return;
   renderWall(root);
   bind(root);
+  root.dataset.ready = '1';
 }
 
-async function load() {
-  const results = await Promise.all(
-    state.games.map(async (game) => {
+async function load(root) {
+  const games = state.games.slice();
+  let next = 0;
+  const worker = async () => {
+    while (next < games.length) {
+      const game = games[next++];
       try {
-        const reply = await call('dlss5.inspect', { targetDir: game.targetDirectory });
-        return [game.id, reply];
+        inspections[game.id] = await call('dlss5.inspect', { targetDir: game.targetDirectory });
       } catch {
-        return [game.id, null];
+        inspections[game.id] = null;
       }
-    }),
+      if (state.section === 'dlss5' && root.isConnected) renderWall(root);
+    }
+  };
+  await Promise.all(
+    Array.from({ length: Math.min(INSPECT_WORKERS, games.length) }, worker),
   );
-  inspections = Object.fromEntries(results);
 }
 
 function deployed(reply) {
@@ -94,7 +104,9 @@ function renderWall(root) {
       const legacy = reply?.legacyFiles?.length > 0;
       return `
         <div class="tile" role="button" tabindex="0" data-action="open" data-id="${esc(game.id)}" style="--i:${index}">
-          ${cover ? `<img src="${esc(cover)}" alt="" loading="lazy" decoding="async">` : `<div class="ph">${esc(game.name.slice(0, 1))}</div>`}
+          ${cover
+            ? `<img data-cover="${esc(game.id)}" src="${esc(cover)}" alt="" loading="lazy" decoding="async">`
+            : `<div class="ph" data-cover="${esc(game.id)}">${esc(game.name.slice(0, 1))}</div>`}
           ${legacy ? `<span class="ribbon warn">${t('dlss5LegacyRibbon')}</span>` : ''}
           <span class="meta">
             <span class="name">${esc(game.name)}</span>
@@ -104,6 +116,7 @@ function renderWall(root) {
         </div>`;
     })
     .join('');
+  loadCovers();
 }
 
 function bind(root) {
@@ -116,7 +129,7 @@ function bind(root) {
       if (action === 'removed') {
         await showRemoved(async () => {
           state.games = (await call('library.list')).games || [];
-          await load();
+          await load(root);
           cachedAt = Date.now();
           renderWall(root);
         });
@@ -128,14 +141,14 @@ function bind(root) {
       } else if (action === 'scan') {
         await call('library.scan');
         state.games = (await call('library.list')).games || [];
-        await load();
+        await load(root);
         renderWall(root);
       } else if (action === 'add') {
         const picked = await call('pickExecutable');
         if (!picked.cancelled) {
           await call('library.addManual', { path: picked.path });
           state.games = (await call('library.list')).games || [];
-          await load();
+          await load(root);
           cachedAt = Date.now();
           renderWall(root);
         }
@@ -264,7 +277,8 @@ async function install(root, game) {
     });
     detail?.remove();
     detail = null;
-    await load();
+    cachedAt = 0;
+    await load(root);
     renderWall(root);
     toast(t('dlss5Complete', { proxy: reply.proxyModule || '—' }));
   } catch (error) {
@@ -286,7 +300,8 @@ async function uninstall(root, game) {
     const reply = await call('dlss5.uninstall', { targetDir: game.targetDirectory });
     detail?.remove();
     detail = null;
-    await load();
+    cachedAt = 0;
+    await load(root);
     renderWall(root);
     toast(
       reply.conflicts?.length
@@ -332,10 +347,11 @@ async function recordHotkey(game) {
         virtualKey,
         exePath: game.renderExe,
       });
-      await load();
+      const page = document.querySelector('.page-host');
+      if (page) await load(page);
       const badge = detail?.querySelector('.hotkey-row .badge');
       if (badge) badge.textContent = hotkeyLabel(virtualKey);
-      renderWall(document.querySelector('#view'));
+      renderWall(document.querySelector('.page-host') || document.querySelector('#view'));
     } catch (error) {
       toast(error.message, 'error');
     } finally {

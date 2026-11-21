@@ -207,7 +207,6 @@ button, select { font: inherit; }
 .sk-body i:nth-child(1) { width: 38%; }
 .sk-body i:nth-child(2) { width: 72%; }
 .sk-body i:nth-child(3) { width: 55%; }
-@keyframes shimmer { 0%, 100% { opacity: .45; } 50% { opacity: 1; } }
 
 /* DLSS5 卡片墙（沿用原项目的 tile 布局） */
 .wall { display: grid; grid-template-columns: repeat(auto-fill, minmax(168px, 1fr)); gap: var(--space-4); }
@@ -414,8 +413,7 @@ button, select { font: inherit; }
   display: grid;
   place-items: center;
   padding: var(--space-6);
-  background: rgba(16, 24, 40, .10);
-  backdrop-filter: blur(6px) saturate(1.02);
+  background: rgba(16, 24, 40, .26);
   animation: dimIn .16s var(--ease) both;
 }
 .modal {
@@ -695,11 +693,10 @@ select:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(0, 122, 2
   background: linear-gradient(90deg, #48a7ff, var(--accent), #7cc4ff, var(--accent));
   background-size: 220% 100%;
   transition: width .2s var(--ease);
-  animation: progressFlow 1.2s linear infinite;
 }
 .global-progress.indeterminate .gp-track i {
   width: 32%;
-  animation: progressFlow 1.2s linear infinite, progressIndeterminate 1.1s ease-in-out infinite;
+  animation: progressIndeterminate 1.1s ease-in-out infinite;
 }
 @keyframes progressIndeterminate {
   from { transform: translateX(-110%); }
@@ -782,7 +779,6 @@ select { min-width: 160px; }
 
 @keyframes coverIn { from { opacity: 0; transform: scale(1.015); } to { opacity: 1; transform: none; } }
 .cover { animation: coverIn .32s var(--ease) both; }
-@keyframes progressFlow { from { background-position: 0% 0; } to { background-position: 220% 0; } }
 .btn.scan.loading { position: relative; color: transparent; text-shadow: none; pointer-events: none; }
 .btn.scan.loading::after {
   content: "";

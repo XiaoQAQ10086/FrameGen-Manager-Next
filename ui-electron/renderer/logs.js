@@ -19,6 +19,7 @@ export async function renderLogs(root) {
     </section>`;
   await load(root);
   bind(root);
+  root.dataset.ready = '1';
 }
 
 function format(line) {

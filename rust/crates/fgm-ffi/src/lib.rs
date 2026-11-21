@@ -212,10 +212,16 @@ pub extern "C" fn fgm_dlss5_uninstall_json(request: *const u8, length: usize) ->
 /// Checks the update manifest against the running version.
 #[unsafe(no_mangle)]
 pub extern "C" fn fgm_update_check_json() -> *mut c_char {
-    execute(|| match commands_update::update_check() {
+    execute(|| match commands_update::update_check("{}") {
         Ok(value) => value,
         Err(error) => error_json(&error),
     })
+}
+
+/// Checks with a JSON request (`force`, `dataDir`), used by the napi bridge.
+#[unsafe(no_mangle)]
+pub extern "C" fn fgm_update_check_request_json(request: *const u8, length: usize) -> *mut c_char {
+    execute_request(request, length, commands_update::update_check)
 }
 
 /// Downloads the latest installer without launching it.

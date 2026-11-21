@@ -5,4 +5,5 @@ contextBridge.exposeInMainWorld('fgm', {
   openUrl: (url) => ipcRenderer.invoke('fgm:openUrl', url),
   quit: () => ipcRenderer.invoke('fgm:quit'),
   windowControl: (action) => ipcRenderer.invoke('fgm:window', action),
+  perf: (entry) => ipcRenderer.send('fgm:perf', entry),
 });

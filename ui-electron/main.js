@@ -2,6 +2,9 @@ const { app, BrowserWindow, ipcMain, screen, shell } = require('electron');
 const fs = require('node:fs');
 const path = require('node:path');
 const { pathToFileURL } = require('node:url');
+const { performance } = require('node:perf_hooks');
+
+app.commandLine.appendSwitch('js-flags', '--max-semi-space-size=8');
 
 const packaged = app.isPackaged;
 if (!packaged) app.commandLine.appendSwitch('force-renderer-accessibility');
@@ -14,6 +17,22 @@ process.env.FGM_PACKS_DIR ||= packaged
   : path.join(appRoot, 'packs');
 
 const native = require(path.join(__dirname, 'native', 'fgm_node.node'));
+
+const perfEnabled = process.env.FGM_PERF === '1';
+const perfPath = () => path.join(process.env.FGM_DATA_DIR, 'logs', 'perf.log');
+
+function writePerf(source, name, at, detail) {
+  if (!perfEnabled) return;
+  try {
+    fs.mkdirSync(path.dirname(perfPath()), { recursive: true });
+    const entry = { source, name, at: Math.round(Number(at) * 1000) / 1000, wall: Date.now() };
+    if (detail && Object.keys(detail).length) entry.detail = detail;
+    fs.appendFileSync(perfPath(), `${JSON.stringify(entry)}
+`);
+  } catch {}
+}
+
+writePerf('main', 'process-start', 0);
 
 const windowStatePath = () => path.join(process.env.FGM_DATA_DIR, 'config', 'window.json');
 const normalBounds = new WeakMap();
@@ -82,6 +101,8 @@ function createWindow() {
       contextIsolation: true,
       nodeIntegration: false,
       sandbox: true,
+      spellcheck: false,
+      webgl: false,
       devTools: !packaged,
     },
   });
@@ -91,11 +112,17 @@ function createWindow() {
   if (process.env.FGM_PROTO_DEMO) query.demo = process.env.FGM_PROTO_DEMO;
   if (process.env.FGM_PROTO_PAGE) query.page = process.env.FGM_PROTO_PAGE;
   if (process.env.FGM_PROTO_LANG) query.lang = process.env.FGM_PROTO_LANG;
+  if (perfEnabled) query.perf = '1';
+  if (process.env.FGM_PERF_NAV === '1') query.perfnav = '1';
+  writePerf('main', 'window-created', performance.now());
   window.loadFile(path.join(__dirname, 'renderer', 'index.html'), { query });
+  window.webContents.on('dom-ready', () => writePerf('main', 'dom-ready', performance.now()));
+  window.webContents.on('did-finish-load', () => writePerf('main', 'did-finish-load', performance.now()));
   window.webContents.on('console-message', (_event, level, message) => {
     console.log('renderer', level, message);
   });
   window.once('ready-to-show', () => {
+    writePerf('main', 'ready-to-show', performance.now());
     if (!bounds) window.center();
     applyWindowCorners(window);
     window.show();
@@ -113,7 +140,13 @@ function createWindow() {
   window.on('close', () => saveBounds(window));
 }
 
+ipcMain.on('fgm:perf', (_event, entry) => {
+  if (entry && typeof entry.name === 'string') writePerf('renderer', entry.name, entry.at, entry.detail);
+});
+
 ipcMain.handle('fgm:call', async (_event, name, payload) => {
+  const callStart = perfEnabled ? performance.now() : 0;
+  let callOk = true;
   try {
     if (name === 'version') {
       return { ok: true, data: native.version() };
@@ -135,10 +168,13 @@ ipcMain.handle('fgm:call', async (_event, name, payload) => {
     }
     return { ok: true, data };
   } catch (error) {
+    callOk = false;
     return {
       ok: false,
       error: { code: error?.code || 'BridgeError', message: String(error?.message || error) },
     };
+  } finally {
+    if (perfEnabled) writePerf('ipc', name, performance.now() - callStart, { ok: callOk });
   }
 });
 

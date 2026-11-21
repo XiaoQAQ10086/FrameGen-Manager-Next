@@ -92,7 +92,7 @@ pub(crate) fn deploy(request: &str) -> Result<Value, AppError> {
     }
 
     if pack.id.starts_with("framegen.") {
-        let gpu = GpuDetector::detect().ok_or_else(|| {
+        let gpu = GpuDetector::detect_cached(&paths).ok_or_else(|| {
             AppError::new(ErrorCode::GpuUnsupported).with("reason", "NVIDIA GPU not detected")
         })?;
         if !matches!(
@@ -339,7 +339,8 @@ pub(crate) fn settings_set(request: &str) -> Result<Value, AppError> {
 }
 
 pub(crate) fn gpu() -> Result<Value, AppError> {
-    let info = fgm_infra::gpu::GpuDetector::detect();
+    let paths = AppPaths::create_default(None)?;
+    let info = fgm_infra::gpu::GpuDetector::detect_cached(&paths);
     let value = info.map(|info| {
         json!({
             "name": info.name,

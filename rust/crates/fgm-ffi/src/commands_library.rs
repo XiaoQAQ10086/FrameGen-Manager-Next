@@ -3,7 +3,7 @@ use std::path::Path;
 
 use fgm_domain::error::{AppError, ErrorCode};
 use fgm_infra::anr::AnrPackageService;
-use fgm_infra::deployment::{DeploymentSummary, ProxyStatus};
+use fgm_infra::deployment::{DeploymentSnapshot, ProxyStatus};
 use fgm_infra::library::{CoverService, LibraryService};
 use fgm_infra::pack_json::PackJson;
 use fgm_infra::packs::PackLocator;
@@ -30,9 +30,13 @@ pub(crate) fn scan_library() -> Result<Vec<fgm_domain::library::GameEntry>, AppE
     paths.ensure_created()?;
     let operation = begin("libraryScan");
     report_total(&operation, 4);
-    let result = LibraryService::scan_with_progress(&paths, |phase, completed, found| {
-        report_scan(&operation, phase, completed, found);
-    });
+    let result = LibraryService::scan_with_progress_cancelled(
+        &paths,
+        &operation.cancelled,
+        |phase, completed, found| {
+            report_scan(&operation, phase, completed, found);
+        },
+    );
     finish();
     let games = result?;
     super::commands::log_event(
@@ -141,42 +145,29 @@ pub(crate) fn game_modes(request: &str) -> Result<Value, AppError> {
     let modes: Vec<Value> = games
         .into_iter()
         .map(|game| {
-            let smooth = if game.render_exe.is_some() {
+            let smooth_state = if game.render_exe.is_some() {
                 let state = smooth_motion.get(smooth_index);
                 smooth_index += 1;
                 state
-                    .and_then(|state| state.enabled)
-                    .map(|enabled| if enabled { "on" } else { "off" })
             } else {
                 None
             };
+            let smooth = smooth_state
+                .and_then(|state| state.enabled)
+                .map(|enabled| if enabled { "on" } else { "off" });
+            let smooth_profiles = smooth_state
+                .map(|state| state.profile_names.clone())
+                .unwrap_or_default();
+            let smooth_ours = smooth_state.is_some_and(|state| state.ours);
+            let smooth_detail = smooth_state.and_then(|state| state.detail.clone());
             let target = &game.target_directory;
-            let framegen = DeploymentSummary::state(
-                "framegen.sm86",
-                target,
-                &paths.backups(),
-                framegen_pack_version.as_deref(),
-            )
-            .ok();
-            let dlss5 = DeploymentSummary::state(
-                "dlss5",
-                target,
-                &paths.backups(),
-                dlss5_version.as_deref(),
-            )
-            .ok();
-            let anr = DeploymentSummary::state(
-                "anr",
-                target,
-                &paths.backups(),
-                anr_pack_version.as_deref(),
-            )
-            .ok();
-            let anr_version = DeploymentSummary::version("anr", target, &paths.backups())
-                .ok()
-                .flatten();
-            let proxies = ProxyStatus::inspect(target, &paths.backups())
-                .unwrap_or_default()
+            let snapshot = DeploymentSnapshot::new(target, &paths.backups());
+            let framegen = Some(snapshot.state("framegen.sm86", framegen_pack_version.as_deref()));
+            let dlss5 = Some(snapshot.state("dlss5", dlss5_version.as_deref()));
+            let anr = Some(snapshot.state("anr", anr_pack_version.as_deref()));
+            let anr_version = snapshot.version("anr");
+            let proxies = snapshot
+                .proxies(target)
                 .into_iter()
                 .map(|entry| {
                     json!({
@@ -186,12 +177,8 @@ pub(crate) fn game_modes(request: &str) -> Result<Value, AppError> {
                     })
                 })
                 .collect::<Vec<Value>>();
-            let smooth_component =
-                DeploymentSummary::state("smooth-motion", target, &paths.backups(), None).ok();
-            let framegen_installed_version =
-                DeploymentSummary::version("framegen.sm86", target, &paths.backups())
-                    .ok()
-                    .flatten();
+            let smooth_component = Some(snapshot.state("smooth-motion", None));
+            let framegen_installed_version = snapshot.version("framegen.sm86");
             json!({
                 "gameId": game.id,
                 "framegen": framegen,
@@ -203,6 +190,9 @@ pub(crate) fn game_modes(request: &str) -> Result<Value, AppError> {
                 "anrPackVersion": anr_pack_version,
                 "proxies": proxies,
                 "smoothMotion": smooth,
+                "smoothMotionProfiles": smooth_profiles,
+                "smoothMotionOurs": smooth_ours,
+                "smoothMotionDetail": smooth_detail,
                 "smoothMotionComponent": smooth_component,
             })
         })

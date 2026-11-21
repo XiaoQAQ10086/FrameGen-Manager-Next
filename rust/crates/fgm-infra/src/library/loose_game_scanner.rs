@@ -1,7 +1,8 @@
 use std::collections::HashSet;
 use std::path::{Path, PathBuf};
+use std::sync::atomic::{AtomicBool, Ordering};
 
-use fgm_domain::library::{GameEntry, GraphicsApi, LibrarySource};
+use fgm_domain::library::{GameEntry, LibrarySource};
 
 use crate::fs::DeploymentKey;
 
@@ -23,22 +24,26 @@ const KNOWN_DIRECTORIES: [&str; 11] = [
 ];
 const MAX_SUBDIRECTORIES: usize = 300;
 const MAX_GAMES_PER_ROOT: usize = 80;
-const MAX_PROBE_DEPTH: usize = 3;
-const MAX_PROBE_ENTRIES: usize = 5_000;
-const MIN_EXE_SIZE: u64 = 64 * 1024;
 
 /// Finds games in well-known folders on fixed/removable drives.
 pub struct LooseGameScanner;
 
 impl LooseGameScanner {
     pub fn scan(roots: &[PathBuf]) -> Vec<GameEntry> {
+        Self::scan_cancelled(roots, None)
+    }
+
+    pub fn scan_cancelled(roots: &[PathBuf], cancelled: Option<&AtomicBool>) -> Vec<GameEntry> {
         let mut games = Vec::new();
         let mut seen = HashSet::new();
 
         for root in roots {
+            if is_cancelled(cancelled) {
+                break;
+            }
             let mut found_for_root = 0;
             for known in KNOWN_DIRECTORIES {
-                if found_for_root >= MAX_GAMES_PER_ROOT {
+                if found_for_root >= MAX_GAMES_PER_ROOT || is_cancelled(cancelled) {
                     break;
                 }
                 let base = root.join(known);
@@ -50,7 +55,7 @@ impl LooseGameScanner {
                 };
 
                 for entry in entries.flatten().take(MAX_SUBDIRECTORIES) {
-                    if found_for_root >= MAX_GAMES_PER_ROOT {
+                    if found_for_root >= MAX_GAMES_PER_ROOT || is_cancelled(cancelled) {
                         break;
                     }
                     let directory = entry.path();
@@ -67,7 +72,15 @@ impl LooseGameScanner {
                     }) {
                         continue;
                     }
-                    if !contains_executable(&directory) {
+                    let render = RenderExeSelector::select(&directory);
+                    let Some(render) = render else {
+                        continue;
+                    };
+                    let depth = render
+                        .path
+                        .strip_prefix(&directory)
+                        .map_or(usize::MAX, |relative| relative.components().count());
+                    if depth > 4 {
                         continue;
                     }
 
@@ -80,14 +93,11 @@ impl LooseGameScanner {
                         || "Unknown".to_string(),
                         |name| name.to_string_lossy().into_owned(),
                     );
-                    let render = RenderExeSelector::select(&directory);
                     let target_directory = render
-                        .as_ref()
-                        .and_then(|candidate| candidate.path.parent())
+                        .path
+                        .parent()
                         .map_or_else(|| directory.clone(), Path::to_path_buf);
-                    let graphics_api = render.as_ref().map_or(GraphicsApi::Unknown, |candidate| {
-                        GraphicsApiDetector::detect(&candidate.path, &directory)
-                    });
+                    let graphics_api = GraphicsApiDetector::detect(&render.path, &directory);
                     let Ok(key) = DeploymentKey::for_path(&directory) else {
                         continue;
                     };
@@ -97,7 +107,7 @@ impl LooseGameScanner {
                         name,
                         source: LibrarySource::Loose,
                         install_directory: directory,
-                        render_exe: render.map(|candidate| candidate.path),
+                        render_exe: Some(render.path),
                         target_directory,
                         graphics_api,
                         app_id: None,
@@ -112,46 +122,10 @@ impl LooseGameScanner {
     }
 }
 
-fn contains_executable(directory: &Path) -> bool {
-    let mut stack = vec![(directory.to_path_buf(), 0_usize)];
-    let mut entries_seen = 0_usize;
-
-    while let Some((current, depth)) = stack.pop() {
-        let Ok(entries) = std::fs::read_dir(&current) else {
-            continue;
-        };
-        for entry in entries.flatten() {
-            entries_seen += 1;
-            if entries_seen > MAX_PROBE_ENTRIES {
-                return false;
-            }
-            let path = entry.path();
-            let Ok(metadata) = std::fs::symlink_metadata(&path) else {
-                continue;
-            };
-            if is_reparse_point(&metadata) {
-                continue;
-            }
-            if metadata.is_dir() {
-                if depth < MAX_PROBE_DEPTH {
-                    stack.push((path, depth + 1));
-                }
-                continue;
-            }
-            if metadata.is_file()
-                && metadata.len() >= MIN_EXE_SIZE
-                && path
-                    .extension()
-                    .is_some_and(|extension| extension.eq_ignore_ascii_case("exe"))
-            {
-                return true;
-            }
-        }
-    }
-    false
+fn is_cancelled(cancelled: Option<&AtomicBool>) -> bool {
+    cancelled.is_some_and(|flag| flag.load(Ordering::Relaxed))
 }
 
-#[cfg(windows)]
 fn is_reparse_point(metadata: &std::fs::Metadata) -> bool {
     use std::os::windows::fs::MetadataExt;
     metadata.file_attributes() & 0x400 != 0

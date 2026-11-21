@@ -42,9 +42,20 @@ impl SmoothMotionService {
                     .collect();
             }
         };
+        let mut indexed = session
+            .profiles_for_executables(executables)
+            .unwrap_or_else(|_| vec![Vec::new(); executables.len()]);
         executables
             .iter()
-            .map(|executable| inspect_with(&session, executable))
+            .zip(indexed.iter_mut())
+            .map(|(executable, profiles)| {
+                if profiles.is_empty()
+                    && let Ok(Some(profile)) = session.find_profile_for_exe(executable)
+                {
+                    profiles.push(profile);
+                }
+                inspect_with_profiles(&session, profiles)
+            })
             .collect()
     }
 
@@ -157,27 +168,47 @@ impl SmoothMotionService {
 
 fn inspect_with(session: &NvApiSession, executable: &Path) -> SmoothMotionState {
     match targets_for(session, executable) {
-        Ok(targets) if !targets.is_empty() => {
-            let enabled = session
-                .read_smooth_motion(targets[0].0)
-                .ok()
-                .flatten()
-                .map(|value| value != 0);
-            SmoothMotionState {
-                enabled,
-                profile_names: targets.iter().map(|target| target.1.clone()).collect(),
-                ours: targets[0].1.starts_with(PROFILE_PREFIX),
-                detail: None,
-            }
+        Ok(targets) => state_from_targets(session, targets),
+        Err(error) => state_from_error(&error),
+    }
+}
+
+fn inspect_with_profiles(session: &NvApiSession, profiles: &[NvApiProfile]) -> SmoothMotionState {
+    match unique_targets(session, profiles) {
+        Ok(targets) => state_from_targets(session, targets),
+        Err(error) => state_from_error(&error),
+    }
+}
+
+fn state_from_error(error: &AppError) -> SmoothMotionState {
+    SmoothMotionState {
+        detail: Some(first_reason(error).to_string()),
+        ..SmoothMotionState::default()
+    }
+}
+
+fn state_from_targets(
+    session: &NvApiSession,
+    targets: Vec<(NvApiProfile, String)>,
+) -> SmoothMotionState {
+    {
+        if targets.is_empty() {
+            return SmoothMotionState {
+                detail: Some("no driver profile is associated with this executable".to_string()),
+                ..SmoothMotionState::default()
+            };
         }
-        Ok(_) => SmoothMotionState {
-            detail: Some("no driver profile is associated with this executable".to_string()),
-            ..SmoothMotionState::default()
-        },
-        Err(error) => SmoothMotionState {
-            detail: Some(first_reason(&error).to_string()),
-            ..SmoothMotionState::default()
-        },
+        let enabled = session
+            .read_smooth_motion(targets[0].0)
+            .ok()
+            .flatten()
+            .map(|value| value != 0);
+        SmoothMotionState {
+            enabled,
+            profile_names: targets.iter().map(|target| target.1.clone()).collect(),
+            ours: targets[0].1.starts_with(PROFILE_PREFIX),
+            detail: None,
+        }
     }
 }
 
@@ -192,17 +223,24 @@ fn targets_for(
         profiles.push(profile);
     }
 
+    unique_targets(session, &profiles)
+}
+
+fn unique_targets(
+    session: &NvApiSession,
+    profiles: &[NvApiProfile],
+) -> Result<Vec<(NvApiProfile, String)>, AppError> {
     let mut targets = Vec::new();
     let mut seen = std::collections::HashSet::new();
     for profile in profiles {
-        if session.is_base_profile(profile) {
+        if session.is_base_profile(*profile) {
             continue;
         }
-        let Some(name) = session.profile_name(profile) else {
+        let Some(name) = session.profile_name(*profile) else {
             continue;
         };
         if seen.insert(name.to_ascii_lowercase()) {
-            targets.push((profile, name));
+            targets.push((*profile, name));
         }
     }
     Ok(targets)

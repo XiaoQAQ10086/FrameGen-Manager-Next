@@ -114,7 +114,7 @@ pub fn invoke(name: &str, body: Option<&str>) -> Result<String, String> {
         "gpuSpoof.inspect" => take(fgm_gpu_spoof_inspect_json()),
         "gpuSpoof.apply" => request(fgm_gpu_spoof_apply_json, payload(body)),
         "gpuSpoof.restore" => request(fgm_gpu_spoof_restore_json, payload(body)),
-        "update.check" => take(crate::fgm_update_check_json()),
+        "update.check" => request(crate::fgm_update_check_request_json, payload(body)),
         "update.download" => take(crate::fgm_update_download_json()),
         "update.install" => request(crate::fgm_update_install_json, payload(body)),
         "update.open" => request(crate::fgm_update_open_json, payload(body)),

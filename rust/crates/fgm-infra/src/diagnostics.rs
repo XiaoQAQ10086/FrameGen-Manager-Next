@@ -26,7 +26,7 @@ impl DiagnosticsService {
         let settings = SettingsStore::new(paths.config().join("app.json"))
             .load()
             .unwrap_or_default();
-        let gpu = GpuDetector::detect();
+        let gpu = GpuDetector::detect_cached(paths);
         let summary = json!({
             "schemaVersion": 1,
             "version": fgm_domain::version::VERSION,

@@ -13,19 +13,48 @@ pub struct CoverService;
 /// cover requests do not run concurrently on many isolate threads.
 static COVER_LOCK: std::sync::Mutex<()> = std::sync::Mutex::new(());
 
+const MISS_TTL_SECONDS: u64 = 60 * 60;
+
 impl CoverService {
     pub fn cover(paths: &AppPaths, game: &GameEntry) -> Result<Option<PathBuf>, AppError> {
         let _guard = COVER_LOCK.lock().unwrap_or_else(|error| error.into_inner());
+        let marker = miss_marker(paths, game);
+        if is_recent_miss(&marker) {
+            return Ok(None);
+        }
         log_cover(paths, "request", game);
         let online = crate::net::is_online();
-        if let Some(path) = steam_cover(paths, game, online)? {
-            return Ok(Some(path));
+        let found = if let Some(path) = steam_cover(paths, game, online)? {
+            Some(path)
+        } else if online && let Some(path) = search_cover(paths, game) {
+            Some(path)
+        } else {
+            icon_cover(paths, game)
+        };
+        if found.is_some() {
+            let _ = std::fs::remove_file(&marker);
+        } else {
+            let _ = crate::fs::AtomicFile::write(&marker, b"1");
         }
-        if online && let Some(path) = search_cover(paths, game) {
-            return Ok(Some(path));
-        }
-        Ok(icon_cover(paths, game))
+        Ok(found)
     }
+}
+
+fn miss_marker(paths: &AppPaths, game: &GameEntry) -> PathBuf {
+    paths
+        .cache()
+        .join("covers")
+        .join(format!("miss-{}", text_hash(&game.id)))
+}
+
+fn is_recent_miss(path: &std::path::Path) -> bool {
+    let Ok(modified) = path.metadata().and_then(|metadata| metadata.modified()) else {
+        return false;
+    };
+    let Ok(age) = std::time::SystemTime::now().duration_since(modified) else {
+        return false;
+    };
+    age.as_secs() < MISS_TTL_SECONDS
 }
 
 /// Steam store/local artwork; `None` when the game has no usable Steam art.
@@ -311,12 +340,14 @@ fn find_local_cover(game: &GameEntry, app_id: &str) -> Option<PathBuf> {
             if !(name.ends_with(".jpg") || name.ends_with(".jpeg") || name.ends_with(".png")) {
                 continue;
             }
-            let rank = if name.starts_with("library_600x900") {
+            let rank = if name.starts_with("library_600x900_2x") {
+                1
+            } else if name.starts_with("library_600x900") {
                 0
             } else if name.starts_with("header") {
-                1
-            } else if name.starts_with("library_hero") {
                 2
+            } else if name.starts_with("library_hero") {
+                3
             } else {
                 continue;
             };
@@ -333,10 +364,10 @@ fn find_local_cover(game: &GameEntry, app_id: &str) -> Option<PathBuf> {
     }
 
     for suffix in [
-        "_library_600x900_2x.jpg",
-        "_library_600x900_2x.png",
         "_library_600x900.jpg",
         "_library_600x900.png",
+        "_library_600x900_2x.jpg",
+        "_library_600x900_2x.png",
         "_header.jpg",
         "_library_hero.jpg",
     ] {
@@ -356,10 +387,10 @@ fn find_local_cover(game: &GameEntry, app_id: &str) -> Option<PathBuf> {
     for user in users.flatten() {
         let grid = user.path().join("config").join("grid");
         for suffix in [
-            "_library_600x900_2x.jpg",
-            "_library_600x900_2x.png",
             "_library_600x900.jpg",
             "_library_600x900.png",
+            "_library_600x900_2x.jpg",
+            "_library_600x900_2x.png",
             "_header.jpg",
             "_library_hero.jpg",
         ] {

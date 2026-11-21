@@ -56,7 +56,7 @@ pub(crate) fn sm_enable(request: &str) -> Result<Value, AppError> {
     let target_directory = absolute(Path::new(&request.target_dir))?;
     let paths = data_paths(request.data_dir.as_deref())?;
     paths.ensure_created()?;
-    let gpu = fgm_infra::gpu::GpuDetector::detect().ok_or_else(|| {
+    let gpu = fgm_infra::gpu::GpuDetector::detect_cached(&paths).ok_or_else(|| {
         AppError::new(ErrorCode::GpuUnsupported).with("reason", "NVIDIA GPU not detected")
     })?;
     let app_version = request.app_version.unwrap_or_else(|| VERSION.to_string());

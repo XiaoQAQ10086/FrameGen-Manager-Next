@@ -2,6 +2,7 @@ import {
   $, call, esc, folderIcon, githubIcon, hideProgress, prettyPath, showProgress, state, toast, trashIcon,
 } from './core.js';
 import { t } from './l10n.js';
+import { loadCovers } from './covers.js';
 import { showRemoved } from './removed.js';
 
 let statuses = null;
@@ -52,6 +53,7 @@ export async function renderSm(root) {
   if (cacheHit) {
     renderGames(root);
     bind(root);
+    root.dataset.ready = '1';
     if (Date.now() - cachedAt < 10000) return;
     load().then(() => {
       if (current === serial && state.section === 'smooth-motion') renderGames(root);
@@ -63,6 +65,7 @@ export async function renderSm(root) {
   if (current !== serial || state.section !== 'smooth-motion') return;
   renderGames(root);
   bind(root);
+  root.dataset.ready = '1';
 }
 
 function renderCompat(panel) {
@@ -80,17 +83,21 @@ function renderCompat(panel) {
 }
 
 async function load() {
-  const paths = state.games
-    .map((game) => game.renderExe)
-    .filter((value) => typeof value === 'string' && value.length > 0);
   try {
-    const [many, modeReply] = await Promise.all([
-      call('sm.inspectMany', { exePaths: paths }),
-      call('gameModes', {}),
-    ]);
-    statuses = many.states || [];
-    cachedAt = Date.now();
+    const modeReply = await call('gameModes', {});
     modes = Object.fromEntries((modeReply.modes || []).map((mode) => [mode.gameId, mode]));
+    statuses = state.games
+      .filter((game) => typeof game.renderExe === 'string' && game.renderExe.length > 0)
+      .map((game) => {
+        const mode = modes[game.id] || {};
+        return {
+          enabled: mode.smoothMotion === 'on' ? true : (mode.smoothMotion === 'off' ? false : null),
+          profiles: mode.smoothMotionProfiles || [],
+          ours: Boolean(mode.smoothMotionOurs),
+          detail: mode.smoothMotionDetail || null,
+        };
+      });
+    cachedAt = Date.now();
   } catch (error) {
     toast(`${t('smOperationFailed')}: ${error.message}`, 'error');
   }
@@ -113,6 +120,7 @@ function renderGames(root) {
   }
   list.innerHTML = state.games.map((game, index) => cardMarkup(game, index)).join('');
   $('[data-role="status"]', root).textContent = t('smChecked', { count: state.games.length });
+  loadCovers();
 }
 
 function cardMarkup(game, index) {
@@ -132,7 +140,9 @@ function cardMarkup(game, index) {
   return `
     <article class="gcard" style="animation-delay:${Math.min(index * 35, 350)}ms">
       <div class="gtop">
-        ${cover ? `<img class="thumb" src="${esc(cover)}" alt="">` : `<div class="thumb ph2">${esc(initial)}</div>`}
+        ${cover
+          ? `<img class="thumb" data-cover="${esc(game.id)}" src="${esc(cover)}" alt="" decoding="async">`
+          : `<div class="thumb ph2" data-cover="${esc(game.id)}">${esc(initial)}</div>`}
         <div class="ginfo">
           <div class="gname">${esc(game.name)}</div>
           <div class="badges">

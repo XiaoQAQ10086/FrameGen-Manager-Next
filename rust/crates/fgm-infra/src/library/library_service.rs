@@ -1,4 +1,5 @@
 use std::path::{Path, PathBuf};
+use std::sync::atomic::AtomicBool;
 
 use fgm_domain::error::{AppError, ErrorCode};
 use fgm_domain::library::{GameEntry, LibrarySource};
@@ -30,6 +31,15 @@ impl LibraryService {
         paths: &AppPaths,
         report: impl FnMut(&'static str, usize, usize),
     ) -> Result<Vec<GameEntry>, AppError> {
+        let cancelled = AtomicBool::new(false);
+        Self::scan_with_progress_cancelled(paths, &cancelled, report)
+    }
+
+    pub fn scan_with_progress_cancelled(
+        paths: &AppPaths,
+        cancelled: &AtomicBool,
+        report: impl FnMut(&'static str, usize, usize),
+    ) -> Result<Vec<GameEntry>, AppError> {
         let store = Self::store(paths);
         let mut cache = store.load()?;
         let manual: Vec<GameEntry> = cache
@@ -39,10 +49,11 @@ impl LibraryService {
             .cloned()
             .collect();
 
-        let scanned = LibraryScanner::scan_with_progress(
+        let scanned = LibraryScanner::scan_with_progress_cancelled(
             SteamLocator::locate().as_deref(),
             EpicLocator::manifests_directory().as_deref(),
             &DriveRoots::roots(),
+            Some(cancelled),
             report,
         );
         cache.schema_version = 1;

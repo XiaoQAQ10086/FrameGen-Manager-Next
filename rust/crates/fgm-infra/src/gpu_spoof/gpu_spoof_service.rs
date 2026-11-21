@@ -49,7 +49,7 @@ impl GpuSpoofService {
             adapters: enumerate()?,
             presets: PRESETS.iter().map(|name| (*name).to_string()).collect(),
             applied: load_manifest(paths)?,
-            live_name: crate::gpu::GpuDetector::detect().map(|gpu| gpu.name),
+            live_name: crate::gpu::GpuDetector::detect_cached(paths).map(|gpu| gpu.name),
         })
     }
 
@@ -100,6 +100,7 @@ impl GpuSpoofService {
             return Err(AppError::new(ErrorCode::Internal)
                 .with("reason", "the adapter name could not be verified"));
         }
+        crate::gpu::GpuDetector::invalidate_cache(paths);
         let mut updated = adapter.clone();
         updated.device_desc = preset.to_string();
         updated.display_name = preset.to_string();
@@ -136,6 +137,7 @@ impl GpuSpoofService {
         if mode == GpuRestoreMode::Backup {
             let _ = std::fs::remove_file(manifest_path(paths));
         }
+        crate::gpu::GpuDetector::invalidate_cache(paths);
         let mut updated = adapter.clone();
         updated.device_desc = target.clone();
         updated.display_name = display_name(&target);

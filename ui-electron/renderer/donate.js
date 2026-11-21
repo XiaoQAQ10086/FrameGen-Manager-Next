@@ -19,4 +19,5 @@ export function renderDonate(root) {
       </div>
       <p class="donate-note">${t('donateNote')}</p>
     </section>`;
+  root.dataset.ready = '1';
 }

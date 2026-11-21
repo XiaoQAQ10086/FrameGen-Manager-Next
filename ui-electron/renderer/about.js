@@ -58,6 +58,7 @@ export async function renderAbout(root) {
       </div>
     </section>`;
   bind(root);
+  root.dataset.ready = '1';
 }
 
 function bind(root) {
@@ -86,7 +87,7 @@ function bind(root) {
       } else if (action === 'licenses') {
         await call('openFolder', { which: 'licenses' });
       } else if (action === 'update') {
-        const reply = await call('update.check');
+        const reply = await call('update.check', { force: true });
         if (!reply.available) {
           toast(t('updateLatest'));
         } else {

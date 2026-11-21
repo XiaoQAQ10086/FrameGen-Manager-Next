@@ -1,10 +1,13 @@
 use std::collections::HashSet;
 use std::path::{Path, PathBuf};
+use std::time::UNIX_EPOCH;
 
 use fgm_domain::deployment::{DeploymentManifest, DeploymentManifestState};
 use fgm_domain::error::{AppError, ErrorCode};
+use serde::{Deserialize, Serialize};
 
 use crate::dlss5::Dlss5Service;
+use crate::fs::AtomicFile;
 use crate::pack_json::PackJson;
 use crate::packs::PackLocator;
 use crate::paths::AppPaths;
@@ -35,12 +38,23 @@ pub struct AssetUpdateReport {
     pub failed: Vec<AssetFailure>,
 }
 
+#[derive(Debug, Deserialize, PartialEq, Eq, Serialize)]
+struct BackupFingerprint {
+    manifests: u64,
+    bytes: u64,
+    newest_nanos: u128,
+}
+
 /// Detects deployed packs whose version no longer matches the bundled pack,
 /// clears those deployments, and leaves redeployment to the user.
 pub struct AssetUpdateService;
 
 impl AssetUpdateService {
     pub fn reconcile(paths: &AppPaths) -> AssetUpdateReport {
+        let fingerprint = backup_fingerprint(paths);
+        if load_fingerprint(paths).as_ref() == Some(&fingerprint) {
+            return AssetUpdateReport::default();
+        }
         let mut report = AssetUpdateReport::default();
         let mut seen = HashSet::new();
         for (family, target, manifest) in manifests(paths) {
@@ -82,8 +96,56 @@ impl AssetUpdateService {
                 }),
             }
         }
+        if report.failed.is_empty() {
+            save_fingerprint(paths, &backup_fingerprint(paths));
+        }
         report
     }
+}
+
+fn fingerprint_path(paths: &AppPaths) -> PathBuf {
+    paths.state().join("assets-fingerprint.json")
+}
+
+fn load_fingerprint(paths: &AppPaths) -> Option<BackupFingerprint> {
+    let bytes = std::fs::read(fingerprint_path(paths)).ok()?;
+    serde_json::from_slice(&bytes).ok()
+}
+
+fn save_fingerprint(paths: &AppPaths, fingerprint: &BackupFingerprint) {
+    if let Ok(bytes) = serde_json::to_vec_pretty(fingerprint) {
+        let _ = AtomicFile::write(&fingerprint_path(paths), &bytes);
+    }
+}
+
+fn backup_fingerprint(paths: &AppPaths) -> BackupFingerprint {
+    let mut fingerprint = BackupFingerprint {
+        manifests: 0,
+        bytes: 0,
+        newest_nanos: 0,
+    };
+    let Ok(families) = std::fs::read_dir(paths.backups()) else {
+        return fingerprint;
+    };
+    for family in families.flatten() {
+        let Ok(keys) = std::fs::read_dir(family.path()) else {
+            continue;
+        };
+        for key in keys.flatten() {
+            let path = key.path().join("manifest.json");
+            let Ok(metadata) = std::fs::metadata(&path) else {
+                continue;
+            };
+            fingerprint.manifests += 1;
+            fingerprint.bytes += metadata.len();
+            if let Ok(modified) = metadata.modified()
+                && let Ok(age) = modified.duration_since(UNIX_EPOCH)
+            {
+                fingerprint.newest_nanos = fingerprint.newest_nanos.max(age.as_nanos());
+            }
+        }
+    }
+    fingerprint
 }
 
 fn manifests(paths: &AppPaths) -> Vec<(String, PathBuf, DeploymentManifest)> {
@@ -174,4 +236,37 @@ fn first_reason(error: &AppError) -> String {
         .iter()
         .find(|(key, _)| key == "reason")
         .map_or_else(|| format!("{:?}", error.code), |(_, value)| value.clone())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::time::{SystemTime, UNIX_EPOCH};
+
+    fn paths() -> AppPaths {
+        let stamp = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap()
+            .as_nanos();
+        AppPaths::new(
+            std::env::temp_dir().join(format!("fgm-assets-{stamp}")),
+            false,
+        )
+        .unwrap()
+    }
+
+    #[test]
+    fn fingerprint_tracks_manifest_changes() {
+        let paths = paths();
+        assert_eq!(backup_fingerprint(&paths).manifests, 0);
+        let directory = paths.backups().join("framegen.sm86").join("key");
+        std::fs::create_dir_all(&directory).unwrap();
+        std::fs::write(directory.join("manifest.json"), b"{}").unwrap();
+        let fingerprint = backup_fingerprint(&paths);
+        assert_eq!(fingerprint.manifests, 1);
+        assert!(fingerprint.bytes >= 2);
+        save_fingerprint(&paths, &fingerprint);
+        assert_eq!(load_fingerprint(&paths), Some(fingerprint));
+        let _ = std::fs::remove_dir_all(paths.root());
+    }
 }

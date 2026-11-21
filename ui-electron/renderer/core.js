@@ -3,6 +3,7 @@ import { t } from './l10n.js';
 export const state = {
   games: [],
   modes: {},
+  modesReady: false,
   gpu: null,
   spoof: null,
   paths: null,
@@ -114,13 +115,26 @@ export function confirmAction({ title, body, confirmLabel, cancelLabel, danger =
   });
 }
 
+const MODE_TTL_MS = 5000;
+const MODE_MUTATIONS = /^(deploy|restore|sm\.(enable|disable|restore)|dlss5\.(install|uninstall|restore)|anr\.(deploy|restore)|library\.(scan|addManual|remove|restoreRemoved|forget)|gpuSpoof\.(apply|restore))$/;
+let modesCache = { at: 0, data: null };
+
+export function invalidateModes() {
+  modesCache = { at: 0, data: null };
+}
+
 export async function call(name, payload) {
+  if (name === 'gameModes' && modesCache.data && Date.now() - modesCache.at < MODE_TTL_MS) {
+    return modesCache.data;
+  }
   const reply = await window.fgm.call(name, payload);
   if (!reply.ok) {
     const error = new Error(reply.error?.message || reply.error?.code || '调用失败');
     error.code = reply.error?.code;
     throw error;
   }
+  if (name === 'gameModes') modesCache = { at: Date.now(), data: reply.data };
+  if (MODE_MUTATIONS.test(name)) invalidateModes();
   return reply.data;
 }
 
@@ -134,6 +148,45 @@ export function toast(message, kind = '') {
 }
 
 let progressTimer = null;
+let progressBusy = false;
+
+async function progressTick() {
+  if (progressBusy || document.hidden) return;
+  progressBusy = true;
+  const node = $('#global-progress');
+  try {
+    const reply = await call('operation.progress');
+    const progress = reply.progress || reply;
+    if (progress.active === false) return;
+    const total = Number(progress.total || 0);
+    const done = Number(progress.done || 0);
+    const fraction = total > 0 ? Math.min(1, done / total) : 0;
+    $('.gp-percent', node).textContent = total > 0
+      ? `${Math.round(fraction * 100)}%`
+      : '…';
+    $('.gp-subject', node).textContent = total > 0 ? `${done} / ${total}` : '';
+    $('.gp-track > i', node).style.width = total > 0
+      ? `${Math.max(2, fraction * 100)}%`
+      : '35%';
+    if (progress.kind === 'libraryScan') {
+      $('.gp-phase', node).textContent = t(`scanPhase_${progress.phase || 'loose'}`);
+      $('.gp-subject', node).textContent = t('scanProgressDetail', {
+        done,
+        total,
+        found: Number(progress.found || 0),
+        remaining: Math.max(0, total - done),
+      });
+    }
+  } catch {
+    // Progress polling is best effort; failures are reported by the operation.
+  } finally {
+    progressBusy = false;
+  }
+}
+
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden && progressTimer) progressTick();
+});
 
 export function showProgress(title, cancellable = true) {
   const node = $('#global-progress');
@@ -144,32 +197,7 @@ export function showProgress(title, cancellable = true) {
   $('.gp-track > i', node).style.width = '35%';
   $('.gp-cancel', node)?.classList.toggle('hidden', !cancellable);
   clearInterval(progressTimer);
-  progressTimer = setInterval(async () => {
-    try {
-      const reply = await call('operation.progress');
-      const progress = reply.progress || reply;
-      if (progress.active === false) return;
-      const total = Number(progress.total || 0);
-      const done = Number(progress.done || 0);
-      const fraction = total > 0 ? Math.min(1, done / total) : 0;
-      $('.gp-percent', node).textContent = total > 0
-        ? `${Math.round(fraction * 100)}%`
-        : '…';
-      $('.gp-subject', node).textContent = total > 0 ? `${done} / ${total}` : '';
-      $('.gp-track > i', node).style.width = total > 0
-        ? `${Math.max(2, fraction * 100)}%`
-        : '35%';
-      if (progress.kind === 'libraryScan') {
-        $('.gp-phase', node).textContent = t(`scanPhase_${progress.phase || 'loose'}`);
-        $('.gp-subject', node).textContent = t('scanProgressDetail', {
-          done,
-          total,
-          found: Number(progress.found || 0),
-          remaining: Math.max(0, total - done),
-        });
-      }
-    } catch {}
-  }, 300);
+  progressTimer = setInterval(progressTick, 500);
 }
 
 export function hideProgress() {

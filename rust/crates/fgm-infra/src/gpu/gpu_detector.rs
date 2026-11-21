@@ -1,18 +1,86 @@
 use std::path::Path;
 use std::sync::atomic::AtomicBool;
-use std::time::Duration;
+use std::sync::{Mutex, OnceLock};
+use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 
 use fgm_domain::gpu::GpuRoute;
+use serde::{Deserialize, Serialize};
 
+use crate::fs::AtomicFile;
+use crate::paths::AppPaths;
+use crate::platform::registry::{HKEY_LOCAL_MACHINE, read_string};
 use crate::process::ProcessRunner;
 
 use super::gpu_info::GpuInfo;
-use super::hags::HagsProbe;
+use super::hags::{HagsProbe, HagsState};
+
+const MEMORY_TTL: Duration = Duration::from_secs(60);
+const DISK_TTL_SECONDS: u64 = 24 * 60 * 60;
+
+struct MemoryEntry {
+    at: Instant,
+    fingerprint: Option<String>,
+    info: GpuInfo,
+}
+
+#[derive(Deserialize, Serialize)]
+struct DiskEntry {
+    saved_at: u64,
+    fingerprint: Option<String>,
+    name: String,
+    driver_version: String,
+    route: GpuRoute,
+    driver_supported: bool,
+}
+
+static CACHE: OnceLock<Mutex<Option<MemoryEntry>>> = OnceLock::new();
 
 /// Detects NVIDIA GPU name, driver version and Smooth Motion route.
 pub struct GpuDetector;
 
 impl GpuDetector {
+    /// Returns a cached result when it is still fresh, otherwise detects once.
+    ///
+    /// The cache is in memory for 60 seconds and on disk for 24 hours. Disk
+    /// entries are ignored when the display driver version changed.
+    pub fn detect_cached(paths: &AppPaths) -> Option<GpuInfo> {
+        let cache = CACHE.get_or_init(|| Mutex::new(None));
+        let mut guard = cache.lock().ok()?;
+        let fingerprint = adapter_driver_fingerprint();
+        if let Some(entry) = guard.as_ref()
+            && entry.at.elapsed() < MEMORY_TTL
+            && entry.fingerprint == fingerprint
+        {
+            return Some(fresh_hags(&entry.info));
+        }
+        if let Some(info) = load_disk(paths, fingerprint.as_deref()) {
+            *guard = Some(MemoryEntry {
+                at: Instant::now(),
+                fingerprint,
+                info: info.clone(),
+            });
+            return Some(fresh_hags(&info));
+        }
+        let info = Self::detect()?;
+        save_disk(paths, &info, fingerprint.as_deref());
+        *guard = Some(MemoryEntry {
+            at: Instant::now(),
+            fingerprint,
+            info: info.clone(),
+        });
+        Some(info)
+    }
+
+    /// Drops both cache layers; used after registry GPU name changes.
+    pub fn invalidate_cache(paths: &AppPaths) {
+        if let Some(cache) = CACHE.get()
+            && let Ok(mut guard) = cache.lock()
+        {
+            *guard = None;
+        }
+        let _ = std::fs::remove_file(disk_path(paths));
+    }
+
     pub fn detect() -> Option<GpuInfo> {
         let result = ProcessRunner::run(
             Path::new("nvidia-smi.exe"),
@@ -83,6 +151,68 @@ impl GpuDetector {
         }
         Some(Self::classify(name, driver))
     }
+}
+
+fn fresh_hags(info: &GpuInfo) -> GpuInfo {
+    let mut copy = info.clone();
+    copy.hags = HagsProbe::read();
+    copy
+}
+
+fn disk_path(paths: &AppPaths) -> std::path::PathBuf {
+    paths.cache().join("gpu.json")
+}
+
+fn load_disk(paths: &AppPaths, fingerprint: Option<&str>) -> Option<GpuInfo> {
+    let bytes = std::fs::read(disk_path(paths)).ok()?;
+    let entry: DiskEntry = serde_json::from_slice(&bytes).ok()?;
+    let now = SystemTime::now().duration_since(UNIX_EPOCH).ok()?.as_secs();
+    if now.saturating_sub(entry.saved_at) >= DISK_TTL_SECONDS {
+        return None;
+    }
+    if entry.fingerprint.as_deref() != fingerprint {
+        return None;
+    }
+    Some(GpuInfo {
+        name: entry.name,
+        driver_version: entry.driver_version,
+        route: entry.route,
+        driver_supported: entry.driver_supported,
+        hags: HagsState::Unknown,
+    })
+}
+
+fn save_disk(paths: &AppPaths, info: &GpuInfo, fingerprint: Option<&str>) {
+    let Ok(saved_at) = SystemTime::now().duration_since(UNIX_EPOCH) else {
+        return;
+    };
+    let entry = DiskEntry {
+        saved_at: saved_at.as_secs(),
+        fingerprint: fingerprint.map(str::to_string),
+        name: info.name.clone(),
+        driver_version: info.driver_version.clone(),
+        route: info.route,
+        driver_supported: info.driver_supported,
+    };
+    if let Ok(bytes) = serde_json::to_vec_pretty(&entry) {
+        let _ = AtomicFile::write(&disk_path(paths), &bytes);
+    }
+}
+
+/// Cheap display-driver fingerprint from the registry, without spawning nvidia-smi.
+fn adapter_driver_fingerprint() -> Option<String> {
+    const CLASS: &str =
+        r"SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}";
+    for index in 0..16 {
+        let key = format!(r"{CLASS}\{index:04}");
+        let Some(desc) = read_string(HKEY_LOCAL_MACHINE, &key, "DriverDesc") else {
+            continue;
+        };
+        if desc.to_uppercase().contains("NVIDIA") {
+            return read_string(HKEY_LOCAL_MACHINE, &key, "DriverVersion");
+        }
+    }
+    None
 }
 
 fn driver_at_least(value: &str, major: u32, minor: u32) -> bool {

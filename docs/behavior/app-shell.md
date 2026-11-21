@@ -1,12 +1,12 @@
-# 应用外壳与 WebView2 宿主
+# 应用外壳与 Electron 宿主
 
 ## 启动
 
-1. `Program.Main` 先执行 Velopack 启动钩子，再尝试获取 `Local\FrameGenManagerNext.App` 互斥体。
-2. 已有实例在运行时，新进程直接退出，不创建窗口、不打开第二份 WebView2 配置。
-3. 主机启动后读取设置语言，创建 `MainWindow`，在 `Loaded` 事件中显示加载层并初始化 WebView2。
-4. 加载层是独立 `Popup`，不会把 WebView2 的父容器设为 `Collapsed`（WebView2 在不可见时会延迟初始化）；WebView2 就绪后关闭加载层。
-5. 页面自身也带启动骨架；游戏库状态读取完成前显示骨架卡片，不显示空白页。
+1. Electron 主进程创建无边框 `BrowserWindow`，渲染进程加载本地 `renderer/index.html`，不加载远程页面。
+2. 窗口 `ready-to-show` 后再显示，避免白屏闪烁；窗口尺寸和位置从 `userdata/config/window.json` 恢复。
+3. 渲染层先画应用壳和骨架卡片，再并行读取 paths、GPU、游戏库、GPU 伪装和设置；`gameModes` 独立异步加载，不阻塞首屏。
+4. GPU 尚未返回时，游戏卡片照常显示，只有依赖 GPU 的部署按钮禁用并显示“加载中”；模式状态未返回时同样禁用，不显示错误的“未部署”。
+5. 首屏完成后才执行资产版本清理和更新检查；两者都不阻塞页面交互。
 
 ## 权限模型
 
@@ -48,22 +48,16 @@
 
 ## 页面状态缓存
 
-- 页面只挂载一次：切换导航时隐藏旧页面、显示已挂载页面，不再销毁 DOM 或重新探测游戏/驱动。
-- 离开页面 5 分钟后自动卸载该页 DOM（清理事件监听、移除节点），同时清空前端 API 缓存；再次进入时按需重新挂载。这样长时间停留在某一页时，其他页的封面解码和列表节点不会一直占内存。
-- `api.js` 缓存 `app.info`、`games.state`、`gpu.state`、`sm.state`、`dlss5.state` 120 秒；扫描、部署、还原、开关 Smooth Motion、DLSS5 安装/卸载和语言保存会清空缓存。
-- 语言切换会清空已挂载页面并重建，避免留下旧语言文案。
-- 封面不再以 base64 塞进状态 JSON：缓存目录通过 `fgm-covers.local` 虚拟主机提供图片 URL，减少桥接数据量和 GDI/图片内存。
-- 封面解码前统一生成 360px 宽的 JPEG 缩略图（`cache/covers/thumbs`），卡片只加载缩略图，避免 WebView2 为 1200x1800 原图保留大块解码内存。
-- 窗口最小化或隐藏时调用 `CoreWebView2.TrySuspendAsync()` 暂停浏览器进程，恢复时 `Resume()`；暂停后顺带压缩一次托管大对象堆。这样游戏期间不会继续占用 WebView2 的 CPU/GPU，也不会持续累积渲染缓存。
-- 列表只给前 12 张卡片播放入场动画，其余卡片使用 `content-visibility: auto`；滚动到视口外时不参与布局/绘制，减少大游戏库的 GPU 开销。
-- 帧生成与 SM 页的列表重新渲染时保留原 `scrollTop`；分批渲染会继续追加卡片直到恢复原位置，部署、扫描或状态刷新不会跳回顶部。
-- 帧生成与 SM 页的左侧栏和游戏列表使用自动隐藏滚动条：仅在滚动时显示，停止约 700 ms 后淡出；未滚动时不占视觉注意力。
-- 主机进程启动时同时设置空闲优先级（`SetPriorityClass(IDLE_PRIORITY_CLASS)`）和 EcoQoS（`SetProcessInformation(ProcessPowerThrottling)`）。Windows 11 任务管理器必须同时看到这两者才显示“效率模式”；只设 EcoQoS 不会显示。旧版 Windows 拒绝调用时忽略。
-- WebView2 默认追加 `--js-flags=--max-old-space-size=192 --disable-background-networking --disable-component-update --disable-sync --disable-domain-reliability --disable-http-cache`，给渲染器堆设上限并关闭后台服务。`--disable-http-cache` 用于本地 WebAssets：升级后不会继续加载上一版本缓存的 JS/CSS。实测不要设置 `MemoryUsageTargetLevel=Low`：在 154.x WebView2 运行时上会把大约 95 MB 的共享内存转为宿主私有工作集，任务管理器反而从约 160 MB 涨到约 260 MB。
-- 进程配置 `System.GC.ConserveMemory=7`，用少量 CPU 换取更小的托管堆。
-- `HotkeyQueueWorker` 每 30 秒重试因游戏运行或 `ReShade.ini` 被锁而排队的快捷键写入；应用退出后队列保留，下次启动继续。
-- 窗口最小化/隐藏时在暂停 WebView2 后压缩 LOH 并调用 `SetProcessWorkingSetSize(-1,-1)` 修剪工作集，把空闲页移到 standby。
-- 部署清单记录每个已写文件的最后写入时间；再次检查时大小和时间都一致就跳过哈希，避免每次打开页面重读数百 MB 的运行库（旧清单在首次检查通过后自动补写时间戳）。
+- 每个页面首次进入时挂载到一个 `.page-host`；切页时把旧 host 从 `#view` 摘下并保留在内存，返回时重新挂载，不再重建 DOM。
+- 离开页面前保存 `#view`、`.game-list` 和 `.side` 的滚动位置，返回时恢复；部署、还原或扫描后的显式刷新不会跳回顶部。
+- 页面 DOM 最多缓存 5 秒；超过 5 秒再进入会重新渲染并刷新数据。页面模块在数据真正渲染完成后才标记 `ready`，切页中途离开的骨架页不会被视为已完成。
+- `gameModes` 由渲染层做 5 秒 TTL 缓存；部署、还原、扫描、增删游戏、SM 开关、DLSS5/ANR 安装卸载和 GPU 伪装后立即失效。SM、ANR、帧生成页共享同一份结果，避免切页重复扫描。
+- DLSS5 状态最多 4 个并发检查，逐卡出现，结果缓存 60 秒；安装/卸载后立即失效。SM 使用 `gameModes` 返回的驱动配置详情，不再单独调用 `sm.inspectMany`。
+- 封面只请求视口内（含 200px 预加载边距）的卡片，最多 2 个并发；优先 600×900 原图，失败封面有 10 分钟渲染层负缓存和 1 小时原生负缓存，离线时只使用本地素材和 EXE 图标。
+- 进度轮询统一 500 ms，增加防重入；窗口隐藏或最小化时暂停，恢复可见时立即拉取一次。
+- 全屏 `backdrop-filter` 模糊已移除，骨架 shimmer 和进度流光已移除；保留必要的 spinner 和一次性入场动画。
+- Chromium 关闭未使用的 WebGL 和拼写检查；V8 半空间上限设为 8 MB，降低渲染器提交内存。
+- 窗口尺寸和位置写入 `config/window.json`；窗口最小尺寸 1360×820。
 
 ## 浏览器进程故障
 

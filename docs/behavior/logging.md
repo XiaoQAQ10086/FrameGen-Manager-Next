@@ -14,7 +14,8 @@ Rust 实现：`fgm-infra/src/logging/operation_log.rs`。
 
 ## 读取
 
-- `tail(maxLines)` 读取最后 N 行；文件不存在返回空。
+- `tail(maxLines)` 只从文件尾部读取最多 256 KB，丢弃截断的首行后再取最后 N 行；文件不存在返回空。
+- 日志达到 5 MB 时轮转为 `fgm.log.1`，保留 3 份历史文件；当前文件继续追加。
 - 最多返回 5000 行，避免一次拉取过大。
 - UI 日志页显示等宽文本，支持复制和刷新。
 
@@ -28,7 +29,6 @@ Rust 实现：`fgm-infra/src/logging/operation_log.rs`。
 
 ## 尚未完成
 
-- 日志滚动/大小上限。
 - 诊断包打包。
 - 所有 Core 操作统一带 operation id（目前 FFI 层按时间戳记录关键操作）。
 

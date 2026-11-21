@@ -33,7 +33,7 @@ pub(crate) fn log_startup(paths: &AppPaths, settings: &fgm_infra::settings::AppS
             ("os", &os),
         ],
     );
-    if let Some(gpu) = fgm_infra::gpu::GpuDetector::detect() {
+    if let Some(gpu) = fgm_infra::gpu::GpuDetector::detect_cached(paths) {
         let route = format!("{:?}", gpu.route);
         let hags = format!("{:?}", gpu.hags);
         log_event(

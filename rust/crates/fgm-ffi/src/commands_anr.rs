@@ -76,7 +76,7 @@ pub(crate) fn anr_deploy(request: &str) -> Result<Value, AppError> {
         .transpose()?;
     let paths = data_paths(request.data_dir.as_deref())?;
     paths.ensure_created()?;
-    if let Some(gpu) = GpuDetector::detect()
+    if let Some(gpu) = GpuDetector::detect_cached(&paths)
         && !matches!(
             gpu.route,
             GpuRoute::Sm86 | GpuRoute::Sm75 | GpuRoute::NotNeeded | GpuRoute::Gtx16

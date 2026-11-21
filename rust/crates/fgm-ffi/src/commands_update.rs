@@ -1,31 +1,98 @@
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::sync::atomic::AtomicBool;
+use std::time::{SystemTime, UNIX_EPOCH};
 
 use fgm_domain::error::{AppError, ErrorCode};
 use fgm_domain::version::VERSION;
+use fgm_infra::fs::AtomicFile;
 use fgm_infra::paths::AppPaths;
 use fgm_infra::process::ProcessLauncher;
-use fgm_infra::updates::{UpdateChecker, UpdateDownloader, UpdateLauncher, UpdateSource};
-use serde::Deserialize;
+use fgm_infra::updates::{
+    UpdateChecker, UpdateDownloader, UpdateInfo, UpdateLauncher, UpdateManifest, UpdateSource,
+};
+use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
 
-use super::commands::{absolute, parse};
+use super::commands::{absolute, data_paths, parse};
 
-pub(crate) fn update_check() -> Result<Value, AppError> {
+const CHECK_TTL_SECONDS: u64 = 24 * 60 * 60;
+
+#[derive(Default, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct UpdateCheckRequest {
+    #[serde(default)]
+    force: bool,
+    #[serde(default)]
+    data_dir: Option<String>,
+}
+
+#[derive(Deserialize, Serialize)]
+struct CachedUpdate {
+    checked_at: u64,
+    available: bool,
+    current_version: String,
+    manifest: UpdateManifest,
+}
+
+fn cache_path(paths: &AppPaths) -> PathBuf {
+    paths.state().join("update-check.json")
+}
+
+fn load_cached(paths: &AppPaths, force: bool) -> Option<UpdateInfo> {
+    if force {
+        return None;
+    }
+    let bytes = std::fs::read(cache_path(paths)).ok()?;
+    let cached: CachedUpdate = serde_json::from_slice(&bytes).ok()?;
+    let now = SystemTime::now().duration_since(UNIX_EPOCH).ok()?.as_secs();
+    if now.saturating_sub(cached.checked_at) >= CHECK_TTL_SECONDS {
+        return None;
+    }
+    Some(UpdateInfo {
+        available: cached.available,
+        current_version: cached.current_version,
+        manifest: cached.manifest,
+    })
+}
+
+fn save_cached(paths: &AppPaths, info: &UpdateInfo) {
+    let Ok(now) = SystemTime::now().duration_since(UNIX_EPOCH) else {
+        return;
+    };
+    let cached = CachedUpdate {
+        checked_at: now.as_secs(),
+        available: info.available,
+        current_version: info.current_version.clone(),
+        manifest: info.manifest.clone(),
+    };
+    if let Ok(bytes) = serde_json::to_vec_pretty(&cached) {
+        let _ = AtomicFile::write(&cache_path(paths), &bytes);
+    }
+}
+
+fn checked_info(paths: &AppPaths, force: bool) -> Result<UpdateInfo, AppError> {
+    if let Some(info) = load_cached(paths, force) {
+        return Ok(info);
+    }
     let info = UpdateChecker::check(
         &UpdateSource::manifest_urls(),
         VERSION,
         &AtomicBool::new(false),
     )?;
+    save_cached(paths, &info);
+    Ok(info)
+}
+
+pub(crate) fn update_check(request: &str) -> Result<Value, AppError> {
+    let request: UpdateCheckRequest = parse(request)?;
+    let paths = data_paths(request.data_dir.as_deref())?;
+    let info = checked_info(&paths, request.force)?;
     Ok(check_reply(&info))
 }
 
 pub(crate) fn update_download() -> Result<Value, AppError> {
-    let info = UpdateChecker::check(
-        &UpdateSource::manifest_urls(),
-        VERSION,
-        &AtomicBool::new(false),
-    )?;
+    let paths = AppPaths::create_default(None)?;
+    let info = checked_info(&paths, false)?;
     if !info.available {
         return Ok(check_reply(&info));
     }

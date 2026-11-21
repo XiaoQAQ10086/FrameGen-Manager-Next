@@ -9,9 +9,10 @@
 - `fgm-infra/src/process/process_launcher.rs`：`launch_detached` 启动安装包；`open_url` 只接受 http/https 并通过 `rundll32 url.dll,FileProtocolHandler` 打开系统浏览器。
 - 下载基于 `fgm-infra/src/net` 的 WinHTTP，支持重定向、取消和进度回调。
 - `fgm-ffi/src/commands_update.rs`：`fgm_update_check_json`、`fgm_update_download_json`（返回路径与 `portable`）、`fgm_update_install_json`、`fgm_update_open_json`。
-- Electron：关于页“更新”卡片手动检查后打开更新弹窗，显示当前/最新版本、更新说明、夸克网盘与百度网盘按钮；下载在弹窗内显示进度条、百分比与实时速度（200ms 轮询 `operation.progress`），取消按钮立即请求 `operation.cancel` 并关闭弹窗，下载器随即删除 `.part` 临时文件。安装版下载完成后启动安装包，便携版只提示手动替换。
+- Electron：关于页“更新”卡片手动检查（`force: true`）后打开更新弹窗，显示当前/最新版本、更新说明、夸克网盘与百度网盘按钮；下载在弹窗内显示进度条、百分比与实时速度（500ms 轮询 `operation.progress`，防重入、窗口隐藏暂停），取消按钮立即请求 `operation.cancel` 并关闭弹窗，下载器随即删除 `.part` 临时文件。安装版下载完成后启动安装包，便携版只提示手动替换。
+- 自动检查结果在 `state/update-check.json` 缓存 24 小时；24 小时内启动不再联网，关于页手动检查始终强制刷新。缓存保存完整 manifest，下载时可直接复用，避免重复检查。
 - 安装包卸载项由 `build/installer-next.iss` 的 `[UninstallDelete]` 清理 `%LOCALAPPDATA%\FrameGen-Manager-Next` 与 `%TEMP%\FrameGen-Manager-Next`。
-- 尚未迁移：启动时静默检查、`update.json` 发布流程（当前由发布脚本另行生成）。
+- 启动后延迟静默检查一次；结果按 24 小时缓存。`update.json` 由发布脚本生成。
 - 测试：`rust/crates/fgm-infra/tests/updates.rs`（本地 HTTP 清单 + 安装包下载）、`downloader.rs`、`update_source.rs`。
 
 ## 检查

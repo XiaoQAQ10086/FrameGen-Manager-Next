@@ -15,7 +15,7 @@ function formatSpeed(bytesPerSecond) {
 
 export async function autoCheckUpdate() {
   try {
-    const info = await call('update.check');
+    const info = await call('update.check', { force: false });
     if (info.available) showUpdateDialog(info);
   } catch {
     // Startup checks are silent: offline or no manifest is not an error.
@@ -76,6 +76,7 @@ export function showUpdateDialog(info) {
   let closed = false;
   let cancelled = false;
   let timer = null;
+  let polling = false;
   let lastBytes = 0;
   let lastTime = 0;
 
@@ -111,6 +112,8 @@ export function showUpdateDialog(info) {
     lastBytes = 0;
     lastTime = performance.now();
     timer = setInterval(async () => {
+      if (polling || document.hidden) return;
+      polling = true;
       try {
         const state = await call('operation.progress');
         const done = Number(state.done || 0);
@@ -124,8 +127,12 @@ export function showUpdateDialog(info) {
         bar.style.width = `${Math.max(1, fraction * 100)}%`;
         percent.textContent = total > 0 ? `${Math.round(fraction * 100)}%` : '…';
         speedNode.textContent = speed > 0 ? formatSpeed(speed) : '';
-      } catch {}
-    }, 200);
+      } catch {
+        // Keep the last rendered progress; the download reports real failures.
+      } finally {
+        polling = false;
+      }
+    }, 500);
   };
 
   const closeButtons = overlay.querySelectorAll('[data-update-close]');
