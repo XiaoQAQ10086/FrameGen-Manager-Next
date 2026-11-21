@@ -470,12 +470,12 @@
     }
   },
   "anrRestored": "ANR restored.",
-  "anrExperimental": "Experimental",
   "anrChecked": "Checked {count} games",
   "anrPackageTitle": "ANR package",
   "anrReady": "Ready",
   "anrNotDownloaded": "Not downloaded",
   "anrPackageVersion": "Version: {version}",
+  "anrPackageFull": " · Full package",
   "anrPackageAddon": " · Addon (requires OptiScaler)",
   "anrPackageMissing": "ANR package not detected. Download it online or import an ANR zip first.",
   "anrCurrentGpu": "Current GPU: {name} · {driver}",

@@ -169,8 +169,12 @@ function openDetail(root, game) {
             <option value="d3d9.dll">d3d9.dll</option><option value="opengl32.dll">opengl32.dll</option>
           </select></div></label>
         </div>
-        <div class="kv2"><span>${t('dlss5OverlayKey')}</span><b class="badge">${esc(hotkeyLabel(reply.hotkeyVk))}</b>
-          <button class="btn small" data-action="record-hotkey" type="button">${t('dlss5RecordHotkey')}</button></div>
+        <div class="kv2 hotkey-row"><span>${t('dlss5OverlayKey')}</span>
+          <div class="hotkey-controls">
+            <b class="badge">${esc(hotkeyLabel(reply.hotkeyVk))}</b>
+            <button class="btn small" data-action="record-hotkey" type="button">${t('dlss5RecordHotkey')}</button>
+          </div>
+        </div>
         <p class="hint">${t('dlss5DetailSubtitle')}</p>
       </div>
       <footer class="modal-foot">

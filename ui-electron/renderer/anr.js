@@ -14,7 +14,7 @@ export async function renderAnr(root) {
     <section class="page">
       <header class="listhead">
         <div class="lh-text">
-          <h1>${t('navAnr')} <span class="badge warn">${t('anrExperimental')}</span></h1>
+          <h1>${t('navAnr')}</h1>
           <div class="sub" data-role="status">${t('anrChecked', { count: state.games.length })}</div>
         </div>
         <div class="lh-actions">
@@ -73,7 +73,7 @@ function renderPackage(root) {
     <div class="ctitle">${t('anrPackageTitle')}</div>
     <div class="chips"><span class="chip ${packageInfo ? 'ok' : 'dim'}">${packageInfo ? t('anrPackageReady') : t('anrNotDownloaded')}</span></div>
     <p class="hint">${packageInfo
-      ? `${t('anrPackageVersion', { version: packageInfo.version })}${packageInfo.kind === 'addon' ? t('anrPackageAddon') : ''}`
+      ? `${t('anrPackageVersion', { version: packageInfo.version })}${packageInfo.kind === 'addon' ? t('anrPackageAddon') : t('anrPackageFull')}`
       : t('anrPackageMissing')}</p>
     <p class="hint">${gpu ? t('anrCurrentGpu', { name: gpu.name, driver: gpu.driverVersion }) : t('gpuMissing')}</p>
     <button class="btn primary wide" data-action="download" type="button">${t('anrDownloadOnline')}</button>
