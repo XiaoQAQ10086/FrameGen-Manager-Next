@@ -112,6 +112,8 @@ function cardMarkup(game, index) {
   const stateText = stateLabel(framegen);
   const stateClass = framegen === 'installed' ? 'ok' : (framegen === 'notDeployed' ? 'dim' : 'warn');
   const primary = framegen === 'outdated' ? t('update') : (deployed ? t('restore') : t('deploy'));
+  const smOn = mode.smoothMotion === 'on';
+  const smBlocked = smOn && !deployed;
   return `
     <article class="gcard" style="animation-delay:${Math.min(index * 35, 350)}ms">
       <div class="gtop">
@@ -124,14 +126,14 @@ function cardMarkup(game, index) {
             <span class="badge">${esc(sourceLabel(game.source))}</span>
             <span class="badge">${esc(apiLabel(game.graphicsApi))}</span>
             <span class="badge state ${stateClass}">${esc(stateText)}</span>
-            ${mode.smoothMotion === 'on' ? '<span class="badge mode">SM</span>' : ''}
+            ${smOn ? `<span class="badge danger">${esc(t('smConflict'))}</span>` : ''}
             ${mode.anr && mode.anr !== 'notDeployed' ? '<span class="badge mode">ANR</span>' : ''}
           </div>
         </div>
       </div>
       <div class="gpath" title="${esc(prettyPath(game.targetDirectory))}">${esc(prettyPath(game.targetDirectory))}</div>
       <div class="gactions">
-        <button class="btn small ${deployed ? 'danger' : 'success'}" data-action="${deployed ? 'restore' : 'deploy'}" data-id="${esc(game.id)}" type="button">${esc(primary)}</button>
+        <button class="btn small ${deployed ? 'danger' : 'success'}" data-action="${deployed ? 'restore' : 'deploy'}" data-id="${esc(game.id)}" type="button" ${smBlocked ? 'disabled' : ''} ${smBlocked ? `title="${esc(t('smConflict'))}"` : ''}>${esc(primary)}</button>
         <button class="btn small launch" data-action="launch" data-id="${esc(game.id)}" type="button">${t('launchGame')}</button>
         <span class="spacer"></span>
         <button class="btn small icon-only" data-action="folder" data-id="${esc(game.id)}" type="button" title="${t('openFolder')}" aria-label="打开文件夹">${folderIcon}</button>

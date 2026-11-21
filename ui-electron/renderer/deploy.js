@@ -42,7 +42,7 @@ export function openDeployDialog(game, refresh) {
         <label><span>${t('optionOptimized')}</span><div class="select-wrap"><select data-option="optimized"><option value="0">${t('optionOptimized0')}</option><option value="1" selected>${t('optionOptimized1')}</option><option value="2">${t('optionOptimized2')}</option><option value="3">${t('optionOptimized3')}</option></select></div></label>
         <label><span>${t('optionPreset')}</span><div class="select-wrap"><select data-option="preset"><option value="A">A</option><option value="B">B</option><option value="C">C</option></select></div></label>
         <label><span>${t('optionSuperResolution')}</span><div class="select-wrap"><select data-option="superResolution"><option value="Off">关闭</option><option value="M-INT8">M-INT8</option><option value="L-INT8">L-INT8</option><option value="M-FP16">M-FP16</option><option value="L-FP16">L-FP16</option></select></div></label>
-        <label data-xess class="hidden"><span>${t('optionFlowResolution')}</span><div class="select-wrap"><select data-option="xessFlow"><option>Coarse</option><option>Middle</option><option>Fine</option><option>CoarseAt4K</option></select></div></label>
+        <label data-xess class="hidden"><span>${t('optionFlowResolution')}</span><div class="select-wrap"><select data-option="xessFlow"><option>Coarse</option><option selected>Middle</option><option>Fine</option><option>CoarseAt4K</option></select></div></label>
         <label data-xess class="hidden"><span>${t('optionUseHudless')}</span><div class="select-wrap"><select data-option="xessHudless"><option>Auto</option><option value="1">1</option><option value="0">0</option></select></div></label>
       </div>
       <p class="option-note hidden" data-xess-note>${t('deployXeSSNote')}</p>
@@ -69,6 +69,22 @@ export function openDeployDialog(game, refresh) {
   const engineSelect = $('[data-option="engine"]', modal);
   if (engineSelect) engineSelect.onchange = syncXess;
   syncXess();
+  call('proxyStatus', { targetDir: game.targetDirectory })
+    .then((reply) => {
+      const occupied = new Set((reply.proxies || [])
+        .filter((entry) => !entry.ownedByFramegen)
+        .map((entry) => String(entry.module).toLowerCase()));
+      const select = $('[data-option="proxy"]', modal);
+      if (!select) return;
+      [...select.options].forEach((option) => {
+        option.disabled = occupied.has(option.value.toLowerCase());
+      });
+      if (select.selectedOptions[0]?.disabled) {
+        const free = [...select.options].find((option) => !option.disabled);
+        if (free) select.value = free.value;
+      }
+    })
+    .catch(() => {});
   const close = () => modal.remove();
   $('[data-close]', modal).onclick = close;
   modal.onclick = (event) => { if (event.target === modal) close(); };
@@ -89,8 +105,21 @@ async function deployGame(game, modal, refresh) {
   const optimized = Number($('[data-option="optimized"]', modal)?.value || 1);
   const preset = $('[data-option="preset"]', modal)?.value || 'A';
   const superResolution = $('[data-option="superResolution"]', modal)?.value || 'Off';
-  const xessFlow = $('[data-option="xessFlow"]', modal)?.value || 'Coarse';
+  const xessFlow = $('[data-option="xessFlow"]', modal)?.value || 'Middle';
   const xessHudless = $('[data-option="xessHudless"]', modal)?.value || 'Auto';
+  const ini = [
+    { section: 'FrameGeneration', key: 'Engine', value: engine },
+    { section: 'FrameGeneration', key: 'MaxGeneratedFrames', value: String(frames) },
+    { section: 'DLSSG', key: 'Optimized', value: String(optimized) },
+    { section: 'DLSSG', key: 'Preset', value: preset },
+    { section: 'SuperResolution', key: 'Mode', value: superResolution },
+  ];
+  if (engine === 'XeSS') {
+    ini.push(
+      { section: 'XeSSFG', key: 'FlowResolution', value: xessFlow },
+      { section: 'XeSSFG', key: 'UseHudless', value: xessHudless },
+    );
+  }
   showProgress(t('deploy'));
   try {
     await call('deploy', {
@@ -100,15 +129,7 @@ async function deployGame(game, modal, refresh) {
       proxySlot,
       gameExe: game.renderExe,
       gameId: game.id,
-      ini: [
-        { section: 'FrameGeneration', key: 'Engine', value: engine },
-        { section: 'FrameGeneration', key: 'MaxGeneratedFrames', value: String(frames) },
-        { section: 'DLSSG', key: 'Optimized', value: String(optimized) },
-        { section: 'DLSSG', key: 'Preset', value: preset },
-        { section: 'SuperResolution', key: 'Mode', value: superResolution },
-        { section: 'XeSSFG', key: 'FlowResolution', value: xessFlow },
-        { section: 'XeSSFG', key: 'UseHudless', value: xessHudless },
-      ],
+      ini,
     });
     await refresh();
     toast(`${t('deploy')}: ${game.name}`);

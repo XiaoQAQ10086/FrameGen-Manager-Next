@@ -1,14 +1,18 @@
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 
+use fgm_domain::deployment::DeploymentState;
 use fgm_domain::error::{AppError, ErrorCode};
 use fgm_domain::pack::IniSetting;
 use fgm_domain::version::VERSION;
-use fgm_infra::deployment::{DeploymentEngine, DeploymentInspector, PackDeploymentPlanner};
+use fgm_infra::deployment::{
+    DeploymentEngine, DeploymentInspector, PackDeploymentPlanner, ProxyOwner, ProxyStatus,
+};
 use fgm_infra::pack_json::PackJson;
 use fgm_infra::packs::PackLocator;
 use fgm_infra::paths::AppPaths;
 use fgm_infra::reframework::ReframeworkService;
+use fgm_infra::smooth_motion::SmoothMotionService;
 use serde::Deserialize;
 use serde_json::{Value, json};
 
@@ -82,6 +86,40 @@ pub(crate) fn deploy(request: &str) -> Result<Value, AppError> {
         let game =
             fgm_infra::library::LibraryService::set_target_override(&paths, game_id, executable)?;
         target_directory = game.target_directory;
+    }
+
+    if pack.id.starts_with("framegen.") {
+        if let Some(slot) = request.proxy_slot.as_deref() {
+            let entries = ProxyStatus::inspect(&target_directory, &paths.backups())?;
+            if let Some(entry) = entries
+                .iter()
+                .find(|entry| entry.module.eq_ignore_ascii_case(slot))
+                && entry.owner != ProxyOwner::Framegen
+            {
+                return Err(AppError::new(ErrorCode::Conflict)
+                    .with("module", entry.module.clone())
+                    .with("owner", entry.owner.key().to_string())
+                    .with("reason", "the selected proxy slot is already in use"));
+            }
+        }
+        if let Some(executable) = game_executable.as_deref()
+            && SmoothMotionService::inspect(executable).enabled == Some(true)
+        {
+            return Err(AppError::new(ErrorCode::Conflict)
+                .with("reason", "smooth motion is enabled for this game"));
+        }
+        let inspection = DeploymentInspector::inspect(
+            "smooth-motion",
+            &target_directory,
+            &paths.backups(),
+            None,
+        )?;
+        if inspection.has_manifest && inspection.state != DeploymentState::NotDeployed {
+            return Err(AppError::new(ErrorCode::Conflict).with(
+                "reason",
+                "smooth motion is already deployed to this directory",
+            ));
+        }
     }
 
     let mut options = BTreeMap::new();

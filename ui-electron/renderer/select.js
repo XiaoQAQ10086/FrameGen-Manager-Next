@@ -33,10 +33,12 @@ function refresh(select, trigger, menu) {
     item.type = 'button';
     item.className = `select-option${index === select.selectedIndex ? ' selected' : ''}`;
     item.textContent = option.textContent;
+    item.disabled = option.disabled;
     item.setAttribute('role', 'option');
     item.setAttribute('aria-selected', String(index === select.selectedIndex));
     item.addEventListener('click', (event) => {
       event.stopPropagation();
+      if (option.disabled) return;
       select.value = option.value;
       select.dispatchEvent(new Event('change', { bubbles: true }));
       closeOpen();

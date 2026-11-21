@@ -1,5 +1,6 @@
 import { $, call, esc, hideProgress, showProgress, toast } from './core.js';
 import { t } from './l10n.js';
+import { showUpdateDialog } from './update.js';
 
 let settings = {};
 let paths = {};
@@ -81,7 +82,7 @@ function bind(root) {
       } else if (action === 'quark') {
         window.fgm.openUrl(paths.netdiskUrl || 'https://pan.quark.cn');
       } else if (action === 'baidu') {
-        window.fgm.openUrl('https://pan.baidu.com/s/1DWG8f4767zpjD0Rk4HBX2w?pwd=1234');
+        window.fgm.openUrl('https://pan.baidu.com/s/1hL4B4WJEV0ui6hVqxiPvRg?pwd=1234');
       } else if (action === 'licenses') {
         await call('openFolder', { which: 'licenses' });
       } else if (action === 'update') {
