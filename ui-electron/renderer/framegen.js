@@ -210,7 +210,18 @@ function bindFramegenActions() {
 async function scan() {
   showProgress('正在扫描游戏库', false);
   try {
-    await call('library.scan');
+    const reply = await call('library.scan');
+    const count = Array.isArray(reply.games) ? reply.games.length : state.games.length;
+    $('.gp-phase').textContent = t('scanPhase_finalizing');
+    $('.gp-subject').textContent = t('scanProgressDetail', {
+      done: 4,
+      total: 4,
+      found: count,
+      remaining: 0,
+    });
+    $('.gp-percent').textContent = '100%';
+    $('.gp-track > i').style.width = '100%';
+    await new Promise((resolve) => setTimeout(resolve, 450));
     await refresh();
     toast('扫描完成');
   } catch (error) {

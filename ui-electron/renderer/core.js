@@ -106,6 +106,7 @@ export function showProgress(title, cancellable = true) {
     try {
       const reply = await call('operation.progress');
       const progress = reply.progress || reply;
+      if (progress.active === false) return;
       const total = Number(progress.total || 0);
       const done = Number(progress.done || 0);
       const fraction = total > 0 ? Math.min(1, done / total) : 0;
@@ -116,6 +117,15 @@ export function showProgress(title, cancellable = true) {
       $('.gp-track > i', node).style.width = total > 0
         ? `${Math.max(2, fraction * 100)}%`
         : '35%';
+      if (progress.kind === 'libraryScan') {
+        $('.gp-phase', node).textContent = t(`scanPhase_${progress.phase || 'loose'}`);
+        $('.gp-subject', node).textContent = t('scanProgressDetail', {
+          done,
+          total,
+          found: Number(progress.found || 0),
+          remaining: Math.max(0, total - done),
+        });
+      }
     } catch {}
   }, 300);
 }

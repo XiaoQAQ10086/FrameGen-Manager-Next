@@ -25,18 +25,42 @@ impl LibraryScanner {
         epic_manifests: Option<&Path>,
         roots: &[PathBuf],
     ) -> Vec<GameEntry> {
+        Self::scan_with_progress(steam_root, epic_manifests, roots, |_, _, _| {})
+    }
+
+    /// Scans every launcher and reports `(phase, completed_sources, found)` as
+    /// each source starts, so the UI can show progress instead of a spinner.
+    pub fn scan_with_progress(
+        steam_root: Option<&Path>,
+        epic_manifests: Option<&Path>,
+        roots: &[PathBuf],
+        mut report: impl FnMut(&'static str, usize, usize),
+    ) -> Vec<GameEntry> {
         let mut games = Vec::new();
         let mut seen = HashSet::new();
+        let mut completed = 0;
 
+        report("steam", completed, games.len());
         if let Some(steam_root) = steam_root {
             append(&mut games, &mut seen, SteamGameScanner::scan(steam_root));
         }
+        completed += 1;
+
+        report("epic", completed, games.len());
         if let Some(epic_manifests) = epic_manifests {
             append(&mut games, &mut seen, EpicGameScanner::scan(epic_manifests));
         }
-        append(&mut games, &mut seen, XboxGameScanner::scan(roots));
-        append(&mut games, &mut seen, LooseGameScanner::scan(roots));
+        completed += 1;
 
+        report("xbox", completed, games.len());
+        append(&mut games, &mut seen, XboxGameScanner::scan(roots));
+        completed += 1;
+
+        report("loose", completed, games.len());
+        append(&mut games, &mut seen, LooseGameScanner::scan(roots));
+        completed += 1;
+
+        report("finalizing", completed, games.len());
         games
     }
 }

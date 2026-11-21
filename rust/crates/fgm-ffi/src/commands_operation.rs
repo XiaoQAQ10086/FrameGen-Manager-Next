@@ -13,6 +13,8 @@ pub(crate) struct OperationState {
     pub(crate) cancelled: AtomicBool,
     done: AtomicUsize,
     total: AtomicUsize,
+    found: AtomicUsize,
+    phase: Mutex<String>,
 }
 
 impl DeploymentProgress for OperationState {
@@ -40,6 +42,8 @@ pub(crate) fn begin(kind: &str) -> Arc<OperationState> {
         cancelled: AtomicBool::new(false),
         done: AtomicUsize::new(0),
         total: AtomicUsize::new(0),
+        found: AtomicUsize::new(0),
+        phase: Mutex::new(String::new()),
     });
     if let Ok(mut current) = REGISTRY.current.lock() {
         *current = Some(state.clone());
@@ -61,6 +65,16 @@ pub(crate) fn report_total(state: &OperationState, total: u64) {
     state.total.store(total as usize, Ordering::Relaxed);
 }
 
+/// Publishes the library-scan phase, completed source count and games found.
+pub(crate) fn report_scan(state: &OperationState, phase: &str, completed: usize, found: usize) {
+    if let Ok(mut current) = state.phase.lock() {
+        current.clear();
+        current.push_str(phase);
+    }
+    state.done.store(completed, Ordering::Relaxed);
+    state.found.store(found, Ordering::Relaxed);
+}
+
 /// Returns `{"active":true,"kind":"deploy","done":3,"total":8,"cancelled":false}`.
 #[unsafe(no_mangle)]
 pub extern "C" fn fgm_operation_progress_json() -> *mut c_char {
@@ -77,6 +91,8 @@ pub extern "C" fn fgm_operation_progress_json() -> *mut c_char {
                 "kind": state.kind,
                 "done": state.done.load(Ordering::Relaxed),
                 "total": state.total.load(Ordering::Relaxed),
+                "found": state.found.load(Ordering::Relaxed),
+                "phase": state.phase.lock().map(|phase| phase.clone()).unwrap_or_default(),
                 "cancelled": state.cancelled.load(Ordering::Relaxed),
             }),
             None => json!({
@@ -84,6 +100,8 @@ pub extern "C" fn fgm_operation_progress_json() -> *mut c_char {
                 "active": false,
                 "done": 0,
                 "total": 0,
+                "found": 0,
+                "phase": "",
                 "cancelled": false,
             }),
         }

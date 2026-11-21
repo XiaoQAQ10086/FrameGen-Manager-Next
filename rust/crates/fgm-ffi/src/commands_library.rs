@@ -11,6 +11,7 @@ use serde::Deserialize;
 use serde_json::{Value, json};
 
 use super::commands::{absolute, data_paths, parse};
+use super::commands_operation::{begin, finish, report_scan, report_total};
 use super::{error_json, execute, execute_request};
 
 #[derive(Deserialize)]
@@ -26,7 +27,13 @@ struct AddManualRequest {
 pub(crate) fn scan_library() -> Result<Vec<fgm_domain::library::GameEntry>, AppError> {
     let paths = data_paths(None)?;
     paths.ensure_created()?;
-    let games = LibraryService::scan(&paths)?;
+    let operation = begin("libraryScan");
+    report_total(&operation, 4);
+    let result = LibraryService::scan_with_progress(&paths, |phase, completed, found| {
+        report_scan(&operation, phase, completed, found);
+    });
+    finish();
+    let games = result?;
     super::commands::log_event(
         &paths,
         "info",

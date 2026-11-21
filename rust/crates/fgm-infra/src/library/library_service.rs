@@ -9,17 +9,27 @@ use crate::platform::DriveRoots;
 use crate::platform::file_version::product_name;
 use crate::process::ProcessLauncher;
 
+use super::epic_locator::EpicLocator;
 use super::graphics_api_detector::GraphicsApiDetector;
 use super::library_cache::LibraryCache;
 use super::library_scanner::LibraryScanner;
 use super::library_store::LibraryStore;
 use super::path_key;
+use super::steam_locator::SteamLocator;
 
 /// Library cache operations: scanning with manual entries, manual add, launch.
 pub struct LibraryService;
 
 impl LibraryService {
     pub fn scan(paths: &AppPaths) -> Result<Vec<GameEntry>, AppError> {
+        Self::scan_with_progress(paths, |_, _, _| {})
+    }
+
+    /// Same as `scan`, forwarding launcher phases and game counts to the UI.
+    pub fn scan_with_progress(
+        paths: &AppPaths,
+        report: impl FnMut(&'static str, usize, usize),
+    ) -> Result<Vec<GameEntry>, AppError> {
         let store = Self::store(paths);
         let mut cache = store.load()?;
         let manual: Vec<GameEntry> = cache
@@ -29,7 +39,12 @@ impl LibraryService {
             .cloned()
             .collect();
 
-        let scanned = LibraryScanner::scan(&DriveRoots::roots());
+        let scanned = LibraryScanner::scan_with_progress(
+            SteamLocator::locate().as_deref(),
+            EpicLocator::manifests_directory().as_deref(),
+            &DriveRoots::roots(),
+            report,
+        );
         cache.schema_version = 1;
         let mut games = merge(manual, scanned);
         apply_overrides(&mut games, &cache.target_overrides);

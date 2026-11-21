@@ -1,7 +1,7 @@
 import { $, call, esc, toast } from './core.js';
 import { t } from './l10n.js';
 
-const QUARK_URL = 'https://pan.quark.cn/s/5708e53de73b';
+const QUARK_URL = 'https://pan.quark.cn/s/adea7ed4f2b2';
 const BAIDU_URL = 'https://pan.baidu.com/s/1hL4B4WJEV0ui6hVqxiPvRg?pwd=1234';
 
 let open = false;

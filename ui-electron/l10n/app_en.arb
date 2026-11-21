@@ -66,6 +66,12 @@
   "launchGame": "Launch game",
   "launchFailed": "Could not launch the game.",
   "scanningGames": "Scanning...",
+  "scanPhase_steam": "Scanning Steam library",
+  "scanPhase_epic": "Scanning Epic library",
+  "scanPhase_xbox": "Scanning Xbox library",
+  "scanPhase_loose": "Scanning disk folders",
+  "scanPhase_finalizing": "Finishing the library",
+  "scanProgressDetail": "{done}/{total} sources · {found} games found · {remaining} remaining",
   "gamesCount": "{count} games",
   "@gamesCount": {
     "placeholders": {
