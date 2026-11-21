@@ -7,7 +7,7 @@ import { loadCovers } from './covers.js';
 import { openDeployDialog, restoreGame } from './deploy.js';
 import { showRemoved } from './removed.js';
 
-export function renderFramegen() {
+export function renderFramegen({ preserveScroll = false } = {}) {
   if (state.section !== 'framegen') return;
   const view = $('#view');
   view.innerHTML = `
@@ -46,10 +46,12 @@ export function renderFramegen() {
   renderAssetsPanel();
   renderGames();
   bindFramegenActions();
-  requestAnimationFrame(() => {
-    const side = $('.side');
-    if (side) side.scrollTop = 0;
-  });
+  if (!preserveScroll) {
+    requestAnimationFrame(() => {
+      const side = $('.side');
+      if (side) side.scrollTop = 0;
+    });
+  }
 }
 
 function renderGpuPanel() {
@@ -112,6 +114,7 @@ function cardMarkup(game, index) {
   const stateText = stateLabel(framegen);
   const stateClass = framegen === 'installed' ? 'ok' : (framegen === 'notDeployed' ? 'dim' : 'warn');
   const primary = framegen === 'outdated' ? t('update') : (deployed ? t('restore') : t('deploy'));
+  const packVersion = mode.framegenPackVersion || mode.framegenVersion;
   const smOn = mode.smoothMotion === 'on';
   const smBlocked = smOn && !deployed;
   const route = String(state.gpu?.route || '').toLowerCase();
@@ -130,6 +133,7 @@ function cardMarkup(game, index) {
             <span class="badge">${esc(sourceLabel(game.source))}</span>
             <span class="badge">${esc(apiLabel(game.graphicsApi))}</span>
             <span class="badge state ${stateClass}">${esc(stateText)}</span>
+            ${packVersion ? `<span class="badge" title="${esc(t('deployFrameGenVersion'))}">v${esc(packVersion)}</span>` : ''}
             ${smOn ? `<span class="badge danger">${esc(t('smConflict'))}</span>` : ''}
             ${gpuBlocked ? `<span class="badge danger">${esc(t('gpuIncompatible'))}</span>` : ''}
             ${mode.anr && mode.anr !== 'notDeployed' ? '<span class="badge mode">ANR</span>' : ''}
@@ -276,8 +280,22 @@ export async function refresh() {
   applyChrome();
   const languageSelect = $('#lang-select');
   if (languageSelect) languageSelect.value = state.settings.language || 'system';
-  renderFramegen();
   const view = $('#view');
-  if (view) view.scrollTop = 0;
+  const list = $('[data-role="games"]');
+  const side = $('.side');
+  const scroll = {
+    view: view?.scrollTop || 0,
+    list: list?.scrollTop || 0,
+    side: side?.scrollTop || 0,
+  };
+  renderFramegen({ preserveScroll: true });
+  requestAnimationFrame(() => {
+    const nextView = $('#view');
+    const nextList = $('[data-role="games"]');
+    const nextSide = $('.side');
+    if (nextView) nextView.scrollTop = scroll.view;
+    if (nextList) nextList.scrollTop = scroll.list;
+    if (nextSide) nextSide.scrollTop = scroll.side;
+  });
   loadCovers();
 }

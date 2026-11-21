@@ -33,7 +33,6 @@ export function openDeployDialog(game, refresh) {
       <p class="hint">${t('deployConfirmBody', { game: esc(game.name) })}</p>
       <div class="options">
         <div class="deploy-api"><span>${t('deployGraphicsApi')}</span><b class="badge">${esc(apiLabel(game.graphicsApi))}</b></div>
-        <div class="deploy-api"><span>${t('deployFrameGenVersion')}</span><b class="badge">${esc(mode.framegenPackVersion || mode.framegenVersion || '—')}</b></div>
         <label><span>${t('optionProxySlot')}</span><div class="select-wrap"><select data-option="proxy">
           <option>version.dll</option><option>winmm.dll</option><option>dbghelp.dll</option>
           <option>dinput8.dll</option><option>dxgi.dll</option><option>d3d12.dll</option>
