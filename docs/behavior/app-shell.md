@@ -10,19 +10,18 @@
 
 ## 权限模型
 
-- 主程序通过 `app.manifest` 声明 `requireAdministrator`，启动时由 UAC 提权；用于写入 `C:\Program Files` 等受保护的游戏目录。
-- UI 与 WebView2 和主程序同进程，因此整个界面处于高完整性级别。程序只加载本地 `WebAssets`，不加载远程页面；便携版发布后也应放在受信任目录。
-- 安装版和便携版行为一致。标准用户（没有管理员凭据）无法启动。
-- 游戏启动继承当前进程令牌；Steam/Epic 协议通常交给已运行的客户端，直接运行 EXE 的手动/散装游戏会以管理员权限运行（当前明确不做降权启动）。
-- `--uninstall-cleanup` 也继承该清单；从按用户安装的卸载器触发时会出现一次 UAC。
-- Xbox/商店游戏的 `WindowsApps` 即使管理员也只有读+执行权限，仍然按只读处理，不抢所有权。
+- Electron 主进程以当前用户权限启动，不整体提权；安装版和便携版行为一致。
+- 写游戏目录时由文件系统决定权限：受保护目录返回 `AccessDenied`，界面显示错误码和诊断信息。
+- GPU 型号伪装需要管理员权限；未提权时按钮禁用并提示，不整体提权主程序。
+- 游戏启动继承当前进程令牌；Steam/Epic 协议交给已运行的客户端，手动/散装游戏按当前用户权限启动。
+- Xbox/商店游戏的 `WindowsApps` 即使管理员也只有读+执行权限，仍然按只读处理。
 
-## WebView2 配置
+## Electron 配置
 
-- 用户数据目录：`%LOCALAPPDATA%\FrameGen-Manager-Next\webview2\<安装路径 SHA-256 前 12 位>`。
-- 同一安装目录重复启动复用同一配置；开发版、便携版和不同更新目录互不干扰。
-- 本地资源通过虚拟主机 `https://fgm.local` 映射到 `WebAssets/`，不允许加载远程页面。
-- 初始化日志记录配置目录、Runtime 版本和附加浏览器参数。
+- `BrowserWindow` 使用 `sandbox: true`、`contextIsolation: true`、`nodeIntegration: false`；渲染进程只能通过 preload 暴露的窄 API 访问原生能力。
+- 打包版关闭 DevTools；只加载本地 `renderer/index.html`，CSP 不允许远程脚本。
+- 用户数据目录：便携版 `<程序目录>\userdata`；安装版 `%LOCALAPPDATA%\FrameGen-Manager-Next`；可用 `FGM_DATA_DIR` 覆盖。
+- 原生插件 `native/fgm_node.node` 由 Electron 主进程加载，不启动独立核心进程。
 
 ## 日志清理
 

@@ -116,7 +116,7 @@ export function confirmAction({ title, body, confirmLabel, cancelLabel, danger =
 }
 
 const MODE_TTL_MS = 5000;
-const MODE_MUTATIONS = /^(deploy|restore|sm\.(enable|disable|restore)|dlss5\.(install|uninstall|restore)|anr\.(deploy|restore)|library\.(scan|addManual|remove|restoreRemoved|forget)|gpuSpoof\.(apply|restore))$/;
+const MODE_MUTATIONS = /^(deploy|restore|sm\.(enable|disable|restore)|dlss5\.(install|uninstall|restore)|anr\.(deploy|restore)|library\.(scan|addManual|remove|restoreRemoved|forget)|gpuSpoof\.(apply|restore)|assets\.reconcile)$/;
 let modesCache = { at: 0, data: null };
 
 export function invalidateModes() {
