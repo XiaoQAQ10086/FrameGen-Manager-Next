@@ -134,6 +134,12 @@ pub(crate) fn deploy(request: &str) -> Result<Value, AppError> {
                 "smooth motion is already deployed to this directory",
             ));
         }
+        let anr = DeploymentInspector::inspect("anr", &target_directory, &paths.backups(), None)?;
+        if anr.has_manifest && anr.state != DeploymentState::NotDeployed {
+            return Err(AppError::new(ErrorCode::Conflict)
+                .with("owner", "anr")
+                .with("reason", "ANR is already deployed to this directory"));
+        }
     }
 
     let mut options = BTreeMap::new();

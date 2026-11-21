@@ -72,14 +72,22 @@ export function applyChrome() {
   }
 }
 
-export function confirmAction({ title, body, confirmLabel, cancelLabel }) {
+export const proxyOwnerLabel = (owner) => ({
+  framegen: t('proxyOwnerFramegen'),
+  dlss5: t('proxyOwnerDlss5'),
+  anr: t('proxyOwnerAnr'),
+  reframework: t('proxyOwnerReframework'),
+  other: t('proxyOwnerOther'),
+}[owner] || owner || t('smUnknown'));
+
+export function confirmAction({ title, body, confirmLabel, cancelLabel, danger = false }) {
   return new Promise((resolve) => {
     const overlay = document.createElement('div');
     overlay.className = 'overlay';
     overlay.innerHTML = `
       <section class="modal confirm-modal" role="dialog" aria-modal="true">
         <header class="modal-head"><h2>${esc(title)}</h2></header>
-        <p class="hint">${esc(body)}</p>
+        <p class="${danger ? 'confirm-warning' : 'hint'}">${esc(body)}</p>
         <footer class="modal-foot">
           <span></span>
           <div class="foot-actions">

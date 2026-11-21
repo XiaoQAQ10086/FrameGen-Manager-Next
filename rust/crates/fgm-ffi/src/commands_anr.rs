@@ -1,8 +1,10 @@
 use std::path::Path;
 
+use fgm_domain::deployment::DeploymentState;
 use fgm_domain::error::{AppError, ErrorCode};
 use fgm_domain::gpu::GpuRoute;
 use fgm_infra::anr::{AnrDeploymentService, AnrPackageService};
+use fgm_infra::deployment::DeploymentInspector;
 use fgm_infra::gpu::GpuDetector;
 use fgm_infra::paths::AppPaths;
 use fgm_infra::platform::FilePicker;
@@ -85,6 +87,15 @@ pub(crate) fn anr_deploy(request: &str) -> Result<Value, AppError> {
             .with(
                 "reason",
                 "ANR requires a supported NVIDIA, AMD or Intel GPU",
+            ));
+    }
+    let framegen = DeploymentInspector::inspect("framegen.sm86", &target, &paths.backups(), None)?;
+    if framegen.has_manifest && framegen.state != DeploymentState::NotDeployed {
+        return Err(AppError::new(ErrorCode::Conflict)
+            .with("owner", "framegen")
+            .with(
+                "reason",
+                "frame generation is already deployed to this directory",
             ));
     }
     let package = AnrPackageService::load_current(paths.root()).ok_or_else(|| {

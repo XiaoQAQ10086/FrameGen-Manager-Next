@@ -2,6 +2,7 @@ use std::ffi::c_char;
 use std::path::Path;
 
 use fgm_domain::error::{AppError, ErrorCode};
+use fgm_infra::anr::AnrPackageService;
 use fgm_infra::deployment::{DeploymentSummary, ProxyStatus};
 use fgm_infra::library::{CoverService, LibraryService};
 use fgm_infra::pack_json::PackJson;
@@ -126,6 +127,8 @@ pub(crate) fn game_modes(request: &str) -> Result<Value, AppError> {
     let paths = data_paths(request.data_dir.as_deref())?;
     let framegen_pack_version = pack_version("framegen.sm86");
     let dlss5_version = pack_version("dlss5.reshade-gitc");
+    let anr_pack_version =
+        AnrPackageService::load_current(paths.root()).map(|package| package.version);
 
     let games = LibraryService::list(&paths);
     let executables: Vec<std::path::PathBuf> = games
@@ -162,7 +165,27 @@ pub(crate) fn game_modes(request: &str) -> Result<Value, AppError> {
                 dlss5_version.as_deref(),
             )
             .ok();
-            let anr = DeploymentSummary::state("anr", target, &paths.backups(), None).ok();
+            let anr = DeploymentSummary::state(
+                "anr",
+                target,
+                &paths.backups(),
+                anr_pack_version.as_deref(),
+            )
+            .ok();
+            let anr_version = DeploymentSummary::version("anr", target, &paths.backups())
+                .ok()
+                .flatten();
+            let proxies = ProxyStatus::inspect(target, &paths.backups())
+                .unwrap_or_default()
+                .into_iter()
+                .map(|entry| {
+                    json!({
+                        "module": entry.module,
+                        "owner": entry.owner.key(),
+                        "ownedByFramegen": entry.owned_by_framegen,
+                    })
+                })
+                .collect::<Vec<Value>>();
             let smooth_component =
                 DeploymentSummary::state("smooth-motion", target, &paths.backups(), None).ok();
             let framegen_installed_version =
@@ -176,6 +199,9 @@ pub(crate) fn game_modes(request: &str) -> Result<Value, AppError> {
                 "framegenPackVersion": framegen_pack_version,
                 "dlss5": dlss5,
                 "anr": anr,
+                "anrVersion": anr_version,
+                "anrPackVersion": anr_pack_version,
+                "proxies": proxies,
                 "smoothMotion": smooth,
                 "smoothMotionComponent": smooth_component,
             })

@@ -1,6 +1,6 @@
 import {
-  $, $$, apiLabel, applyChrome, call, esc, folderIcon, githubIcon, hagsClass, hagsLabel, hideProgress,
-  prettyPath, showProgress, sourceLabel, state, stateLabel, toast, trashIcon,
+  $, $$, apiLabel, applyChrome, call, confirmAction, esc, folderIcon, githubIcon, hagsClass, hagsLabel,
+  hideProgress, prettyPath, proxyOwnerLabel, showProgress, sourceLabel, state, stateLabel, toast, trashIcon,
 } from './core.js';
 import { t } from './l10n.js';
 import { loadCovers } from './covers.js';
@@ -120,10 +120,12 @@ function cardMarkup(game, index) {
     : stateText;
   const smOn = mode.smoothMotion === 'on';
   const smBlocked = smOn && !deployed;
+  const anrOn = mode.anr && mode.anr !== 'notDeployed';
   const route = String(state.gpu?.route || '').toLowerCase();
   const gpuBlocked = !['sm86', 'sm75', 'notneeded'].includes(route);
-  const blocked = smBlocked || (gpuBlocked && !deployed);
-  const blockedTitle = smBlocked ? t('smConflict') : t('gpuIncompatible');
+  const blocked = smBlocked || (anrOn && !deployed) || (gpuBlocked && !deployed);
+  const blockedTitle = smBlocked ? t('smConflict') : (anrOn ? t('anrConflict') : t('gpuIncompatible'));
+  const occupied = (mode.proxies || []).filter((entry) => !entry.ownedByFramegen);
   return `
     <article class="gcard" style="animation-delay:${Math.min(index * 35, 350)}ms">
       <div class="gtop">
@@ -135,10 +137,11 @@ function cardMarkup(game, index) {
           <div class="badges">
             <span class="badge">${esc(sourceLabel(game.source))}</span>
             <span class="badge">${esc(apiLabel(game.graphicsApi))}</span>
-            <span class="badge state ${stateClass}">${esc(stateBadge)}</span>
+            ${deployed ? `<span class="badge state ${stateClass}">${esc(stateBadge)}</span>` : ''}
             ${smOn ? `<span class="badge danger">${esc(t('smConflict'))}</span>` : ''}
+            ${occupied.map((entry) => `<span class="badge warn">${esc(entry.module)} · ${esc(proxyOwnerLabel(entry.owner))}</span>`).join('')}
+            ${anrOn ? `<span class="badge danger">${esc(t('anrConflict'))}</span>` : ''}
             ${gpuBlocked ? `<span class="badge danger">${esc(t('gpuIncompatible'))}</span>` : ''}
-            ${mode.anr && mode.anr !== 'notDeployed' ? '<span class="badge mode">ANR</span>' : ''}
           </div>
         </div>
       </div>
@@ -261,7 +264,13 @@ async function addGame() {
 async function applySpoof() {
   const preset = $('[data-role="spoof-preset"]')?.value;
   if (!preset) return;
-  if (!confirm(`把显卡型号伪装为 ${preset}？需要管理员权限，重启后生效。`)) return;
+  if (!(await confirmAction({
+    title: t('gpuSpoofApply'),
+    body: `${t('gpuSpoofConfirm', { name: preset })} ${t('gpuSpoofAdminWarning')}`,
+    confirmLabel: t('gpuSpoofApply'),
+    cancelLabel: t('cancel'),
+    danger: true,
+  }))) return;
   await call('gpuSpoof.apply', { adapterIndex: 0, preset });
   toast('已写入，重启后生效。');
   await refresh();

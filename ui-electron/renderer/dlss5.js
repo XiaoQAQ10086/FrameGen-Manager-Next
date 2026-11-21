@@ -164,6 +164,8 @@ function openDetail(root, game) {
   const reply = inspections[game.id] || {};
   const route = String(state.gpu?.route || '').toLowerCase();
   const gpuBlocked = !['sm86', 'sm75'].includes(route);
+  const locked = reply.state === 'installed' || reply.state === 'installedWithoutManifest';
+  const update = reply.state === 'outdated';
   detail?.remove();
   detail = document.createElement('div');
   detail.className = 'overlay';
@@ -201,7 +203,7 @@ function openDetail(root, game) {
         <div class="foot-actions">
           <button class="btn" data-action="open-folder" type="button">${t('openFolder')}</button>
           <button class="btn danger" data-action="uninstall" type="button" ${deployed(reply) ? '' : 'disabled'}>${t('dlss5Uninstall')}</button>
-          <button class="btn success" data-action="install" type="button" ${gpuBlocked ? 'disabled' : ''} ${gpuBlocked ? `title="${esc(t('gpuIncompatible'))}"` : ''}>${t('dlss5Install')}</button>
+          <button class="btn success" data-action="install" type="button" ${gpuBlocked || locked ? 'disabled' : ''} ${gpuBlocked ? `title="${esc(t('gpuIncompatible'))}"` : (locked ? `title="${esc(t('dlss5Deployed'))}"` : '')}>${update ? t('dlss5Update') : t('dlss5Install')}</button>
         </div>
       </footer>
     </section>`;

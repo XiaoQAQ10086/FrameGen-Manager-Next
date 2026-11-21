@@ -1,5 +1,6 @@
 import {
-  $, call, esc, folderIcon, githubIcon, hideProgress, prettyPath, showProgress, state, toast, trashIcon,
+  $, call, esc, folderIcon, githubIcon, hideProgress, prettyPath, proxyOwnerLabel, showProgress, state,
+  toast, trashIcon,
 } from './core.js';
 import { t } from './l10n.js';
 import { showRemoved } from './removed.js';
@@ -95,11 +96,16 @@ function renderGames(root) {
 }
 
 function cardMarkup(game, index) {
-  const anr = (modes[game.id] || {}).anr || 'notDeployed';
+  const mode = modes[game.id] || {};
+  const anr = mode.anr || 'notDeployed';
   const deployed = anr !== 'notDeployed';
   const route = String(state.gpu?.route || '').toLowerCase();
   const gpuBlocked = Boolean(state.gpu) && !['sm86', 'sm75', 'notneeded', 'gtx16'].includes(route);
-  const blocked = !packageInfo || gpuBlocked;
+  const framegenOn = (mode.framegen || 'notDeployed') !== 'notDeployed';
+  const blocked = !packageInfo || gpuBlocked || (framegenOn && !deployed);
+  const blockedTitle = framegenOn ? t('framegenConflict') : t('gpuIncompatible');
+  const anrVersion = mode.anrVersion || mode.anrPackVersion;
+  const occupied = (mode.proxies || []).filter((entry) => entry.owner !== 'anr');
   const cover = state.covers[game.id];
   return `
     <article class="gcard" style="animation-delay:${Math.min(index * 35, 350)}ms">
@@ -108,8 +114,10 @@ function cardMarkup(game, index) {
         <div class="ginfo">
           <div class="gname">${esc(game.name)}</div>
           <div class="badges">
-            <span class="badge ${deployed ? (anr === 'needsRepair' ? 'warn' : 'ok') : 'dim'}">${esc(anrLabel(anr))}</span>
+            ${deployed ? `<span class="badge ${anr === 'needsRepair' ? 'warn' : 'ok'}">${esc(`${anrLabel(anr)}${anrVersion ? ` ${t('assetVersionLabel')}：${anrVersion}` : ''}`)}</span>` : ''}
+            ${framegenOn ? `<span class="badge danger">${esc(t('framegenConflict'))}</span>` : ''}
             ${gpuBlocked ? `<span class="badge danger">${esc(t('gpuIncompatible'))}</span>` : ''}
+            ${occupied.map((entry) => `<span class="badge warn">${esc(entry.module)} · ${esc(proxyOwnerLabel(entry.owner))}</span>`).join('')}
           </div>
         </div>
       </div>
@@ -117,7 +125,7 @@ function cardMarkup(game, index) {
       <div class="gactions">
         ${deployed
           ? `<button class="btn small danger" data-action="restore" data-id="${esc(game.id)}" type="button">${t('restore')}</button>`
-          : `<button class="btn small success" data-action="deploy" data-id="${esc(game.id)}" type="button" ${blocked ? 'disabled' : ''} ${blocked ? `title="${esc(t('gpuIncompatible'))}"` : ''}>${t('deploy')}</button>`}
+          : `<button class="btn small success" data-action="deploy" data-id="${esc(game.id)}" type="button" ${blocked ? 'disabled' : ''} ${blocked ? `title="${esc(blockedTitle)}"` : ''}>${t('deploy')}</button>`}
         <button class="btn small launch" data-action="launch" data-id="${esc(game.id)}" type="button">${t('launchGame')}</button>
         <span class="spacer"></span>
         <button class="btn small icon-only" data-action="folder" data-id="${esc(game.id)}" type="button" title="${esc(t('openFolder'))}">${folderIcon}</button>
@@ -131,6 +139,44 @@ function anrLabel(anr) {
     installed: t('anrStateDeployed'),
     needsRepair: t('anrStateNeedsRepair'),
   }[anr] || t('anrStateNotDeployed');
+}
+
+async function chooseProxy(game) {
+  let entries = [];
+  try {
+    entries = (await call('proxyStatus', { targetDir: game.targetDirectory })).proxies || [];
+  } catch {}
+  const owners = new Map(entries.map((entry) => [String(entry.module).toLowerCase(), entry.owner]));
+  const choices = ['dxgi.dll', 'winmm.dll', 'version.dll'].map((name) => {
+    const owner = owners.get(name);
+    return { name, owner, disabled: Boolean(owner), label: owner ? `${name} · ${proxyOwnerLabel(owner)}` : name };
+  });
+  const free = choices.find((choice) => !choice.disabled);
+  if (!free) {
+    toast(t('anrProxyHint'), 'error');
+    return null;
+  }
+  return new Promise((resolve) => {
+    const overlay = document.createElement('div');
+    overlay.className = 'overlay';
+    overlay.innerHTML = `
+      <section class="modal deploy-modal" role="dialog" aria-modal="true">
+        <header class="modal-head"><div><h2>${esc(game.name)}</h2><p class="muted">${t('optionProxySlot')}</p></div></header>
+        <p class="hint">${t('anrProxyHint')}</p>
+        <div class="options"><label><span>${t('optionProxySlot')}</span><select data-anr-proxy>
+          ${choices.map((choice) => `<option value="${choice.name}" ${choice.disabled ? 'disabled' : ''} ${choice.name === free.name ? 'selected' : ''}>${esc(choice.label)}</option>`).join('')}
+        </select></label></div>
+        <footer class="modal-foot"><span></span><div class="foot-actions">
+          <button class="btn" data-anr-cancel type="button">${t('cancel')}</button>
+          <button class="btn success" data-anr-go type="button">${t('deploy')}</button>
+        </div></footer>
+      </section>`;
+    const close = (value) => { overlay.remove(); resolve(value); };
+    overlay.querySelector('[data-anr-cancel]').onclick = () => close(null);
+    overlay.querySelector('[data-anr-go]').onclick = () => close(overlay.querySelector('[data-anr-proxy]').value);
+    overlay.addEventListener('click', (event) => { if (event.target === overlay) close(null); });
+    document.querySelector('#modal-root').appendChild(overlay);
+  });
 }
 
 function bind(root) {
@@ -165,11 +211,14 @@ function bind(root) {
           toast(t('anrImported'));
         }
       } else if (action === 'deploy' && game) {
+        const proxy = packageInfo?.kind === 'addon' ? null : await chooseProxy(game);
+        if (packageInfo?.kind !== 'addon' && !proxy) return;
         showProgress(t('deploy'));
         try {
           const reply = await call('anr.deploy', {
             targetDir: game.targetDirectory,
             exePath: game.renderExe,
+            proxy,
           });
           await load();
           renderGames(root);

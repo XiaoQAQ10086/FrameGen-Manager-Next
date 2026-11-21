@@ -145,6 +145,8 @@ fn deploy_full(
         paths,
         cancelled,
         progress,
+        &package.version,
+        Some(&proxy),
     )?;
     Ok(AnrReport {
         kind: AnrPackageKind::Full,
@@ -221,6 +223,8 @@ fn deploy_addon(
         paths,
         cancelled,
         progress,
+        &package.version,
+        None,
     )?;
     Ok(AnrReport {
         kind: AnrPackageKind::Addon,
@@ -229,6 +233,7 @@ fn deploy_addon(
     })
 }
 
+#[allow(clippy::too_many_arguments)]
 fn apply(
     files: &[DeploymentFile],
     target_directory: &Path,
@@ -236,14 +241,20 @@ fn apply(
     paths: &AppPaths,
     cancelled: &AtomicBool,
     progress: Option<&dyn DeploymentProgress>,
+    version: &str,
+    proxy: Option<&str>,
 ) -> Result<(), AppError> {
+    let mut options = BTreeMap::new();
+    if let Some(proxy) = proxy {
+        options.insert("proxySlot".to_string(), proxy.to_string());
+    }
     DeploymentEngine::apply(
         files,
         target_directory,
         "anr",
         "anr",
-        "imported",
-        &BTreeMap::new(),
+        version,
+        &options,
         &[],
         game_exe,
         &paths.backups(),
@@ -299,4 +310,54 @@ fn deployment_file(source: &Path, target: &str, role: &str) -> Result<Deployment
         size,
         role: role.to_string(),
     })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::time::{SystemTime, UNIX_EPOCH};
+
+    fn fixture(name: &str) -> PathBuf {
+        let stamp = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap()
+            .as_nanos();
+        let directory = std::env::temp_dir().join(format!("fgm-anr-{name}-{stamp}"));
+        std::fs::create_dir_all(&directory).unwrap();
+        directory
+    }
+
+    #[test]
+    fn honours_an_explicit_free_proxy_slot() {
+        let directory = fixture("free");
+        let proxy = AnrDeploymentService::resolve_proxy(&directory, Some("winmm.dll")).unwrap();
+        assert_eq!(proxy, "winmm.dll");
+        let _ = std::fs::remove_dir_all(directory);
+    }
+
+    #[test]
+    fn rejects_an_occupied_proxy_slot() {
+        let directory = fixture("occupied");
+        std::fs::write(directory.join("dxgi.dll"), b"original").unwrap();
+        let error = AnrDeploymentService::resolve_proxy(&directory, Some("dxgi.dll")).unwrap_err();
+        assert_eq!(error.code, ErrorCode::Conflict);
+        let _ = std::fs::remove_dir_all(directory);
+    }
+
+    #[test]
+    fn rejects_an_unknown_proxy_slot() {
+        let directory = fixture("unknown");
+        let error = AnrDeploymentService::resolve_proxy(&directory, Some("d3d12.dll")).unwrap_err();
+        assert_eq!(error.code, ErrorCode::InvalidArgument);
+        let _ = std::fs::remove_dir_all(directory);
+    }
+
+    #[test]
+    fn selects_the_first_free_slot() {
+        let directory = fixture("auto");
+        std::fs::write(directory.join("dxgi.dll"), b"original").unwrap();
+        let proxy = AnrDeploymentService::select_proxy(&directory).unwrap();
+        assert_eq!(proxy, "winmm.dll");
+        let _ = std::fs::remove_dir_all(directory);
+    }
 }
