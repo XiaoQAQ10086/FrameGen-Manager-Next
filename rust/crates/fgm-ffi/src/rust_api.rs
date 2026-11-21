@@ -65,6 +65,9 @@ pub fn clear_rounded_region(hwnd: f64) -> bool {
 pub fn invoke(name: &str, body: Option<&str>) -> Result<String, String> {
     match name {
         "version" => Ok(fgm_domain::version::VERSION.to_string()),
+        "assets.reconcile" => crate::commands::assets_reconcile()
+            .map_err(|error| format!("{:?}", error.code))
+            .and_then(|value| serde_json::to_string(&value).map_err(|error| error.to_string())),
         "library.list" => take(crate::fgm_library_list_json()),
         "library.scan" => take(crate::fgm_library_scan_json()),
         "library.removed" => take(fgm_library_removed_json()),

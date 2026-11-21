@@ -271,6 +271,11 @@ button, select { font: inherit; }
 .about-actions { display: flex; gap: var(--space-2); flex-wrap: wrap; }
 .update-modal { width: min(640px, 92vw); }
 .confirm-modal { width: min(460px, 92vw); }
+.asset-update-modal { width: min(620px, 92vw); }
+.asset-update-groups { display: grid; gap: var(--space-2); max-height: 260px; margin: var(--space-4) 0; overflow: auto; }
+.asset-update-group { display: grid; gap: var(--space-1); padding: var(--space-2) var(--space-3); border: 1px solid var(--line); border-radius: var(--radius-md); background: var(--field); }
+.asset-update-group b { font-size: var(--text-md); }
+.asset-update-group .small { font-size: var(--text-xs); }
 .update-versions { display: flex; gap: var(--space-3); margin-top: var(--space-4); }
 .update-versions > div { flex: 1 1 0; display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); padding: var(--space-3) var(--space-3); border-radius: var(--radius-md); background: rgba(96, 107, 125, .08); border: 1px solid var(--line); }
 .update-versions span { color: var(--muted); font-size: var(--text-sm); }

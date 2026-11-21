@@ -7,7 +7,8 @@ use fgm_domain::gpu::GpuRoute;
 use fgm_domain::pack::IniSetting;
 use fgm_domain::version::VERSION;
 use fgm_infra::deployment::{
-    DeploymentEngine, DeploymentInspector, PackDeploymentPlanner, ProxyOwner, ProxyStatus,
+    AssetUpdateService, DeploymentEngine, DeploymentInspector, PackDeploymentPlanner, ProxyOwner,
+    ProxyStatus,
 };
 use fgm_infra::gpu::GpuDetector;
 use fgm_infra::pack_json::PackJson;
@@ -285,6 +286,27 @@ pub(crate) fn absolute(path: &Path) -> Result<PathBuf, AppError> {
             .with("path", path.display().to_string())
             .with("reason", error.to_string())
     })
+}
+
+pub(crate) fn assets_reconcile() -> Result<Value, AppError> {
+    let paths = data_paths(None)?;
+    paths.ensure_created()?;
+    let report = AssetUpdateService::reconcile(&paths);
+    Ok(json!({
+        "ok": true,
+        "cleared": report.cleared.iter().map(|item| json!({
+            "family": item.family,
+            "targetDirectory": item.target_directory,
+            "oldVersion": item.old_version,
+            "newVersion": item.new_version,
+        })).collect::<Vec<Value>>(),
+        "failed": report.failed.iter().map(|item| json!({
+            "family": item.family,
+            "targetDirectory": item.target_directory,
+            "code": item.code,
+            "reason": item.reason,
+        })).collect::<Vec<Value>>(),
+    }))
 }
 
 pub(crate) fn settings_get() -> Result<Value, AppError> {
