@@ -208,7 +208,15 @@ function bindFramegenActions() {
 }
 
 async function scan() {
-  showProgress('正在扫描游戏库', false);
+  showProgress(t('scanPhase_steam'), false);
+  $('.gp-subject').textContent = t('scanProgressDetail', {
+    done: 0,
+    total: 4,
+    found: 0,
+    remaining: 4,
+  });
+  $('.gp-percent').textContent = '0%';
+  $('.gp-track > i').style.width = '2%';
   try {
     const reply = await call('library.scan');
     const count = Array.isArray(reply.games) ? reply.games.length : state.games.length;
