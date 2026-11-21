@@ -67,13 +67,14 @@ export async function renderSm(root) {
 
 function renderCompat(panel) {
   const gpu = state.gpu;
+  const ready = Boolean(gpu?.driverSupported);
   panel.innerHTML = `
     <div class="ctitle">${t('smCompatibilityTitle')}</div>
-    <div class="chips"><span class="chip ${gpu ? 'ok' : 'dim'}">${gpu ? t('smReady') : t('gpuMissing')}</span></div>
+    <div class="chips"><span class="chip ${ready ? 'ok' : 'warn'}">${ready ? t('smReady') : t('smUpdate')}</span></div>
     <div class="kv2"><span>${t('smGpuLabel')}</span><b class="badge">${esc(gpu?.name || '—')}</b></div>
     <div class="kv2"><span>${t('gpuDriverVersionLabel')}</span><b class="badge">${esc(gpu?.driverVersion || '—')}</b></div>
     <div class="kv2"><span>${t('smMinimum')}</span><b class="badge">616.64</b></div>
-    <p class="hint">${gpu ? t('smDriverOk') : t('gpuMissing')}</p>`;
+    <p class="hint">${gpu ? (ready ? t('smDriverOk') : t('smDriverTooOld', { current: gpu.driverVersion, min: '616.64' })) : t('gpuMissing')}</p>`;
 }
 
 async function load() {
@@ -119,7 +120,8 @@ function cardMarkup(game, index) {
   const enabled = status.enabled === true;
   const framegenOn = (mode.framegen || 'notDeployed') !== 'notDeployed';
   const outdated = component === 'outdated';
-  const blocked = framegenOn && !enabled;
+  const driverBlocked = !state.gpu?.driverSupported;
+  const blocked = (framegenOn && !enabled) || (driverBlocked && !enabled);
   const cover = state.covers[game.id];
   const initial = game.name ? game.name.slice(0, 1) : '?';
   return `
@@ -139,7 +141,7 @@ function cardMarkup(game, index) {
       ${status.detail ? `<div class="hint">${esc(status.detail)}</div>` : ''}
       ${(status.profiles || []).length ? `<div class="hint">${t('smProfileLabel')}: ${esc(status.profiles.join(' / '))}</div>` : ''}
       <div class="gactions">
-        <button class="btn small ${enabled ? 'danger' : 'success'}" data-action="${enabled ? 'disable' : 'enable'}" data-id="${esc(game.id)}" type="button" ${blocked ? 'disabled' : ''} ${blocked ? `title="${esc(t('smConflict'))}"` : ''}>${enabled ? t('smDisable') : (outdated ? t('smUpdate') : t('smEnable'))}</button>
+        <button class="btn small ${enabled ? 'danger' : 'success'}" data-action="${enabled ? 'disable' : 'enable'}" data-id="${esc(game.id)}" type="button" ${blocked ? 'disabled' : ''} ${blocked ? `title="${esc(framegenOn ? t('smConflict') : t('smDriverTooOld', { current: state.gpu?.driverVersion || '—', min: '616.64' }))}"` : ''}>${enabled ? t('smDisable') : (outdated ? t('smUpdate') : t('smEnable'))}</button>
         <button class="btn small launch" data-action="launch" data-id="${esc(game.id)}" type="button">${t('launchGame')}</button>
         <span class="spacer"></span>
         <button class="btn small icon-only" data-action="folder" data-id="${esc(game.id)}" type="button" title="${esc(t('openFolder'))}">${folderIcon}</button>

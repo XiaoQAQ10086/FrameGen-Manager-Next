@@ -269,29 +269,42 @@ async function uninstall(root, game) {
 async function recordHotkey(game) {
   if (recording) return;
   recording = true;
-  toast(t('dlss5RecordHotkey'));
+  const button = detail?.querySelector('[data-action="record-hotkey"]');
+  const buttonText = button?.textContent || t('dlss5RecordHotkey');
+  if (button) {
+    button.textContent = t('dlss5Recording');
+    button.disabled = true;
+  }
+  const finish = () => {
+    recording = false;
+    if (button) {
+      button.textContent = buttonText;
+      button.disabled = false;
+    }
+  };
   const handler = async (event) => {
     event.preventDefault();
     window.removeEventListener('keydown', handler, true);
-    recording = false;
     const virtualKey = keyToVirtualKey(event);
     if (!virtualKey) {
+      finish();
       toast(t('smUnknown'), 'warn');
       return;
     }
     try {
-      const reply = await call('dlss5.setHotkey', {
+      await call('dlss5.setHotkey', {
         targetDir: game.targetDirectory,
         virtualKey,
         exePath: game.renderExe,
       });
-      if (reply.deferred) toast(t('dlss5HotkeyDeferred'));
       await load();
+      const badge = detail?.querySelector('.hotkey-row .badge');
+      if (badge) badge.textContent = hotkeyLabel(virtualKey);
       renderWall(document.querySelector('#view'));
-      detail?.remove();
-      detail = null;
     } catch (error) {
       toast(error.message, 'error');
+    } finally {
+      finish();
     }
   };
   window.addEventListener('keydown', handler, true);

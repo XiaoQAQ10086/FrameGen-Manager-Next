@@ -29,8 +29,8 @@ function savedBounds() {
 
 function visibleBounds(bounds) {
   if (!bounds || !Number.isFinite(bounds.x) || !Number.isFinite(bounds.y)) return null;
-  const width = Math.max(1100, Number(bounds.width) || 1280);
-  const height = Math.max(700, Number(bounds.height) || 850);
+  const width = Math.max(1360, Number(bounds.width) || 1360);
+  const height = Math.max(820, Number(bounds.height) || 880);
   const visible = screen.getAllDisplays().some((display) => {
     const area = display.workArea;
     return bounds.x + 80 < area.x + area.width
@@ -67,11 +67,11 @@ function applyWindowCorners(window) {
 function createWindow() {
   const bounds = visibleBounds(savedBounds());
   const window = new BrowserWindow({
-    width: bounds?.width || 1280,
-    height: bounds?.height || 850,
+    width: bounds?.width || 1360,
+    height: bounds?.height || 880,
     ...(bounds ? { x: bounds.x, y: bounds.y } : {}),
-    minWidth: 1100,
-    minHeight: 700,
+    minWidth: 1360,
+    minHeight: 820,
     backgroundColor: '#F3F6FB',
     frame: false,
     show: false,

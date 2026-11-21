@@ -32,18 +32,18 @@
 
 ## 排版
 
-系统字体栈：`system-ui, -apple-system, "Segoe UI", "Microsoft YaHei UI", "PingFang SC", sans-serif`，正文 `13px/1.5`；路径/哈希用 `Consolas, "Courier New", monospace`。不打包字体。
+系统字体栈：`system-ui, -apple-system, "Segoe UI", "Microsoft YaHei UI", "PingFang SC", sans-serif`，正文 `14px/1.5`；路径/哈希用 `Consolas, "Courier New", monospace`。不打包字体。
 
-字号由 `:root` token 统一：`--text-xs:11px`、`--text-sm:12px`、`--text-md:13px`、`--text-lg:15px`、`--text-xl:20px`、`--text-display:24px`。路径等宽字号保留 11.5/12px，`.tile .ph` 的 40px 首字母水印保留为显示例外。
+字号由 `:root` token 统一：`--text-xs:12px`、`--text-sm:13px`、`--text-md:14px`、`--text-lg:16px`、`--text-xl:22px`、`--text-display:26px`。路径等宽字号保留 11.5/12px，`.tile .ph` 的 40px 首字母水印保留为显示例外。
 
 | 字号 | 用途 |
 |---|---|
-| 11 | 绶带、tile 角标、品牌辅助文字 |
-| 12 | 徽章、说明文字、卡路径、部署选项 |
-| 13 | 正文、键值行、小节标题 |
-| 15 | 游戏名、更新版本号 |
-| 20 | 列表页标题 |
-| 24 | 页面大标题、弹窗标题 |
+| 12 | 绶带、tile 角标、品牌辅助文字 |
+| 13 | 徽章、说明文字、卡路径、部署选项 |
+| 14 | 正文、键值行、小节标题 |
+| 16 | 游戏名、更新版本号 |
+| 22 | 列表页标题 |
+| 26 | 页面大标题、弹窗标题 |
 
 字重只使用 400 / 600 / 650 / 700 / 800：正文 400，徽章与小标签 600/650，按钮与导航 700，首字母水印 800。不使用 500，避免 12–14px 下糊字。
 

@@ -24,12 +24,12 @@
   --space-5: 20px;
   --space-6: 24px;
   --space-8: 32px;
-  --text-xs: 11px;
-  --text-sm: 12px;
-  --text-md: 13px;
-  --text-lg: 15px;
-  --text-xl: 20px;
-  --text-display: 24px;
+  --text-xs: 12px;
+  --text-sm: 13px;
+  --text-md: 14px;
+  --text-lg: 16px;
+  --text-xl: 22px;
+  --text-display: 26px;
   --success: #157a33;
   --success-top: #239f48;
   --success-border: #0f632a;
@@ -161,7 +161,7 @@ button, select { font: inherit; }
 .row .btn { flex: 0 0 auto; }
 .hint { margin: var(--space-2) 0 0; color: var(--muted); font-size: var(--text-sm); line-height: 1.5; }
 .hint.danger { color: #a52222; }
-.path { margin-top: var(--space-1); color: var(--muted); font-family: Consolas, "Courier New", monospace; font-size: 11.5px; overflow-wrap: anywhere; line-height: 1.45; }
+.path { margin-top: var(--space-1); color: var(--muted); font-family: Consolas, "Courier New", monospace; font-size: 12px; overflow-wrap: anywhere; line-height: 1.45; }
 
 .statusline { display: flex; align-items: center; gap: var(--space-4); min-height: 24px; color: var(--muted); font-size: var(--text-md); }
 .progress { flex: 1; height: 4px; border-radius: 999px; background: rgba(96, 107, 125, 0.15); overflow: hidden; }
@@ -292,6 +292,7 @@ button, select { font: inherit; }
 .hotkey-picker { display: flex; align-items: center; gap: var(--space-2); }
 .hotkey-row { align-items: center; justify-content: flex-start; gap: var(--space-3); }
 .hotkey-controls { display: flex; align-items: center; gap: var(--space-2); margin-left: 0; }
+.hotkey-controls .badge { flex: 0 0 104px; width: 104px; padding: var(--space-1) var(--space-4); font-size: var(--text-md); text-align: center; }
 .hotkey-picker b { color: var(--ink); font-size: var(--text-sm); font-weight: 600; }
 .dlss-detail .hint { margin: 0; }
 .dlss-detail .badges { margin-top: var(--space-1); }
@@ -728,7 +729,7 @@ select:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(0, 122, 2
 .about-page .kv2 small { font-size: var(--text-md); line-height: 1.5; }
 .about-links { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-4); margin-top: var(--space-5); }
 .about-link { display: flex; flex-direction: column; gap: var(--space-2); }
-.about-link .path { margin: 0; font-size: 11.5px; }
+.about-link .path { margin: 0; font-size: 12px; }
 .about-link .btn { margin-top: auto; }
 .page-host > .page.about-page { height: auto; min-height: 100%; }
 .about-page > .form-panel { flex: 0 0 auto; margin-left: auto; margin-right: auto; width: 100%; }

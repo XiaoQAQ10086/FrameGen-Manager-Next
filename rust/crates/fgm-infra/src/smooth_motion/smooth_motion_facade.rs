@@ -15,13 +15,16 @@ impl SmoothMotionFacade {
     #[allow(clippy::too_many_arguments)]
     pub fn enable(
         route: GpuRoute,
-        _driver_supported: bool,
+        driver_supported: bool,
         game: &str,
         executable: &Path,
         target_directory: &Path,
         app_version: &str,
         paths: &AppPaths,
     ) -> Result<SmoothMotionChange, AppError> {
+        if !driver_supported {
+            return Err(AppError::new(ErrorCode::GpuUnsupported).with("min", "616.64"));
+        }
         SmoothMotionComponents::deploy(
             route,
             target_directory,
