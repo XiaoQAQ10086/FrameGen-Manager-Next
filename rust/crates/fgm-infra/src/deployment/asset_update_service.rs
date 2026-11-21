@@ -9,6 +9,7 @@ use crate::pack_json::PackJson;
 use crate::packs::PackLocator;
 use crate::paths::AppPaths;
 use crate::smooth_motion::SmoothMotionService;
+use crate::updates::update_checker::is_newer;
 
 use super::DeploymentEngine;
 
@@ -58,7 +59,9 @@ impl AssetUpdateService {
             let Some(current_version) = pack_version(&pack_id) else {
                 continue;
             };
-            if manifest.pack_version.is_empty() || manifest.pack_version == current_version {
+            if manifest.pack_version.is_empty()
+                || !is_newer(&current_version, &manifest.pack_version)
+            {
                 continue;
             }
             if !seen.insert((effective.to_string(), target.clone())) {

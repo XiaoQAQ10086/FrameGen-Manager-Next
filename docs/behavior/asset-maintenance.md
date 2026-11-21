@@ -77,7 +77,7 @@ fgm-next assets clear --yes
 - `Infrastructure.Tests/DeploymentEngineTests`：有冲突的还原保留 `Partial` manifest，便于重试。
 ## Electron/Rust 实现状态（2026-11-21）
 
-- 启动后调用 `assets.reconcile`，只读扫描 `backups/*/*/manifest.json`，比较 manifest 的 pack 版本与当前内置 pack；版本不同才处理。
+- 启动后调用 `assets.reconcile`，只读扫描 `backups/*/*/manifest.json`，比较 manifest 的 pack 版本与当前内置 pack；只有当前内置版本**高于**已部署版本时才清除（例如部署 0.4.2、内置 0.4.3），降级或同版本不处理。
 - 自动清除旧部署（帧生成、SM、DLSS5、REFramework），清除成功后再弹窗列出已清理游戏和版本，提示用户手动重新部署；不会自动重装。
 - 有冲突/残留时保留 manifest，列入失败列表；运行时目录和日志按各功能清理规则处理。
 - ANR 是用户导入的外部包，不参与内置资产版本检查。

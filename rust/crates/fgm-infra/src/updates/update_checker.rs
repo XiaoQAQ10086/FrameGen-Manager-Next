@@ -67,7 +67,7 @@ fn manifest_path() -> PathBuf {
         .join(format!("update-{}.json", std::process::id()))
 }
 
-fn is_newer(candidate: &str, current: &str) -> bool {
+pub(crate) fn is_newer(candidate: &str, current: &str) -> bool {
     let Some(candidate) = parse_version(candidate) else {
         return false;
     };
