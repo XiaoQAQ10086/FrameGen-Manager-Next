@@ -9,6 +9,8 @@ let detailApi = 'auto';
 let detailProxy = 'auto';
 let recording = false;
 let serial = 0;
+let cachedKey = '';
+let cachedAt = 0;
 
 export async function renderDlss5(root) {
   const current = ++serial;
@@ -42,7 +44,19 @@ export async function renderDlss5(root) {
       </main>
     </section>`;
 
+  const key = state.games.map((game) => game.targetDirectory).join('|');
+  if (Object.keys(inspections).length && key === cachedKey) {
+    renderWall(root);
+    bind(root);
+    if (Date.now() - cachedAt < 10000) return;
+    load().then(() => {
+      if (current === serial && state.section === 'dlss5') renderWall(root);
+    });
+    return;
+  }
   await load();
+  cachedKey = key;
+  cachedAt = Date.now();
   if (current !== serial || state.section !== 'dlss5') return;
   renderWall(root);
   bind(root);
@@ -103,6 +117,7 @@ function bind(root) {
         await showRemoved(async () => {
           state.games = (await call('library.list')).games || [];
           await load();
+          cachedAt = Date.now();
           renderWall(root);
         });
       } else if (action === 'open' && game) {
@@ -121,6 +136,7 @@ function bind(root) {
           await call('library.addManual', { path: picked.path });
           state.games = (await call('library.list')).games || [];
           await load();
+          cachedAt = Date.now();
           renderWall(root);
         }
       } else if (action === 'record-hotkey' && selected) {
