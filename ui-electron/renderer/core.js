@@ -116,7 +116,7 @@ export function confirmAction({ title, body, confirmLabel, cancelLabel, danger =
 }
 
 const MODE_TTL_MS = 5000;
-const MODE_MUTATIONS = /^(deploy|restore|sm\.(enable|disable|restore)|dlss5\.(install|uninstall|restore)|anr\.(deploy|restore)|library\.(scan|addManual|remove|restoreRemoved|forget)|gpuSpoof\.(apply|restore)|assets\.reconcile)$/;
+const MODE_MUTATIONS = /^(deploy|restore|sm\.(enable|disable|restore)|dlss5\.(install|uninstall|restore)|anr\.(deploy|restore)|library\.(scan|addManual|remove|restoreRemoved|forget)|gpuSpoof\.(apply|restore))$/;
 let modesCache = { at: 0, data: null };
 
 export function invalidateModes() {
@@ -134,7 +134,9 @@ export async function call(name, payload) {
     throw error;
   }
   if (name === 'gameModes') modesCache = { at: Date.now(), data: reply.data };
-  if (MODE_MUTATIONS.test(name)) invalidateModes();
+  if (MODE_MUTATIONS.test(name) || (name === 'assets.reconcile' && reply.data?.cleared?.length)) {
+    invalidateModes();
+  }
   return reply.data;
 }
 
