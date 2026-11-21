@@ -148,9 +148,9 @@ impl super::deployment_engine::DeploymentEngine {
             }
         }
 
-        if report.conflicts.is_empty() {
-            prune_empty_directories(target_directory, &touched_directories);
-        }
+        // Empty directories are safe to prune even when a file was modified:
+        // the conflicting file stays, while DLSS5/GITC folders no longer linger.
+        prune_empty_directories(target_directory, &touched_directories);
 
         Ok(report)
     }

@@ -41,6 +41,7 @@ impl DeploymentSummary {
                 }
             }
             DeploymentManifestState::Partial
+            | DeploymentManifestState::Installing
             | DeploymentManifestState::BackingUp
             | DeploymentManifestState::Writing
             | DeploymentManifestState::Verifying => DeploymentState::Partial,

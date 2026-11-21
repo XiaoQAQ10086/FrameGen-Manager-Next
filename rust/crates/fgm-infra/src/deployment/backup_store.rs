@@ -26,10 +26,18 @@ impl BackupStore {
             .map(|value| value.replace('/', "_"))
             .unwrap_or_else(|_| "unknown".to_string());
 
-        Ok(self
-            .root
-            .join(family)
-            .join(DeploymentKey::for_path(target)?))
+        let key = DeploymentKey::for_path(target)?;
+        let current = self.root.join(&family).join(&key);
+        // C# 2.x recorded frame generation under `framegen`; the Rust engine
+        // uses the pack id. Keep reading the old directory so upgrades retain
+        // manifests, versions and backups.
+        if family == "framegen.sm86" && !current.exists() {
+            let legacy = self.root.join("framegen").join(&key);
+            if legacy.exists() {
+                return Ok(legacy);
+            }
+        }
+        Ok(current)
     }
 
     pub fn manifest_path(&self, family: &str, target: &Path) -> Result<PathBuf, AppError> {

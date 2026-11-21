@@ -6,7 +6,7 @@ use super::deployed_file_record::DeployedFileRecord;
 use super::deployment_manifest_state::DeploymentManifestState;
 
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[serde(rename_all = "camelCase")]
 pub struct DeploymentManifest {
     #[serde(default = "default_schema_version")]
     pub schema_version: u32,

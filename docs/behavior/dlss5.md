@@ -129,3 +129,9 @@ fgm-next dlss5 uninstall <target-dir> [--data-dir <dir>]
 - 官方 ReShade setup 每次都会联网下载兼容性数据，耗时约 60–100 秒；常规安装不经过它，只有 Vulkan 或离线解包失败时使用。
 - Vulkan 依赖全局 ReShade 层，只能联网运行官方 setup。
 - 官方 setup 的界面与退出码受 ReShade 上游控制；超时按失败处理并回滚。
+
+## 安装/卸载与确认
+
+- DX10/11/12 安装从官方 ReShade setup 中提取 `ReShade64.dll`，不运行官方安装器；Vulkan 才调用官方 setup 的 headless 安装/卸载。
+- 安装/卸载确认使用软件内弹窗，不调用浏览器原生 `confirm()`。
+- 卸载按 manifest 还原；空的 `GITC-Uplift`、`reshade-shaders` 目录会清理，非空或用户文件保留。

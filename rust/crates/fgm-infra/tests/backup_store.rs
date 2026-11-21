@@ -5,7 +5,8 @@ use std::time::{SystemTime, UNIX_EPOCH};
 
 use fgm_domain::deployment::{DeployedFileRecord, DeploymentManifest, DeploymentManifestState};
 use fgm_domain::error::ErrorCode;
-use fgm_infra::deployment::BackupStore;
+use fgm_infra::deployment::{BackupStore, DeploymentSummary};
+use fgm_infra::fs::DeploymentKey;
 
 #[test]
 fn backup_directory_is_stable_and_sanitized() {
@@ -37,6 +38,52 @@ fn saves_and_loads_a_manifest() {
         .expect("manifest");
 
     assert_eq!(loaded, manifest);
+}
+
+#[test]
+fn reads_a_csharp_framegen_manifest_after_upgrade() {
+    let dir = TestDir::new("backup-csharp");
+    let store = BackupStore::new(dir.path().join("backups"));
+    let target = dir.path().join("game");
+    let legacy = dir
+        .path()
+        .join("backups")
+        .join("framegen")
+        .join(DeploymentKey::for_path(&target).unwrap());
+    fs::create_dir_all(&legacy).unwrap();
+    fs::write(
+        legacy.join("manifest.json"),
+        serde_json::json!({
+            "schemaVersion": 1,
+            "familyId": "framegen",
+            "packId": "framegen.sm86",
+            "packVersion": "0.4.1",
+            "targetDirectory": target.to_string_lossy(),
+            "createdUtc": "2026-11-20T12:00:00+00:00",
+            "state": "installed",
+            "files": [],
+            "options": {}
+        })
+        .to_string(),
+    )
+    .unwrap();
+
+    let loaded = store
+        .load_manifest("framegen.sm86", &target)
+        .unwrap()
+        .expect("legacy manifest");
+    assert_eq!(loaded.pack_version, "0.4.1");
+    assert_eq!(loaded.family_id, "framegen");
+    assert_eq!(
+        DeploymentSummary::state(
+            "framegen.sm86",
+            &target,
+            &dir.path().join("backups"),
+            Some("0.4.2")
+        )
+        .unwrap(),
+        fgm_domain::deployment::DeploymentState::Outdated
+    );
 }
 
 #[test]

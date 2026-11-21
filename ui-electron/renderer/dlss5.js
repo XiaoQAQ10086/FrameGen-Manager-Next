@@ -1,4 +1,4 @@
-import { $, call, esc, githubIcon, hideProgress, prettyPath, showProgress, state, toast } from './core.js';
+import { $, call, confirmAction, esc, githubIcon, hideProgress, prettyPath, showProgress, state, toast } from './core.js';
 import { t } from './l10n.js';
 import { showRemoved } from './removed.js';
 
@@ -244,7 +244,12 @@ function resolveApi(game) {
 }
 
 async function install(root, game) {
-  if (!confirm(t('dlss5ConfirmBody', { game: game.name }))) return;
+  if (!(await confirmAction({
+    title: t('dlss5Install'),
+    body: t('dlss5ConfirmBody', { game: game.name }),
+    confirmLabel: t('dlss5Install'),
+    cancelLabel: t('cancel'),
+  }))) return;
   const api = resolveApi(game);
   const proxy = detailProxy === 'auto' ? undefined : detailProxy;
   showProgress(t('dlss5Install'));
@@ -268,7 +273,12 @@ async function install(root, game) {
 }
 
 async function uninstall(root, game) {
-  if (!confirm(t('dlss5UninstallConfirm', { game: game.name }))) return;
+  if (!(await confirmAction({
+    title: t('dlss5Uninstall'),
+    body: t('dlss5UninstallConfirm', { game: game.name }),
+    confirmLabel: t('dlss5Uninstall'),
+    cancelLabel: t('cancel'),
+  }))) return;
   showProgress(t('dlss5Uninstall'));
   try {
     const reply = await call('dlss5.uninstall', { targetDir: game.targetDirectory });

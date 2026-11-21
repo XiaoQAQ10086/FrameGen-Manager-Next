@@ -72,6 +72,40 @@ export function applyChrome() {
   }
 }
 
+export function confirmAction({ title, body, confirmLabel, cancelLabel }) {
+  return new Promise((resolve) => {
+    const overlay = document.createElement('div');
+    overlay.className = 'overlay';
+    overlay.innerHTML = `
+      <section class="modal confirm-modal" role="dialog" aria-modal="true">
+        <header class="modal-head"><h2>${esc(title)}</h2></header>
+        <p class="hint">${esc(body)}</p>
+        <footer class="modal-foot">
+          <span></span>
+          <div class="foot-actions">
+            <button class="btn" data-confirm-cancel type="button">${esc(cancelLabel)}</button>
+            <button class="btn success" data-confirm-ok type="button">${esc(confirmLabel)}</button>
+          </div>
+        </footer>
+      </section>`;
+    const onKey = (event) => {
+      if (event.key === 'Escape') close(false);
+    };
+    const close = (value) => {
+      document.removeEventListener('keydown', onKey);
+      overlay.remove();
+      resolve(value);
+    };
+    overlay.querySelector('[data-confirm-cancel]').onclick = () => close(false);
+    overlay.querySelector('[data-confirm-ok]').onclick = () => close(true);
+    overlay.addEventListener('click', (event) => {
+      if (event.target === overlay) close(false);
+    });
+    document.addEventListener('keydown', onKey);
+    $('#modal-root').appendChild(overlay);
+  });
+}
+
 export async function call(name, payload) {
   const reply = await window.fgm.call(name, payload);
   if (!reply.ok) {

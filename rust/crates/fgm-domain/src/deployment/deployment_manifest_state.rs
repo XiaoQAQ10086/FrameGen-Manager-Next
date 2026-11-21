@@ -10,6 +10,8 @@ pub enum DeploymentManifestState {
     BackingUp,
     Writing,
     Verifying,
+    /// C# 2.x wrote this while an install was in progress.
+    Installing,
     Installed,
     RolledBack,
     Partial,

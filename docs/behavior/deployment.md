@@ -216,3 +216,9 @@ UI：点击“部署”打开选项面板（游戏启动 EXE、代理 DLL、插�
 - 不自动结束游戏进程；检测到文件占用时直接拒绝。
 - 不删除 `dlssg_sm86` 下的未知文件（日志/缓存），只在还原报告里列出。
 - 不处理符号链接/junction 的最终路径解析；目标目录必须由用户选择，且受保护目录会被拒绝。
+
+## 升级兼容（C# → Rust）
+
+- C# 2.x 的帧生成 manifest 位于 `backups/framegen/<key>/manifest.json`，Rust 使用 `framegen.sm86`；`BackupStore` 会在新目录不存在时回退读取旧 `framegen` 目录，恢复时继续使用旧备份目录。
+- 读取 C# manifest 时忽略额外的 `createdUtc` 字段，接受 C# 的 `installing` 状态；packVersion 正常用于“已部署/有更新/资产版本”判断。
+- 没有 manifest 的极老部署不会伪造记录：文件哈希可匹配时只提示“已部署（无记录）”，不自动删除或还原；用户应先重新部署或手动清理旧文件。
