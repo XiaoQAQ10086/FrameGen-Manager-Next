@@ -25,6 +25,7 @@ export async function renderAbout(root) {
           <div class="about-actions">
             <button class="btn success" data-action="update" type="button">${t('aboutCheckUpdates')}</button>
             <button class="btn" data-action="quark" type="button">${t('aboutQuark')}</button>
+            <button class="btn" data-action="baidu" type="button">${t('aboutBaidu')}</button>
           </div>
           <div class="about-links">
             <section class="panel about-link">
@@ -79,6 +80,8 @@ function bind(root) {
         window.fgm.openUrl(paths.repository || 'https://github.com/XiaoQAQ10086/FrameGen-Manager-Next');
       } else if (action === 'quark') {
         window.fgm.openUrl(paths.netdiskUrl || 'https://pan.quark.cn');
+      } else if (action === 'baidu') {
+        window.fgm.openUrl('https://pan.baidu.com/s/1DWG8f4767zpjD0Rk4HBX2w?pwd=1234');
       } else if (action === 'licenses') {
         await call('openFolder', { which: 'licenses' });
       } else if (action === 'update') {

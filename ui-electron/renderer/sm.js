@@ -4,9 +4,11 @@ import {
 import { t } from './l10n.js';
 import { showRemoved } from './removed.js';
 
-let statuses = [];
+let statuses = null;
 let modes = {};
 let serial = 0;
+let cachedKey = '';
+let cachedAt = 0;
 
 export async function renderSm(root) {
   const current = ++serial;
@@ -45,7 +47,19 @@ export async function renderSm(root) {
     </section>`;
 
   renderCompat($('[data-role="compat"]', root));
+  const key = state.games.map((game) => game.renderExe || game.id).join('|');
+  const cacheHit = statuses && cachedKey === key && current === serial && state.section === 'smooth-motion';
+  if (cacheHit) {
+    renderGames(root);
+    bind(root);
+    if (Date.now() - cachedAt < 10000) return;
+    load().then(() => {
+      if (current === serial && state.section === 'smooth-motion') renderGames(root);
+    });
+    return;
+  }
   await load();
+  cachedKey = key;
   if (current !== serial || state.section !== 'smooth-motion') return;
   renderGames(root);
   bind(root);
@@ -72,6 +86,7 @@ async function load() {
       call('gameModes', {}),
     ]);
     statuses = many.states || [];
+    cachedAt = Date.now();
     modes = Object.fromEntries((modeReply.modes || []).map((mode) => [mode.gameId, mode]));
   } catch (error) {
     toast(`${t('smOperationFailed')}: ${error.message}`, 'error');

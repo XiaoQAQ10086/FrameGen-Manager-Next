@@ -71,6 +71,10 @@ function createWindow() {
     },
   });
   window.setMenu(null);
+  if (process.platform === 'win32' && typeof native.setRoundedCorners === 'function') {
+    const handle = window.getNativeWindowHandle();
+    native.setRoundedCorners(Number(handle.readBigUInt64LE(0)));
+  }
   const query = {};
   if (process.env.FGM_PROTO_DEMO) query.demo = process.env.FGM_PROTO_DEMO;
   if (process.env.FGM_PROTO_PAGE) query.page = process.env.FGM_PROTO_PAGE;

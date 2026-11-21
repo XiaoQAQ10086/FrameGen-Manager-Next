@@ -46,6 +46,11 @@ fn payload(payload: Option<&str>) -> &str {
     payload.unwrap_or("{}")
 }
 
+/// Rounds the native window corners on Windows 11 and later.
+pub fn set_rounded_corners(hwnd: f64) -> bool {
+    fgm_infra::platform::set_rounded_corners(hwnd as isize)
+}
+
 /// Dispatches `name` to the matching FFI entry and returns its JSON envelope.
 pub fn invoke(name: &str, body: Option<&str>) -> Result<String, String> {
     match name {

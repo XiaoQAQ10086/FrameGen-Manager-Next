@@ -10,6 +10,12 @@ pub fn version() -> String {
     fgm_domain::version::VERSION.to_string()
 }
 
+/// Applies the Windows 11 rounded-corner DWM preference to a native window.
+#[napi]
+pub fn set_rounded_corners(hwnd: f64) -> bool {
+    fgm_ffi::rust_api::set_rounded_corners(hwnd)
+}
+
 /// Runs a bridge command off the Electron main thread and returns its JSON
 /// envelope as a JavaScript object.
 #[napi]

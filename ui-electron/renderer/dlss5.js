@@ -169,7 +169,7 @@ function openDetail(root, game) {
             <option value="d3d9.dll">d3d9.dll</option><option value="opengl32.dll">opengl32.dll</option>
           </select></div></label>
         </div>
-        <div class="kv2"><span>${t('dlss5OverlayKey')}</span><b class="badge">${reply.hotkeyVk ?? '-'}</b>
+        <div class="kv2"><span>${t('dlss5OverlayKey')}</span><b class="badge">${esc(hotkeyLabel(reply.hotkeyVk))}</b>
           <button class="btn small" data-action="record-hotkey" type="button">${t('dlss5RecordHotkey')}</button></div>
         <p class="hint">${t('dlss5DetailSubtitle')}</p>
       </div>
@@ -177,12 +177,21 @@ function openDetail(root, game) {
         <span class="muted small">${t('deployCloseGameHint')}</span>
         <div class="foot-actions">
           <button class="btn" data-action="open-folder" type="button">${t('openFolder')}</button>
-          <button class="btn danger" data-action="uninstall" type="button">${t('dlss5Uninstall')}</button>
+          <button class="btn danger" data-action="uninstall" type="button" ${deployed(reply) ? '' : 'disabled'}>${t('dlss5Uninstall')}</button>
           <button class="btn success" data-action="install" type="button">${t('dlss5Install')}</button>
         </div>
       </footer>
     </section>`;
   $('#modal-root').appendChild(detail);
+  const close = () => {
+    detail?.remove();
+    detail = null;
+  };
+  $('[data-action="close-detail"]', detail).onclick = close;
+  $('[data-action="open-folder"]', detail).onclick = () => call('openPath', { path: game.targetDirectory });
+  $('[data-action="record-hotkey"]', detail).onclick = () => recordHotkey(game);
+  $('[data-action="install"]', detail).onclick = () => install(root, game);
+  $('[data-action="uninstall"]', detail).onclick = () => uninstall(root, game);
   detail.onchange = (event) => {
     if (event.target.dataset.detail === 'api') detailApi = event.target.value;
     if (event.target.dataset.detail === 'proxy') detailProxy = event.target.value;
@@ -281,6 +290,20 @@ async function recordHotkey(game) {
     }
   };
   window.addEventListener('keydown', handler, true);
+}
+
+function hotkeyLabel(vk) {
+  const value = Number(vk);
+  if (!Number.isFinite(value) || value <= 0) return 'Home';
+  const names = {
+    0x08: 'Backspace', 0x09: 'Tab', 0x0d: 'Enter', 0x1b: 'Esc', 0x20: 'Space',
+    0x21: 'PageUp', 0x22: 'PageDown', 0x23: 'End', 0x24: 'Home', 0x25: 'Left',
+    0x26: 'Up', 0x27: 'Right', 0x28: 'Down', 0x2d: 'Insert', 0x2e: 'Delete',
+  };
+  if (names[value]) return names[value];
+  if (value >= 0x70 && value <= 0x7b) return `F${value - 0x6f}`;
+  if ((value >= 65 && value <= 90) || (value >= 48 && value <= 57)) return String.fromCharCode(value);
+  return `VK ${value}`;
 }
 
 function keyToVirtualKey(event) {

@@ -249,6 +249,7 @@
   "aboutDescription": "Windows frame generation deployment manager.",
   "aboutSoftwareVersion": "Software version",
   "aboutCheckUpdates": "Check for updates",
+  "aboutBaidu": "Baidu Pan",
   "aboutQuark": "Quark Drive",
   "aboutGithub": "GitHub",
   "aboutOpenRepo": "Open GitHub repository",
@@ -304,7 +305,7 @@
   "dlss5VulkanHint": "The Vulkan layer requires the online ReShade setup; other APIs install offline.",
   "dlss5ProxyAuto": "Auto ({proxy})",
   "dlss5ApiAuto": "{api} (auto)",
-  "dlss5OverlayKey": "ReShade overlay key",
+  "dlss5OverlayKey": "ReShade hotkey",
   "dlss5RecordHotkey": "Record shortcut",
   "dlss5DeployAgain": "Deploy again",
   "dlss5HotkeyQueuedShort": "Key queued",
@@ -324,7 +325,7 @@
       }
     }
   },
-  "dlss5Uninstall": "Uninstall DLSS5",
+  "dlss5Uninstall": "Restore",
   "dlss5Restore": "Restore, keep ReShade",
   "dlss5RestoreConfirm": "Remove the DLSS5/GITC files from {game} but keep ReShade and its configuration?",
   "@dlss5RestoreConfirm": {
@@ -336,7 +337,7 @@
   },
   "dlss5Restored": "DLSS5 components restored; ReShade was kept.",
   "dlss5Update": "Update DLSS5",
-  "dlss5UninstallConfirm": "Remove DLSS5, ReShade and the GITC files from {game}? Files you changed are kept.",
+  "dlss5UninstallConfirm": "Restore {game} by removing DLSS5, ReShade and the GITC files? Files you changed are kept.",
   "@dlss5UninstallConfirm": {
     "placeholders": {
       "game": {
@@ -344,7 +345,7 @@
       }
     }
   },
-  "dlss5Uninstalled": "DLSS5 removed.",
+  "dlss5Uninstalled": "DLSS5 restored.",
   "dlss5UninstallConflicts": "Uninstall finished; {count} modified files were kept.",
   "dlss5StateNotDeployed": "Not installed",
   "dlss5StateInstalled": "Installed",
