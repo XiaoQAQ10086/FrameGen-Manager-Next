@@ -11,6 +11,7 @@
 - 输出：`artifacts/portable-electron/FrameGen-Manager-Next/` 和同名 zip。
 - 内容：`FrameGen-Manager-Next.exe`、Electron 运行时（裁剪 locale）、`resources/app.asar`（`native/*.node` unpack）、`packs/`（清单 + `assets/packs/` 载荷）、`licenses/`。
 - 数据目录：exe 同目录 `userdata/`；`packs/` 位于 exe 同目录。
+- 重新打包时保留便携目录里的 `userdata/`（构建前临时移出、构建后放回），但 zip 不包含 `userdata`，避免测试库被分发。
 - `packs/` 先复制仓库清单，再把 `assets/packs/` 的载荷叠加进去；载荷不进 git，但发布包必须包含，否则部署会报 `FileNotFound`。
 - 打包时会删除除 `en-US.pak`、`zh-CN.pak` 外的 locale，移除 `resources/default_app.asar`。
 

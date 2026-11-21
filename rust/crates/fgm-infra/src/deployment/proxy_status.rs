@@ -2,6 +2,10 @@ use std::path::Path;
 
 use fgm_domain::error::AppError;
 
+use crate::hashing::FileHasher;
+use crate::pack_json::PackJson;
+use crate::packs::PackLocator;
+
 use super::backup_store::BackupStore;
 
 /// Which deployment family owns a proxy module in a game directory.
@@ -82,6 +86,15 @@ impl ProxyStatus {
                 .iter()
                 .find(|(path, _)| path == &lower)
                 .map_or(ProxyOwner::Other, |(_, owner)| *owner);
+            // A previous frame-gen deployment can leave its proxy behind when
+            // the data directory was reset (portable rebuild, wiped cache).
+            // Match the pack hash so the slot is still recognised as ours.
+            let owner =
+                if owner == ProxyOwner::Other && matches_framegen_proxy(target_directory, module) {
+                    ProxyOwner::Framegen
+                } else {
+                    owner
+                };
             entries.push(ProxyEntry {
                 module: module.to_string(),
                 owner,
@@ -90,4 +103,24 @@ impl ProxyStatus {
         }
         Ok(entries)
     }
+}
+
+fn matches_framegen_proxy(target_directory: &Path, module: &str) -> bool {
+    let Some(pack_directory) = PackLocator::find("framegen.sm86") else {
+        return false;
+    };
+    let Ok(pack) = PackJson::load(&pack_directory.join("pack.json")) else {
+        return false;
+    };
+    let Ok(hash) = FileHasher::sha256_file(&target_directory.join(module)) else {
+        return false;
+    };
+    pack.files.iter().flatten().any(|file| {
+        file.proxy_slot
+            && file.target.eq_ignore_ascii_case(module)
+            && file
+                .sha256
+                .as_deref()
+                .is_some_and(|expected| expected.eq_ignore_ascii_case(&hash))
+    })
 }

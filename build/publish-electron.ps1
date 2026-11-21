@@ -34,12 +34,24 @@ try {
 }
 finally { Pop-Location }
 
+$userdata = Join-Path $portable "userdata"
+$userdataKeep = Join-Path $root "artifacts/.portable-userdata-keep"
+if (Test-Path $userdata) {
+    if (Test-Path $userdataKeep) { Remove-Item $userdataKeep -Recurse -Force }
+    Move-Item -LiteralPath $userdata -Destination $userdataKeep -Force
+}
 if (Test-Path $portableRoot) { Remove-Item $portableRoot -Recurse -Force }
 New-Item -ItemType Directory -Path $portableRoot -Force | Out-Null
 Copy-Item (Join-Path $app "dist/FrameGen-Manager-Next") $portable -Recurse -Force
+if (Test-Path $userdataKeep) {
+    Move-Item -LiteralPath $userdataKeep -Destination $userdata -Force
+}
 
 Write-Host "==> creating portable zip" -ForegroundColor Cyan
-Compress-Archive -Path (Join-Path $portable "*") -DestinationPath (Join-Path $portableRoot "FrameGen-Manager-Next-portable.zip") -CompressionLevel Optimal -Force
+$zipItems = Get-ChildItem -LiteralPath $portable -Force |
+    Where-Object { $_.Name -ne "userdata" } |
+    Select-Object -ExpandProperty FullName
+Compress-Archive -Path $zipItems -DestinationPath (Join-Path $portableRoot "FrameGen-Manager-Next-portable.zip") -CompressionLevel Optimal -Force
 
 $releases = Join-Path $root "artifacts/installer-electron/releases"
 if (Test-Path $releases) { Remove-Item $releases -Recurse -Force }

@@ -28,7 +28,7 @@ export async function renderAnr(root) {
           <section class="panel" data-role="package"></section>
           <section class="panel">
             <div class="ctitle">${t('modeSourceTitle')}</div>
-            <div class="chips"><span class="chip gpu-chip">${t('modeGpusAnr')}</span></div>
+            <div class="chips"><span class="chip gpu-chip wrap">${t('modeGpusAnr')}</span></div>
             <a class="source-link" data-action="github" href="#">${githubIcon}<span>${t('modeSourceLink')}</span></a>
           </section>
           <section class="panel">

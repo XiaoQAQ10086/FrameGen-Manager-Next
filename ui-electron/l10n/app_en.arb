@@ -117,6 +117,7 @@
   "optionProxySlot": "Proxy entry",
   "deployTargetLabel": "Deployment target",
   "deployChooseExe": "Choose the actual launch EXE...",
+  "deployFrameGenVersion": "Frame generation version",
   "deployGraphicsApi": "Graphics API",
   "deployAnrTitle": "Deploy ANR frame generation",
   "anrProxyHint": "Only one proxy DLL is deployed; occupied entries cannot be chosen.",
