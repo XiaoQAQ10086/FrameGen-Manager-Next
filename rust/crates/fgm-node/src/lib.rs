@@ -16,6 +16,18 @@ pub fn set_rounded_corners(hwnd: f64) -> bool {
     fgm_ffi::rust_api::set_rounded_corners(hwnd)
 }
 
+/// Windows 10 fallback for rounded window corners.
+#[napi]
+pub fn set_rounded_region(hwnd: f64, radius: f64) -> bool {
+    fgm_ffi::rust_api::set_rounded_region(hwnd, radius)
+}
+
+/// Removes the Windows 10 fallback window region.
+#[napi]
+pub fn clear_rounded_region(hwnd: f64) -> bool {
+    fgm_ffi::rust_api::clear_rounded_region(hwnd)
+}
+
 /// Runs a bridge command off the Electron main thread and returns its JSON
 /// envelope as a JavaScript object.
 #[napi]

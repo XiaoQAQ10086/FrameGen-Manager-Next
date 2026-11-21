@@ -51,6 +51,16 @@ pub fn set_rounded_corners(hwnd: f64) -> bool {
     fgm_infra::platform::set_rounded_corners(hwnd as isize)
 }
 
+/// Applies a rounded window region, used as the Windows 10 fallback.
+pub fn set_rounded_region(hwnd: f64, radius: f64) -> bool {
+    fgm_infra::platform::set_rounded_region(hwnd as isize, radius as i32)
+}
+
+/// Removes the fallback window region.
+pub fn clear_rounded_region(hwnd: f64) -> bool {
+    fgm_infra::platform::clear_rounded_region(hwnd as isize)
+}
+
 /// Dispatches `name` to the matching FFI entry and returns its JSON envelope.
 pub fn invoke(name: &str, body: Option<&str>) -> Result<String, String> {
     match name {

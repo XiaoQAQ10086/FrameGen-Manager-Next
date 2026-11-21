@@ -23,24 +23,27 @@
 - 卡片入场按 `animation-delay: min(index * 35ms, 350ms)` 错峰；侧栏面板 0/25/50/75ms。
 - `@media (prefers-reduced-motion: reduce)` 下所有动画/过渡压到 0.01ms。
 
+## 设计 token
+
+- 圆角：`--radius-sm:8px`（控件/下拉项）、`--radius-md:12px`（内嵌卡片/菜单）、`--radius-lg:16px`（主卡片/面板/弹窗）；胶囊/开关/进度条保留 999px。
+- 间距：`--space-1:4px` … `--space-8:32px`，所有 padding/margin/gap 均引用 token。
+- 状态色：success / danger / launch 各有语义 token；内容卡片使用实色 `#fff`。
+- 玻璃只用于 modal overlay（6px blur）；内容卡片、表单、日志、进度卡均为实色。
+
 ## 排版
 
-系统字体栈：`"Microsoft YaHei UI", "Microsoft YaHei", "Segoe UI", sans-serif`，正文 `14px/1.5`；路径/哈希用 `Consolas, "Courier New", monospace`。不打包字体。
+系统字体栈：`system-ui, -apple-system, "Segoe UI", "Microsoft YaHei UI", "PingFang SC", sans-serif`，正文 `13px/1.5`；路径/哈希用 `Consolas, "Courier New", monospace`。不打包字体。
 
-字号档位（整数或 .5 像素，均为实际使用值）：
+字号由 `:root` token 统一：`--text-xs:11px`、`--text-sm:12px`、`--text-md:13px`、`--text-lg:15px`、`--text-xl:20px`、`--text-display:24px`。路径等宽字号保留 11.5/12px，`.tile .ph` 的 40px 首字母水印保留为显示例外。
 
 | 字号 | 用途 |
 |---|---|
-| 11 | 绶带、tile 角标 |
-| 11.5 | 徽章、路径、按钮辅助文字 |
-| 12 | 说明文字、卡路径、部署选项标签 |
-| 12.5 | 列表头副标题、键值行、GPU 胶囊 |
-| 13 | 小节标题、状态行 |
-| 13.5 | 下拉值、tile 名称 |
-| 14 | 正文、导航项 |
+| 11 | 绶带、tile 角标、品牌辅助文字 |
+| 12 | 徽章、说明文字、卡路径、部署选项 |
+| 13 | 正文、键值行、小节标题 |
 | 15 | 游戏名、更新版本号 |
 | 20 | 列表页标题 |
-| 28 | 页面大标题 |
+| 24 | 页面大标题、弹窗标题 |
 
 字重只使用 400 / 600 / 650 / 700 / 800：正文 400，徽章与小标签 600/650，按钮与导航 700，首字母水印 800。不使用 500，避免 12–14px 下糊字。
 

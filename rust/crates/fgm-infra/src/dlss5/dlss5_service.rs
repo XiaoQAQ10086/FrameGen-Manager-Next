@@ -19,6 +19,7 @@ use crate::reframework::ReframeworkService;
 use super::dlss5_config::Dlss5Config;
 use super::dlss5_hotkey_outcome::HotkeyOutcome;
 use super::dlss5_hotkey_queue::HotkeyQueue;
+use super::dlss5_hotkey_store::Dlss5HotkeyStore;
 use super::dlss5_inspection::Dlss5Inspection;
 use super::dlss5_report::Dlss5Report;
 use super::reshade_installer::ReShadeInstaller;
@@ -68,6 +69,7 @@ impl Dlss5Service {
         proxy_override: Option<&str>,
     ) -> Result<Dlss5Report, AppError> {
         let pack = PackJson::load(&pack_directory.join("pack.json"))?;
+        let pending_hotkey = Dlss5HotkeyStore::pending(target_directory, paths);
         let legacy = legacy_residue(target_directory);
         if !legacy.is_empty() {
             return Err(AppError::new(ErrorCode::Conflict)
@@ -146,7 +148,11 @@ impl Dlss5Service {
             } else {
                 ReShadeInstaller::default_ini().to_string()
             };
-            let content = Dlss5Config::merge(&ini_text).into_bytes();
+            let mut merged = Dlss5Config::merge(&ini_text);
+            if let Some(virtual_key) = pending_hotkey {
+                merged = Dlss5Config::with_hotkey(&merged, virtual_key);
+            }
+            let content = merged.into_bytes();
             files.push(DeploymentFile {
                 relative_path: "ReShade.ini".to_string(),
                 source: None,
@@ -179,6 +185,16 @@ impl Dlss5Service {
             cancelled,
             progress,
         )?;
+
+        if proxy_module.is_none()
+            && let Some(virtual_key) = pending_hotkey
+        {
+            let ini_path = TargetPath::combine(target_directory, "ReShade.ini")?;
+            Dlss5Config::set_hotkey(&ini_path, virtual_key)?;
+        }
+        if pending_hotkey.is_some() {
+            Dlss5HotkeyStore::clear(target_directory, paths);
+        }
 
         Ok(Dlss5Report {
             files_written: report.files_written,
@@ -221,7 +237,8 @@ impl Dlss5Service {
             pack_version: inspection.pack_version,
             proxy_module,
             re_shade_present,
-            hotkey_vk: read_hotkey(target_directory),
+            hotkey_vk: read_hotkey(target_directory)
+                .or_else(|| Dlss5HotkeyStore::pending(target_directory, paths)),
             legacy_files: legacy_residue(target_directory),
             details: inspection.details,
         })
@@ -252,6 +269,13 @@ impl Dlss5Service {
         game_exe: Option<&Path>,
         paths: &AppPaths,
     ) -> Result<HotkeyOutcome, AppError> {
+        let deployed = crate::deployment::BackupStore::new(paths.backups())
+            .load_manifest(Self::FAMILY, target_directory)?
+            .is_some();
+        if !deployed {
+            Dlss5HotkeyStore::save(target_directory, virtual_key, paths)?;
+            return Ok(HotkeyOutcome::Deferred);
+        }
         if game_exe.is_some_and(crate::process::GameProcessProbe::is_running) {
             HotkeyQueue::enqueue(paths, target_directory, game_exe, virtual_key)?;
             return Ok(HotkeyOutcome::Queued);

@@ -59,8 +59,6 @@
 .side .panel:nth-child(4) { animation-delay: 75ms; }
 
 #modal-root .overlay {
-  background: rgba(16, 24, 40, .10);
-  backdrop-filter: blur(6px) saturate(1.02);
   animation: overlayIn var(--motion-enter) var(--motion-ease) both;
 }
 

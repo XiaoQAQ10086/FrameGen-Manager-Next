@@ -162,6 +162,7 @@ pub(crate) fn dlss5_set_hotkey(request: &str) -> Result<Value, AppError> {
         "ok": true,
         "hotkeyVk": request.virtual_key,
         "queued": outcome == fgm_infra::dlss5::HotkeyOutcome::Queued,
+        "deferred": outcome == fgm_infra::dlss5::HotkeyOutcome::Deferred,
     }))
 }
 

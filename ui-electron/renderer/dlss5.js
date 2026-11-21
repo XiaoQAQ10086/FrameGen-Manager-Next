@@ -280,11 +280,12 @@ async function recordHotkey(game) {
       return;
     }
     try {
-      await call('dlss5.setHotkey', {
+      const reply = await call('dlss5.setHotkey', {
         targetDir: game.targetDirectory,
         virtualKey,
         exePath: game.renderExe,
       });
+      if (reply.deferred) toast(t('dlss5HotkeyDeferred'));
       await load();
       renderWall(document.querySelector('#view'));
       detail?.remove();

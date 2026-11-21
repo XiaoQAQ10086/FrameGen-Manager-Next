@@ -62,6 +62,22 @@ unsafe extern "system" {
     fn GetCurrentProcessId() -> u32;
 }
 
+/// Outer window rectangle, used by the Windows 10 rounded-corner fallback.
+pub(crate) fn window_rect(hwnd: Hwnd) -> Option<(i32, i32, i32, i32)> {
+    let mut rect = Rect {
+        left: 0,
+        top: 0,
+        right: 0,
+        bottom: 0,
+    };
+    (unsafe { GetWindowRect(hwnd, &mut rect) } != 0).then_some((
+        rect.left,
+        rect.top,
+        rect.right,
+        rect.bottom,
+    ))
+}
+
 #[derive(Clone, Copy, Debug, Deserialize, Serialize, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
 struct WindowState {

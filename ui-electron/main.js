@@ -17,6 +17,7 @@ const native = require(path.join(__dirname, 'native', 'fgm_node.node'));
 
 const windowStatePath = () => path.join(process.env.FGM_DATA_DIR, 'config', 'window.json');
 const normalBounds = new WeakMap();
+const windowRounding = new WeakMap();
 
 function savedBounds() {
   try {
@@ -49,6 +50,20 @@ function saveBounds(window) {
   } catch {}
 }
 
+function applyWindowCorners(window) {
+  if (process.platform !== 'win32' || typeof native.setRoundedCorners !== 'function') return;
+  const handle = window.getNativeWindowHandle();
+  const hwnd = Number(handle.readBigUInt64LE(0));
+  let mode = windowRounding.get(window);
+  if (!mode) {
+    mode = native.setRoundedCorners(hwnd) ? 'dwm' : 'region';
+    windowRounding.set(window, mode);
+  }
+  if (mode === 'dwm') return;
+  if (normalBounds.has(window)) native.clearRoundedRegion(hwnd);
+  else native.setRoundedRegion(hwnd, 12);
+}
+
 function createWindow() {
   const bounds = visibleBounds(savedBounds());
   const window = new BrowserWindow({
@@ -71,10 +86,7 @@ function createWindow() {
     },
   });
   window.setMenu(null);
-  if (process.platform === 'win32' && typeof native.setRoundedCorners === 'function') {
-    const handle = window.getNativeWindowHandle();
-    native.setRoundedCorners(Number(handle.readBigUInt64LE(0)));
-  }
+  applyWindowCorners(window);
   const query = {};
   if (process.env.FGM_PROTO_DEMO) query.demo = process.env.FGM_PROTO_DEMO;
   if (process.env.FGM_PROTO_PAGE) query.page = process.env.FGM_PROTO_PAGE;
@@ -85,6 +97,7 @@ function createWindow() {
   });
   window.once('ready-to-show', () => {
     if (!bounds) window.center();
+    applyWindowCorners(window);
     window.show();
   });
   let saveTimer = null;
@@ -92,7 +105,10 @@ function createWindow() {
     clearTimeout(saveTimer);
     saveTimer = setTimeout(() => saveBounds(window), 800);
   };
-  window.on('resize', scheduleSave);
+  window.on('resize', () => {
+    scheduleSave();
+    applyWindowCorners(window);
+  });
   window.on('move', scheduleSave);
   window.on('close', () => saveBounds(window));
 }
@@ -137,14 +153,17 @@ ipcMain.handle('fgm:window', (event, action) => {
     if (normalBounds.has(window)) {
       window.setBounds(normalBounds.get(window));
       normalBounds.delete(window);
+      applyWindowCorners(window);
     } else {
       normalBounds.set(window, window.getBounds());
       window.setBounds(screen.getDisplayMatching(window.getBounds()).workArea);
+      applyWindowCorners(window);
     }
   } else if (action === 'unmaximize') {
     if (normalBounds.has(window)) {
       window.setBounds(normalBounds.get(window));
       normalBounds.delete(window);
+      applyWindowCorners(window);
     }
   } else if (action === 'close') {
     window.close();

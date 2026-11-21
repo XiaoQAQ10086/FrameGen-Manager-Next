@@ -137,6 +137,7 @@ function cardMarkup(game, index) {
       </div>
       <div class="gpath" title="${esc(prettyPath(game.targetDirectory))}">${esc(prettyPath(game.targetDirectory))}</div>
       ${status.detail ? `<div class="hint">${esc(status.detail)}</div>` : ''}
+      ${(status.profiles || []).length ? `<div class="hint">${t('smProfileLabel')}: ${esc(status.profiles.join(' / '))}</div>` : ''}
       <div class="gactions">
         <button class="btn small ${enabled ? 'danger' : 'success'}" data-action="${enabled ? 'disable' : 'enable'}" data-id="${esc(game.id)}" type="button" ${blocked ? 'disabled' : ''} ${blocked ? `title="${esc(t('smConflict'))}"` : ''}>${enabled ? t('smDisable') : (outdated ? t('smUpdate') : t('smEnable'))}</button>
         <button class="btn small launch" data-action="launch" data-id="${esc(game.id)}" type="button">${t('launchGame')}</button>

@@ -257,11 +257,15 @@ fn locked_ini_is_queued_and_retried_after_unlock() {
 }
 
 #[test]
-fn set_hotkey_requires_an_existing_deployment() {
+fn set_hotkey_before_deployment_is_applied_on_install() {
     let fixture = Fixture::new("dlss5-hotkey-missing");
+    let paths = fixture.paths();
 
-    let error = Dlss5Service::set_hotkey(&fixture.target, 118, None, &fixture.paths()).unwrap_err();
-
-    assert_eq!(error.code, ErrorCode::ManifestMissing);
+    let outcome = Dlss5Service::set_hotkey(&fixture.target, 118, None, &paths).unwrap();
+    assert_eq!(outcome, fgm_infra::dlss5::HotkeyOutcome::Deferred);
     assert!(!fixture.target.join("ReShade.ini").exists());
+
+    fixture.install().unwrap();
+    let text = fs::read_to_string(fixture.target.join("ReShade.ini")).unwrap();
+    assert!(text.contains("KeyOverlay=118,0,0,0"));
 }
