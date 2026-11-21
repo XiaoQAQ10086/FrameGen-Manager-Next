@@ -33,6 +33,10 @@ impl UpdateLauncher {
                 .with("path", downloaded.display().to_string())
                 .with("reason", "the update file is not a setup executable"));
         }
-        ProcessLauncher::launch_detached(downloaded, None)
+        ProcessLauncher::launch_detached_with_args(
+            downloaded,
+            None,
+            &["/SILENT", "/NORESTART", "/CLOSEAPPLICATIONS"],
+        )
     }
 }

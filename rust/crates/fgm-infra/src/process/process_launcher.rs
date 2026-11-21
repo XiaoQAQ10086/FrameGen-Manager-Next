@@ -15,6 +15,14 @@ impl ProcessLauncher {
         executable: &Path,
         working_directory: Option<&Path>,
     ) -> Result<(), AppError> {
+        Self::launch_detached_with_args(executable, working_directory, &[])
+    }
+
+    pub fn launch_detached_with_args(
+        executable: &Path,
+        working_directory: Option<&Path>,
+        args: &[&str],
+    ) -> Result<(), AppError> {
         if !executable.is_file() {
             return Err(AppError::new(ErrorCode::FileNotFound)
                 .with("path", executable.display().to_string())
@@ -22,6 +30,7 @@ impl ProcessLauncher {
         }
 
         let mut command = Command::new(executable);
+        command.args(args);
         command
             .stdin(std::process::Stdio::null())
             .stdout(std::process::Stdio::null())

@@ -47,3 +47,5 @@ Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; Flags: unchecked
 
 [Run]
 Filename: "{app}\{#AppExeName}"; Description: "{cm:LaunchProgram,{#AppName}}"; Flags: nowait postinstall skipifsilent
+; Silent updates must reopen the app after the installer finishes.
+Filename: "{app}\{#AppExeName}"; Flags: nowait; Check: WizardSilent

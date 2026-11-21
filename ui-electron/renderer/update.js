@@ -13,6 +13,15 @@ function formatSpeed(bytesPerSecond) {
   return `${Math.max(1, Math.round(bytesPerSecond / 1024))} KB/s`;
 }
 
+export async function autoCheckUpdate() {
+  try {
+    const info = await call('update.check');
+    if (info.available) showUpdateDialog(info);
+  } catch {
+    // Startup checks are silent: offline or no manifest is not an error.
+  }
+}
+
 export function showUpdateDialog(info) {
   if (open) return;
   open = true;
@@ -130,9 +139,7 @@ export function showUpdateDialog(info) {
   cancelButton.addEventListener('click', async () => {
     if (downloading) {
       cancelled = true;
-      cancelButton.textContent = t('updateCancelling');
-      cancelButton.disabled = true;
-      await call('operation.cancel').catch(() => {});
+      call('operation.cancel').catch(() => {});
       close();
       toast(t('updateCancelled'));
       return;
@@ -179,7 +186,7 @@ export function showUpdateDialog(info) {
       } else {
         startButton.textContent = t('updateInstalling');
         await call('update.install', { path: reply.path });
-        toast(t('updateDownloaded'));
+        window.fgm.quit();
       }
     } catch (error) {
       if (closed) return;

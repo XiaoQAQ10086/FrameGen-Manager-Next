@@ -9,6 +9,7 @@ import { renderDonate } from './donate.js';
 import { renderFramegen, refresh } from './framegen.js';
 import { loadCovers } from './covers.js';
 import { openDeployDialog } from './deploy.js';
+import { autoCheckUpdate } from './update.js';
 import { enhanceSelects, observeSelects } from './select.js';
 
 enhanceSelects();
@@ -122,6 +123,7 @@ document.addEventListener('click', async (event) => {
   }
 });
 
+setTimeout(() => autoCheckUpdate(), 1500);
 boot().then(() => {
   const params = new URLSearchParams(location.search);
   const page = params.get('page');

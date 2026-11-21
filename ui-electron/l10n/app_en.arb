@@ -285,7 +285,7 @@
   "updateClose": "Close",
   "updateInstalling": "Starting installer…",
   "updateDone": "Done",
-  "updateModalLater": "Later",
+  "updateModalLater": "Not now",
   "updateTitle": "Updates",
   "updateCheck": "Check for updates",
   "updateChecking": "Checking...",

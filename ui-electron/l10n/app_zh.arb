@@ -229,7 +229,7 @@
   "updateClose": "关闭",
   "updateInstalling": "正在启动安装程序…",
   "updateDone": "完成",
-  "updateModalLater": "稍后",
+  "updateModalLater": "暂不更新",
   "updateTitle": "更新",
   "updateCheck": "检查更新",
   "updateChecking": "检查中...",

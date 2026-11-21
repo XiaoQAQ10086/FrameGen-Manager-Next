@@ -144,6 +144,8 @@ ipcMain.handle('fgm:call', async (_event, name, payload) => {
 
 ipcMain.handle('fgm:openUrl', (_event, url) => shell.openExternal(String(url)));
 
+ipcMain.handle('fgm:quit', () => app.quit());
+
 ipcMain.handle('fgm:window', (event, action) => {
   const window = BrowserWindow.fromWebContents(event.sender);
   if (!window) return;
