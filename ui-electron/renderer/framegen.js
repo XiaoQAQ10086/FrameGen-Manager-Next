@@ -114,7 +114,10 @@ function cardMarkup(game, index) {
   const stateText = stateLabel(framegen);
   const stateClass = framegen === 'installed' ? 'ok' : (framegen === 'notDeployed' ? 'dim' : 'warn');
   const primary = framegen === 'outdated' ? t('update') : (deployed ? t('restore') : t('deploy'));
-  const packVersion = mode.framegenPackVersion || mode.framegenVersion;
+  const assetVersion = mode.framegenVersion || mode.framegenPackVersion;
+  const stateBadge = deployed && assetVersion
+    ? `${stateText} ${t('assetVersionLabel')}：${assetVersion}`
+    : stateText;
   const smOn = mode.smoothMotion === 'on';
   const smBlocked = smOn && !deployed;
   const route = String(state.gpu?.route || '').toLowerCase();
@@ -132,8 +135,7 @@ function cardMarkup(game, index) {
           <div class="badges">
             <span class="badge">${esc(sourceLabel(game.source))}</span>
             <span class="badge">${esc(apiLabel(game.graphicsApi))}</span>
-            <span class="badge state ${stateClass}">${esc(stateText)}</span>
-            ${packVersion ? `<span class="badge" title="${esc(t('deployFrameGenVersion'))}">v${esc(packVersion)}</span>` : ''}
+            <span class="badge state ${stateClass}">${esc(stateBadge)}</span>
             ${smOn ? `<span class="badge danger">${esc(t('smConflict'))}</span>` : ''}
             ${gpuBlocked ? `<span class="badge danger">${esc(t('gpuIncompatible'))}</span>` : ''}
             ${mode.anr && mode.anr !== 'notDeployed' ? '<span class="badge mode">ANR</span>' : ''}
