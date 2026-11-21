@@ -78,6 +78,9 @@ fn remove_components(target_directory: &Path, paths: &AppPaths) -> Result<(), Ap
     if restored.is_none() {
         let _ = SmoothMotionComponents::restore_orphaned(target_directory);
     }
+    // The component creates this runtime folder after the game starts; it is
+    // never part of the manifest, so remove it explicitly.
+    let _ = std::fs::remove_dir_all(target_directory.join("RTXMFG"));
     Ok(())
 }
 

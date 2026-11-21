@@ -57,6 +57,16 @@ impl Dlss5Service {
             &paths.backups(),
             &paths.state().join("locks"),
         )?;
+        let owned_ini = previous.as_ref().is_some_and(|manifest| {
+            manifest.files.iter().any(|file| {
+                file.relative_path.eq_ignore_ascii_case("ReShade.ini") && !file.existed_before
+            })
+        });
+        if owned_ini {
+            for name in ["ReShade.ini", "ReShade.log", "ReShadePreset.ini"] {
+                let _ = std::fs::remove_file(target_directory.join(name));
+            }
+        }
         if vulkan {
             match (pack_directory, game_exe) {
                 (Some(pack_directory), Some(game_exe)) => {

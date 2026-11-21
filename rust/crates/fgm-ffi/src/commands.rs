@@ -208,6 +208,11 @@ pub(crate) fn restore(request: &str) -> Result<Value, AppError> {
         &paths.state().join("locks"),
     )?;
 
+    if request.family == "framegen.sm86" {
+        let runtime = target_directory.join("dlssg_sm86");
+        let _ = std::fs::remove_dir_all(runtime.join("logs"));
+        let _ = std::fs::remove_dir(&runtime);
+    }
     log_event(&paths, "info", "restore", &[("family", &request.family)]);
     Ok(json!({
         "ok": true,

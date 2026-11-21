@@ -315,6 +315,7 @@ Write-PackManifest `
     -Version '1.0.0' `
     -DisplayName 'Smooth Motion RTX 30 (SmoothMotion-next, sm8792+)' `
     -GpuRoutes @('Sm86') `
+    -OwnedDirectories @('RTXMFG') `
     -Files $files `
     -Ini $null `
     -Steps @([ordered]@{ type = 'copyFiles' }) `
@@ -343,6 +344,7 @@ Write-PackManifest `
     -Version '2.8.5' `
     -DisplayName 'Smooth Motion RTX 20 (2.8.5 experimental)' `
     -GpuRoutes @('Sm75') `
+    -OwnedDirectories @('RTXMFG') `
     -Files $files `
     -Ini $null `
     -Steps @([ordered]@{ type = 'copyFiles' }) `
@@ -393,6 +395,7 @@ Write-PackManifest `
     -Version '6.8.2' `
     -DisplayName 'DLSS5 ReShade 6.8.0 + GITC Uplift 2.0.0' `
     -GpuRoutes @('Sm86', 'Sm75') `
+    -OwnedDirectories @('GITC-Uplift') `
     -Files $files `
     -Ini $null `
     -Steps @(

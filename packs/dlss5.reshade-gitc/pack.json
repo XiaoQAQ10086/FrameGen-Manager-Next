@@ -8,6 +8,7 @@
                       "Sm86",
                       "Sm75"
                   ],
+    "ownedDirectories": ["GITC-Uplift"],
     "files":  [
                   {
                       "source":  "Addons/gitc-uplift.addon64",

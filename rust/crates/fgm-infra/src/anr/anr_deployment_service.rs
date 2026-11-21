@@ -88,30 +88,30 @@ impl AnrDeploymentService {
     }
 
     pub fn restore(target_directory: &Path, paths: &AppPaths) -> Result<(), AppError> {
-        let report = DeploymentEngine::restore(
+        let _report = DeploymentEngine::restore(
             "anr",
             target_directory,
             &paths.backups(),
             &paths.state().join("locks"),
         )?;
-        if report.conflicts.is_empty() {
-            for relative in [
-                "OptiScaler/custom/Apex Neural Rendering FG",
-                "custom/Apex Neural Rendering FG",
-            ] {
-                let directory = target_directory.join(relative);
-                if directory.is_dir() {
-                    let _ = std::fs::remove_dir_all(&directory);
-                    if let Some(parent) = directory.parent()
-                        && parent.is_dir()
-                        && std::fs::read_dir(parent)
-                            .is_ok_and(|mut entries| entries.next().is_none())
-                    {
-                        let _ = std::fs::remove_dir(parent);
-                    }
+        // ANR's custom provider and runtime log are owned by this deployment,
+        // even when a tracked file was modified and restore reported a conflict.
+        for relative in [
+            "OptiScaler/custom/Apex Neural Rendering FG",
+            "custom/Apex Neural Rendering FG",
+        ] {
+            let directory = target_directory.join(relative);
+            if directory.is_dir() {
+                let _ = std::fs::remove_dir_all(&directory);
+                if let Some(parent) = directory.parent()
+                    && parent.is_dir()
+                    && std::fs::read_dir(parent).is_ok_and(|mut entries| entries.next().is_none())
+                {
+                    let _ = std::fs::remove_dir(parent);
                 }
             }
         }
+        let _ = std::fs::remove_file(target_directory.join("OptiScaler.log"));
         Ok(())
     }
 }
