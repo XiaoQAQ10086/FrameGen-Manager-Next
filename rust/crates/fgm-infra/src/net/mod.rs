@@ -6,6 +6,22 @@ pub use downloader::Downloader;
 
 use std::sync::atomic::AtomicBool;
 
+#[cfg(windows)]
+#[link(name = "wininet")]
+unsafe extern "system" {
+    fn InternetGetConnectedState(flags: *mut u32, reserved: u32) -> i32;
+}
+
+/// Best-effort connectivity check used to skip artwork downloads offline.
+pub fn is_online() -> bool {
+    #[cfg(windows)]
+    unsafe {
+        InternetGetConnectedState(std::ptr::null_mut(), 0) != 0
+    }
+    #[cfg(not(windows))]
+    false
+}
+
 use fgm_domain::error::{AppError, ErrorCode};
 
 /// Downloads a small text resource and returns its body.

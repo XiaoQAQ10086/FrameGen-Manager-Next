@@ -17,10 +17,11 @@ impl CoverService {
     pub fn cover(paths: &AppPaths, game: &GameEntry) -> Result<Option<PathBuf>, AppError> {
         let _guard = COVER_LOCK.lock().unwrap_or_else(|error| error.into_inner());
         log_cover(paths, "request", game);
-        if let Some(path) = steam_cover(paths, game)? {
+        let online = crate::net::is_online();
+        if let Some(path) = steam_cover(paths, game, online)? {
             return Ok(Some(path));
         }
-        if let Some(path) = search_cover(paths, game) {
+        if online && let Some(path) = search_cover(paths, game) {
             return Ok(Some(path));
         }
         Ok(icon_cover(paths, game))
@@ -28,7 +29,11 @@ impl CoverService {
 }
 
 /// Steam store/local artwork; `None` when the game has no usable Steam art.
-fn steam_cover(paths: &AppPaths, game: &GameEntry) -> Result<Option<PathBuf>, AppError> {
+fn steam_cover(
+    paths: &AppPaths,
+    game: &GameEntry,
+    online: bool,
+) -> Result<Option<PathBuf>, AppError> {
     {
         if game.source != LibrarySource::Steam {
             return Ok(None);
@@ -48,6 +53,9 @@ fn steam_cover(paths: &AppPaths, game: &GameEntry) -> Result<Option<PathBuf>, Ap
         }
         if let Some(local) = find_local_cover(game, app_id) {
             return Ok(Some(local));
+        }
+        if !online {
+            return Ok(None);
         }
         if let Some(path) = appdetails_cover(paths, app_id) {
             return Ok(Some(path));

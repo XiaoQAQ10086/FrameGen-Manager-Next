@@ -12,7 +12,8 @@ function placeholder(game) {
 
 export async function loadCovers() {
   const token = ++run;
-  const games = [...state.games];
+  const games = state.games.filter((game) => !state.covers[game.id]);
+  if (!games.length) return;
   let index = 0;
 
   const worker = async () => {
@@ -31,6 +32,7 @@ export async function loadCovers() {
         image.src = cover.url;
         image.alt = '';
         image.addEventListener('error', () => {
+          delete state.covers[game.id];
           if (image.isConnected) image.replaceWith(placeholder(game));
         }, { once: true });
         node.replaceWith(image);
