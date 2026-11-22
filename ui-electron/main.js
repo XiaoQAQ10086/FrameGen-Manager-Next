@@ -209,9 +209,14 @@ function saveFeedbackHistory(items) {
 }
 
 function sanitizedHistory() {
-  return loadFeedbackHistory().map(({ id, time, summary, type, statusText, reply }) => ({
-    id, time, summary, type, statusText: statusText || '待处理', reply: reply || '',
-  }));
+  return loadFeedbackHistory().map(({ id, time, summary, type, statusText, reply, lastReadReply, lastReadStatus }) => {
+    const text = statusText || '待处理';
+    const unread = (reply && reply !== (lastReadReply || ''))
+      || (text === '已完成' && lastReadStatus !== '已完成');
+    return {
+      id, time, summary, type, statusText: text, reply: reply || '', unread: Boolean(unread),
+    };
+  });
 }
 
 ipcMain.handle('fgm:feedbackSubmit', async (_event, payload = {}) => {
@@ -295,7 +300,7 @@ ipcMain.handle('fgm:feedbackSubmit', async (_event, payload = {}) => {
   return { ok: false, error: { code: 'upload_failed', message: '上传失败，请稍后重试。' } };
 });
 
-ipcMain.handle('fgm:feedbackHistory', async () => {
+ipcMain.handle('fgm:feedbackHistory', async (_event, payload = {}) => {
   const items = loadFeedbackHistory();
   if (items.length && feedbackKey()) {
     try {
@@ -321,7 +326,15 @@ ipcMain.handle('fgm:feedbackHistory', async () => {
       // Offline: keep the local snapshot.
     }
   }
-  return { ok: true, items: sanitizedHistory() };
+  if (payload.markRead) {
+    for (const item of items) {
+      item.lastReadReply = item.reply || '';
+      item.lastReadStatus = item.statusText || '';
+    }
+    saveFeedbackHistory(items);
+  }
+  const history = sanitizedHistory();
+  return { ok: true, items: history, hasUnread: history.some((item) => item.unread) };
 });
 
 ipcMain.handle('fgm:feedbackDelete', (_event, id) => {

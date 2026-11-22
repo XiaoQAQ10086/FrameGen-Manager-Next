@@ -13,6 +13,7 @@ import { autoCheckUpdate } from './update.js';
 import { checkAssetUpdates } from './assets.js';
 import { enhanceSelects, observeSelects } from './select.js';
 import { perfMark } from './perf.js';
+import { refreshFeedbackBadge } from './feedback.js';
 
 perfMark('renderer-start');
 window.addEventListener('error', (event) => {
@@ -235,6 +236,7 @@ document.addEventListener('click', async (event) => {
   }
 });
 
+setTimeout(() => refreshFeedbackBadge(), 1500);
 setTimeout(async () => {
   await checkAssetUpdates();
   setTimeout(() => autoCheckUpdate(), 1200);

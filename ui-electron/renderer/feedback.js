@@ -18,20 +18,19 @@ function submitLabel() {
   return kind === 'suggestion' ? t('feedbackSubmitSuggestion') : t('feedbackSubmitIssue');
 }
 
-function updateSubmit(panel, busy = false) {
+function updateSubmit(panel) {
   const description = $('[data-role="feedback-description"]', panel)?.value.trim() || '';
-  const privacy = $('[data-role="feedback-privacy"]', panel)?.checked;
   const button = $('[data-action="feedback-submit"]', panel);
-  if (!button || busy) return;
-  button.disabled = !description || !privacy;
+  if (!button) return;
+  button.disabled = !description;
   button.textContent = submitLabel();
 }
 
-function showState(panel, text, danger = false) {
+function showState(panel, text, danger = false, loading = false) {
   const node = $('[data-role="feedback-state"]', panel);
   if (!node) return;
   node.className = `feedback-state${danger ? ' danger' : ''}`;
-  node.textContent = text;
+  node.innerHTML = `${loading ? '<span class="spinner"></span>' : ''}<span>${esc(text)}</span>`;
 }
 
 export function renderFeedback(root) {
@@ -50,10 +49,7 @@ export function renderFeedback(root) {
     <label class="feedback-field"><span>${t('feedbackDescription')}</span>
       <textarea data-role="feedback-description" maxlength="5000" rows="5" placeholder="${esc(t('feedbackPlaceholder'))}"></textarea>
     </label>
-    <label class="feedback-privacy">
-      <input type="checkbox" data-role="feedback-privacy">
-      <span>${t('feedbackPrivacy')}</span>
-    </label>
+    <p class="feedback-notice">${t('feedbackNotice')}</p>
     <div class="feedback-actions">
       <span class="feedback-state" data-role="feedback-state">${t('feedbackLogAttached')}</span>
       <button class="btn" data-action="feedback-history" type="button">${t('feedbackHistory')}</button>
@@ -70,29 +66,23 @@ export function renderFeedback(root) {
     });
   });
   $('[data-role="feedback-description"]', panel).addEventListener('input', () => updateSubmit(panel));
-  $('[data-role="feedback-privacy"]', panel).addEventListener('change', () => updateSubmit(panel));
   $('[data-action="feedback-submit"]', panel).addEventListener('click', () => submit(panel));
   $('[data-action="feedback-history"]', panel).addEventListener('click', () => openHistory());
 }
 
 async function submit(panel) {
   const description = $('[data-role="feedback-description"]', panel).value.trim();
-  const privacy = $('[data-role="feedback-privacy"]', panel).checked;
   if (!description) {
     showState(panel, t('feedbackDescriptionRequired'), true);
     $('[data-role="feedback-description"]', panel).focus();
     return;
   }
-  if (!privacy) {
-    showState(panel, t('feedbackPrivacyRequired'), true);
-    return;
-  }
   const button = $('[data-action="feedback-submit"]', panel);
   button.disabled = true;
-  showState(panel, t('feedbackPreparing'));
+  showState(panel, t('feedbackPreparing'), false, true);
   try {
     const bundle = await call('feedback.bundle');
-    showState(panel, t('feedbackUploading'));
+    showState(panel, t('feedbackUploading'), false, true);
     const reply = await window.fgm.feedbackSubmit({
       type: kind,
       description,
@@ -110,24 +100,23 @@ async function submit(panel) {
     showState(panel, t('feedbackSuccess', { id: reply.id }));
     button.textContent = t('feedbackSubmitted');
     button.disabled = true;
-    const copy = document.createElement('button');
-    copy.type = 'button';
-    copy.className = 'btn small';
-    copy.textContent = t('feedbackCopy');
-    copy.addEventListener('click', async () => {
-      try {
-        await navigator.clipboard.writeText(reply.id);
-        toast(t('feedbackCopied'));
-      } catch {
-        toast(reply.id);
-      }
-    });
-    panel.querySelector('.feedback-actions')?.appendChild(copy);
+    await refreshFeedbackBadge();
   } catch (error) {
     showState(panel, t('feedbackFailed', { message: error.message }), true);
     button.disabled = false;
     button.textContent = t('feedbackRetry');
   }
+}
+
+function historyRow(item) {
+  const status = item.reply && item.statusText === t('feedbackStatusPending') ? t('feedbackReplied') : item.statusText;
+  return `
+    <article class="feedback-history-row">
+      <div class="feedback-history-top"><b>${esc(item.id)}</b><span class="badge">${esc(status)}</span></div>
+      <div class="feedback-history-summary">${esc(item.summary)}</div>
+      <p class="hint">${esc(item.reply || t('feedbackNoReply'))}</p>
+      <button class="btn small danger" data-delete-local="${esc(item.id)}" type="button">${t('feedbackDeleteLocal')}</button>
+    </article>`;
 }
 
 async function openHistory() {
@@ -137,7 +126,7 @@ async function openHistory() {
     <section class="modal feedback-history-modal" role="dialog" aria-modal="true">
       <header class="modal-head"><div><h2>${t('feedbackHistory')}</h2><p class="muted">${t('feedbackHistoryHint')}</p></div>
         <button class="icon-btn" data-close type="button">✕</button></header>
-      <div class="feedback-history-list" data-role="feedback-history-list">${t('feedbackLoading')}</div>
+      <div class="feedback-history-list" data-role="feedback-history-list"><div class="feedback-loading"><span class="spinner"></span>${t('feedbackLoading')}</div></div>
       <footer class="modal-foot"><span></span><div class="foot-actions">
         <button class="btn" data-refresh type="button">${t('feedbackRefresh')}</button>
       </div></footer>
@@ -147,28 +136,34 @@ async function openHistory() {
   overlay.querySelector('[data-close]').onclick = close;
   overlay.addEventListener('click', (event) => { if (event.target === overlay) close(); });
   const list = overlay.querySelector('[data-role="feedback-history-list"]');
-  const load = async () => {
-    list.textContent = t('feedbackLoading');
-    const reply = await window.fgm.feedbackHistory();
+  const load = async (markRead = false) => {
+    list.innerHTML = `<div class="feedback-loading"><span class="spinner"></span>${t('feedbackLoading')}</div>`;
+    const reply = await window.fgm.feedbackHistory({ markRead });
     const items = reply.items || [];
-    if (!items.length) {
-      list.innerHTML = `<div class="feedback-history-empty">${t('feedbackNoHistory')}</div>`;
-      return;
-    }
-    list.innerHTML = items.map((item) => `
-      <article class="feedback-history-row">
-        <div class="feedback-history-top"><b>${esc(item.id)}</b><span class="badge">${esc(item.statusText)}</span></div>
-        <div class="feedback-history-summary">${esc(item.summary)}</div>
-        <p class="hint">${esc(item.reply || t('feedbackNoReply'))}</p>
-        <button class="btn small danger" data-delete-local="${esc(item.id)}" type="button">${t('feedbackDeleteLocal')}</button>
-      </article>`).join('');
+    list.innerHTML = items.length
+      ? items.map(historyRow).join('')
+      : `<div class="feedback-history-empty">${t('feedbackNoHistory')}</div>`;
+    if (markRead) await refreshFeedbackBadge();
   };
-  overlay.querySelector('[data-refresh]').onclick = load;
+  overlay.querySelector('[data-refresh]').onclick = () => load(true);
   list.addEventListener('click', async (event) => {
     const target = event.target.closest('[data-delete-local]');
     if (!target) return;
     await window.fgm.feedbackDelete(target.dataset.deleteLocal);
-    await load();
+    await load(false);
   });
-  await load();
+  await load(true);
+}
+
+function setFeedbackDot(visible) {
+  document.querySelector('.nav-item[data-page="logs"]')?.classList.toggle('has-feedback', visible);
+}
+
+export async function refreshFeedbackBadge() {
+  try {
+    const reply = await window.fgm.feedbackHistory();
+    setFeedbackDot(Boolean(reply.hasUnread));
+  } catch {
+    setFeedbackDot(false);
+  }
 }
