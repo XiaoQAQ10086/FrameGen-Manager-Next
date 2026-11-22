@@ -164,6 +164,7 @@ pub(crate) fn deploy(request: &str) -> Result<Value, AppError> {
             &target_directory,
             &app_version,
             &paths,
+            plan.proxy_slot.as_deref(),
         )?;
     }
 

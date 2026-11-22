@@ -4,7 +4,7 @@ use std::path::Path;
 use fgm_domain::error::{AppError, ErrorCode};
 use fgm_infra::anr::AnrPackageService;
 use fgm_infra::deployment::{DeploymentSnapshot, ProxyStatus};
-use fgm_infra::library::{CoverService, LibraryService};
+use fgm_infra::library::{CoverService, EngineDetector, LibraryService};
 use fgm_infra::pack_json::PackJson;
 use fgm_infra::packs::PackLocator;
 use fgm_infra::platform::FilePicker;
@@ -155,6 +155,21 @@ pub(crate) fn game_modes(request: &str) -> Result<Value, AppError> {
             let smooth_ours = smooth_state.is_some_and(|state| state.ours);
             let smooth_detail = smooth_state.and_then(|state| state.detail.clone());
             let target = &game.target_directory;
+            let engine = game
+                .render_exe
+                .as_deref()
+                .map(|exe| {
+                    EngineDetector::detect_with_roots(
+                        exe,
+                        &[target.as_path(), game.install_directory.as_path()],
+                    )
+                })
+                .unwrap_or_default();
+            let engine = match engine {
+                fgm_infra::library::GameEngine::ReEngine => "reEngine",
+                fgm_infra::library::GameEngine::MtFramework => "mtFramework",
+                fgm_infra::library::GameEngine::Unknown => "unknown",
+            };
             let snapshot = DeploymentSnapshot::new(target, &paths.backups());
             let framegen = Some(snapshot.state("framegen.sm86", framegen_pack_version.as_deref()));
             let dlss5 = Some(snapshot.state("dlss5", dlss5_version.as_deref()));
@@ -178,6 +193,7 @@ pub(crate) fn game_modes(request: &str) -> Result<Value, AppError> {
             let framegen_installed_version = snapshot.version("framegen.sm86");
             json!({
                 "gameId": game.id,
+                "engine": engine,
                 "framegen": framegen,
                 "framegenVersion": framegen_installed_version,
                 "framegenPackVersion": framegen_pack_version,

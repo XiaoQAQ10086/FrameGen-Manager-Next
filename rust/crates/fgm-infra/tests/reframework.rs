@@ -2,6 +2,7 @@ use std::fs;
 use std::path::PathBuf;
 use std::time::{SystemTime, UNIX_EPOCH};
 
+use fgm_domain::error::ErrorCode;
 use fgm_infra::paths::AppPaths;
 use fgm_infra::reframework::ReframeworkService;
 
@@ -14,12 +15,59 @@ fn skips_games_without_an_re_engine_marker() {
     let paths = AppPaths::new(root.join("data"), false).unwrap();
     paths.ensure_created().unwrap();
 
-    let installed =
-        ReframeworkService::install_before_deploy(&executable, &root.join("game"), "0.1.0", &paths)
-            .unwrap();
+    let installed = ReframeworkService::install_before_deploy(
+        &executable,
+        &root.join("game"),
+        "0.1.0",
+        &paths,
+        None,
+    )
+    .unwrap();
 
     assert!(!installed);
     assert!(!root.join("game").join("dinput8.dll").exists());
+}
+
+#[test]
+fn refuses_dinput8_when_reframework_is_enabled() {
+    let root = unique_dir("reframework-dinput");
+    let game = root.join("game");
+    fs::create_dir_all(&game).unwrap();
+    fs::write(game.join("re_chunk_000.pak"), b"pak").unwrap();
+    let executable = game.join("game.exe");
+    fs::write(&executable, b"not-a-pe").unwrap();
+    let paths = AppPaths::new(root.join("data"), false).unwrap();
+    paths.ensure_created().unwrap();
+
+    let error = ReframeworkService::install_before_deploy(
+        &executable,
+        &game,
+        "0.1.0",
+        &paths,
+        Some("dinput8.dll"),
+    )
+    .unwrap_err();
+
+    assert_eq!(error.code, ErrorCode::Conflict);
+}
+
+#[test]
+fn skips_an_existing_reframework_revision_file() {
+    let root = unique_dir("reframework-revision");
+    let game = root.join("game");
+    fs::create_dir_all(&game).unwrap();
+    fs::write(game.join("re_chunk_000.pak"), b"pak").unwrap();
+    fs::write(game.join("reframework_revision.txt"), b"existing").unwrap();
+    let executable = game.join("game.exe");
+    fs::write(&executable, b"not-a-pe").unwrap();
+    let paths = AppPaths::new(root.join("data"), false).unwrap();
+    paths.ensure_created().unwrap();
+
+    let installed =
+        ReframeworkService::install_before_deploy(&executable, &game, "0.1.0", &paths, None)
+            .unwrap();
+
+    assert!(!installed);
 }
 
 #[test]

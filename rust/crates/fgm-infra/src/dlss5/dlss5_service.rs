@@ -76,7 +76,13 @@ impl Dlss5Service {
                 .with("reason", "legacy DLSS5/RenoDX files must be cleaned first")
                 .with("files", legacy.join(",")));
         }
-        ReframeworkService::install_before_deploy(game_exe, target_directory, app_version, paths)?;
+        ReframeworkService::install_before_deploy(
+            game_exe,
+            target_directory,
+            app_version,
+            paths,
+            proxy_override,
+        )?;
         let proxy_module = if api == GraphicsApi::Vulkan {
             if proxy_override.is_some_and(|proxy| !proxy.trim().is_empty()) {
                 return Err(AppError::new(ErrorCode::InvalidArgument)

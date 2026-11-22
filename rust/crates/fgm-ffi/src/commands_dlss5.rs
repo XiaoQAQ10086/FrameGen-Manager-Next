@@ -54,7 +54,6 @@ pub(crate) fn dlss5_install(request: &str) -> Result<Value, AppError> {
     }
     let api = parse_api(&request.api)?;
     let app_version = request.app_version.unwrap_or_else(|| VERSION.to_string());
-
     let operation = super::commands_operation::begin("dlss5Install");
     let result = Dlss5Service::install(
         &pack_directory,

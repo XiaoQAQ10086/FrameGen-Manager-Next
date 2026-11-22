@@ -4,8 +4,8 @@ use std::sync::atomic::AtomicBool;
 
 use fgm_domain::error::AppError;
 
-use crate::deployment::{BackupStore, DeploymentEngine, PackDeploymentPlanner};
-use crate::library::{EngineDetector, GameEngine};
+use crate::deployment::{BackupStore, DeploymentEngine, DeploymentSummary, PackDeploymentPlanner};
+use crate::library::{EngineDetector, GameEngine, LibraryService, path_key};
 use crate::pack_json::PackJson;
 use crate::packs::PackLocator;
 use crate::paths::AppPaths;
@@ -26,12 +26,37 @@ impl ReframeworkService {
         target_directory: &Path,
         app_version: &str,
         paths: &AppPaths,
+        proxy_slot: Option<&str>,
     ) -> Result<bool, AppError> {
         let settings = SettingsStore::new(paths.config().join("app.json")).load()?;
         if !settings.auto_install_reframework {
             return Ok(false);
         }
-        if EngineDetector::detect(game_exe, target_directory) != GameEngine::ReEngine {
+        let install_directory = LibraryService::list(paths)
+            .into_iter()
+            .find(|game| path_key(&game.target_directory) == path_key(target_directory))
+            .map(|game| game.install_directory);
+        let roots = [
+            target_directory,
+            install_directory.as_deref().unwrap_or(target_directory),
+        ];
+        if EngineDetector::detect_with_roots(game_exe, &roots) != GameEngine::ReEngine {
+            return Ok(false);
+        }
+        if proxy_slot.is_some_and(|slot| slot.eq_ignore_ascii_case("dinput8.dll")) {
+            return Err(AppError::new(fgm_domain::error::ErrorCode::Conflict)
+                .with("module", "dinput8.dll")
+                .with(
+                    "reason",
+                    "REFramework will use dinput8.dll; choose another proxy",
+                ));
+        }
+        if target_directory.join("reframework_revision.txt").is_file() {
+            return Ok(false);
+        }
+        if DeploymentSummary::state("reframework", target_directory, &paths.backups(), None)?
+            != fgm_domain::deployment::DeploymentState::NotDeployed
+        {
             return Ok(false);
         }
         if target_directory.join("dinput8.dll").is_file() {

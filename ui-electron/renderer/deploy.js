@@ -71,13 +71,17 @@ export function openDeployDialog(game, refresh) {
   syncXess();
   call('proxyStatus', { targetDir: game.targetDirectory })
     .then((reply) => {
+      const mode = state.modes[game.id] || {};
+      const reframeworkAuto = Boolean(state.settings?.autoInstallReframework)
+        && mode.engine === 'reEngine';
       const occupied = new Set((reply.proxies || [])
         .filter((entry) => !entry.ownedByFramegen)
         .map((entry) => String(entry.module).toLowerCase()));
       const select = $('[data-option="proxy"]', modal);
       if (!select) return;
       [...select.options].forEach((option) => {
-        option.disabled = occupied.has(option.value.toLowerCase());
+        const name = option.value.toLowerCase();
+        option.disabled = occupied.has(name) || (reframeworkAuto && name === 'dinput8.dll');
       });
       if (select.selectedOptions[0]?.disabled) {
         const free = [...select.options].find((option) => !option.disabled);

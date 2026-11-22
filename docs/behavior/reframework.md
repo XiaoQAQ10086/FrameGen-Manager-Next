@@ -30,11 +30,13 @@
 
 ## Rust 迁移状态（Phase 4）
 
-- `fgm-infra/src/library/engine_detector.rs`：从安装目录向上最多 3 级查找 `re_chunk_000.pak`、`re_chunk_000.pak.patch_*.pak`、`re_dlc_000.pak`；命中判为 RE Engine；否则按 EXE 名（`mhw`/`mhworld`/`re5`/`re6`/`dmc4`）判为 MT Framework，其余 Unknown。
+- `fgm-infra/src/library/engine_detector.rs`：从目标目录、游戏库安装目录和 EXE 父目录分别向上最多 4 级查找 `re_chunk_000.pak`、`re_chunk_000.pak.patch_*.pak`、`re_dlc_000.pak`；命中判为 RE Engine；否则按 EXE 名（`mhw`/`mhworld`/`re5`/`re6`/`dmc4`）判为 MT Framework，其余 Unknown。
 - `fgm-infra/src/reframework.rs`：`install_before_deploy` 读取 `config/app.json` 的 `autoInstallReframework`，只在开关开启、引擎为 RE Engine、目标目录没有 `dinput8.dll` 且本地存在 `reframework` pack 时部署；部署走统一引擎，备份/回滚与哈希校验一致。`uninstall` 只处理本工具自己的 manifest，绝不按文件名删除其他工具的 `dinput8.dll`。
 - 接入点：帧生成部署（`fgm_deploy_json`）与 DLSS5 安装在写入前调用；DLSS5 卸载在还原后调用 REFramework 卸载。
-- 已知差异：帧生成页尚未根据已安装的 `dinput8.dll` 禁用代理选项；pack 缺失时静默跳过而不是报错，避免没有资产的构建阻塞主功能。
-- 测试：`engine_detector.rs` 单测（chunk/patch/MT/未知）、`tests/reframework.rs`（非 RE Engine 跳过、无 manifest 卸载不动第三方文件）。完整 pack 需要 23 MB 资产，未纳入 CI 集成测试。
+- 帧生成部署前会读取 `gameModes.engine`；RE Engine 且自动安装开关开启时，代理选择禁用 `dinput8.dll`，后端也会在 REFramework 安装前返回 `Conflict`，避免先装 REFramework 再被帧生成覆盖。
+- 已存在 `reframework_revision.txt` 或本工具 reframework manifest 时跳过安装，不覆盖用户已有 REFramework。
+- 已知差异：pack 缺失时静默跳过而不是报错，避免没有资产的构建阻塞主功能。
+- 测试：`engine_detector.rs` 单测（chunk/patch/安装根目录/MT/未知）、`tests/reframework.rs`（非 RE Engine 跳过、已有 revision 跳过、dinput8 代理冲突、无 manifest 卸载不动第三方文件）。完整 pack 需要 23 MB 资产，未纳入 CI 集成测试。
 
 ## 资产来源
 

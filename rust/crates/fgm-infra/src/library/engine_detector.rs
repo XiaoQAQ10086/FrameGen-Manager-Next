@@ -16,7 +16,23 @@ impl EngineDetector {
     const MT_FRAMEWORK_EXES: [&str; 5] = ["mhw", "mhworld", "re5", "re6", "dmc4"];
 
     pub fn detect(executable: &Path, install_directory: &Path) -> GameEngine {
-        if Self::has_re_engine_marker(install_directory) {
+        Self::detect_with_roots(executable, &[install_directory])
+    }
+
+    /// Checks the explicit roots (target and library install directory) plus
+    /// the executable's parent, matching the C# detector.
+    pub fn detect_with_roots(executable: &Path, roots: &[&Path]) -> GameEngine {
+        let mut candidates = roots
+            .iter()
+            .map(|root| (*root).to_path_buf())
+            .collect::<Vec<_>>();
+        if let Some(parent) = executable.parent() {
+            candidates.push(parent.to_path_buf());
+        }
+        if candidates
+            .iter()
+            .any(|root| Self::has_re_engine_marker(root))
+        {
             return GameEngine::ReEngine;
         }
         let stem = executable
@@ -91,6 +107,22 @@ mod tests {
         fs::write(root.join("re_chunk_000.pak.patch_002.pak"), b"pak").unwrap();
         assert_eq!(
             EngineDetector::detect(&nested.join("game.exe"), &nested),
+            GameEngine::ReEngine
+        );
+        let _ = fs::remove_dir_all(root);
+    }
+
+    #[test]
+    fn detects_marker_from_the_library_install_root() {
+        let root = temp_dir("install-root");
+        let target = root.join("Binaries").join("Win64");
+        std::fs::create_dir_all(&target).unwrap();
+        fs::write(root.join("re_chunk_000.pak"), b"pak").unwrap();
+        assert_eq!(
+            EngineDetector::detect_with_roots(
+                &target.join("game.exe"),
+                &[target.as_path(), root.as_path()]
+            ),
             GameEngine::ReEngine
         );
         let _ = fs::remove_dir_all(root);
