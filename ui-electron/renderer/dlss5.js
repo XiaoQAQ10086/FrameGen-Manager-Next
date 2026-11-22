@@ -150,6 +150,7 @@ function bind(root) {
         cachedKey = '';
         cachedAt = 0;
         renderWall(root);
+        syncRemovedCount(root);
       } else if (action === 'open' && game) {
         openDetail(root, game);
       } else if (action === 'github') {

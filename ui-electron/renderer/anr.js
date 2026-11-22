@@ -259,6 +259,7 @@ function bind(root) {
         await call('library.remove', { gameId: game.id });
         state.games = state.games.filter((item) => item.id !== game.id);
         renderGames(root);
+        syncRemovedCount(root);
       } else if (action === 'scan') {
         await call('library.scan');
         state.games = (await call('library.list')).games || [];

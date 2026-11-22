@@ -262,6 +262,7 @@ function bind(root) {
         state.games = state.games.filter((item) => item.id !== game.id);
         await load();
         renderGames(root);
+        syncRemovedCount(root);
       } else if (action === 'scan') {
         await call('library.scan');
         const reply = await call('library.list');
