@@ -181,6 +181,7 @@ ipcMain.handle('fgm:call', async (_event, name, payload) => {
 
 const FEEDBACK_API = 'https://laobiao-feedback.pages.dev/api/feedback';
 const FEEDBACK_QUERY = 'https://laobiao-feedback.pages.dev/api/feedback/query';
+const FEEDBACK_UA = 'FrameGen-Manager-Next/2.3.4';
 const feedbackHistoryPath = () => path.join(process.env.FGM_DATA_DIR, 'state', 'feedback-history.json');
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -262,7 +263,7 @@ ipcMain.handle('fgm:feedbackSubmit', async (_event, payload = {}) => {
       }
       const response = await fetch(FEEDBACK_API, {
         method: 'POST',
-        headers: { 'x-upload-key': key },
+        headers: { 'x-upload-key': key, 'User-Agent': FEEDBACK_UA },
         body: form,
         signal: AbortSignal.timeout(90000),
       });
@@ -300,30 +301,56 @@ ipcMain.handle('fgm:feedbackSubmit', async (_event, payload = {}) => {
   return { ok: false, error: { code: 'upload_failed', message: '上传失败，请稍后重试。' } };
 });
 
+async function queryOne(item) {
+  const url = `https://laobiao-feedback.pages.dev/api/feedback/status?id=${encodeURIComponent(item.id)}&k=${encodeURIComponent(item.key)}`;
+  const response = await fetch(url, {
+    headers: { 'User-Agent': FEEDBACK_UA },
+    signal: AbortSignal.timeout(4000),
+  });
+  const data = await response.json().catch(() => ({}));
+  return response.ok && data.ok ? data : null;
+}
+
 ipcMain.handle('fgm:feedbackHistory', async (_event, payload = {}) => {
   const items = loadFeedbackHistory();
+  let syncFailed = false;
+  let syncError = '';
   if (items.length && feedbackKey()) {
+    let batch = null;
     try {
       const response = await fetch(FEEDBACK_QUERY, {
         method: 'POST',
-        headers: { 'content-type': 'application/json' },
+        headers: { 'content-type': 'application/json', 'User-Agent': FEEDBACK_UA },
         body: JSON.stringify(items.map((item) => ({ id: item.id, k: item.key }))),
-        signal: AbortSignal.timeout(20000),
+        signal: AbortSignal.timeout(8000),
       });
       const data = await response.json().catch(() => ({}));
-      if (data.ok && Array.isArray(data.items)) {
-        const byId = new Map(data.items.filter((item) => item.ok).map((item) => [item.id, item]));
-        for (const item of items) {
-          const remote = byId.get(item.id);
-          if (remote) {
-            item.statusText = remote.statusText || item.statusText;
-            item.reply = remote.reply || '';
-          }
-        }
-        saveFeedbackHistory(items);
+      if (data.ok && Array.isArray(data.items)) batch = data.items;
+      else syncError = `HTTP ${response.status}`;
+    } catch (error) {
+      syncError = String(error.message || error);
+    }
+    if (!batch) {
+      const singles = [];
+      for (const item of items.slice(0, 5)) {
+        try {
+          const remote = await queryOne(item);
+          if (remote) singles.push({ ...remote, ok: true });
+        } catch {}
       }
-    } catch {
-      // Offline: keep the local snapshot.
+      if (singles.length) batch = singles;
+      else syncFailed = true;
+    }
+    if (batch) {
+      const byId = new Map(batch.filter((item) => item.ok).map((item) => [item.id, item]));
+      for (const item of items) {
+        const remote = byId.get(item.id);
+        if (remote) {
+          item.statusText = remote.statusText || item.statusText;
+          item.reply = remote.reply || '';
+        }
+      }
+      saveFeedbackHistory(items);
     }
   }
   if (payload.markRead) {
@@ -334,7 +361,13 @@ ipcMain.handle('fgm:feedbackHistory', async (_event, payload = {}) => {
     saveFeedbackHistory(items);
   }
   const history = sanitizedHistory();
-  return { ok: true, items: history, hasUnread: history.some((item) => item.unread) };
+  return {
+    ok: true,
+    items: history,
+    hasUnread: history.some((item) => item.unread),
+    syncFailed,
+    syncError,
+  };
 });
 
 ipcMain.handle('fgm:feedbackDelete', (_event, id) => {

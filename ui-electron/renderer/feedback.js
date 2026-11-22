@@ -140,9 +140,12 @@ async function openHistory() {
     list.innerHTML = `<div class="feedback-loading"><span class="spinner"></span>${t('feedbackLoading')}</div>`;
     const reply = await window.fgm.feedbackHistory({ markRead });
     const items = reply.items || [];
-    list.innerHTML = items.length
+    const warning = reply.syncFailed
+      ? `<div class="feedback-sync-warning">${t('feedbackSyncFailed')}</div>`
+      : '';
+    list.innerHTML = warning + (items.length
       ? items.map(historyRow).join('')
-      : `<div class="feedback-history-empty">${t('feedbackNoHistory')}</div>`;
+      : `<div class="feedback-history-empty">${t('feedbackNoHistory')}</div>`);
     if (markRead) await refreshFeedbackBadge();
   };
   overlay.querySelector('[data-refresh]').onclick = () => load(true);

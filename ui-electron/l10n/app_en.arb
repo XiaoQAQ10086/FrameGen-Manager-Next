@@ -464,6 +464,7 @@
   "feedbackHistoryHint": "Up to 30 local records; deleting a local record does not affect the server.",
   "feedbackLoading": "Loading…",
   "feedbackRefresh": "Refresh",
+  "feedbackSyncFailed": "Sync failed; showing local records. Check your network and refresh.",
   "feedbackNoHistory": "No feedback submitted yet.",
   "feedbackNoReply": "The administrator has not replied yet.",
   "feedbackDeleteLocal": "Delete local record",

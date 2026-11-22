@@ -331,6 +331,7 @@
   "feedbackHistoryHint": "本地最多保留 30 条；删除本地记录不会影响服务器。",
   "feedbackLoading": "正在加载…",
   "feedbackRefresh": "刷新",
+  "feedbackSyncFailed": "同步失败，当前显示本地记录；请检查网络后刷新。",
   "feedbackNoHistory": "还没有提交过反馈。",
   "feedbackNoReply": "站长还没有回复，处理完成后会显示在这里。",
   "feedbackDeleteLocal": "删除本地记录",
