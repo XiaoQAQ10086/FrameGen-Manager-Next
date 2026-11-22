@@ -41,8 +41,8 @@
 ## 资产来源
 
 - 官方：`praydog/REFramework-nightly`。
-- 当前固定 nightly revision `f00d6bee503125180621a6666779499f9a30881d`，`REFramework.zip` SHA-256 `9b3f82dbad5599d3b67082bc89ca5a6b990fcf02416ea32490a630cea2f2d9d0`。
-- 包内 `dinput8.dll` SHA-256 `748d6543b45a5ddd6b2d5170d1ba16ed56219c7f0d52141797a95c3bda189e5f`。
+- 当前固定 nightly `nightly-01441`，revision `49c21b26d50b23a333e9025743c8d45c46bb460e`（2026-11-17 发布），`REFramework.zip` SHA-256 `49a897335cea7368885477426e90a524659329e2ac74dde302eb5769ba777c11`。
+- 包内 `dinput8.dll` SHA-256 `28222866b3fb8182f522b6eb8d8bf9d04cec08a4e87bfc302c5aa0374b8e2b95`，大小 23,097,856 bytes。pack 版本从 `1.0.0` 升到 `1.1.0`，旧版本部署会被资产更新流程识别为可清理。
 - 上游更新需要替换 pack、更新 SHA，并在 RE Engine 真机验证；不自动跟随 latest。
 
 ## 测试

@@ -1,7 +1,7 @@
 {
     "schemaVersion": 1,
     "id": "reframework",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "displayName": "REFramework nightly (RE Engine)",
     "minAppVersion": "2.0.0",
     "gpuRoutes": [
@@ -14,8 +14,8 @@
             "role": "runtime",
             "required": true,
             "proxySlot": false,
-            "sha256": "748d6543b45a5ddd6b2d5170d1ba16ed56219c7f0d52141797a95c3bda189e5f",
-            "size": 23096320
+            "sha256": "28222866b3fb8182f522b6eb8d8bf9d04cec08a4e87bfc302c5aa0374b8e2b95",
+            "size": 23097856
         },
         {
             "source": "reframework_revision.txt",
@@ -23,7 +23,7 @@
             "role": "config",
             "required": true,
             "proxySlot": false,
-            "sha256": "5a6f9faff650d8675e0950c5ed7a21c991d367c1f85b7541ba5a4be02e53e3a6",
+            "sha256": "a37111bcab5901db2a745fa861c85b4a5c66fd266d3423fb09e4f0efdb865afb",
             "size": 42
         }
     ],
