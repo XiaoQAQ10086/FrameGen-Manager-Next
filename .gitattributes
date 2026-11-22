@@ -11,3 +11,7 @@
 *.md text eol=lf
 *.yml text eol=lf
 *.yaml text eol=lf
+
+# The C# tree is a frozen behavior oracle; it is not part of the shipping app.
+*.cs linguist-detectable=false
+*.xaml linguist-detectable=false
