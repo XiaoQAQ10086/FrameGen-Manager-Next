@@ -78,6 +78,7 @@ export const proxyOwnerLabel = (owner) => ({
   framegen: t('proxyOwnerFramegen'),
   dlss5: t('proxyOwnerDlss5'),
   anr: t('proxyOwnerAnr'),
+  smoothMotion: t('proxyOwnerSmoothMotion'),
   reframework: t('proxyOwnerReframework'),
   other: t('proxyOwnerOther'),
 }[owner] || owner || t('smUnknown'));

@@ -15,6 +15,15 @@ unsafe extern "system" {
 
 /// Reads the `ProductName` string from a PE version resource.
 pub fn product_name(path: &Path) -> Option<String> {
+    read_string(path, "ProductName")
+}
+
+/// Reads the `CompanyName` string from a PE version resource.
+pub fn company_name(path: &Path) -> Option<String> {
+    read_string(path, "CompanyName")
+}
+
+fn read_string(path: &Path, key: &str) -> Option<String> {
     let path = wide(&path.display().to_string());
     let mut handle = 0_u32;
     let size = unsafe { GetFileVersionInfoSizeW(path.as_ptr(), &mut handle) };
@@ -32,7 +41,7 @@ pub fn product_name(path: &Path) -> Option<String> {
         .into_iter()
         .chain(["040904B0".to_string()])
     {
-        let sub = wide(&format!("\\StringFileInfo\\{language}\\ProductName"));
+        let sub = wide(&format!("\\StringFileInfo\\{language}\\{key}"));
         let mut pointer: *mut c_void = std::ptr::null_mut();
         let mut length = 0_u32;
         let ok = unsafe {

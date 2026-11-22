@@ -14,6 +14,7 @@ pub enum ProxyOwner {
     Framegen,
     Dlss5,
     Anr,
+    SmoothMotion,
     Reframework,
     Other,
 }
@@ -24,6 +25,7 @@ impl ProxyOwner {
             Self::Framegen => "framegen",
             Self::Dlss5 => "dlss5",
             Self::Anr => "anr",
+            Self::SmoothMotion => "smoothMotion",
             Self::Reframework => "reframework",
             Self::Other => "other",
         }
@@ -37,7 +39,7 @@ pub struct ProxyEntry {
     pub owned_by_framegen: bool,
 }
 
-const CANDIDATES: [&str; 11] = [
+const CANDIDATES: [&str; 10] = [
     "version.dll",
     "winmm.dll",
     "dbghelp.dll",
@@ -48,10 +50,10 @@ const CANDIDATES: [&str; 11] = [
     "d3d11.dll",
     "d3d12.dll",
     "opengl32.dll",
-    "vulkan-1.dll",
 ];
-const FAMILIES: [(&str, ProxyOwner); 4] = [
+const FAMILIES: [(&str, ProxyOwner); 5] = [
     ("framegen.sm86", ProxyOwner::Framegen),
+    ("smooth-motion", ProxyOwner::SmoothMotion),
     ("dlss5", ProxyOwner::Dlss5),
     ("anr", ProxyOwner::Anr),
     ("reframework", ProxyOwner::Reframework),
@@ -104,7 +106,11 @@ impl ProxyStatus {
 
         let mut entries = Vec::new();
         for module in CANDIDATES {
-            if !target_directory.join(module).is_file() {
+            let path = target_directory.join(module);
+            if !path.is_file() {
+                continue;
+            }
+            if is_microsoft_file(&path) {
                 continue;
             }
             let lower = module.to_ascii_lowercase();
@@ -115,12 +121,11 @@ impl ProxyStatus {
             // A previous frame-gen deployment can leave its proxy behind when
             // the data directory was reset (portable rebuild, wiped cache).
             // Match the pack hash so the slot is still recognised as ours.
-            let owner =
-                if owner == ProxyOwner::Other && matches_framegen_proxy(target_directory, module) {
-                    ProxyOwner::Framegen
-                } else {
-                    owner
-                };
+            let owner = if owner == ProxyOwner::Other {
+                matches_known_proxy(target_directory, module).unwrap_or(ProxyOwner::Other)
+            } else {
+                owner
+            };
             entries.push(ProxyEntry {
                 module: module.to_string(),
                 owner,
@@ -131,8 +136,25 @@ impl ProxyStatus {
     }
 }
 
-fn matches_framegen_proxy(target_directory: &Path, module: &str) -> bool {
-    let Some(pack_directory) = PackLocator::find("framegen.sm86") else {
+fn is_microsoft_file(path: &Path) -> bool {
+    crate::platform::company_name(path)
+        .is_some_and(|company| company.to_ascii_lowercase().contains("microsoft"))
+}
+
+fn matches_known_proxy(target_directory: &Path, module: &str) -> Option<ProxyOwner> {
+    [
+        ("framegen.sm86", ProxyOwner::Framegen),
+        ("smooth-motion.rtx30", ProxyOwner::SmoothMotion),
+        ("smooth-motion.rtx20", ProxyOwner::SmoothMotion),
+    ]
+    .into_iter()
+    .find_map(|(pack_id, owner)| {
+        matches_pack_proxy(target_directory, module, pack_id).then_some(owner)
+    })
+}
+
+fn matches_pack_proxy(target_directory: &Path, module: &str, pack_id: &str) -> bool {
+    let Some(pack_directory) = PackLocator::find(pack_id) else {
         return false;
     };
     let Ok(pack) = PackJson::load(&pack_directory.join("pack.json")) else {
@@ -147,8 +169,7 @@ fn matches_framegen_proxy(target_directory: &Path, module: &str) -> bool {
         .iter()
         .flatten()
         .filter(|file| {
-            file.proxy_slot
-                && file.target.eq_ignore_ascii_case(module)
+            file.target.eq_ignore_ascii_case(module)
                 && file.size.is_none_or(|size| size as u64 == metadata.len())
         })
         .collect::<Vec<_>>();

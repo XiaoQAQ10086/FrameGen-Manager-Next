@@ -1,5 +1,6 @@
 import {
-  $, call, esc, folderIcon, githubIcon, hideProgress, prettyPath, showProgress, state, toast, trashIcon,
+  $, call, confirmAction, esc, folderIcon, githubIcon, hideProgress, prettyPath, showProgress, state,
+  toast, trashIcon,
 } from './core.js';
 import { t } from './l10n.js';
 import { loadCovers } from './covers.js';
@@ -127,14 +128,16 @@ function renderGames(root) {
 function cardMarkup(game, index) {
   const status = statusFor(game);
   const mode = modes[game.id] || {};
-  const component = mode.smoothMotionComponent || 'notDeployed';
+  const rawComponent = mode.smoothMotionComponent || 'notDeployed';
+  const missing = mode.smoothMotionFilesOk === false && rawComponent !== 'notDeployed';
+  const component = missing ? 'partial' : rawComponent;
   const enabled = status.enabled === true;
   const framegenOn = (mode.framegen || 'notDeployed') !== 'notDeployed';
   const outdated = component === 'outdated';
   const route = String(state.gpu?.route || '').toLowerCase();
   const routeBlocked = !['sm86', 'sm75'].includes(route);
   const driverBlocked = routeBlocked || !state.gpu?.driverSupported;
-  const blocked = (framegenOn && !enabled) || (driverBlocked && !enabled);
+  const blocked = !missing && ((framegenOn && !enabled) || (driverBlocked && !enabled));
   const blockedTitle = framegenOn ? t('smConflict') : (routeBlocked ? t('gpuIncompatible') : t('smDriverTooOld', { current: state.gpu?.driverVersion || '—', min: '616.64' }));
   const cover = state.covers[game.id];
   const initial = game.name ? game.name.slice(0, 1) : '?';
@@ -145,10 +148,10 @@ function cardMarkup(game, index) {
           ? `<img class="thumb" data-cover="${esc(game.id)}" src="${esc(cover)}" alt="" decoding="async">`
           : `<div class="thumb ph2" data-cover="${esc(game.id)}">${esc(initial)}</div>`}
         <div class="ginfo">
-          <div class="gname">${esc(game.name)}</div>
+          <div class="gname" title="${esc(game.name)}">${esc(game.name)}</div>
           <div class="badges">
             <span class="badge ${component === 'installed' ? 'ok' : (component === 'notDeployed' ? 'dim' : 'warn')}">${esc(componentLabel(component))}</span>
-            ${enabled ? `<span class="badge ok">${t('smDriverOn')}</span>` : `<span class="badge dim">${t('smDriverOff')}</span>`}
+            ${missing ? '' : (enabled ? `<span class="badge ok">${t('smDriverOn')}</span>` : `<span class="badge dim">${t('smDriverOff')}</span>`)}
             ${framegenOn ? `<span class="badge danger">${t('smConflict')}</span>` : ''}
           </div>
         </div>
@@ -157,7 +160,7 @@ function cardMarkup(game, index) {
       ${status.detail ? `<div class="hint">${esc(status.detail)}</div>` : ''}
       ${(status.profiles || []).length ? `<div class="hint">${t('smProfileLabel')}: ${esc(status.profiles.join(' / '))}</div>` : ''}
       <div class="gactions">
-        <button class="btn small ${enabled ? 'danger' : 'success'}" data-action="${enabled ? 'disable' : 'enable'}" data-id="${esc(game.id)}" type="button" ${blocked ? 'disabled' : ''} ${blocked ? `title="${esc(blockedTitle)}"` : ''}>${enabled ? t('smDisable') : (outdated ? t('smUpdate') : t('smEnable'))}</button>
+        <button class="btn small ${missing ? 'danger' : (enabled ? 'danger' : 'success')}" data-action="${missing ? 'cleanup' : (enabled ? 'disable' : 'enable')}" data-id="${esc(game.id)}" type="button" ${blocked ? 'disabled' : ''} ${blocked ? `title="${esc(blockedTitle)}"` : ''}>${missing ? t('restore') : (enabled ? t('smDisable') : (outdated ? t('smUpdate') : t('smEnable')))}</button>
         <button class="btn small launch" data-action="launch" data-id="${esc(game.id)}" type="button">${t('launchGame')}</button>
         <span class="spacer"></span>
         <button class="btn small icon-only" data-action="folder" data-id="${esc(game.id)}" type="button" title="${esc(t('openFolder'))}">${folderIcon}</button>
@@ -203,6 +206,28 @@ function bind(root) {
         } finally {
           hideProgress();
         }
+      } else if (action === 'cleanup' && game) {
+        const ok = await confirmAction({
+          title: t('restore'),
+          body: t('smCleanupConfirm', { game: game.name }),
+          confirmLabel: t('restore'),
+          cancelLabel: t('cancel'),
+          danger: true,
+        });
+        if (!ok) return;
+        showProgress(t('restore'));
+        try {
+          await call('sm.restore', {
+            game: game.name,
+            exePath: game.renderExe,
+            targetDir: game.targetDirectory,
+          });
+          await load();
+          renderGames(root);
+          toast(t('smRestoreDone'));
+        } finally {
+          hideProgress();
+        }
       } else if (action === 'disable' && game) {
         showProgress(t('smDisable'));
         try {
@@ -223,12 +248,18 @@ function bind(root) {
       } else if (action === 'folder' && game) {
         await call('openPath', { path: game.targetDirectory });
       } else if (action === 'remove' && game) {
-        if (confirm(`${t('removeGame')} ${game.name}?`)) {
-          await call('library.remove', { gameId: game.id });
-          state.games = state.games.filter((item) => item.id !== game.id);
-          await load();
-          renderGames(root);
-        }
+        const ok = await confirmAction({
+          title: t('removeGame'),
+          body: t('removeGameConfirm', { game: game.name }),
+          confirmLabel: t('removeGame'),
+          cancelLabel: t('cancel'),
+          danger: true,
+        });
+        if (!ok) return;
+        await call('library.remove', { gameId: game.id });
+        state.games = state.games.filter((item) => item.id !== game.id);
+        await load();
+        renderGames(root);
       } else if (action === 'scan') {
         await call('library.scan');
         const reply = await call('library.list');
@@ -236,7 +267,7 @@ function bind(root) {
         await load();
         renderGames(root);
       } else if (action === 'add') {
-        const picked = await call('pickExecutable');
+        const picked = await call('pickExecutable', { title: t('pickExeTitle') });
         if (!picked.cancelled) {
           await call('library.addManual', { path: picked.path });
           const reply = await call('library.list');

@@ -11,9 +11,9 @@ impl FilePicker {
             .pick_file()
     }
 
-    pub fn pick_executable() -> Option<PathBuf> {
+    pub fn pick_executable(title: Option<&str>) -> Option<PathBuf> {
         rfd::FileDialog::new()
-            .set_title("Select the game executable")
+            .set_title(title.unwrap_or("Select the game executable"))
             .add_filter("Executable", &["exe"])
             .pick_file()
     }

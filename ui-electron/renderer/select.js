@@ -20,7 +20,8 @@ function positionMenu(trigger, menu) {
   menu.style.position = 'fixed';
   menu.style.left = `${Math.max(8, Math.min(rect.left, window.innerWidth - Math.max(120, rect.width) - 8))}px`;
   menu.style.top = `${top}px`;
-  menu.style.width = `${Math.max(120, rect.width)}px`;
+  const minimum = trigger.closest('.select-wrap-lang') ? 160 : 120;
+  menu.style.width = `${Math.max(minimum, rect.width)}px`;
 }
 
 function refresh(select, trigger, menu) {

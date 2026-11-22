@@ -101,6 +101,8 @@ Steam junk 跳过（精确名称）：`steamworks common redistributables`、`st
 - `fgm-infra/src/library/cover_service.rs`：先找 Steam 已下载的本地素材（`appcache/librarycache/<appid>/` 的 `library_600x900`/`header`/`library_hero`、旧扁平缓存与 `userdata/*/config/grid`），Windows 上改用 WinINET（跟随系统代理）下载，再依次尝试 `library_600x900`、旧 CDN header、`store_item_assets` header、`capsule_616x353`，成功后缓存到 `cache/covers/<appid>.jpg`；没有 Steam id 或商店素材缺失时，会用游戏名、去掉 “Demo” 的名称以及 EXE 的 ProductName 调用 Steam 商店搜索取封面；仍找不到才提取可执行文件自身图标（含通用 exe 图标）缓存到 `cache/icons/<hash>.png`，卡片以 contain 方式展示；只有连 exe 都没有时才显示首字母占位。Dart 侧不再只对 Steam 请求封面。
 - 离线时跳过所有商店/CDN 请求：只使用 Steam 本地素材、缓存和 EXE 图标；渲染层只请求视口内的封面（最多 2 并发、200px 预加载边距），优先本地/下载 600×900 而不是 1200×1800，减少解码内存。
 - 封面失败做负缓存：渲染层 10 分钟、原生 `cache/covers/miss-*` 1 小时；成功或用户重新扫描后重新尝试。下载与本地查找仍由全局锁串行，避免 urlmon/GDI+ 并发问题。
+- 代理占用徽章只报告可信文件：带 Microsoft 公司信息的系统 DLL（如 CS2 自带的 `dbghelp.dll`）和 Vulkan Runtime 不报告；没有清单但哈希匹配帧生成/RTSS 20/30 SM 包的文件分别归为对应模式。未知的非 Microsoft 代理仍显示“其他程序”。
+- 【添加游戏】使用系统文件选择器，标题按界面语言传入：中文为“选择游戏实际启动的 exe 程序，一般在 Win64 文件夹下”。
 - `fgm-infra/src/platform/drive_roots.rs`：固定/可移动盘符枚举。
 - `fgm-ffi/src/commands_library.rs`：`fgm_library_add_manual_json`（无路径时打开原生选择器，取消返回 `cancelled`）、`fgm_launch_game_json`、`fgm_cover_json`。
 - CLI：`fgm-next library scan [--root <dir>]...`、`fgm-next library list`。

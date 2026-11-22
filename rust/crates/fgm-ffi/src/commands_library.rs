@@ -58,7 +58,7 @@ pub(crate) fn add_manual(request: &str) -> Result<Value, AppError> {
     let request: AddManualRequest = parse(request)?;
     let executable = match request.exe_path {
         Some(path) => absolute(Path::new(&path))?,
-        None => match FilePicker::pick_executable() {
+        None => match FilePicker::pick_executable(None) {
             Some(path) => path,
             None => return Ok(json!({ "ok": true, "cancelled": true })),
         },
@@ -67,13 +67,6 @@ pub(crate) fn add_manual(request: &str) -> Result<Value, AppError> {
     paths.ensure_created()?;
     let game = LibraryService::add_manual(&paths, &executable)?;
     Ok(json!({ "ok": true, "game": game }))
-}
-
-pub(crate) fn pick_executable() -> Result<Value, AppError> {
-    Ok(match FilePicker::pick_executable() {
-        Some(path) => json!({ "ok": true, "path": path.to_string_lossy() }),
-        None => json!({ "ok": true, "cancelled": true }),
-    })
 }
 
 #[derive(Deserialize)]
@@ -178,6 +171,9 @@ pub(crate) fn game_modes(request: &str) -> Result<Value, AppError> {
                 })
                 .collect::<Vec<Value>>();
             let smooth_component = Some(snapshot.state("smooth-motion", None));
+            let smooth_files_ok = snapshot
+                .files_present("smooth-motion", target)
+                .unwrap_or(true);
             let framegen_installed_version = snapshot.version("framegen.sm86");
             json!({
                 "gameId": game.id,
@@ -194,6 +190,7 @@ pub(crate) fn game_modes(request: &str) -> Result<Value, AppError> {
                 "smoothMotionOurs": smooth_ours,
                 "smoothMotionDetail": smooth_detail,
                 "smoothMotionComponent": smooth_component,
+                "smoothMotionFilesOk": smooth_files_ok,
             })
         })
         .collect();
@@ -207,13 +204,38 @@ fn pack_version(pack_id: &str) -> Option<String> {
         .map(|pack| pack.version)
 }
 
+#[derive(Default, Deserialize)]
+struct PickExecutableRequest {
+    #[serde(default)]
+    title: Option<String>,
+}
+
 /// Opens the native picker and returns the chosen executable path.
+pub(crate) fn pick_executable(request: &str) -> Result<Value, AppError> {
+    let request: PickExecutableRequest = parse(request)?;
+    Ok(
+        match FilePicker::pick_executable(request.title.as_deref()) {
+            Some(path) => json!({ "ok": true, "path": path.to_string_lossy() }),
+            None => json!({ "ok": true, "cancelled": true }),
+        },
+    )
+}
+
 #[unsafe(no_mangle)]
 pub extern "C" fn fgm_pick_executable_json() -> *mut c_char {
-    execute(|| match pick_executable() {
+    execute(|| match pick_executable("{}") {
         Ok(value) => value,
         Err(error) => error_json(&error),
     })
+}
+
+/// Picker with a localized title, used by the napi bridge.
+#[unsafe(no_mangle)]
+pub extern "C" fn fgm_pick_executable_request_json(
+    request: *const u8,
+    length: usize,
+) -> *mut c_char {
+    execute_request(request, length, pick_executable)
 }
 
 #[derive(Deserialize)]

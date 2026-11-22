@@ -79,7 +79,11 @@ pub(crate) fn anr_deploy(request: &str) -> Result<Value, AppError> {
     if let Some(gpu) = GpuDetector::detect_cached(&paths)
         && !matches!(
             gpu.route,
-            GpuRoute::Sm86 | GpuRoute::Sm75 | GpuRoute::NotNeeded | GpuRoute::Gtx16
+            GpuRoute::Sm86
+                | GpuRoute::Sm75
+                | GpuRoute::NotNeeded
+                | GpuRoute::Gtx16
+                | GpuRoute::Unsupported
         )
     {
         return Err(AppError::new(ErrorCode::GpuUnsupported)

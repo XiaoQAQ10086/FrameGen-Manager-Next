@@ -11,7 +11,7 @@ use crate::commands_gpu_spoof::{
 };
 use crate::commands_library::{
     fgm_library_forget_json, fgm_library_remove_json, fgm_library_removed_json,
-    fgm_library_restore_removed_json, fgm_pick_executable_json, fgm_proxy_status_json,
+    fgm_library_restore_removed_json, fgm_pick_executable_request_json, fgm_proxy_status_json,
 };
 use crate::commands_logs::fgm_logs_clear_json;
 use crate::commands_operation::{fgm_operation_cancel_json, fgm_operation_progress_json};
@@ -75,7 +75,7 @@ pub fn invoke(name: &str, body: Option<&str>) -> Result<String, String> {
         "library.remove" => request(fgm_library_remove_json, payload(body)),
         "library.restoreRemoved" => request(fgm_library_restore_removed_json, payload(body)),
         "library.forget" => request(fgm_library_forget_json, payload(body)),
-        "pickExecutable" => take(fgm_pick_executable_json()),
+        "pickExecutable" => request(fgm_pick_executable_request_json, payload(body)),
         "cover" => request(crate::fgm_cover_json, payload(body)),
         "gameModes" => request(crate::fgm_game_modes_json, payload(body)),
         "launch" => request(crate::fgm_launch_game_json, payload(body)),

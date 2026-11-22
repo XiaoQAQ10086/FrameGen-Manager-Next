@@ -1,5 +1,5 @@
 import {
-  $, call, esc, folderIcon, githubIcon, hideProgress, prettyPath, proxyOwnerLabel, showProgress, state,
+  $, call, confirmAction, esc, folderIcon, githubIcon, hideProgress, prettyPath, proxyOwnerLabel, showProgress, state,
   toast, trashIcon,
 } from './core.js';
 import { t } from './l10n.js';
@@ -103,7 +103,7 @@ function cardMarkup(game, index) {
   const anr = mode.anr || 'notDeployed';
   const deployed = anr !== 'notDeployed';
   const route = String(state.gpu?.route || '').toLowerCase();
-  const gpuBlocked = Boolean(state.gpu) && !['sm86', 'sm75', 'notneeded', 'gtx16'].includes(route);
+  const gpuBlocked = Boolean(state.gpu) && !['sm86', 'sm75', 'notneeded', 'gtx16', 'unsupported'].includes(route);
   const framegenOn = (mode.framegen || 'notDeployed') !== 'notDeployed';
   const blocked = !packageInfo || gpuBlocked || (framegenOn && !deployed);
   const blockedTitle = framegenOn ? t('framegenConflict') : t('gpuIncompatible');
@@ -117,7 +117,7 @@ function cardMarkup(game, index) {
           ? `<img class="thumb" data-cover="${esc(game.id)}" src="${esc(cover)}" alt="" decoding="async">`
           : `<div class="thumb ph2" data-cover="${esc(game.id)}">${esc(game.name.slice(0, 1))}</div>`}
         <div class="ginfo">
-          <div class="gname">${esc(game.name)}</div>
+          <div class="gname" title="${esc(game.name)}">${esc(game.name)}</div>
           <div class="badges">
             ${deployed ? `<span class="badge ${anr === 'needsRepair' ? 'warn' : 'ok'}">${esc(`${anrLabel(anr)}${anrVersion ? ` ${t('assetVersionLabel')}：${anrVersion}` : ''}`)}</span>` : ''}
             ${framegenOn ? `<span class="badge danger">${esc(t('framegenConflict'))}</span>` : ''}
@@ -246,18 +246,24 @@ function bind(root) {
       } else if (action === 'folder' && game) {
         await call('openPath', { path: game.targetDirectory });
       } else if (action === 'remove' && game) {
-        if (confirm(`${t('removeGame')} ${game.name}?`)) {
-          await call('library.remove', { gameId: game.id });
-          state.games = state.games.filter((item) => item.id !== game.id);
-          renderGames(root);
-        }
+        const ok = await confirmAction({
+          title: t('removeGame'),
+          body: t('removeGameConfirm', { game: game.name }),
+          confirmLabel: t('removeGame'),
+          cancelLabel: t('cancel'),
+          danger: true,
+        });
+        if (!ok) return;
+        await call('library.remove', { gameId: game.id });
+        state.games = state.games.filter((item) => item.id !== game.id);
+        renderGames(root);
       } else if (action === 'scan') {
         await call('library.scan');
         state.games = (await call('library.list')).games || [];
         await load();
         renderGames(root);
       } else if (action === 'add') {
-        const picked = await call('pickExecutable');
+        const picked = await call('pickExecutable', { title: t('pickExeTitle') });
         if (!picked.cancelled) {
           await call('library.addManual', { path: picked.path });
           state.games = (await call('library.list')).games || [];

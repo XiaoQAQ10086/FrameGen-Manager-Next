@@ -137,7 +137,8 @@ impl GpuDetector {
             name: name.to_string(),
             driver_version: driver_version.to_string(),
             route,
-            driver_supported: driver_at_least(driver_version, 616, 64),
+            driver_supported: route == GpuRoute::Unsupported
+                || driver_at_least(driver_version, 616, 64),
             hags: HagsProbe::read(),
         }
     }
@@ -207,20 +208,56 @@ fn adapter_driver_fingerprint() -> Option<String> {
 fn registry_adapter() -> Option<(String, String)> {
     const CLASS: &str =
         r"SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}";
-    for index in 0..16 {
+    let mut best: Option<(u8, String, String)> = None;
+    for index in 0..32 {
         let key = format!(r"{CLASS}\{index:04}");
         let Some(desc) = read_string(HKEY_LOCAL_MACHINE, &key, "DriverDesc") else {
             continue;
         };
-        if !desc.to_uppercase().contains("NVIDIA") {
+        if is_virtual_adapter(&desc) {
             continue;
         }
         let Some(raw) = read_string(HKEY_LOCAL_MACHINE, &key, "DriverVersion") else {
             continue;
         };
-        return Some((desc, normalize_driver_version(&raw)));
+        let upper = desc.to_uppercase();
+        let score = if upper.contains("NVIDIA") {
+            4
+        } else if upper.contains("AMD") || upper.contains("RADEON") {
+            3
+        } else if upper.contains("INTEL") {
+            2
+        } else {
+            1
+        };
+        let driver = if upper.contains("NVIDIA") {
+            normalize_driver_version(&raw)
+        } else {
+            raw
+        };
+        if best
+            .as_ref()
+            .is_none_or(|(best_score, _, _)| score > *best_score)
+        {
+            best = Some((score, desc, driver));
+        }
     }
-    None
+    best.map(|(_, name, driver)| (name, driver))
+}
+
+fn is_virtual_adapter(name: &str) -> bool {
+    let upper = name.to_uppercase();
+    [
+        "MICROSOFT BASIC",
+        "VIRTUAL",
+        "REMOTE",
+        "PARSEC",
+        "GAMEVIEWER",
+        "SUNSHINE",
+        "SPACEDESK",
+    ]
+    .iter()
+    .any(|marker| upper.contains(marker))
 }
 
 /// Converts the registry form `32.0.16.2124` to the nvidia-smi form `621.24`.
@@ -291,6 +328,20 @@ mod tests {
         assert!(driver_at_least("616.64", 616, 64));
         assert!(driver_at_least("621.01", 616, 64));
         assert!(!driver_at_least("unknown", 616, 64));
+    }
+
+    #[test]
+    fn skips_virtual_adapters() {
+        assert!(is_virtual_adapter("GameViewer Virtual Display Adapter"));
+        assert!(is_virtual_adapter("Microsoft Basic Display Adapter"));
+        assert!(!is_virtual_adapter("NVIDIA GeForce RTX 3070"));
+        assert!(!is_virtual_adapter("AMD Radeon RX 7900 XTX"));
+    }
+
+    #[test]
+    fn amd_and_intel_are_not_marked_driver_too_old() {
+        assert!(GpuDetector::classify("AMD Radeon RX 7900", "31.0.12027.9001").driver_supported);
+        assert!(GpuDetector::classify("Intel(R) Arc(TM) A770", "31.0.101.5333").driver_supported);
     }
 
     #[test]

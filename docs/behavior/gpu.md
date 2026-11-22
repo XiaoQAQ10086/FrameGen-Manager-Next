@@ -90,7 +90,7 @@ HAGS: unknown
 
 ## 已知限制
 
-- 注册表回退只用于展示名称/驱动；路由仍按名称分类，AMD/Intel 得到 `Unsupported`。Smooth Motion 仍会拒绝；帧生成不再门控（上游仅支持 NVIDIA RTX 20–50，其他显卡可以尝试但运行时不保证生效）。
+- 注册表回退枚举显示适配器类键，跳过 `Microsoft Basic`、虚拟/远程/串流适配器；NVIDIA 优先，其次 AMD/Radeon，再次 Intel。NVIDIA 驱动号归一化，AMD/Intel 保留 Windows 驱动版本号；AMD/Intel 路由为 `Unsupported`，但 `driver_supported` 不按 NVIDIA 616.64 阈值判旧。ANR 允许 `Unsupported`（OptiScaler 支持 A/I），帧生成/SM/DLSS5 仍拒绝。
 - 多显卡/虚拟显示器环境可能返回第一个非基本显示适配器，不保证与用户期望的主卡一致。
 - 多 GPU 机器取第一行；如需选择器，后续在设置页增加。
 - HAGS 缺失时显示未知，不当作关闭。注册表为 `2` 但实时 caps 仍为关闭时显示“待重启生效”，而不是“已关闭”；这通常表示设置已写入但驱动尚未在本次启动中启用。

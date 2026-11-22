@@ -140,7 +140,7 @@ function cardMarkup(game, index) {
           ? `<img class="thumb" data-cover="${esc(game.id)}" src="${esc(cover)}" alt="">`
           : `<div class="thumb ph2" data-cover="${esc(game.id)}">${esc(initial)}</div>`}
         <div class="ginfo">
-          <div class="gname">${esc(game.name)}</div>
+          <div class="gname" title="${esc(game.name)}">${esc(game.name)}</div>
           <div class="badges">
             <span class="badge">${esc(sourceLabel(game.source))}</span>
             <span class="badge">${esc(apiLabel(game.graphicsApi))}</span>
@@ -198,11 +198,17 @@ function bindFramegenActions(view = $('.page-host') || $('#view')) {
         toast(`已启动 ${game.name}`);
       } else if (action === 'folder' && game) {
         await call('openPath', { path: game.targetDirectory });
-      } else if (action === 'library.remove' && game) {
-        if (confirm(`从列表移除 ${game.name}？不会删除游戏文件。`)) {
-          await call('library.remove', { gameId: game.id });
-          await refresh();
-        }
+      } else if (action === 'remove' && game) {
+        const ok = await confirmAction({
+          title: t('removeGame'),
+          body: t('removeGameConfirm', { game: game.name }),
+          confirmLabel: t('removeGame'),
+          cancelLabel: t('cancel'),
+          danger: true,
+        });
+        if (!ok) return;
+        await call('library.remove', { gameId: game.id });
+        await refresh();
       } else if (action === 'deploy' && game) {
         openDeployDialog(game, refresh);
       } else if (action === 'restore' && game) {
@@ -261,7 +267,7 @@ async function scan() {
 }
 
 async function addGame() {
-  const picked = await call('pickExecutable');
+  const picked = await call('pickExecutable', { title: t('pickExeTitle') });
   if (picked.cancelled) return;
   await call('library.addManual', { path: picked.path });
   await refresh();

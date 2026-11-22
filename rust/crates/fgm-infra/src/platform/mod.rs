@@ -11,7 +11,7 @@ pub mod window_state;
 pub use drive_roots::DriveRoots;
 pub use elevation::is_elevated;
 pub use file_picker::FilePicker;
-pub use file_version::product_name;
+pub use file_version::{company_name, product_name};
 pub use icon_extract::extract_exe_icon;
 pub use rtss::rtss_running;
 pub use window_corners::{clear_rounded_region, set_rounded_corners, set_rounded_region};

@@ -1,4 +1,4 @@
-import { $, call, confirmAction, esc, githubIcon, hideProgress, prettyPath, showProgress, state, toast } from './core.js';
+import { $, call, confirmAction, esc, githubIcon, hideProgress, prettyPath, showProgress, state, toast, trashIcon } from './core.js';
 import { t } from './l10n.js';
 import { loadCovers } from './covers.js';
 import { showRemoved } from './removed.js';
@@ -108,8 +108,9 @@ function renderWall(root) {
             ? `<img data-cover="${esc(game.id)}" src="${esc(cover)}" alt="" loading="lazy" decoding="async">`
             : `<div class="ph" data-cover="${esc(game.id)}">${esc(game.name.slice(0, 1))}</div>`}
           ${legacy ? `<span class="ribbon warn">${t('dlss5LegacyRibbon')}</span>` : ''}
+          <button class="tile-remove" data-action="remove" data-id="${esc(game.id)}" type="button" title="${esc(t('removeGame'))}" aria-label="${esc(t('removeGame'))}">${trashIcon}</button>
           <span class="meta">
-            <span class="name">${esc(game.name)}</span>
+            <span class="name" title="${esc(game.name)}">${esc(game.name)}</span>
             <span class="tag">${esc(t('dlss5ApiLabel', { api: String(game.graphicsApi || 'unknown').toUpperCase() }))}</span>
             <span class="tag ${deployed(reply) ? 'ok' : ''}">${esc(deployed(reply) ? t('dlss5Deployed') : t('dlss5NotDeployed'))}</span>
           </span>
@@ -133,6 +134,20 @@ function bind(root) {
           cachedAt = Date.now();
           renderWall(root);
         });
+      } else if (action === 'remove' && game) {
+        const ok = await confirmAction({
+          title: t('removeGame'),
+          body: t('removeGameConfirm', { game: game.name }),
+          confirmLabel: t('removeGame'),
+          cancelLabel: t('cancel'),
+          danger: true,
+        });
+        if (!ok) return;
+        await call('library.remove', { gameId: game.id });
+        state.games = state.games.filter((item) => item.id !== game.id);
+        cachedKey = '';
+        cachedAt = 0;
+        renderWall(root);
       } else if (action === 'open' && game) {
         openDetail(root, game);
       } else if (action === 'github') {
@@ -144,7 +159,7 @@ function bind(root) {
         await load(root);
         renderWall(root);
       } else if (action === 'add') {
-        const picked = await call('pickExecutable');
+        const picked = await call('pickExecutable', { title: t('pickExeTitle') });
         if (!picked.cancelled) {
           await call('library.addManual', { path: picked.path });
           state.games = (await call('library.list')).games || [];
