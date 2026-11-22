@@ -76,6 +76,11 @@ function selectSection(section) {
       list: currentHost.querySelector('.game-list')?.scrollTop || 0,
       side: currentHost.querySelector('.side')?.scrollTop || 0,
     });
+    if (currentHost.dataset.section !== 'framegen') {
+      currentHost.dataset.ready = '';
+      currentHost.dataset.rendered = '';
+      currentHost.replaceChildren();
+    }
     currentHost.remove();
   } else if (currentHost) {
     scrollMemory.set(section, {
