@@ -89,6 +89,9 @@ function selectSection(section) {
   if (!host.isConnected) view.appendChild(host);
   currentHost = host;
   $$('.nav-item').forEach((item) => item.classList.toggle('active', item.dataset.page === section));
+  if (section === 'logs') {
+    document.querySelector('.nav-item[data-page="logs"]')?.classList.remove('has-feedback');
+  }
   moveIndicator();
   const renderedAt = Number(host.dataset.renderedAt || 0);
   const modeDirty = section === 'framegen' && state.modesDirty;

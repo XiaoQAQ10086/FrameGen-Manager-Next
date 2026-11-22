@@ -166,7 +166,8 @@ async function openHistory() {
 }
 
 function applyFeedbackDots() {
-  document.querySelector('.nav-item[data-page="logs"]')?.classList.toggle('has-feedback', unread);
+  const onLogs = Boolean(document.querySelector('.page-host[data-section="logs"]'));
+  document.querySelector('.nav-item[data-page="logs"]')?.classList.toggle('has-feedback', unread && !onLogs);
   document.querySelector('[data-action="feedback-history"]')?.classList.toggle('has-feedback', unread);
 }
 
