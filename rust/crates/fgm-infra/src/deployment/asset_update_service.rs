@@ -25,6 +25,14 @@ pub struct ClearedAsset {
 }
 
 #[derive(Clone, Debug)]
+pub struct AssetUpgrade {
+    pub family: String,
+    pub target_directory: String,
+    pub old_version: String,
+    pub new_version: String,
+}
+
+#[derive(Clone, Debug)]
 pub struct AssetFailure {
     pub family: String,
     pub target_directory: String,
@@ -35,6 +43,7 @@ pub struct AssetFailure {
 #[derive(Clone, Debug, Default)]
 pub struct AssetUpdateReport {
     pub cleared: Vec<ClearedAsset>,
+    pub upgrades: Vec<AssetUpgrade>,
     pub failed: Vec<AssetFailure>,
 }
 
@@ -43,6 +52,9 @@ struct BackupFingerprint {
     manifests: u64,
     bytes: u64,
     newest_nanos: u128,
+    /// Bundled pack versions; a shipped asset update must re-run reconciliation
+    /// even though no manifest changed on disk.
+    packs: String,
 }
 
 /// Detects deployed packs whose version no longer matches the bundled pack,
@@ -81,6 +93,18 @@ impl AssetUpdateService {
             if !seen.insert((effective.to_string(), target.clone())) {
                 continue;
             }
+            // REFramework is a small, self-contained deployment. Upgrading it
+            // in place preserves the user's backup and avoids a clear/redeploy
+            // round trip.
+            if effective == "reframework" {
+                report.upgrades.push(AssetUpgrade {
+                    family: effective.to_string(),
+                    target_directory: target.display().to_string(),
+                    old_version: manifest.pack_version.clone(),
+                    new_version: current_version,
+                });
+                continue;
+            }
             match clear(effective, &target, paths) {
                 Ok(()) => report.cleared.push(ClearedAsset {
                     family: effective.to_string(),
@@ -96,11 +120,16 @@ impl AssetUpdateService {
                 }),
             }
         }
-        if report.failed.is_empty() {
+        if report.failed.is_empty() && report.upgrades.is_empty() {
             save_fingerprint(paths, &backup_fingerprint(paths));
         }
         report
     }
+}
+
+/// Forces the next reconcile to inspect manifests again.
+pub fn invalidate_fingerprint(paths: &AppPaths) {
+    let _ = std::fs::remove_file(fingerprint_path(paths));
 }
 
 fn fingerprint_path(paths: &AppPaths) -> PathBuf {
@@ -123,6 +152,7 @@ fn backup_fingerprint(paths: &AppPaths) -> BackupFingerprint {
         manifests: 0,
         bytes: 0,
         newest_nanos: 0,
+        packs: bundled_versions(),
     };
     let Ok(families) = std::fs::read_dir(paths.backups()) else {
         return fingerprint;
@@ -146,6 +176,35 @@ fn backup_fingerprint(paths: &AppPaths) -> BackupFingerprint {
         }
     }
     fingerprint
+}
+
+fn bundled_versions() -> String {
+    let mut versions = std::collections::BTreeMap::new();
+    for root in PackLocator::roots() {
+        let Ok(entries) = std::fs::read_dir(root) else {
+            continue;
+        };
+        for entry in entries.flatten() {
+            let directory = entry.path();
+            if !directory.is_dir() {
+                continue;
+            }
+            let Some(id) = directory.file_name().map(|name| name.to_string_lossy()) else {
+                continue;
+            };
+            if versions.contains_key(id.as_ref()) {
+                continue;
+            }
+            if let Ok(pack) = PackJson::load(&directory.join("pack.json")) {
+                versions.insert(id.into_owned(), pack.version);
+            }
+        }
+    }
+    versions
+        .into_iter()
+        .map(|(id, version)| format!("{id}:{version}"))
+        .collect::<Vec<_>>()
+        .join(",")
 }
 
 fn manifests(paths: &AppPaths) -> Vec<(String, PathBuf, DeploymentManifest)> {

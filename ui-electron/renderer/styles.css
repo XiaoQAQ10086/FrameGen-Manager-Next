@@ -276,6 +276,7 @@ button, select { font: inherit; }
 .asset-update-group { display: grid; gap: var(--space-1); padding: var(--space-2) var(--space-3); border: 1px solid var(--line); border-radius: var(--radius-md); background: var(--field); }
 .asset-update-group b { min-width: 0; overflow-wrap: anywhere; font-size: var(--text-md); }
 .asset-update-group .small { min-width: 0; overflow-wrap: anywhere; font-size: var(--text-xs); }
+.asset-update-group .btn { justify-self: start; }
 .update-versions { display: flex; gap: var(--space-3); margin-top: var(--space-4); }
 .update-versions > div { flex: 1 1 0; display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); padding: var(--space-3) var(--space-3); border-radius: var(--radius-md); background: rgba(96, 107, 125, .08); border: 1px solid var(--line); }
 .update-versions span { min-width: 0; overflow-wrap: anywhere; color: var(--muted); font-size: var(--text-sm); }

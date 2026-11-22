@@ -17,7 +17,10 @@ mod deployment_restore;
 mod deployment_rollback;
 mod deployment_support;
 
-pub use asset_update_service::{AssetFailure, AssetUpdateReport, AssetUpdateService, ClearedAsset};
+pub use asset_update_service::{
+    AssetFailure, AssetUpdateReport, AssetUpdateService, AssetUpgrade, ClearedAsset,
+    invalidate_fingerprint,
+};
 pub use backup_store::BackupStore;
 pub use deployment_engine::DeploymentEngine;
 pub use deployment_file::DeploymentFile;

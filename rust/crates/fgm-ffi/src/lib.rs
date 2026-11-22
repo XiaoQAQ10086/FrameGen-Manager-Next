@@ -210,6 +210,12 @@ pub extern "C" fn fgm_dlss5_uninstall_json(request: *const u8, length: usize) ->
     execute_request(request, length, commands_dlss5::dlss5_uninstall)
 }
 
+/// Upgrades a deployed REFramework to the bundled nightly in place.
+#[unsafe(no_mangle)]
+pub extern "C" fn fgm_assets_upgrade_json(request: *const u8, length: usize) -> *mut c_char {
+    execute_request(request, length, commands::assets_upgrade)
+}
+
 /// Stages a bounded diagnostics zip for feedback upload.
 #[unsafe(no_mangle)]
 pub extern "C" fn fgm_feedback_bundle_json() -> *mut c_char {

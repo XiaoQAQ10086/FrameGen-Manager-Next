@@ -155,7 +155,7 @@ dependencies = [
 
 [[package]]
 name = "fgm-cli"
-version = "2.3.5"
+version = "2.3.6"
 dependencies = [
  "fgm-domain",
  "fgm-infra",
@@ -163,7 +163,7 @@ dependencies = [
 
 [[package]]
 name = "fgm-core"
-version = "2.3.5"
+version = "2.3.6"
 dependencies = [
  "fgm-domain",
  "serde",
@@ -171,14 +171,14 @@ dependencies = [
 
 [[package]]
 name = "fgm-domain"
-version = "2.3.5"
+version = "2.3.6"
 dependencies = [
  "serde",
 ]
 
 [[package]]
 name = "fgm-ffi"
-version = "2.3.5"
+version = "2.3.6"
 dependencies = [
  "fgm-core",
  "fgm-domain",
@@ -189,7 +189,7 @@ dependencies = [
 
 [[package]]
 name = "fgm-infra"
-version = "2.3.5"
+version = "2.3.6"
 dependencies = [
  "fgm-core",
  "fgm-domain",
@@ -202,7 +202,7 @@ dependencies = [
 
 [[package]]
 name = "fgm-node"
-version = "2.3.5"
+version = "2.3.6"
 dependencies = [
  "fgm-domain",
  "fgm-ffi",

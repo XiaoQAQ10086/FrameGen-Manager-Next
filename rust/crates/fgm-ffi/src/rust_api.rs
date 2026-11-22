@@ -68,6 +68,7 @@ pub fn invoke(name: &str, body: Option<&str>) -> Result<String, String> {
         "assets.reconcile" => crate::commands::assets_reconcile()
             .map_err(|error| format!("{:?}", error.code))
             .and_then(|value| serde_json::to_string(&value).map_err(|error| error.to_string())),
+        "assets.upgrade" => request(crate::fgm_assets_upgrade_json, payload(body)),
         "library.list" => take(crate::fgm_library_list_json()),
         "library.scan" => take(crate::fgm_library_scan_json()),
         "library.removed" => take(fgm_library_removed_json()),

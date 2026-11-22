@@ -8,7 +8,7 @@ use fgm_domain::pack::IniSetting;
 use fgm_domain::version::VERSION;
 use fgm_infra::deployment::{
     AssetUpdateService, DeploymentEngine, DeploymentInspector, PackDeploymentPlanner, ProxyOwner,
-    ProxyStatus,
+    ProxyStatus, invalidate_fingerprint,
 };
 use fgm_infra::gpu::GpuDetector;
 use fgm_infra::pack_json::PackJson;
@@ -307,6 +307,12 @@ pub(crate) fn assets_reconcile() -> Result<Value, AppError> {
             "oldVersion": item.old_version,
             "newVersion": item.new_version,
         })).collect::<Vec<Value>>(),
+        "upgrades": report.upgrades.iter().map(|item| json!({
+            "family": item.family,
+            "targetDirectory": item.target_directory,
+            "oldVersion": item.old_version,
+            "newVersion": item.new_version,
+        })).collect::<Vec<Value>>(),
         "failed": report.failed.iter().map(|item| json!({
             "family": item.family,
             "targetDirectory": item.target_directory,
@@ -314,6 +320,24 @@ pub(crate) fn assets_reconcile() -> Result<Value, AppError> {
             "reason": item.reason,
         })).collect::<Vec<Value>>(),
     }))
+}
+
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct AssetUpgradeRequest {
+    target_dir: String,
+    #[serde(default)]
+    data_dir: Option<String>,
+}
+
+pub(crate) fn assets_upgrade(request: &str) -> Result<Value, AppError> {
+    let request: AssetUpgradeRequest = parse(request)?;
+    let target = absolute(Path::new(&request.target_dir))?;
+    let paths = data_paths(request.data_dir.as_deref())?;
+    paths.ensure_created()?;
+    let upgraded = ReframeworkService::upgrade(&target, VERSION, &paths)?;
+    invalidate_fingerprint(&paths);
+    Ok(json!({ "ok": true, "upgraded": upgraded }))
 }
 
 pub(crate) fn settings_get() -> Result<Value, AppError> {
@@ -424,7 +448,7 @@ mod tests {
             "packDir": pack_dir,
             "targetDir": target,
             "family": "test.pack",
-            "appVersion": "2.3.5",
+            "appVersion": "2.3.6",
             "dataDir": data,
         })
         .to_string();

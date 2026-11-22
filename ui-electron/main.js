@@ -210,7 +210,7 @@ ipcMain.handle('fgm:call', async (_event, name, payload) => {
 
 const FEEDBACK_API = 'https://laobiao-feedback.pages.dev/api/feedback';
 const FEEDBACK_QUERY = 'https://laobiao-feedback.pages.dev/api/feedback/query';
-const FEEDBACK_UA = 'FrameGen-Manager-Next/2.3.5';
+const FEEDBACK_UA = 'FrameGen-Manager-Next/2.3.6';
 const feedbackHistoryPath = () => path.join(process.env.FGM_DATA_DIR, 'state', 'feedback-history.json');
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 

@@ -1,5 +1,5 @@
 #define AppName "FrameGen Manager-Next"
-#define AppVersion "2.3.5"
+#define AppVersion "2.3.6"
 #define AppPublisher "FrameGen"
 #define AppExeName "FrameGen-Manager-Next.exe"
 

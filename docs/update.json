@@ -1,16 +1,16 @@
 {
-  "version": "2.3.5",
-  "notes": "【改进】\r\n1. 部署、还原与内置资产清理兼容 C# 2.x 升级\r\n2. C# 2.x 安装版/便携版升级后保留游戏库与已部署记录\r\n3. 帧生成、Smooth Motion、ANR 互斥校验\r\n4. 修复移除游戏后重新扫描又进入已移除列表\r\n5. 优化启动与页面切换卡顿\r\n6. 问题反馈支持日志上传、回复同步与未读红点",
-  "pageUrl": "https://github.com/XiaoQAQ10086/FrameGen-Manager-Next/releases/tag/v2.3.5",
+  "version": "2.3.6",
+  "notes": "【改进】\r\n1. REFramework 内置资产更新到 nightly-01441\r\n2. 已部署的 REFramework 可直接点击升级，原位替换并保留原始备份\r\n3. 修复 Re Engine 检测漏掉安装根目录的问题\r\n4. 帧生成与自动 REFramework 的 dinput8.dll 冲突时禁用该选项\r\n5. 修复左下角进度条取消按钮无法点击",
+  "pageUrl": "https://github.com/XiaoQAQ10086/FrameGen-Manager-Next/releases/tag/v2.3.6",
   "installer": {
-    "name": "FrameGenManagerNext-2.3.5-win-Setup.exe",
-    "size": 394223198,
-    "sha256": "DAB14C7F7FD16320E936D38F7592303912B3108FE189CCEFC91EC696A78A3651",
+    "name": "FrameGenManagerNext-2.3.6-win-Setup.exe",
+    "size": 394243575,
+    "sha256": "4B0CCA82837E348AF835D1A010FE6EAB5C1113BE25CDDC4F4A7F4A8F81DDA498",
     "urls": [
-      "https://github.com/XiaoQAQ10086/FrameGen-Manager-Next/releases/download/v2.3.5/FrameGenManagerNext-2.3.5-win-Setup.exe",
-      "https://ghfast.top/https://github.com/XiaoQAQ10086/FrameGen-Manager-Next/releases/download/v2.3.5/FrameGenManagerNext-2.3.5-win-Setup.exe",
-      "https://gh-proxy.com/https://github.com/XiaoQAQ10086/FrameGen-Manager-Next/releases/download/v2.3.5/FrameGenManagerNext-2.3.5-win-Setup.exe",
-      "https://ghproxy.net/https://github.com/XiaoQAQ10086/FrameGen-Manager-Next/releases/download/v2.3.5/FrameGenManagerNext-2.3.5-win-Setup.exe"
+      "https://github.com/XiaoQAQ10086/FrameGen-Manager-Next/releases/download/v2.3.6/FrameGenManagerNext-2.3.6-win-Setup.exe",
+      "https://ghfast.top/https://github.com/XiaoQAQ10086/FrameGen-Manager-Next/releases/download/v2.3.6/FrameGenManagerNext-2.3.6-win-Setup.exe",
+      "https://gh-proxy.com/https://github.com/XiaoQAQ10086/FrameGen-Manager-Next/releases/download/v2.3.6/FrameGenManagerNext-2.3.6-win-Setup.exe",
+      "https://ghproxy.net/https://github.com/XiaoQAQ10086/FrameGen-Manager-Next/releases/download/v2.3.6/FrameGenManagerNext-2.3.6-win-Setup.exe"
     ]
   }
 }
