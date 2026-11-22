@@ -858,3 +858,5 @@ select { min-width: 160px; }
 .feedback-history-empty { padding: var(--space-5) 0; text-align: center; color: var(--muted); }
 
 .feedback-sync-warning { padding: var(--space-2) var(--space-3); border-radius: var(--radius-sm); color: #8a5a00; background: rgba(194,110,0,.1); border: 1px solid rgba(194,110,0,.24); font-size: var(--text-sm); }
+.btn.has-feedback { position: relative; }
+.btn.has-feedback::after { content: ""; position: absolute; top: -3px; right: -3px; width: 7px; height: 7px; border-radius: 50%; background: #e5484d; box-shadow: 0 0 0 2px #fff; }

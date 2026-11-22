@@ -135,12 +135,16 @@ function cardMarkup(game, index) {
   const component = missing ? 'partial' : rawComponent;
   const enabled = status.enabled === true;
   const framegenOn = (mode.framegen || 'notDeployed') !== 'notDeployed';
+  const anrOn = (mode.anr || 'notDeployed') !== 'notDeployed';
   const outdated = component === 'outdated';
   const route = String(state.gpu?.route || '').toLowerCase();
   const routeBlocked = !['sm86', 'sm75'].includes(route);
   const driverBlocked = routeBlocked || !state.gpu?.driverSupported;
-  const blocked = !missing && ((framegenOn && !enabled) || (driverBlocked && !enabled));
-  const blockedTitle = framegenOn ? t('smConflict') : (routeBlocked ? t('gpuIncompatible') : t('smDriverTooOld', { current: state.gpu?.driverVersion || '—', min: '616.64' }));
+  const conflict = framegenOn || anrOn;
+  const blocked = !missing && ((conflict && !enabled) || (driverBlocked && !enabled));
+  const blockedTitle = framegenOn ? t('smConflict')
+    : (anrOn ? t('anrConflict')
+      : (routeBlocked ? t('gpuIncompatible') : t('smDriverTooOld', { current: state.gpu?.driverVersion || '—', min: '616.64' })));
   const cover = state.covers[game.id];
   const initial = game.name ? game.name.slice(0, 1) : '?';
   return `
@@ -155,6 +159,7 @@ function cardMarkup(game, index) {
             <span class="badge ${component === 'installed' ? 'ok' : (component === 'notDeployed' ? 'dim' : 'warn')}">${esc(componentLabel(component))}</span>
             ${missing ? '' : (enabled ? `<span class="badge ok">${t('smDriverOn')}</span>` : `<span class="badge dim">${t('smDriverOff')}</span>`)}
             ${framegenOn ? `<span class="badge danger">${t('smConflict')}</span>` : ''}
+            ${anrOn ? `<span class="badge danger">${t('anrConflict')}</span>` : ''}
           </div>
         </div>
       </div>

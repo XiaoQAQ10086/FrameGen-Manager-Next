@@ -2,6 +2,7 @@ use std::path::Path;
 
 use fgm_domain::error::{AppError, ErrorCode};
 use fgm_domain::version::VERSION;
+use fgm_infra::deployment::DeploymentInspector;
 use fgm_infra::paths::AppPaths;
 use fgm_infra::smooth_motion::SmoothMotionChange;
 use serde::Deserialize;
@@ -59,6 +60,19 @@ pub(crate) fn sm_enable(request: &str) -> Result<Value, AppError> {
     let gpu = fgm_infra::gpu::GpuDetector::detect_cached(&paths).ok_or_else(|| {
         AppError::new(ErrorCode::GpuUnsupported).with("reason", "NVIDIA GPU not detected")
     })?;
+    for (family, owner) in [("framegen.sm86", "framegen"), ("anr", "anr")] {
+        let other =
+            DeploymentInspector::inspect(family, &target_directory, &paths.backups(), None)?;
+        if other.has_manifest && other.state != fgm_domain::deployment::DeploymentState::NotDeployed
+        {
+            return Err(AppError::new(ErrorCode::Conflict)
+                .with("owner", owner)
+                .with(
+                    "reason",
+                    "another frame generation mode is already deployed",
+                ));
+        }
+    }
     let app_version = request.app_version.unwrap_or_else(|| VERSION.to_string());
     let outcome = fgm_infra::smooth_motion::SmoothMotionFacade::enable(
         gpu.route,

@@ -2,6 +2,7 @@ import { $, call, esc, state, toast } from './core.js';
 import { t } from './l10n.js';
 
 let kind = 'issue';
+let unread = false;
 
 function feedbackMeta() {
   return {
@@ -68,6 +69,7 @@ export function renderFeedback(root) {
   $('[data-role="feedback-description"]', panel).addEventListener('input', () => updateSubmit(panel));
   $('[data-action="feedback-submit"]', panel).addEventListener('click', () => submit(panel));
   $('[data-action="feedback-history"]', panel).addEventListener('click', () => openHistory());
+  applyFeedbackDots();
 }
 
 async function submit(panel) {
@@ -120,6 +122,8 @@ function historyRow(item) {
 }
 
 async function openHistory() {
+  unread = false;
+  applyFeedbackDots();
   const overlay = document.createElement('div');
   overlay.className = 'overlay';
   overlay.innerHTML = `
@@ -146,7 +150,10 @@ async function openHistory() {
     list.innerHTML = warning + (items.length
       ? items.map(historyRow).join('')
       : `<div class="feedback-history-empty">${t('feedbackNoHistory')}</div>`);
-    if (markRead) await refreshFeedbackBadge();
+    if (markRead) {
+      unread = false;
+      applyFeedbackDots();
+    }
   };
   overlay.querySelector('[data-refresh]').onclick = () => load(true);
   list.addEventListener('click', async (event) => {
@@ -158,15 +165,17 @@ async function openHistory() {
   await load(true);
 }
 
-function setFeedbackDot(visible) {
-  document.querySelector('.nav-item[data-page="logs"]')?.classList.toggle('has-feedback', visible);
+function applyFeedbackDots() {
+  document.querySelector('.nav-item[data-page="logs"]')?.classList.toggle('has-feedback', unread);
+  document.querySelector('[data-action="feedback-history"]')?.classList.toggle('has-feedback', unread);
 }
 
 export async function refreshFeedbackBadge() {
   try {
     const reply = await window.fgm.feedbackHistory();
-    setFeedbackDot(Boolean(reply.hasUnread));
+    unread = Boolean(reply.hasUnread);
   } catch {
-    setFeedbackDot(false);
+    unread = false;
   }
+  applyFeedbackDots();
 }

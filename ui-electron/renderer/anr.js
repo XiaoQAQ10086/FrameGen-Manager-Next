@@ -1,5 +1,6 @@
 import {
-  $, call, confirmAction, esc, folderIcon, githubIcon, hideProgress, prettyPath, proxyOwnerLabel, showProgress, state,
+  $, apiLabel, call, confirmAction, esc, folderIcon, githubIcon, hideProgress, prettyPath, proxyOwnerLabel,
+  showProgress, sourceLabel, state,
   syncRemovedCount,
   toast, trashIcon,
 } from './core.js';
@@ -107,8 +108,12 @@ function cardMarkup(game, index) {
   const route = String(state.gpu?.route || '').toLowerCase();
   const gpuBlocked = Boolean(state.gpu) && !['sm86', 'sm75', 'notneeded', 'gtx16', 'unsupported'].includes(route);
   const framegenOn = (mode.framegen || 'notDeployed') !== 'notDeployed';
-  const blocked = !packageInfo || gpuBlocked || (framegenOn && !deployed);
-  const blockedTitle = framegenOn ? t('framegenConflict') : t('gpuIncompatible');
+  const smOn = mode.smoothMotion === 'on'
+    || (mode.smoothMotionComponent && mode.smoothMotionComponent !== 'notDeployed');
+  const conflict = framegenOn || smOn;
+  const blocked = !packageInfo || gpuBlocked || (conflict && !deployed);
+  const blockedTitle = framegenOn ? t('framegenConflict')
+    : (smOn ? t('smConflict') : t('gpuIncompatible'));
   const anrVersion = mode.anrVersion || mode.anrPackVersion;
   const occupied = (mode.proxies || []).filter((entry) => entry.owner !== 'anr');
   const cover = state.covers[game.id];
@@ -121,8 +126,11 @@ function cardMarkup(game, index) {
         <div class="ginfo">
           <div class="gname" title="${esc(game.name)}">${esc(game.name)}</div>
           <div class="badges">
+            <span class="badge">${esc(sourceLabel(game.source))}</span>
+            <span class="badge">${esc(apiLabel(game.graphicsApi))}</span>
             ${deployed ? `<span class="badge ${anr === 'needsRepair' ? 'warn' : 'ok'}">${esc(`${anrLabel(anr)}${anrVersion ? ` ${t('assetVersionLabel')}：${anrVersion}` : ''}`)}</span>` : ''}
             ${framegenOn ? `<span class="badge danger">${esc(t('framegenConflict'))}</span>` : ''}
+            ${smOn ? `<span class="badge danger">${esc(t('smConflict'))}</span>` : ''}
             ${gpuBlocked ? `<span class="badge danger">${esc(t('gpuIncompatible'))}</span>` : ''}
             ${occupied.map((entry) => `<span class="badge warn">${esc(entry.module)} · ${esc(proxyOwnerLabel(entry.owner))}</span>`).join('')}
           </div>

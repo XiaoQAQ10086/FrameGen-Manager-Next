@@ -91,7 +91,11 @@ function selectSection(section) {
   $$('.nav-item').forEach((item) => item.classList.toggle('active', item.dataset.page === section));
   moveIndicator();
   const renderedAt = Number(host.dataset.renderedAt || 0);
-  if (!host.dataset.rendered || host.dataset.ready !== '1' || Date.now() - renderedAt > PAGE_TTL_MS) {
+  const modeDirty = section === 'framegen' && state.modesDirty;
+  if (modeDirty) {
+    state.modesDirty = false;
+    refresh();
+  } else if (!host.dataset.rendered || host.dataset.ready !== '1' || Date.now() - renderedAt > PAGE_TTL_MS) {
     host.dataset.rendered = '1';
     host.dataset.ready = '';
     host.dataset.renderedAt = String(Date.now());
@@ -236,11 +240,11 @@ document.addEventListener('click', async (event) => {
   }
 });
 
-setTimeout(() => refreshFeedbackBadge(), 1500);
+setTimeout(() => refreshFeedbackBadge(), 5000);
 setTimeout(async () => {
   await checkAssetUpdates();
-  setTimeout(() => autoCheckUpdate(), 1200);
-}, 1200);
+  setTimeout(() => autoCheckUpdate(), 3000);
+}, 2500);
 boot().then(() => {
   const params = new URLSearchParams(location.search);
   const page = params.get('page');

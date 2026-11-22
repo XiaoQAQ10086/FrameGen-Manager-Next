@@ -93,14 +93,24 @@ pub(crate) fn anr_deploy(request: &str) -> Result<Value, AppError> {
                 "ANR requires a supported NVIDIA, AMD or Intel GPU",
             ));
     }
-    let framegen = DeploymentInspector::inspect("framegen.sm86", &target, &paths.backups(), None)?;
-    if framegen.has_manifest && framegen.state != DeploymentState::NotDeployed {
-        return Err(AppError::new(ErrorCode::Conflict)
-            .with("owner", "framegen")
-            .with(
-                "reason",
-                "frame generation is already deployed to this directory",
-            ));
+    for (family, owner, reason) in [
+        (
+            "framegen.sm86",
+            "framegen",
+            "frame generation is already deployed to this directory",
+        ),
+        (
+            "smooth-motion",
+            "smooth-motion",
+            "Smooth Motion is already deployed to this directory",
+        ),
+    ] {
+        let other = DeploymentInspector::inspect(family, &target, &paths.backups(), None)?;
+        if other.has_manifest && other.state != DeploymentState::NotDeployed {
+            return Err(AppError::new(ErrorCode::Conflict)
+                .with("owner", owner)
+                .with("reason", reason));
+        }
     }
     let package = AnrPackageService::load_current(paths.root()).ok_or_else(|| {
         AppError::new(ErrorCode::PackNotFound).with("reason", "no ANR package imported")

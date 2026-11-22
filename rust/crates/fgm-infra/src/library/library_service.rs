@@ -105,9 +105,7 @@ impl LibraryService {
         let store = Self::store(paths);
         let mut cache = store.load()?;
         cache.games.retain(|game| game.id != game_id);
-        if !cache.ignored_ids.iter().any(|id| id == game_id) {
-            cache.ignored_ids.push(game_id.to_string());
-        }
+        cache.ignored_ids.retain(|id| id != game_id);
         cache.target_overrides.remove(game_id);
         store.save(&cache)
     }

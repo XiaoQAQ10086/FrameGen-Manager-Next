@@ -4,6 +4,7 @@ export const state = {
   games: [],
   modes: {},
   modesReady: false,
+  modesDirty: false,
   gpu: null,
   rtss: false,
   spoof: null,
@@ -123,6 +124,7 @@ let modesCache = { at: 0, data: null };
 
 export function invalidateModes() {
   modesCache = { at: 0, data: null };
+  state.modesDirty = true;
 }
 
 export async function syncRemovedCount(root) {

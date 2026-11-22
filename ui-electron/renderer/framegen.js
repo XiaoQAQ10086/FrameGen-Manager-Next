@@ -122,7 +122,8 @@ function cardMarkup(game, index) {
   const stateBadge = deployed && assetVersion
     ? `${stateText} ${t('assetVersionLabel')}：${assetVersion}`
     : stateText;
-  const smOn = mode.smoothMotion === 'on';
+  const smOn = mode.smoothMotion === 'on'
+    || (mode.smoothMotionComponent && mode.smoothMotionComponent !== 'notDeployed');
   const smBlocked = smOn && !deployed;
   const anrOn = mode.anr && mode.anr !== 'notDeployed';
   const route = String(state.gpu?.route || '').toLowerCase();
@@ -303,6 +304,7 @@ export async function refresh() {
   state.rtss = Boolean(gpu.rtss);
   state.modes = Object.fromEntries((modes.modes || []).map((mode) => [mode.gameId, mode]));
   state.modesReady = true;
+  state.modesDirty = false;
   state.games = games.games || [];
   state.spoof = spoof;
   applyChrome();
