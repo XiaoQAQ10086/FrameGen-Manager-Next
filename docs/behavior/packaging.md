@@ -20,6 +20,7 @@
 - Inno Setup 6.7.4，`UseSetupLdr=x64`，避免旧 32 位 loader 在 Win10 22H2 上无响应；`Compression=lzma2/ultra64`。
 - 每用户安装：`{localappdata}\Programs\{AppName}`。
 - 输出：`artifacts/installer-electron/releases/FrameGenManagerNext-2.3.5-win-Setup.exe`；每次编译前清空 releases，只保留最新安装包。
+- 安装器必须沿用 C# 2.x 的 AppId `{B7E7...}` 并按同一 `DefaultDirName` 升级；安装前清理旧 `FrameGenManager-Next.exe` 和 .NET payload，但不删除 `data`/`userdata`。安装版数据固定为 `%LOCALAPPDATA%\FrameGen-Manager-Next`；便携版用 `portable.flag` 选择 `<app>\userdata`，并迁移 C# 的 `<app>\data`。
 - 安装包从 `ui-electron/dist/FrameGen-Manager-Next` 取文件，排除 `userdata`。
 - 当前实测（含资产载荷）：解压约 1081MB、便携 zip 约 489MB、安装包约 376MB。不含载荷时约 312MB / 144MB / 101MB，但部署与 SM/DLSS5/ANR 会失败。
 
