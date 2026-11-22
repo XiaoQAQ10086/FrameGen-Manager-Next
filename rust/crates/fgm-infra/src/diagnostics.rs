@@ -17,9 +17,16 @@ pub struct DiagnosticsService;
 
 impl DiagnosticsService {
     pub fn build_bundle(paths: &AppPaths) -> Result<Vec<u8>, AppError> {
+        Self::build_bundle_with_log_limit(paths, LOG_LIMIT)
+    }
+
+    pub fn build_bundle_with_log_limit(
+        paths: &AppPaths,
+        log_limit: u64,
+    ) -> Result<Vec<u8>, AppError> {
         let mut writer = ZipWriter::new();
         let log_path = paths.logs().join("fgm.log");
-        if let Some(bytes) = read_tail(&log_path, LOG_LIMIT) {
+        if let Some(bytes) = read_tail(&log_path, log_limit) {
             writer.add_file("logs/fgm.log", &bytes);
         }
 

@@ -1,4 +1,5 @@
-import { $, call, esc, prettyPath, toast } from './core.js';
+import { $, call, esc, prettyPath, state, toast } from './core.js';
+import { loadCovers } from './covers.js';
 import { t } from './l10n.js';
 
 export async function showRemoved(refresh) {
@@ -17,6 +18,7 @@ export async function showRemoved(refresh) {
       </div>
     </section>`;
   $('#modal-root').appendChild(modal);
+  loadCovers();
   const close = () => modal.remove();
   $('[data-close]', modal).onclick = close;
   modal.onclick = (event) => {
@@ -47,14 +49,16 @@ function row(game) {
   const initial = game.name ? game.name.slice(0, 1) : '?';
   return `
     <div class="removed-row">
-      <div class="removed-initial">${esc(initial)}</div>
+      ${state.covers[game.id]
+        ? `<img class="removed-cover" data-cover="${esc(game.id)}" src="${esc(state.covers[game.id])}" alt="" decoding="async">`
+        : `<div class="removed-initial" data-cover="${esc(game.id)}">${esc(initial)}</div>`}
       <div class="removed-info">
         <div class="removed-name">${esc(game.name)}</div>
         <div class="game-path">${esc(prettyPath(game.targetDirectory))}</div>
       </div>
       <div class="removed-actions">
         <button class="btn small primary" data-action="restore" data-id="${esc(game.id)}" type="button">${t('restoreGame')}</button>
-        <button class="btn small danger" data-action="forget" data-id="${esc(game.id)}" type="button">${t('forget')}</button>
+        <button class="btn small danger" data-action="forget" data-id="${esc(game.id)}" type="button">${t('deleteRecord')}</button>
       </div>
     </div>`;
 }

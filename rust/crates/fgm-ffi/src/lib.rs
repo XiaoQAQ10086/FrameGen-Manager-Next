@@ -12,6 +12,7 @@ mod commands;
 mod commands_anr;
 mod commands_diagnostics;
 mod commands_dlss5;
+mod commands_feedback;
 mod commands_gpu_spoof;
 mod commands_library;
 mod commands_logging;
@@ -207,6 +208,15 @@ pub extern "C" fn fgm_dlss5_restore_json(request: *const u8, length: usize) -> *
 #[unsafe(no_mangle)]
 pub extern "C" fn fgm_dlss5_uninstall_json(request: *const u8, length: usize) -> *mut c_char {
     execute_request(request, length, commands_dlss5::dlss5_uninstall)
+}
+
+/// Stages a bounded diagnostics zip for feedback upload.
+#[unsafe(no_mangle)]
+pub extern "C" fn fgm_feedback_bundle_json() -> *mut c_char {
+    execute(|| match commands_feedback::bundle() {
+        Ok(value) => value,
+        Err(error) => error_json(&error),
+    })
 }
 
 /// Checks the update manifest against the running version.

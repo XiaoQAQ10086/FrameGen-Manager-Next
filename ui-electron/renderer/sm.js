@@ -1,6 +1,6 @@
 import {
   $, call, confirmAction, esc, folderIcon, githubIcon, hideProgress, prettyPath, showProgress, state,
-  toast, trashIcon,
+  syncRemovedCount, toast, trashIcon,
 } from './core.js';
 import { t } from './l10n.js';
 import { loadCovers } from './covers.js';
@@ -54,6 +54,7 @@ export async function renderSm(root) {
   if (cacheHit) {
     renderGames(root);
     bind(root);
+    syncRemovedCount(root);
     root.dataset.ready = '1';
     if (Date.now() - cachedAt < 10000) return;
     load().then(() => {
@@ -66,6 +67,7 @@ export async function renderSm(root) {
   if (current !== serial || state.section !== 'smooth-motion') return;
   renderGames(root);
   bind(root);
+  syncRemovedCount(root);
   root.dataset.ready = '1';
 }
 

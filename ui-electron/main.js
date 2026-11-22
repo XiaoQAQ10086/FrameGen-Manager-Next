@@ -178,6 +178,157 @@ ipcMain.handle('fgm:call', async (_event, name, payload) => {
   }
 });
 
+
+const FEEDBACK_API = 'https://laobiao-feedback.pages.dev/api/feedback';
+const FEEDBACK_QUERY = 'https://laobiao-feedback.pages.dev/api/feedback/query';
+const feedbackHistoryPath = () => path.join(process.env.FGM_DATA_DIR, 'state', 'feedback-history.json');
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+function feedbackKey() {
+  if (process.env.FGM_FEEDBACK_KEY) return process.env.FGM_FEEDBACK_KEY;
+  try {
+    return JSON.parse(fs.readFileSync(path.join(__dirname, 'feedback.local.json'), 'utf8')).uploadKey || '';
+  } catch {
+    return '';
+  }
+}
+
+function loadFeedbackHistory() {
+  try {
+    const items = JSON.parse(fs.readFileSync(feedbackHistoryPath(), 'utf8'));
+    return Array.isArray(items) ? items : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveFeedbackHistory(items) {
+  const trimmed = items.slice(0, 30);
+  fs.mkdirSync(path.dirname(feedbackHistoryPath()), { recursive: true });
+  fs.writeFileSync(feedbackHistoryPath(), JSON.stringify(trimmed, null, 2));
+}
+
+function sanitizedHistory() {
+  return loadFeedbackHistory().map(({ id, time, summary, type, statusText, reply }) => ({
+    id, time, summary, type, statusText: statusText || '待处理', reply: reply || '',
+  }));
+}
+
+ipcMain.handle('fgm:feedbackSubmit', async (_event, payload = {}) => {
+  const key = feedbackKey();
+  if (!key) {
+    return { ok: false, error: { code: 'unauthorized', message: '客户端缺少反馈密钥，请更新软件。' } };
+  }
+  const description = String(payload.description || '').trim();
+  if (!description) {
+    return { ok: false, error: { code: 'description_required', message: '请填写详细说明。' } };
+  }
+  if (description.length > 5000) {
+    return { ok: false, error: { code: 'description_too_long', message: '详细说明不能超过 5000 字符。' } };
+  }
+  const type = payload.type === 'suggestion' ? 'suggestion' : 'issue';
+  const contact = String(payload.contact || '').slice(0, 200);
+  const meta = JSON.stringify(payload.meta || {}).slice(0, 4000);
+  let logBuffer = null;
+  let logName = '';
+  if (payload.logPath) {
+    try {
+      logBuffer = fs.readFileSync(String(payload.logPath));
+      if (logBuffer.length > 2 * 1024 * 1024) {
+        return { ok: false, error: { code: 'log_too_large', message: '日志压缩包超过 2MB。' } };
+      }
+      logName = path.basename(String(payload.logPath));
+    } catch {
+      return { ok: false, error: { code: 'log_missing', message: '日志压缩包读取失败，请重试。' } };
+    }
+  }
+
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    try {
+      const form = new FormData();
+      form.set('type', type);
+      form.set('description', description);
+      form.set('app', 'FrameGen Manager Next');
+      form.set('version', String(payload.version || ''));
+      form.set('contact', contact);
+      form.set('meta', meta);
+      if (logBuffer) {
+        form.set('log', new Blob([logBuffer], { type: 'application/zip' }), logName);
+      }
+      const response = await fetch(FEEDBACK_API, {
+        method: 'POST',
+        headers: { 'x-upload-key': key },
+        body: form,
+        signal: AbortSignal.timeout(90000),
+      });
+      const data = await response.json().catch(() => ({}));
+      if (response.ok && data.ok) {
+        const items = loadFeedbackHistory();
+        items.unshift({
+          id: data.id,
+          key: data.key,
+          time: Date.now(),
+          type,
+          summary: description.slice(0, 160),
+          statusText: data.statusText || '待处理',
+          reply: '',
+        });
+        saveFeedbackHistory(items);
+        return { ok: true, id: data.id, statusText: data.statusText || '待处理' };
+      }
+      if (response.status >= 500 && attempt < 2) {
+        await sleep(attempt === 0 ? 2000 : 5000);
+        continue;
+      }
+      if (response.status === 401) {
+        return { ok: false, error: { code: 'unauthorized', message: '客户端版本过旧，请下载新版后再反馈。' } };
+      }
+      return { ok: false, error: { code: data.error || 'upload_failed', message: `上传失败（HTTP ${response.status}）。` } };
+    } catch (error) {
+      if (attempt < 2) {
+        await sleep(attempt === 0 ? 2000 : 5000);
+        continue;
+      }
+      return { ok: false, error: { code: 'network', message: `网络错误：${error.message || error}` } };
+    }
+  }
+  return { ok: false, error: { code: 'upload_failed', message: '上传失败，请稍后重试。' } };
+});
+
+ipcMain.handle('fgm:feedbackHistory', async () => {
+  const items = loadFeedbackHistory();
+  if (items.length && feedbackKey()) {
+    try {
+      const response = await fetch(FEEDBACK_QUERY, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify(items.map((item) => ({ id: item.id, k: item.key }))),
+        signal: AbortSignal.timeout(20000),
+      });
+      const data = await response.json().catch(() => ({}));
+      if (data.ok && Array.isArray(data.items)) {
+        const byId = new Map(data.items.filter((item) => item.ok).map((item) => [item.id, item]));
+        for (const item of items) {
+          const remote = byId.get(item.id);
+          if (remote) {
+            item.statusText = remote.statusText || item.statusText;
+            item.reply = remote.reply || '';
+          }
+        }
+        saveFeedbackHistory(items);
+      }
+    } catch {
+      // Offline: keep the local snapshot.
+    }
+  }
+  return { ok: true, items: sanitizedHistory() };
+});
+
+ipcMain.handle('fgm:feedbackDelete', (_event, id) => {
+  saveFeedbackHistory(loadFeedbackHistory().filter((item) => item.id !== String(id)));
+  return { ok: true };
+});
+
 ipcMain.handle('fgm:openUrl', (_event, url) => shell.openExternal(String(url)));
 
 ipcMain.handle('fgm:quit', () => app.quit());

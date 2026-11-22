@@ -100,6 +100,7 @@ pub(crate) fn cover(request: &str) -> Result<Value, AppError> {
     let paths = data_paths(request.data_dir.as_deref())?;
     let game = LibraryService::list(&paths)
         .into_iter()
+        .chain(LibraryService::removed(&paths))
         .find(|game| game.id == request.game_id)
         .ok_or_else(|| {
             AppError::new(ErrorCode::FileNotFound).with("gameId", request.game_id.clone())

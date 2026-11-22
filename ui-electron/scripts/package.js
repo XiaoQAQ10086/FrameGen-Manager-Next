@@ -37,6 +37,10 @@ async function main() {
   for (const name of ['main.js', 'preload.js', 'renderer', 'native']) {
     fs.cpSync(path.join(root, name), path.join(appStage, name), { recursive: true });
   }
+  const feedbackKey = path.join(root, 'feedback.local.json');
+  if (fs.existsSync(feedbackKey)) {
+    fs.cpSync(feedbackKey, path.join(appStage, 'feedback.local.json'));
+  }
   fs.writeFileSync(
     path.join(appStage, 'package.json'),
     JSON.stringify(

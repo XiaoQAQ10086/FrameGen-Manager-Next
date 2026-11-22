@@ -1,4 +1,6 @@
-# 操作日志行为规格
+# 操作日志与反馈
+
+- 顶部导航为“日志与反馈”，导出按钮为“导出日志包”；页面内提供问题/建议反馈卡片，详见 `feedback.md`。
 
 Rust 实现：`fgm-infra/src/logging/operation_log.rs`。
 

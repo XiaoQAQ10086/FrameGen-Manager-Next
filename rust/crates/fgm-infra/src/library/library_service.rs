@@ -1,5 +1,7 @@
 use std::path::{Path, PathBuf};
+use std::process::Command;
 use std::sync::atomic::AtomicBool;
+use std::time::Duration;
 
 use fgm_domain::error::{AppError, ErrorCode};
 use fgm_domain::library::{GameEntry, LibrarySource};
@@ -8,7 +10,7 @@ use crate::hashing::sha256_hex;
 use crate::paths::AppPaths;
 use crate::platform::DriveRoots;
 use crate::platform::file_version::product_name;
-use crate::process::ProcessLauncher;
+use crate::process::{GameProcessProbe, ProcessLauncher};
 
 use super::epic_locator::EpicLocator;
 use super::graphics_api_detector::GraphicsApiDetector;
@@ -103,7 +105,9 @@ impl LibraryService {
         let store = Self::store(paths);
         let mut cache = store.load()?;
         cache.games.retain(|game| game.id != game_id);
-        cache.ignored_ids.retain(|id| id != game_id);
+        if !cache.ignored_ids.iter().any(|id| id == game_id) {
+            cache.ignored_ids.push(game_id.to_string());
+        }
         cache.target_overrides.remove(game_id);
         store.save(&cache)
     }
@@ -217,7 +221,30 @@ impl LibraryService {
                     return Err(AppError::new(ErrorCode::InvalidArgument)
                         .with("gameId", game_id.to_string()));
                 }
-                ProcessLauncher::open_protocol(&format!("steam://rungameid/{app_id}"))
+                let executable = game.render_exe.clone();
+                if !GameProcessProbe::is_name_running("steam.exe")
+                    && let Some(root) = SteamLocator::locate()
+                {
+                    let _ = Command::new(root.join("steam.exe")).arg("-silent").spawn();
+                }
+                let url = format!("steam://rungameid/{app_id}");
+                ProcessLauncher::open_protocol(&url)?;
+                // A cold Steam start can land on the login window; the queued
+                // rungameid is then dropped. Keep retrying after login until
+                // the game process appears or two minutes pass.
+                std::thread::spawn(move || {
+                    for _ in 0..20 {
+                        std::thread::sleep(Duration::from_secs(6));
+                        if executable
+                            .as_deref()
+                            .is_some_and(GameProcessProbe::is_running)
+                        {
+                            break;
+                        }
+                        let _ = ProcessLauncher::open_protocol(&url);
+                    }
+                });
+                Ok(())
             }
             LibrarySource::Epic => {
                 let app_name = game.app_id.as_deref().ok_or_else(|| {

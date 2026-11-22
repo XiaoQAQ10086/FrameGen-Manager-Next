@@ -125,6 +125,18 @@ export function invalidateModes() {
   modesCache = { at: 0, data: null };
 }
 
+export async function syncRemovedCount(root) {
+  try {
+    const reply = await call('library.removed');
+    const button = root?.querySelector?.('[data-action="removed"]');
+    if (button) {
+      button.textContent = t('removedCount', { count: (reply.games || []).length });
+    }
+  } catch {
+    // The library may still be loading; keep the plain label.
+  }
+}
+
 export async function call(name, payload) {
   if (name === 'gameModes' && modesCache.data && Date.now() - modesCache.at < MODE_TTL_MS) {
     return modesCache.data;

@@ -103,6 +103,8 @@ Steam junk 跳过（精确名称）：`steamworks common redistributables`、`st
 - 封面失败做负缓存：渲染层 10 分钟、原生 `cache/covers/miss-*` 1 小时；成功或用户重新扫描后重新尝试。下载与本地查找仍由全局锁串行，避免 urlmon/GDI+ 并发问题。
 - 代理占用徽章只报告可信文件：带 Microsoft 公司信息的系统 DLL（如 CS2 自带的 `dbghelp.dll`）和 Vulkan Runtime 不报告；没有清单但哈希匹配帧生成/RTSS 20/30 SM 包的文件分别归为对应模式。未知的非 Microsoft 代理仍显示“其他程序”。
 - 【添加游戏】使用系统文件选择器，标题按界面语言传入：中文为“选择游戏实际启动的 exe 程序，一般在 Win64 文件夹下”。
+- 已移除的游戏按钮显示数量（`已移除的游戏（N）`）；列表展示封面、路径、恢复与删除。删除记录会保留 ignored id，后续扫描也不会重新出现在游戏库。
+- Steam 启动：若 Steam 未运行，先启动 steam.exe；`steam://rungameid/<appid>` 会持续重试最多约 2 分钟，直到游戏进程出现，解决冷启动/未登录时排队命令丢失的问题。
 - `fgm-infra/src/platform/drive_roots.rs`：固定/可移动盘符枚举。
 - `fgm-ffi/src/commands_library.rs`：`fgm_library_add_manual_json`（无路径时打开原生选择器，取消返回 `cancelled`）、`fgm_launch_game_json`、`fgm_cover_json`。
 - CLI：`fgm-next library scan [--root <dir>]...`、`fgm-next library list`。

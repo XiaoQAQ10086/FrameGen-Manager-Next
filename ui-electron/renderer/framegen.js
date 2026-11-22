@@ -1,6 +1,7 @@
 import {
   $, $$, apiLabel, applyChrome, call, confirmAction, esc, folderIcon, githubIcon, hagsClass, hagsLabel,
-  hideProgress, prettyPath, proxyOwnerLabel, showProgress, sourceLabel, state, stateLabel, toast, trashIcon,
+  hideProgress, prettyPath, proxyOwnerLabel, showProgress, sourceLabel, state, stateLabel, syncRemovedCount,
+  toast, trashIcon,
 } from './core.js';
 import { t } from './l10n.js';
 import { loadCovers } from './covers.js';
@@ -46,6 +47,7 @@ export function renderFramegen({ preserveScroll = false, root = null } = {}) {
   renderAssetsPanel();
   renderGames();
   bindFramegenActions(view);
+  syncRemovedCount(view);
   view.dataset.ready = '1';
   if (!preserveScroll) {
     requestAnimationFrame(() => {

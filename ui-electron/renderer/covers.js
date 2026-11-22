@@ -35,7 +35,9 @@ function applyCover(id, url) {
       continue;
     }
     const image = document.createElement('img');
-    image.className = node.classList.contains('thumb') ? 'thumb' : '';
+    image.className = node.classList.contains('removed-initial')
+      ? 'removed-cover'
+      : (node.classList.contains('thumb') ? 'thumb' : '');
     image.dataset.cover = id;
     image.src = url;
     image.alt = '';

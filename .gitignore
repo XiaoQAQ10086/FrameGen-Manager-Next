@@ -518,3 +518,5 @@ ui-electron/node_modules/
 ui-electron/native/*.node
 ui-electron/dist/
 ui-electron/data/
+
+feedback.local.json

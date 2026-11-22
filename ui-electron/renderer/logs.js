@@ -1,5 +1,6 @@
 import { $, call, esc, toast } from './core.js';
 import { t } from './l10n.js';
+import { renderFeedback } from './feedback.js';
 
 export async function renderLogs(root) {
   root.innerHTML = `
@@ -15,8 +16,10 @@ export async function renderLogs(root) {
           <button class="btn scan" data-action="export" type="button">${t('diagnosticsExport')}</button>
         </div>
       </header>
+      <section class="panel feedback-panel" data-role="feedback"></section>
       <pre class="log-box" data-role="log">${t('logsReading')}</pre>
     </section>`;
+  renderFeedback(root);
   await load(root);
   bind(root);
   root.dataset.ready = '1';

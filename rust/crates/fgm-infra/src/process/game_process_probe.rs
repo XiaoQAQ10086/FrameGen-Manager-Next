@@ -42,6 +42,42 @@ impl GameProcessProbe {
     /// Returns true when a process with the executable's file name is running.
     /// A path match is preferred, but an inaccessible path falls back to the
     /// name so protected game processes are not treated as stopped.
+    /// Returns true when any process with the given executable name is running.
+    pub fn is_name_running(name: &str) -> bool {
+        let wanted = name.trim().to_ascii_lowercase();
+        if wanted.is_empty() {
+            return false;
+        }
+        unsafe {
+            let snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+            if snapshot == INVALID_HANDLE_VALUE || snapshot.is_null() {
+                return false;
+            }
+            let snapshot = Handle(snapshot);
+            let mut entry = ProcessEntry32W {
+                size: std::mem::size_of::<ProcessEntry32W>() as u32,
+                usage: 0,
+                process_id: 0,
+                default_heap_id: 0,
+                module_id: 0,
+                thread_count: 0,
+                parent_process_id: 0,
+                priority_class_base: 0,
+                flags: 0,
+                exe_file: [0; 260],
+            };
+            let mut more = Process32FirstW(snapshot.0, &mut entry) != 0;
+            while more {
+                if utf16z(&entry.exe_file).eq_ignore_ascii_case(&wanted) {
+                    return true;
+                }
+                entry.size = std::mem::size_of::<ProcessEntry32W>() as u32;
+                more = Process32NextW(snapshot.0, &mut entry) != 0;
+            }
+        }
+        false
+    }
+
     pub fn is_running(exe_path: &Path) -> bool {
         if exe_path.as_os_str().is_empty() {
             return false;

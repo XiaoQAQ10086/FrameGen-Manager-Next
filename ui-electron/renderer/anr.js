@@ -1,5 +1,6 @@
 import {
   $, call, confirmAction, esc, folderIcon, githubIcon, hideProgress, prettyPath, proxyOwnerLabel, showProgress, state,
+  syncRemovedCount,
   toast, trashIcon,
 } from './core.js';
 import { t } from './l10n.js';
@@ -53,6 +54,7 @@ export async function renderAnr(root) {
   renderPackage(root);
   renderGames(root);
   bind(root);
+  syncRemovedCount(root);
   root.dataset.ready = '1';
 }
 

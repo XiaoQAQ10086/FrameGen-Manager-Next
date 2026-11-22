@@ -1,4 +1,4 @@
-import { $, call, confirmAction, esc, githubIcon, hideProgress, prettyPath, showProgress, state, toast, trashIcon } from './core.js';
+import { $, call, confirmAction, esc, githubIcon, hideProgress, prettyPath, showProgress, state, syncRemovedCount, toast, trashIcon } from './core.js';
 import { t } from './l10n.js';
 import { loadCovers } from './covers.js';
 import { showRemoved } from './removed.js';
@@ -51,6 +51,7 @@ export async function renderDlss5(root) {
   if (Object.keys(inspections).length && key === cachedKey) {
     renderWall(root);
     bind(root);
+    syncRemovedCount(root);
     root.dataset.ready = '1';
     if (Date.now() - cachedAt < CACHE_MS) return;
     load(root).then(() => {
@@ -64,6 +65,7 @@ export async function renderDlss5(root) {
   if (current !== serial || state.section !== 'dlss5') return;
   renderWall(root);
   bind(root);
+  syncRemovedCount(root);
   root.dataset.ready = '1';
 }
 
