@@ -151,7 +151,7 @@ function cardMarkup(game, index) {
     <article class="gcard" style="animation-delay:${Math.min(index * 35, 350)}ms">
       <div class="gtop">
         ${cover
-          ? `<img class="thumb" data-cover="${esc(game.id)}" src="${esc(cover)}" alt="" decoding="async">`
+          ? `<img class="thumb" data-cover="${esc(game.id)}" src="${esc(cover)}" alt="" loading="lazy" decoding="async">`
           : `<div class="thumb ph2" data-cover="${esc(game.id)}">${esc(initial)}</div>`}
         <div class="ginfo">
           <div class="gname" title="${esc(game.name)}">${esc(game.name)}</div>

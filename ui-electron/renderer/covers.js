@@ -1,7 +1,7 @@
 import { $$, call, state } from './core.js';
 
 const FAIL_TTL_MS = 10 * 60 * 1000;
-const MAX_ACTIVE = 2;
+const MAX_ACTIVE = 1;
 const failed = new Map();
 const inFlight = new Set();
 const queue = [];
@@ -41,6 +41,7 @@ function applyCover(id, url) {
     image.dataset.cover = id;
     image.src = url;
     image.alt = '';
+    image.loading = 'lazy';
     image.decoding = 'async';
     image.addEventListener('error', () => {
       delete state.covers[id];
@@ -70,6 +71,7 @@ async function pump() {
       if (cover.url) {
         state.covers[id] = cover.url;
         applyCover(id, cover.url);
+        await new Promise((resolve) => setTimeout(resolve, 60));
       } else {
         failed.set(id, Date.now());
       }

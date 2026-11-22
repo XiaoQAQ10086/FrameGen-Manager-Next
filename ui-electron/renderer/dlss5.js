@@ -80,7 +80,6 @@ async function load(root) {
       } catch {
         inspections[game.id] = null;
       }
-      if (state.section === 'dlss5' && root.isConnected) renderWall(root);
     }
   };
   await Promise.all(
