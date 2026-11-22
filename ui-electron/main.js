@@ -9,12 +9,41 @@ app.commandLine.appendSwitch('js-flags', '--max-semi-space-size=8');
 const packaged = app.isPackaged;
 if (!packaged) app.commandLine.appendSwitch('force-renderer-accessibility');
 const appRoot = packaged ? path.dirname(process.execPath) : path.resolve(__dirname, '..');
+const portable = packaged && fs.existsSync(path.join(appRoot, 'portable.flag'));
+const localData = path.join(process.env.LOCALAPPDATA || appRoot, 'FrameGen-Manager-Next');
+
+function migrateData(source, target) {
+  if (!fs.existsSync(source)) return;
+  const names = ['config', 'library', 'logs', 'state', 'cache', 'backups', 'packs'];
+  fs.mkdirSync(target, { recursive: true });
+  for (const name of names) {
+    const from = path.join(source, name);
+    const to = path.join(target, name);
+    if (!fs.existsSync(from) || fs.existsSync(to)) continue;
+    try {
+      fs.renameSync(from, to);
+    } catch {
+      try {
+        fs.cpSync(from, to, { recursive: true });
+      } catch {}
+    }
+  }
+}
+
+if (packaged) {
+  // Portable C# 2.x kept state in <app>\data; portable Electron uses
+  // <app>\userdata. Installed builds share %LOCALAPPDATA%\FrameGen-Manager-Next
+  // with C# 2.x, so old deployments stay visible after the upgrade.
+  if (portable) migrateData(path.join(appRoot, 'data'), path.join(appRoot, 'userdata'));
+  else {
+    migrateData(path.join(appRoot, 'data'), localData);
+    migrateData(path.join(appRoot, 'userdata'), localData);
+  }
+}
 process.env.FGM_DATA_DIR ||= packaged
-  ? path.join(path.dirname(process.execPath), 'userdata')
+  ? (portable ? path.join(appRoot, 'userdata') : localData)
   : path.join(__dirname, 'data');
-process.env.FGM_PACKS_DIR ||= packaged
-  ? path.join(path.dirname(process.execPath), 'packs')
-  : path.join(appRoot, 'packs');
+process.env.FGM_PACKS_DIR ||= path.join(appRoot, 'packs');
 
 const native = require(path.join(__dirname, 'native', 'fgm_node.node'));
 
@@ -181,7 +210,7 @@ ipcMain.handle('fgm:call', async (_event, name, payload) => {
 
 const FEEDBACK_API = 'https://laobiao-feedback.pages.dev/api/feedback';
 const FEEDBACK_QUERY = 'https://laobiao-feedback.pages.dev/api/feedback/query';
-const FEEDBACK_UA = 'FrameGen-Manager-Next/2.3.4';
+const FEEDBACK_UA = 'FrameGen-Manager-Next/2.3.5';
 const feedbackHistoryPath = () => path.join(process.env.FGM_DATA_DIR, 'state', 'feedback-history.json');
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 

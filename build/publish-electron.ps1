@@ -43,6 +43,7 @@ if (Test-Path $userdata) {
 if (Test-Path $portableRoot) { Remove-Item $portableRoot -Recurse -Force }
 New-Item -ItemType Directory -Path $portableRoot -Force | Out-Null
 Copy-Item (Join-Path $app "dist/FrameGen-Manager-Next") $portable -Recurse -Force
+Set-Content -LiteralPath (Join-Path $portable 'portable.flag') -Value 'FrameGen Manager-Next portable build' -Encoding ascii
 if (Test-Path $userdataKeep) {
     Move-Item -LiteralPath $userdataKeep -Destination $userdata -Force
 }

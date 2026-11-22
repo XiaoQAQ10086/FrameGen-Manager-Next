@@ -22,7 +22,7 @@ export async function renderAbout(root) {
       <div class="form-panel">
         <section class="panel">
           <div class="ctitle">${t('aboutSoftwareVersion')}</div>
-          <div class="kv2 stacked"><b class="about-version">v2.3.4</b><span>${t('aboutDescription')}</span></div>
+          <div class="kv2 stacked"><b class="about-version">v2.3.5</b><span>${t('aboutDescription')}</span></div>
           <div class="about-actions">
             <button class="btn success" data-action="update" type="button">${t('aboutCheckUpdates')}</button>
             <button class="btn" data-action="quark" type="button">${t('aboutQuark')}</button>

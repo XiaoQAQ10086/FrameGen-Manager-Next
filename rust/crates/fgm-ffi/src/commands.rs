@@ -423,7 +423,7 @@ mod tests {
             "packDir": pack_dir,
             "targetDir": target,
             "family": "test.pack",
-            "appVersion": "2.3.4",
+            "appVersion": "2.3.5",
             "dataDir": data,
         })
         .to_string();

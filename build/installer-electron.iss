@@ -1,10 +1,10 @@
 #define AppName "FrameGen Manager-Next"
-#define AppVersion "2.3.4"
+#define AppVersion "2.3.5"
 #define AppPublisher "FrameGen"
 #define AppExeName "FrameGen-Manager-Next.exe"
 
 [Setup]
-AppId={{5F2E4A97-6C1B-4C4E-9B7A-2F7D1C3A8E51}
+AppId={{B7E7F3B6-6C3E-4F7A-9E0B-6F6B2C6D0D61}
 AppName={#AppName}
 AppVersion={#AppVersion}
 AppPublisher={#AppPublisher}
@@ -32,7 +32,21 @@ Name: "english"; MessagesFile: "compiler:Default.isl"
 Name: "chinesesimplified"; MessagesFile: "Languages\ChineseSimplified.isl"
 
 [Files]
-Source: "..\ui-electron\dist\FrameGen-Manager-Next\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs; Excludes: "userdata\*"
+Source: "..\ui-electron\dist\FrameGen-Manager-Next\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs; Excludes: "userdata\*,portable.flag"
+
+; The C# 2.x build used a different executable name and .NET payload.
+; Remove those obsolete files on upgrade; never touch data/ or userdata/.
+[InstallDelete]
+Type: files; Name: "{app}\portable.flag"
+Type: files; Name: "{app}\FrameGenManager-Next.exe"
+Type: files; Name: "{app}\FrameGenManager-Next.pdb"
+Type: files; Name: "{app}\*.dll"
+Type: files; Name: "{app}\*.deps.json"
+Type: files; Name: "{app}\*.runtimeconfig.json"
+Type: files; Name: "{app}\*.json"
+Type: filesandordirs; Name: "{app}\WebAssets"
+Type: filesandordirs; Name: "{app}\Assets"
+Type: filesandordirs; Name: "{app}\runtimes"
 
 [UninstallDelete]
 Type: filesandordirs; Name: "{app}\userdata"

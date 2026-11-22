@@ -1,16 +1,16 @@
 {
-  "version": "2.3.3",
-  "notes": "【改进】\r\n1.记忆上一次窗口大小\r\n\r\n【修复】\r\n1.修复部分用户在Win10系统下已开启硬件加速计划，软件内仍显示GPU硬件加速计划已关闭的问题\r\n2.尝试修复卸载DLSS5时误伤用户其他MOD文件的问题",
-  "pageUrl": "https://github.com/XiaoQAQ10086/FrameGen-Manager-Next/releases/tag/v2.3.3",
+  "version": "2.3.5",
+  "notes": "【改进】\r\n1. 部署、还原与内置资产清理兼容 C# 2.x 升级\r\n2. C# 2.x 安装版/便携版升级后保留游戏库与已部署记录\r\n3. 帧生成、Smooth Motion、ANR 互斥校验\r\n4. 修复移除游戏后重新扫描又进入已移除列表\r\n5. 优化启动与页面切换卡顿\r\n6. 问题反馈支持日志上传、回复同步与未读红点",
+  "pageUrl": "https://github.com/XiaoQAQ10086/FrameGen-Manager-Next/releases/tag/v2.3.5",
   "installer": {
-    "name": "FrameGenManagerNext-2.3.3-win-Setup.exe",
-    "size": 391196748,
-    "sha256": "27322794B57F45B0A710B848F3BC05F8AEA4DA966A6B89267ABBCC1007F3CF41",
+    "name": "FrameGenManagerNext-2.3.5-win-Setup.exe",
+    "size": 394217415,
+    "sha256": "0F004348924E38615BBC4934B1DAF64599E14B17AE3FAB0C3B860C4C71C0C3DE",
     "urls": [
-      "https://github.com/XiaoQAQ10086/FrameGen-Manager-Next/releases/download/v2.3.3/FrameGenManagerNext-2.3.3-win-Setup.exe",
-      "https://ghfast.top/https://github.com/XiaoQAQ10086/FrameGen-Manager-Next/releases/download/v2.3.3/FrameGenManagerNext-2.3.3-win-Setup.exe",
-      "https://gh-proxy.com/https://github.com/XiaoQAQ10086/FrameGen-Manager-Next/releases/download/v2.3.3/FrameGenManagerNext-2.3.3-win-Setup.exe",
-      "https://ghproxy.net/https://github.com/XiaoQAQ10086/FrameGen-Manager-Next/releases/download/v2.3.3/FrameGenManagerNext-2.3.3-win-Setup.exe"
+      "https://github.com/XiaoQAQ10086/FrameGen-Manager-Next/releases/download/v2.3.5/FrameGenManagerNext-2.3.5-win-Setup.exe",
+      "https://ghfast.top/https://github.com/XiaoQAQ10086/FrameGen-Manager-Next/releases/download/v2.3.5/FrameGenManagerNext-2.3.5-win-Setup.exe",
+      "https://gh-proxy.com/https://github.com/XiaoQAQ10086/FrameGen-Manager-Next/releases/download/v2.3.5/FrameGenManagerNext-2.3.5-win-Setup.exe",
+      "https://ghproxy.net/https://github.com/XiaoQAQ10086/FrameGen-Manager-Next/releases/download/v2.3.5/FrameGenManagerNext-2.3.5-win-Setup.exe"
     ]
   }
 }

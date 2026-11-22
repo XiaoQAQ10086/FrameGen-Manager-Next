@@ -25,8 +25,8 @@ async function main() {
       ProductName: 'FrameGen Manager-Next',
       OriginalFilename: 'FrameGen-Manager-Next.exe',
     },
-    'file-version': '2.3.4',
-    'product-version': '2.3.4',
+    'file-version': '2.3.5',
+    'product-version': '2.3.5',
   });
   fs.renameSync(exe, targetExe);
 
@@ -47,7 +47,7 @@ async function main() {
       {
         name: 'framegen-manager-next',
         productName: 'FrameGen Manager-Next',
-        version: '2.3.4',
+        version: '2.3.5',
         main: 'main.js',
       },
       null,

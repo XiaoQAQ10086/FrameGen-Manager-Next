@@ -1,6 +1,6 @@
 {
   "name": "framegen-manager-next-ui",
-  "version": "2.3.4",
+  "version": "2.3.5",
   "private": true,
   "description": "FrameGen Manager-Next desktop UI (Electron + Rust napi-rs)",
   "main": "main.js",

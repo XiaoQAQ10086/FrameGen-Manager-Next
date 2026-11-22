@@ -4,6 +4,7 @@ use fgm_domain::error::{AppError, ErrorCode};
 
 use crate::deployment::{BackupStore, DeploymentEngine, RestoreReport};
 use crate::hashing::FileHasher;
+use crate::library::{LibraryService, path_key};
 use crate::paths::{AppPaths, TargetPath};
 use crate::reframework::ReframeworkService;
 
@@ -50,7 +51,16 @@ impl Dlss5Service {
         let game_exe = previous
             .as_ref()
             .and_then(|manifest| manifest.options.get("gameExe"))
-            .map(std::path::PathBuf::from);
+            .map(std::path::PathBuf::from)
+            .or_else(|| {
+                // C# 2.x did not store the game executable in the manifest.
+                // Recover it from the library by the deployed target directory.
+                let target = path_key(target_directory);
+                LibraryService::list(paths)
+                    .into_iter()
+                    .find(|game| path_key(&game.target_directory) == target)
+                    .and_then(|game| game.render_exe)
+            });
         let mut report = DeploymentEngine::restore(
             Self::FAMILY,
             target_directory,
