@@ -124,6 +124,7 @@ function renderBootShell() {
   const host = hostFor('framegen');
   const view = $('#view');
   view.replaceChildren(host);
+  currentHost = host;
   host.innerHTML = `
     <section class="page">
       <header class="listhead">
@@ -181,6 +182,7 @@ async function boot() {
     setLanguage(language);
     state.paths = paths;
     state.gpu = gpu.gpu;
+    state.rtss = Boolean(gpu.rtss);
     state.games = games.games || [];
     state.spoof = spoof;
     perfMark('data-ready', { games: state.games.length });

@@ -67,7 +67,8 @@ function renderGpuPanel() {
     <div class="chips"><span class="chip gpu-chip" title="${esc(gpu.name)}">${esc(gpu.name)}</span></div>
     <div class="kv2 equal-values"><span>${t('gpuDriverVersionLabel')}</span><b class="badge">${esc(gpu.driverVersion || '—')}</b></div>
     <div class="kv2 equal-values"><span>${t('gpuHagsLabel')}</span><b class="badge ${hagsClass(gpu.hags)}">${esc(hagsLabel(gpu.hags))}</b></div>
-    <button class="btn wide" data-action="open-hags" type="button">${t('gpuOpenHags')}</button>`;
+    <button class="btn wide" data-action="open-hags" type="button">${t('gpuOpenHags')}</button>
+    ${state.rtss ? `<p class="hint danger">${esc(t('rtssConflict'))}</p>` : ''}`;
 }
 
 function renderSpoofPanel() {
@@ -291,6 +292,7 @@ export async function refresh() {
     call('gpuSpoof.inspect'),
   ]);
   state.gpu = gpu.gpu;
+  state.rtss = Boolean(gpu.rtss);
   state.modes = Object.fromEntries((modes.modes || []).map((mode) => [mode.gameId, mode]));
   state.modesReady = true;
   state.games = games.games || [];

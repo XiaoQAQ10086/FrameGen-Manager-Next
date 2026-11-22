@@ -86,6 +86,7 @@
   "modeSm": "SM",
   "modeAnr": "ANR",
   "smConflict": "冲突：Smooth Motion 已开启",
+  "rtssConflict": "检测到 RTSS/Afterburner。它的注入与 version.dll 代理可能冲突，部分游戏会报 STACK_OVERFLOW；请在 RTSS 中把该游戏的 Application detection level 设为 None，或退出 RTSS 后再启动游戏。",
   "anrConflict": "冲突：ANR 已部署",
   "framegenConflict": "冲突：帧生成已部署",
   "proxyOwnerFramegen": "帧生成",

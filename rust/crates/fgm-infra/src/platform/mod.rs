@@ -4,6 +4,7 @@ pub mod file_picker;
 pub(crate) mod file_version;
 pub mod icon_extract;
 pub(crate) mod registry;
+pub mod rtss;
 pub mod window_corners;
 pub mod window_state;
 
@@ -12,6 +13,7 @@ pub use elevation::is_elevated;
 pub use file_picker::FilePicker;
 pub use file_version::product_name;
 pub use icon_extract::extract_exe_icon;
+pub use rtss::rtss_running;
 pub use window_corners::{clear_rounded_region, set_rounded_corners, set_rounded_region};
 pub use window_state::WindowStateService;
 

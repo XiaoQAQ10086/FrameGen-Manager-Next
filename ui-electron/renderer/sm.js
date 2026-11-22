@@ -79,7 +79,8 @@ function renderCompat(panel) {
     <div class="kv2"><span>${t('smGpuLabel')}</span><b class="badge">${esc(gpu?.name || '—')}</b></div>
     <div class="kv2"><span>${t('gpuDriverVersionLabel')}</span><b class="badge">${esc(gpu?.driverVersion || '—')}</b></div>
     <div class="kv2"><span>${t('smMinimum')}</span><b class="badge">616.64</b></div>
-    <p class="hint">${gpu ? (ready ? t('smDriverOk') : (routeOk ? t('smDriverTooOld', { current: gpu.driverVersion, min: '616.64' }) : t('gpuIncompatible'))) : t('gpuMissing')}</p>`;
+    <p class="hint">${gpu ? (ready ? t('smDriverOk') : (routeOk ? t('smDriverTooOld', { current: gpu.driverVersion, min: '616.64' }) : t('gpuIncompatible'))) : t('gpuMissing')}</p>
+    ${state.rtss ? `<p class="hint danger">${esc(t('rtssConflict'))}</p>` : ''}`;
 }
 
 async function load() {

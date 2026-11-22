@@ -101,7 +101,7 @@ impl GpuDetector {
                 }
             }
         }
-        None
+        registry_adapter().map(|(name, driver)| Self::classify(&name, &driver))
     }
 
     pub fn classify(name: &str, driver_version: &str) -> GpuInfo {
@@ -201,6 +201,10 @@ fn save_disk(paths: &AppPaths, info: &GpuInfo, fingerprint: Option<&str>) {
 
 /// Cheap display-driver fingerprint from the registry, without spawning nvidia-smi.
 fn adapter_driver_fingerprint() -> Option<String> {
+    registry_adapter().map(|(_, driver)| driver)
+}
+
+fn registry_adapter() -> Option<(String, String)> {
     const CLASS: &str =
         r"SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}";
     for index in 0..16 {
@@ -208,11 +212,29 @@ fn adapter_driver_fingerprint() -> Option<String> {
         let Some(desc) = read_string(HKEY_LOCAL_MACHINE, &key, "DriverDesc") else {
             continue;
         };
-        if desc.to_uppercase().contains("NVIDIA") {
-            return read_string(HKEY_LOCAL_MACHINE, &key, "DriverVersion");
+        if !desc.to_uppercase().contains("NVIDIA") {
+            continue;
         }
+        let Some(raw) = read_string(HKEY_LOCAL_MACHINE, &key, "DriverVersion") else {
+            continue;
+        };
+        return Some((desc, normalize_driver_version(&raw)));
     }
     None
+}
+
+/// Converts the registry form `32.0.16.2124` to the nvidia-smi form `621.24`.
+fn normalize_driver_version(raw: &str) -> String {
+    let parts = raw
+        .split('.')
+        .filter_map(|part| part.parse::<u32>().ok())
+        .collect::<Vec<_>>();
+    if parts.len() != 4 {
+        return raw.to_string();
+    }
+    let major = parts[2].saturating_sub(10);
+    let build = parts[3];
+    format!("{}.{:02}", major * 100 + build / 100, build % 100)
 }
 
 fn driver_at_least(value: &str, major: u32, minor: u32) -> bool {
@@ -269,6 +291,13 @@ mod tests {
         assert!(driver_at_least("616.64", 616, 64));
         assert!(driver_at_least("621.01", 616, 64));
         assert!(!driver_at_least("unknown", 616, 64));
+    }
+
+    #[test]
+    fn normalizes_registry_driver_versions() {
+        assert_eq!(normalize_driver_version("32.0.16.2124"), "621.24");
+        assert_eq!(normalize_driver_version("32.0.15.6094"), "560.94");
+        assert_eq!(normalize_driver_version("unknown"), "unknown");
     }
 
     #[test]

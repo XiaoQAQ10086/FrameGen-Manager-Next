@@ -341,6 +341,7 @@ pub(crate) fn settings_set(request: &str) -> Result<Value, AppError> {
 pub(crate) fn gpu() -> Result<Value, AppError> {
     let paths = AppPaths::create_default(None)?;
     let info = fgm_infra::gpu::GpuDetector::detect_cached(&paths);
+    let rtss = fgm_infra::platform::rtss_running();
     let value = info.map(|info| {
         json!({
             "name": info.name,
@@ -350,7 +351,7 @@ pub(crate) fn gpu() -> Result<Value, AppError> {
             "hags": hags_key(info.hags),
         })
     });
-    Ok(json!({ "ok": true, "gpu": value }))
+    Ok(json!({ "ok": true, "gpu": value, "rtss": rtss }))
 }
 
 fn hags_key(state: fgm_infra::gpu::HagsState) -> &'static str {

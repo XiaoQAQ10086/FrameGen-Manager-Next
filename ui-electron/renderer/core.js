@@ -5,6 +5,7 @@ export const state = {
   modes: {},
   modesReady: false,
   gpu: null,
+  rtss: false,
   spoof: null,
   paths: null,
   settings: {},

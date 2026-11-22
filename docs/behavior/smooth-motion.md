@@ -133,4 +133,5 @@ RTX 3070 / 621.01：
 - 不检查游戏是否正在运行；文件被占用时由部署引擎拒绝。
 
 - 部署门槛：只要检测到 NVIDIA 显卡即可尝试开启/部署，不再用型号或驱动版本阻断；左侧兼容性面板的“可用/驱动版本”仅作为参考信息。
+- RTSS/Afterburner 冲突：RTSS 注入 `RTSSHooks64.dll` 后会调用 `version.dll` 的版本查询接口；Smooth Motion 的 `version.dll` 代理在部分游戏（如 WoW）会形成 VERSION.dll → RTSSHooks64 → VERSION.dll 递归并触发 `0xC00000FD` STACK_OVERFLOW。检测到 `RTSS.exe` / `RTSSHooksLoader*.exe` 时，SM 页和帧生成页显卡面板显示红色警告，建议在 RTSS 中把该游戏的 Application detection level 设为 `None`，或退出 RTSS 后再启动游戏。管理器不自动修改 RTSS 配置。
 - 与帧生成的互斥仍然生效（同一游戏不允许同时开启帧生成与 Smooth Motion）。

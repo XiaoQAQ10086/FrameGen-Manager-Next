@@ -73,7 +73,8 @@ HAGS: unknown
 
 ## Rust 迁移状态（Phase 4）
 
-- `fgm-infra/src/gpu/gpu_detector.rs`：`GpuDetector::detect` 调用 `nvidia-smi --query-gpu=name,driver_version --format=csv,noheader`，5 秒超时；失败返回 `None`。
+- `fgm-infra/src/gpu/gpu_detector.rs`：`GpuDetector::detect` 调用 `nvidia-smi --query-gpu=name,driver_version --format=csv,noheader`，5 秒超时；失败时回退读取 `HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-...}\<序号>` 的 `DriverDesc` / `DriverVersion`，把 `32.0.16.2124` 归一化为 `621.24` 后按同一路由规则分类。
+- 结果有 60 秒内存缓存和 24 小时磁盘缓存（`cache/gpu.json`），磁盘缓存与注册表驱动版本绑定；GPU 伪装后会主动失效。`gpu` IPC 同时返回 `rtss` 进程检测结果，供 UI 显示代理冲突警告。
 - `GpuDetector::classify` 纯函数按名称映射 `GpuRoute`，覆盖 RTX 50/40、AMD/Intel、Quadro RTX、RTX A、RTX 30、GTX 16、RTX 2050、RTX 20、Titan RTX、Pascal 级别；驱动 `major.minor >= 616.64` 才算支持。
 - `fgm-infra/src/gpu/hags.rs`：`HagsProbe::read` 走 D3DKMT 实时 caps，失败时用 `HwSchMode` 注册表分类；`GpuDetector` 把结果并入 `GpuInfo.hags`。
 - 伪装检查（`fgm_gpu_spoof_inspect_json`）额外返回 `liveName`（nvidia-smi 读到的运行时名称）；注册表枚举跳过 `CSConfigFlags=1` 的幻影适配器，避免旧驱动残留的显卡型号出现在“当前”一栏。“驱动记录”仍展示 `DriverDesc`，用于还原。
