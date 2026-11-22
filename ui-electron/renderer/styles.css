@@ -683,6 +683,8 @@ select:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(0, 122, 2
   animation: toastIn .2s var(--ease) both;
 }
 .gp-head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); color: var(--ink); font-size: var(--text-md); font-weight: 650; }
+.gp-cancel { pointer-events: auto; border: 1px solid rgba(190, 42, 42, .28); border-radius: var(--radius-sm); background: rgba(190, 42, 42, .08); color: #a52222; padding: var(--space-1) var(--space-2); font-size: var(--text-sm); font-weight: 650; cursor: pointer; }
+.gp-cancel:hover { background: rgba(190, 42, 42, .14); }
 .gp-percent { color: var(--accent); font-variant-numeric: tabular-nums; }
 .gp-subject { margin-top: var(--space-1); min-height: 16px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--muted); font-size: var(--text-sm); }
 .gp-track { margin-top: var(--space-2); height: 6px; overflow: hidden; border-radius: 999px; background: rgba(96, 107, 125, .12); }
